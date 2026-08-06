@@ -1,7 +1,7 @@
 import type { Theme } from '@mui/material/styles';
 
 type V2DataGridStylesOptions = {
-  height?: number;
+  height?: number | string;
   highlightedRowClassName?: string;
   highlightedRowColor?: string;
 };

@@ -14,6 +14,84 @@ type Args<TItem> = {
   getValue: (item: TItem, fieldName: string) => unknown;
 };
 
+function optionsForField<TItem>({
+  field,
+  getValue,
+  isBlank,
+  items,
+  selectedValuesByField,
+}: Args<TItem> & {
+  field: CustomField;
+  selectedValuesByField: CustomFieldFilterSelectionsByField;
+}) {
+  const selectedSet = new Set<CustomFieldFilterValue>(
+    selectedValuesByField[field.name] ?? []
+  );
+
+  if (field.type === CustomFieldType.Boolean) {
+    const options: CustomFieldFilterOption[] = [
+      { key: '(blank)', value: null, selected: selectedSet.has(null) },
+      { key: 'Yes', value: true, selected: selectedSet.has(true) },
+      { key: 'No', value: false, selected: selectedSet.has(false) },
+    ];
+
+    return options;
+  }
+
+  const observedValues: CustomFieldFilterValue[] =
+    items.flatMap<CustomFieldFilterValue>((item) => {
+      if (isBlank(item, field.name)) return [];
+
+      const raw = getValue(item, field.name);
+
+      if (raw === undefined || raw === null || raw === '') return [];
+
+      if (field.type === CustomFieldType.StringArray) {
+        if (Array.isArray(raw)) return raw as string[];
+        return [];
+      }
+
+      return [raw.toString()];
+    });
+
+  const values = Array.from(
+    new Set<CustomFieldFilterValue>([
+      null,
+      ...observedValues,
+      ...(field.validValues ?? []),
+    ])
+  );
+
+  const mappedOptions: CustomFieldFilterOption[] = values.map((v) => {
+    const key = v === null ? '(blank)' : v.toString();
+    return {
+      key,
+      value: v,
+      selected: selectedSet.has(v),
+    };
+  });
+
+  const optionsByKey = new Map<string, CustomFieldFilterOption>(
+    mappedOptions.map((o) => [o.key, o])
+  );
+
+  return field.type === CustomFieldType.StringArray &&
+    field.validValues &&
+    field.validValues.length > 0
+    ? [
+        ...mappedOptions.filter((o) => o.value === null),
+        ...sortByPolicyOrder(
+          mappedOptions.filter((o) => o.value !== null).map((o) => o.key),
+          field.validValues
+        ).map((key) => optionsByKey.get(key)!),
+      ]
+    : mappedOptions.sort((a, b) => {
+        if (a.value === null) return -1;
+        if (b.value === null) return 1;
+        return a.key.localeCompare(b.key);
+      });
+}
+
 export function useCustomFieldFilters<TItem>({
   customFields,
   items,
@@ -33,84 +111,23 @@ export function useCustomFieldFilters<TItem>({
     []
   );
 
-  const optionsByField = React.useMemo(() => {
-    return Object.fromEntries(
-      customFields.map((field) => {
-        const selectedSet = new Set<CustomFieldFilterValue>(
-          selectedValuesByField[field.name] ?? []
-        );
-
-        if (field.type === CustomFieldType.Boolean) {
-          const options: CustomFieldFilterOption[] = [
-            { key: '(blank)', value: null, selected: selectedSet.has(null) },
-            { key: 'Yes', value: true, selected: selectedSet.has(true) },
-            { key: 'No', value: false, selected: selectedSet.has(false) },
-          ];
-
-          return [field.name, options] as const;
-        }
-
-        const observedValues: CustomFieldFilterValue[] =
-          items.flatMap<CustomFieldFilterValue>((item) => {
-            if (isBlank(item, field.name)) return [];
-
-            const raw = getValue(item, field.name);
-
-            if (raw === undefined || raw === null || raw === '') return [];
-
-            if (field.type === CustomFieldType.StringArray) {
-              if (Array.isArray(raw)) return raw as string[];
-              return [];
-            }
-
-            return [raw.toString()];
-          });
-
-        const values = Array.from(
-          new Set<CustomFieldFilterValue>([null, ...observedValues, ...(field.validValues ?? [])])
-        );
-
-        const mappedOptions: CustomFieldFilterOption[] = values.map((v) => {
-          const key = v === null ? '(blank)' : v.toString();
-          return {
-            key,
-            value: v,
-            selected: selectedSet.has(v),
-          };
-        });
-
-        const optionsByKey = new Map<string, CustomFieldFilterOption>(
-          mappedOptions.map((o) => [o.key, o])
-        );
-
-        const options: CustomFieldFilterOption[] =
-          field.type === CustomFieldType.StringArray &&
-          field.validValues &&
-          field.validValues.length > 0
-            ? [
-                ...mappedOptions.filter((o) => o.value === null),
-                ...sortByPolicyOrder(
-                  mappedOptions
-                    .filter((o) => o.value !== null)
-                    .map((o) => o.key),
-                  field.validValues
-                ).map((key) => optionsByKey.get(key)!),
-              ]
-            : mappedOptions.sort((a, b) => {
-                if (a.value === null) return -1;
-                if (b.value === null) return 1;
-                return a.key.localeCompare(b.key);
-              });
-
-        return [field.name, options] as const;
-      })
-    ) as Record<string, CustomFieldFilterOption[]>;
-  }, [customFields, getValue, isBlank, items, selectedValuesByField]);
+  const getOptionsForField = React.useCallback(
+    (field: CustomField) =>
+      optionsForField({
+        customFields,
+        field,
+        getValue,
+        isBlank,
+        items,
+        selectedValuesByField,
+      }),
+    [customFields, getValue, isBlank, items, selectedValuesByField]
+  );
 
   return {
     selectedValuesByField,
     setSelectedValuesByField,
     setSelectedValuesForField,
-    optionsByField,
+    getOptionsForField,
   };
 }

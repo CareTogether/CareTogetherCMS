@@ -1,5 +1,6 @@
 import CloseIcon from '@mui/icons-material/Close';
 import {
+  Alert,
   Box,
   Button,
   Checkbox,
@@ -73,6 +74,58 @@ type ArrangementRequirementManagementDrawerV2Props = {
 };
 
 const UPLOAD_NEW = '__uploadnew__';
+const NON_ISO_8859_1_CODE_POINT_ERROR =
+  'String contains non ISO-8859-1 code point.';
+
+class RequirementDocumentUploadError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'RequirementDocumentUploadError';
+  }
+}
+
+function errorMessage(error: unknown) {
+  return error instanceof Error ? error.message : '';
+}
+
+function nonIso88591FilenameCharacters(fileName: string) {
+  return Array.from(
+    new Set(
+      Array.from(fileName).filter(
+        (character) => character.codePointAt(0)! > 255
+      )
+    )
+  );
+}
+
+function formatCodePoint(character: string) {
+  return `U+${character.codePointAt(0)!.toString(16).toUpperCase().padStart(4, '0')}`;
+}
+
+function formatUnsupportedFilenameCharacters(fileName: string) {
+  return nonIso88591FilenameCharacters(fileName)
+    .map((character) => `"${character}" (${formatCodePoint(character)})`)
+    .join(', ');
+}
+
+function formatDocumentUploadError(error: unknown, fileName: string) {
+  const message = errorMessage(error);
+  const unsupportedCharacters = formatUnsupportedFilenameCharacters(fileName);
+
+  if (message.includes(NON_ISO_8859_1_CODE_POINT_ERROR)) {
+    if (unsupportedCharacters !== '') {
+      return `Upload failed. Rename the file without ${unsupportedCharacters}. Use basic letters, numbers, spaces, hyphens, or underscores.`;
+    }
+
+    return 'Upload failed. Rename the file using basic letters, numbers, spaces, hyphens, or underscores, then try again.';
+  }
+
+  if (message.trim() !== '') {
+    return `Upload failed: ${message}`;
+  }
+
+  return 'Upload failed. Please try again.';
+}
 
 function requirementName(workflow: ArrangementRequirementWorkflowV2) {
   if (workflow.kind === 'missing') {
@@ -214,6 +267,7 @@ export function ArrangementRequirementManagementDrawerV2({
   const [applyToArrangements, setApplyToArrangements] = useState<Arrangement[]>(
     []
   );
+  const [uploadError, setUploadError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
 
   const requirementTitle = workflow ? requirementName(workflow) : '';
@@ -239,7 +293,9 @@ export function ArrangementRequirementManagementDrawerV2({
       ? workflow.context
       : null;
   const selectedV1Case = arrangementContext
-    ? v1CasesForFamily.find((v1Case) => v1Case.id === arrangementContext.v1CaseId)
+    ? v1CasesForFamily.find(
+        (v1Case) => v1Case.id === arrangementContext.v1CaseId
+      )
     : undefined;
   const availableArrangements = useMemo(
     () =>
@@ -247,44 +303,44 @@ export function ArrangementRequirementManagementDrawerV2({
       selectedV1Case &&
       workflow.requirement instanceof MissingArrangementRequirement
         ? selectedV1Case.arrangements!.filter((arrangement) =>
-          [
-            ...(arrangement.missingRequirements ?? []),
-            ...(arrangement.missingOptionalRequirements ?? []),
-          ].some((missingRequirementInfo) => {
-            if (workflow.context.kind === 'Family Volunteer Assignment') {
+            [
+              ...(arrangement.missingRequirements ?? []),
+              ...(arrangement.missingOptionalRequirements ?? []),
+            ].some((missingRequirementInfo) => {
+              if (workflow.context.kind === 'Family Volunteer Assignment') {
+                return (
+                  missingRequirementInfo.action?.actionName ===
+                    workflow.requirement.action?.actionName &&
+                  missingRequirementInfo.arrangementFunction ===
+                    workflow.context.assignment.arrangementFunction &&
+                  missingRequirementInfo.arrangementFunctionVariant ===
+                    workflow.context.assignment.arrangementFunctionVariant &&
+                  missingRequirementInfo.volunteerFamilyId ===
+                    workflow.context.assignment.familyId
+                );
+              }
+
+              if (workflow.context.kind === 'Individual Volunteer Assignment') {
+                return (
+                  missingRequirementInfo.action?.actionName ===
+                    workflow.requirement.action?.actionName &&
+                  missingRequirementInfo.arrangementFunction ===
+                    workflow.context.assignment.arrangementFunction &&
+                  missingRequirementInfo.arrangementFunctionVariant ===
+                    workflow.context.assignment.arrangementFunctionVariant &&
+                  missingRequirementInfo.volunteerFamilyId ===
+                    workflow.context.assignment.familyId &&
+                  missingRequirementInfo.personId ===
+                    workflow.context.assignment.personId
+                );
+              }
+
               return (
                 missingRequirementInfo.action?.actionName ===
-                  workflow.requirement.action?.actionName &&
-                missingRequirementInfo.arrangementFunction ===
-                  workflow.context.assignment.arrangementFunction &&
-                missingRequirementInfo.arrangementFunctionVariant ===
-                  workflow.context.assignment.arrangementFunctionVariant &&
-                missingRequirementInfo.volunteerFamilyId ===
-                  workflow.context.assignment.familyId
+                workflow.requirement.action?.actionName
               );
-            }
-
-            if (workflow.context.kind === 'Individual Volunteer Assignment') {
-              return (
-                missingRequirementInfo.action?.actionName ===
-                  workflow.requirement.action?.actionName &&
-                missingRequirementInfo.arrangementFunction ===
-                  workflow.context.assignment.arrangementFunction &&
-                missingRequirementInfo.arrangementFunctionVariant ===
-                  workflow.context.assignment.arrangementFunctionVariant &&
-                missingRequirementInfo.volunteerFamilyId ===
-                  workflow.context.assignment.familyId &&
-                missingRequirementInfo.personId ===
-                  workflow.context.assignment.personId
-              );
-            }
-
-            return (
-              missingRequirementInfo.action?.actionName ===
-              workflow.requirement.action?.actionName
-            );
-          })
-        )
+            })
+          )
         : [],
     [selectedV1Case, workflow]
   );
@@ -305,6 +361,7 @@ export function ArrangementRequirementManagementDrawerV2({
     setExemptionExpiresAtLocal(null);
     setExemptionExpiresAtError(false);
     setExemptAll(false);
+    setUploadError(null);
     setSaving(false);
   }, [open, workflow]);
 
@@ -312,7 +369,7 @@ export function ArrangementRequirementManagementDrawerV2({
     if (!open || workflow?.kind !== 'missing') return;
 
     setApplyToArrangements(
-      arrangementContext?.kind === 'Arrangement'
+      arrangementContext
         ? availableArrangements.filter(
             (arrangement) => arrangement.id === arrangementContext.arrangementId
           )
@@ -345,7 +402,8 @@ export function ArrangementRequirementManagementDrawerV2({
         !completedAtError &&
         ((documentId === UPLOAD_NEW && documentFile) ||
           (documentId !== UPLOAD_NEW && documentId !== '') ||
-          requirementPolicy.documentLink !== DocumentLinkRequirement.Required) &&
+          requirementPolicy.documentLink !==
+            DocumentLinkRequirement.Required) &&
         (notes !== '' ||
           requirementPolicy.noteEntry !== NoteEntryRequirement.Required)
       : additionalComments !== '' && !exemptionExpiresAtError);
@@ -371,12 +429,19 @@ export function ArrangementRequirementManagementDrawerV2({
       throw new Error('No document file selected.');
     }
 
-    const uploadedDocumentId = await uploadFamilyFileToTenant(
-      organizationId,
-      locationId,
-      familyId,
-      documentFile
-    );
+    let uploadedDocumentId: string;
+    try {
+      uploadedDocumentId = await uploadFamilyFileToTenant(
+        organizationId,
+        locationId,
+        familyId,
+        documentFile
+      );
+    } catch (error: unknown) {
+      throw new RequirementDocumentUploadError(
+        formatDocumentUploadError(error, documentFile.name)
+      );
+    }
 
     await directory.uploadFamilyDocument(
       familyId,
@@ -406,7 +471,9 @@ export function ArrangementRequirementManagementDrawerV2({
   const completeMissingRequirement = async () => {
     if (!requirementPolicy || workflow.kind !== 'missing') return;
     if (!isArrangementRequirementContext(workflow.context)) {
-      throw new Error(`Invalid requirement context '${workflow.context.kind}'.`);
+      throw new Error(
+        `Invalid requirement context '${workflow.context.kind}'.`
+      );
     }
 
     const document = await uploadDocument();
@@ -460,7 +527,9 @@ export function ArrangementRequirementManagementDrawerV2({
   const exemptMissingRequirement = async () => {
     if (workflow.kind !== 'missing') return;
     if (!isArrangementRequirementContext(workflow.context)) {
-      throw new Error(`Invalid requirement context '${workflow.context.kind}'.`);
+      throw new Error(
+        `Invalid requirement context '${workflow.context.kind}'.`
+      );
     }
 
     const arrangementIds = applyToArrangements.map(
@@ -509,7 +578,9 @@ export function ArrangementRequirementManagementDrawerV2({
   const markRequirementIncomplete = async () => {
     if (workflow.kind !== 'completed') return;
     if (!isArrangementRequirementContext(workflow.context)) {
-      throw new Error(`Invalid requirement context '${workflow.context.kind}'.`);
+      throw new Error(
+        `Invalid requirement context '${workflow.context.kind}'.`
+      );
     }
 
     if (workflow.context.kind === 'Arrangement') {
@@ -545,7 +616,9 @@ export function ArrangementRequirementManagementDrawerV2({
   const removeRequirementExemption = async () => {
     if (workflow.kind !== 'exempted') return;
     if (!isArrangementRequirementContext(workflow.context)) {
-      throw new Error(`Invalid requirement context '${workflow.context.kind}'.`);
+      throw new Error(
+        `Invalid requirement context '${workflow.context.kind}'.`
+      );
     }
 
     if (workflow.context.kind === 'Arrangement') {
@@ -580,6 +653,7 @@ export function ArrangementRequirementManagementDrawerV2({
 
   const save = async () => {
     setSaving(true);
+    setUploadError(null);
 
     try {
       await withBackdrop(async () => {
@@ -595,6 +669,13 @@ export function ArrangementRequirementManagementDrawerV2({
 
         onClose();
       });
+    } catch (error: unknown) {
+      if (error instanceof RequirementDocumentUploadError) {
+        setUploadError(error.message);
+        return;
+      }
+
+      throw error;
     } finally {
       setSaving(false);
     }
@@ -649,7 +730,10 @@ export function ArrangementRequirementManagementDrawerV2({
               {contextLabel(workflow.context)}
             </Typography>
           </Box>
-          <IconButton aria-label="Close requirement management" onClick={onClose}>
+          <IconButton
+            aria-label="Close requirement management"
+            onClick={onClose}
+          >
             <CloseIcon />
           </IconButton>
         </Stack>
@@ -775,9 +859,10 @@ export function ArrangementRequirementManagementDrawerV2({
                         labelId="requirement-document-label"
                         label="Document"
                         value={documentId}
-                        onChange={(event) =>
-                          setDocumentId(event.target.value as string)
-                        }
+                        onChange={(event) => {
+                          setDocumentId(event.target.value as string);
+                          setUploadError(null);
+                        }}
                       >
                         <MenuItem value="">None</MenuItem>
                         <MenuItem value={UPLOAD_NEW}>Upload new...</MenuItem>
@@ -799,20 +884,23 @@ export function ArrangementRequirementManagementDrawerV2({
                           id="requirement-document-file"
                           multiple={false}
                           type="file"
-                          onChange={(event) =>
-                            setDocumentFile(event.target.files?.[0] ?? null)
-                          }
+                          onChange={(event) => {
+                            setDocumentFile(event.target.files?.[0] ?? null);
+                            setUploadError(null);
+                          }}
                         />
                       </Box>
                     )}
                   </Stack>
                 )}
-                {(requirementPolicy.noteEntry === NoteEntryRequirement.Allowed ||
+                {(requirementPolicy.noteEntry ===
+                  NoteEntryRequirement.Allowed ||
                   requirementPolicy.noteEntry ===
                     NoteEntryRequirement.Required) && (
                   <TextField
                     required={
-                      requirementPolicy.noteEntry === NoteEntryRequirement.Required
+                      requirementPolicy.noteEntry ===
+                      NoteEntryRequirement.Required
                     }
                     label="Notes"
                     placeholder="Space for any general notes"
@@ -877,7 +965,9 @@ export function ArrangementRequirementManagementDrawerV2({
                   minRows={2}
                   maxRows={5}
                   value={additionalComments}
-                  onChange={(event) => setAdditionalComments(event.target.value)}
+                  onChange={(event) =>
+                    setAdditionalComments(event.target.value)
+                  }
                 />
                 <ValidateDatePicker
                   label="When does this exemption expire? (Default is never)"
@@ -915,6 +1005,8 @@ export function ArrangementRequirementManagementDrawerV2({
             )}
           </Stack>
         )}
+
+        {uploadError && <Alert severity="error">{uploadError}</Alert>}
 
         <Stack direction="row" spacing={1} sx={{ justifyContent: 'flex-end' }}>
           <Button color="secondary" disabled={saving} onClick={closeDrawer}>

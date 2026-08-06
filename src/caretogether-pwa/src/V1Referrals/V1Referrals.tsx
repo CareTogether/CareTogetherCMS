@@ -25,10 +25,14 @@ import { currentLocationQuery, visibleReferralsQuery } from '../Model/Data';
 import { Permission, V1ReferralStatus } from '../GeneratedClient';
 import { getFamilyCounty } from '../Utilities/getFamilyCounty';
 import { ReferralStatusFilter } from './ReferralsFilters';
-import { useFeatureFlagEnabled, usePostHog } from 'posthog-js/react';
 import { useAppNavigate } from '../Hooks/useAppNavigate';
 import { ProgressBackdrop } from '../Shell/ProgressBackdrop';
 import { useGlobalPermissions } from '../Model/SessionModel';
+import {
+  useFeatureFlagEnabledWithLocalOverride,
+  useFeatureFlagsLoadedWithLocalOverride,
+} from '../Utilities/Instrumentation/useFeatureFlagWithLocalOverride';
+import { useFeatureFlagEnabled } from 'posthog-js/react';
 import { policyData } from '../Model/ConfigurationModel';
 import { useLoadable } from '../Hooks/useLoadable';
 import { FUNCTION_ASSIGNMENTS_FEATURE_FLAG } from '../featureFlags';
@@ -58,9 +62,11 @@ function statusToUi(status: V1ReferralStatus): 'OPEN' | 'ACCEPTED' | 'CLOSED' {
 export function V1Referrals() {
   useScreenTitle('Referrals');
 
-  const posthog = usePostHog();
-  const referralsEnabled = useFeatureFlagEnabled(REFERRALS_FEATURE_FLAG);
-  const featureFlagsLoaded = posthog.featureFlags.hasLoadedFlags;
+  const referralsEnabled =
+    useFeatureFlagEnabledWithLocalOverride(REFERRALS_FEATURE_FLAG);
+  const featureFlagsLoaded = useFeatureFlagsLoadedWithLocalOverride(
+    REFERRALS_FEATURE_FLAG
+  );
   const appNavigate = useAppNavigate();
   const permissions = useGlobalPermissions();
   const currentLocationLoadable = useRecoilValueLoadable(currentLocationQuery);

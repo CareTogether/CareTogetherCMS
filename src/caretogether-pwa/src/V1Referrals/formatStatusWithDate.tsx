@@ -10,12 +10,12 @@ export function formatStatusWithDate(
   const format = (date?: Date) => (date ? formatUtcDateOnly(date) : '-');
 
   if (status === V1ReferralStatus.Open) {
-    return `Open since ${format(openedAt)}`;
+    return `Opened ${format(openedAt)}`;
   }
 
   if (status === V1ReferralStatus.Accepted) {
-    return `Accepted on ${format(acceptedAt)}`;
+    return `Accepted ${format(acceptedAt)}`;
   }
 
-  return `Closed on ${format(closedAt)}`;
+  return `Closed ${format(closedAt)}`;
 }

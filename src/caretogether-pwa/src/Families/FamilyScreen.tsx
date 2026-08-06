@@ -1,6 +1,5 @@
 import Grid from '../Generic/GridLegacyCompat';
-import {
-  useReactToPrint } from 'react-to-print';
+import { useReactToPrint } from 'react-to-print';
 import {
   Container,
   Toolbar,
@@ -47,9 +46,9 @@ import { ChildCard } from './ChildCard';
 import { useEffect, useRef, useState } from 'react';
 import { AddAdultDialog } from './AddAdultDrawer';
 import { AddChildDialog } from './AddChildDrawer';
-import { AddEditNoteDialog } from '../Notes/AddEditNoteDialog';
+import { AddEditNoteDrawer } from '../Notes/AddEditNoteDrawer';
 import { format } from 'date-fns';
-import { UploadFamilyDocumentsDialog } from './UploadFamilyDocumentsDialog';
+import { UploadFamilyDocumentsDrawer } from './UploadFamilyDocumentsDrawer';
 import { CloseV1CaseDrawer } from '../V1Cases/CloseV1CaseDrawer';
 import { OpenNewV1CaseDialog } from '../V1Cases/OpenNewV1CaseDialog';
 import { FamilyDocuments } from './FamilyDocuments';
@@ -81,7 +80,6 @@ import { ResetFamilyRoleDialog } from '../Volunteers/ResetFamilyRoleDialog';
 import { VolunteerRoleApprovalStatusChip } from '../Volunteers/VolunteerRoleApprovalStatusChip';
 import { FamilyCustomField } from './FamilyCustomField';
 import { VolunteerFamilyCustomField } from '../Volunteers/VolunteerFamilyCustomField';
-import { isBackdropClick } from '../Utilities/handleBackdropClick';
 import { DeleteFamilyDialog } from './DeleteFamilyDialog';
 import { useDialogHandle } from '../Hooks/useDialogHandle';
 import { familyLastName } from './FamilyUtils';
@@ -101,6 +99,7 @@ import { useRecoilValue } from 'recoil';
 import { FamilyCompleteOtherController } from '../Requirements/FamilyCompleteOtherController';
 import { useV1CasesModel } from '../Model/V1CasesModel';
 import { formatStatusWithDate } from '../V1Referrals/formatStatusWithDate';
+import { useFeatureFlagEnabledWithLocalOverride } from '../Utilities/Instrumentation/useFeatureFlagWithLocalOverride';
 import { policyData } from '../Model/ConfigurationModel';
 import { FUNCTION_ASSIGNMENTS_FEATURE_FLAG } from '../featureFlags';
 import { FunctionAssignmentsEditorDrawer } from '../FunctionAssignments/FunctionAssignmentsSection';
@@ -402,7 +401,7 @@ export function FamilyScreen() {
   const updateTestFamilyFlagEnabled = useFeatureFlagEnabled(
     'updateTestFamilyFlag'
   );
-  const referralsEnabled = useFeatureFlagEnabled('referrals');
+  const referralsEnabled = useFeatureFlagEnabledWithLocalOverride('referrals');
   const functionAssignmentsEnabled = useFeatureFlagEnabled(
     FUNCTION_ASSIGNMENTS_FEATURE_FLAG
   );
@@ -481,18 +480,19 @@ export function FamilyScreen() {
             Adult
           </Button>
         )}
-        {permissions(Permission.EditFamilyInfo) && (
-          <Button
-            className="ph-unmask"
-            onClick={() => setAddChildDialogOpen(true)}
-            variant="contained"
-            size="small"
-            sx={{ margin: 1 }}
-            startIcon={<AddCircleIcon />}
-          >
-            Child
-          </Button>
-        )}
+        {permissions(Permission.EditFamilyInfo) &&
+          permissions(Permission.ViewFamilyChildren) && (
+            <Button
+              className="ph-unmask"
+              onClick={() => setAddChildDialogOpen(true)}
+              variant="contained"
+              size="small"
+              sx={{ margin: 1 }}
+              startIcon={<AddCircleIcon />}
+            >
+              Child
+            </Button>
+          )}
         {(permissions(Permission.AddEditDraftNotes) ||
           permissions(Permission.AddEditOwnDraftNotes)) && (
           <Button
@@ -613,27 +613,23 @@ export function FamilyScreen() {
           onClose={() => setFamilyCompleteOtherOpen(false)}
         />
         {uploadDocumentDialogOpen && (
-          <UploadFamilyDocumentsDialog
+          <UploadFamilyDocumentsDrawer
             family={family}
             onClose={() => setUploadDocumentDialogOpen(false)}
           />
         )}
         {addAdultDialogOpen && (
           <AddAdultDialog
-            onClose={(_event: object | undefined, reason: string) =>
-              !isBackdropClick(reason) ? setAddAdultDialogOpen(false) : {}
-            }
+            onClose={() => setAddAdultDialogOpen(false)}
           ></AddAdultDialog>
         )}
         {addChildDialogOpen && (
           <AddChildDialog
-            onClose={(_event: object | undefined, reason: string) =>
-              !isBackdropClick(reason) ? setAddChildDialogOpen(false) : {}
-            }
+            onClose={() => setAddChildDialogOpen(false)}
           />
         )}
         {addNoteDialogOpen && (
-          <AddEditNoteDialog
+          <AddEditNoteDrawer
             familyId={family.family!.id!}
             onClose={() => setAddNoteDialogOpen(false)}
           />
@@ -1384,16 +1380,17 @@ export function FamilyScreen() {
                       />
                     )
                 )}
-                {family.family?.children?.map(
-                  (child) =>
-                    child.active && (
-                      <ChildCard
-                        key={child.id!}
-                        familyId={familyId}
-                        personId={child.id!}
-                      />
-                    )
-                )}
+                {permissions(Permission.ViewFamilyChildren) &&
+                  family.family?.children?.map(
+                    (child) =>
+                      child.active && (
+                        <ChildCard
+                          key={child.id!}
+                          familyId={familyId}
+                          personId={child.id!}
+                        />
+                      )
+                  )}
               </AppMasonry>
             </Grid>
           </Grid>

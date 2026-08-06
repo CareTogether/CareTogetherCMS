@@ -27,20 +27,45 @@ namespace CareTogether.Engines.PolicyEvaluation
                 .DefaultIfEmpty()
                 .Max();
 
+        internal static bool ShouldShowApplicationPrompt(RoleApprovalStatus? effectiveStatus) =>
+            effectiveStatus is null or RoleApprovalStatus.Expired;
+
         internal static ImmutableList<IndividualRoleVersionApprovalStatus> SelectPromptableVersions(
             ImmutableList<IndividualRoleVersionApprovalStatus> versions
+        ) => versions.Where(IsActive).ToImmutableList();
+
+        internal static ImmutableList<IndividualRoleVersionApprovalStatus> SelectPromptableVersions(
+            ImmutableList<IndividualRoleVersionApprovalStatus> versions,
+            RoleApprovalStatus? effectiveStatus
         )
         {
-            var activeVersions = versions.Where(IsActive).ToImmutableList();
-            return activeVersions.Count > 0 ? activeVersions : versions;
+            var activeVersions = SelectPromptableVersions(versions);
+            if (effectiveStatus == RoleApprovalStatus.Expired)
+                return activeVersions;
+
+            var activeStatus = GetMaxRoleStatus(activeVersions);
+            return activeStatus == effectiveStatus
+                ? activeVersions
+                : ImmutableList<IndividualRoleVersionApprovalStatus>.Empty;
         }
 
         internal static ImmutableList<FamilyRoleVersionApprovalStatus> SelectPromptableVersions(
             ImmutableList<FamilyRoleVersionApprovalStatus> versions
+        ) => versions.Where(IsActive).ToImmutableList();
+
+        internal static ImmutableList<FamilyRoleVersionApprovalStatus> SelectPromptableVersions(
+            ImmutableList<FamilyRoleVersionApprovalStatus> versions,
+            RoleApprovalStatus? effectiveStatus
         )
         {
-            var activeVersions = versions.Where(IsActive).ToImmutableList();
-            return activeVersions.Count > 0 ? activeVersions : versions;
+            var activeVersions = SelectPromptableVersions(versions);
+            if (effectiveStatus == RoleApprovalStatus.Expired)
+                return activeVersions;
+
+            var activeStatus = GetMaxRoleStatus(activeVersions);
+            return activeStatus == effectiveStatus
+                ? activeVersions
+                : ImmutableList<FamilyRoleVersionApprovalStatus>.Empty;
         }
 
         private static bool IsActive(IndividualRoleVersionApprovalStatus version) =>

@@ -14,6 +14,22 @@ type ArrangementsFilter =
   | 'Setup'
   | 'Active + Setup';
 
+function normalizeArrangementsFilter(
+  value: ArrangementsFilter | null | undefined
+): ArrangementsFilter {
+  switch (value) {
+    case 'All':
+    case 'Intake':
+    case 'Active':
+    case 'Setup':
+    case 'Active + Setup':
+      return value;
+
+    default:
+      return 'All';
+  }
+}
+
 type PartneringFamilyTableItemProps = {
   partneringFamily: CombinedFamilyInfo;
   arrangementTypes: string[];
@@ -37,3 +53,4 @@ type PartneringFamilyTableItemProps = {
 };
 
 export type { ArrangementsFilter, PartneringFamilyTableItemProps };
+export { normalizeArrangementsFilter };

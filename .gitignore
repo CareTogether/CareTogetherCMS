@@ -43,6 +43,11 @@ Generated\ Files/
 [Tt]est[Rr]esult*/
 [Bb]uild[Ll]og.*
 
+# Playwright
+test-results/
+playwright-report/
+playwright/.auth/
+
 # NUnit
 *.VisualState.xml
 TestResult.xml

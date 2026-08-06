@@ -46,10 +46,14 @@ import { useAppNavigate } from '../Hooks/useAppNavigate';
 import { useCustomFieldFilters } from '../Generic/CustomFieldsFilter/useCustomFieldFilters';
 import { matchesCustomFieldFilters } from '../Generic/CustomFieldsFilter/matchesCustomFieldFilters';
 import { useFeatureFlagEnabled } from 'posthog-js/react';
+import { useFeatureFlagEnabledWithLocalOverride } from '../Utilities/Instrumentation/useFeatureFlagWithLocalOverride';
 import { forceCheck } from '../Utilities/reactLazyLoadInterop';
 import { PartneringFamilyTableItem } from './PartneringFamilies/PartneringFamilyTableItem';
 import { arrangementStatusSummary } from './PartneringFamilies/arrangementStatusSummary';
-import { ArrangementsFilter } from './PartneringFamilies/types';
+import {
+  ArrangementsFilter,
+  normalizeArrangementsFilter,
+} from './PartneringFamilies/types';
 import { containedStickyHeaderTableSx } from '../Utilities/stickyHeaderTableSx';
 import { WideTableContainer } from '../Utilities/WideTableContainer';
 import { wideTablePageSx } from '../Utilities/wideTablePageSx';
@@ -75,22 +79,6 @@ import { AssignmentRoleFilters } from '../FunctionAssignments/AssignmentRoleFilt
 const PARTNERING_FAMILIES_SORT_STORAGE_KEY = 'partnering-families-sortMode';
 const ARRANGEMENTS_FILTER_STORAGE_KEY =
   'partnering-families-arrangementsFilter';
-
-function normalizeArrangementsFilter(
-  value: ArrangementsFilter | null | undefined
-): ArrangementsFilter {
-  switch (value) {
-    case 'All':
-    case 'Intake':
-    case 'Active':
-    case 'Setup':
-    case 'Active + Setup':
-      return value;
-
-    default:
-      return 'All';
-  }
-}
 
 function isSetupOrActiveArrangementPhase(phase: ArrangementPhase | undefined) {
   return (
@@ -162,7 +150,7 @@ function PartneringFamilies() {
   const {
     selectedValuesByField: selectedCustomFieldValuesByField,
     setSelectedValuesForField: setSelectedCustomFieldValuesForField,
-    optionsByField: customFieldFilterOptionsByField,
+    getOptionsForField: getCustomFieldFilterOptionsForField,
   } = useCustomFieldFilters({
     customFields: referralCustomFields,
     items: partneringFamilies,
@@ -362,7 +350,7 @@ function PartneringFamilies() {
   const tableMinWidth = Math.max(700, tableColumnCount * 160);
   const hasFeaturebaseChat = globalPermissions(Permission.AccessSupportScreen);
 
-  const referralsEnabled = useFeatureFlagEnabled('referrals');
+  const referralsEnabled = useFeatureFlagEnabledWithLocalOverride('referrals');
   const showAddFamilyButton = !referralsEnabled && canCreateFamily;
 
   useScreenTitle('Clients');
@@ -547,7 +535,7 @@ function PartneringFamilies() {
         <CustomFieldFiltersSidePanel>
           <PartneringFamilyCustomFieldFiltersSidePanel
             customFields={referralCustomFields}
-            optionsByField={customFieldFilterOptionsByField}
+            getOptionsForField={getCustomFieldFilterOptionsForField}
             selectedValuesByField={selectedCustomFieldValuesByField}
             onFieldChange={setSelectedCustomFieldValuesForField}
             onClose={closeCustomFieldFiltersSidePanel}
@@ -633,9 +621,7 @@ function PartneringFamilies() {
             onClose={(partneringFamilyId) => {
               setCreatePartneringFamilyDialogOpen(false);
 
-              if (!partneringFamilyId) {
-                return;
-              }
+              if (!partneringFamilyId) return;
 
               openFamily(partneringFamilyId);
             }}

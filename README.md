@@ -42,6 +42,32 @@ _**NOTE:** The API project comes with a basic set of test data for local develop
       - Email Address: `test2@bynalogic.com`
       - Password: `P@ssw0rd`
 
+### Local Aspire + Keycloak Playwright E2E
+The local end-to-end test path uses the Aspire AppHost in `src/CareTogether.AppHost` to start Keycloak, the API, and the React/Vite frontend. Keycloak imports the local test realm from `src/CareTogether.AppHost/Realms/caretogether-local-realm.json`, and the AppHost configures the API and frontend to use that local Keycloak realm instead of Azure AD B2C. The AppHost also disables external telemetry and enables local-only feature flag overrides needed by the referral E2E path.
+
+Before running the AppHost Playwright test, make sure these local prerequisites are available:
+
+- Docker Desktop is installed, running, and using the Linux container engine. Keycloak is an Aspire container resource, so `docker info` must succeed.
+- Azurite Blob service is running on `127.0.0.1:10000`. The API uses `UseDevelopmentStorage=true` for local test data. One direct command is `azurite-blob --loose` from the repository root.
+- Port `3000` is free. The local Keycloak realm, API CORS policy, and Vite frontend are intentionally aligned on `http://localhost:3000`.
+- Frontend dependencies are installed with `npm ci` from `src/caretogether-pwa`.
+- Playwright browsers are installed with `npx playwright install` from `src/caretogether-pwa`.
+
+Recommended local verification commands:
+
+```powershell
+docker info
+Push-Location src/caretogether-pwa
+npm ci
+npx playwright install
+npm run type-check
+npx playwright test --list
+Pop-Location
+dotnet test test/CareTogether.AppHost.Tests/CareTogether.AppHost.Tests.csproj
+```
+
+If the AppHost Playwright test fails before the browser opens, first check Docker and Azurite. The test performs preflight checks for both and should fail with a direct message when either local dependency is unavailable.
+
 ### Troubleshooting Your Local Setup
 1. If pressing 'F5' does not start the project for you in **Visual Studio Code**, then you likely have a key-mapping issue with your keyboard & will need to instead select "Start Debugging" from **Visual Studio Code**'s "Run" menu
 2. If the server side of the application does not start correctly and/or seems to be having issues that you're having trouble debugging, you can try running the "CareTogether.Api" project separately in a different IDE, such as Visual Studio
