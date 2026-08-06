@@ -1,5 +1,8 @@
 import { Box, Paper, Stack, Typography } from '@mui/material';
-import type { GridRowSelectionModel } from '@mui/x-data-grid';
+import type {
+  GridFilterModel,
+  GridRowSelectionModel,
+} from '@mui/x-data-grid';
 import { useMemo, useState } from 'react';
 import { useFeatureFlagEnabled } from 'posthog-js/react';
 import { useRecoilValue } from 'recoil';
@@ -19,6 +22,17 @@ import { VolunteerCustomFieldFiltersSidePanel } from './VolunteerApprovalTab/Vol
 import { VolunteersDataGridV2 } from './VolunteersDataGridV2';
 import { VolunteersToolbarV2 } from './VolunteersToolbarV2';
 import { useVolunteersBrowserViewModel } from './useVolunteersBrowserViewModel';
+import { filterOption } from './VolunteerApprovalTab/filterOption';
+import {
+  gridFilterModelFromVolunteerFilters,
+  volunteerFiltersFromGridFilterModel,
+} from './volunteersGridFilterAdapter';
+
+function selectedFilterValues(filters: filterOption[]) {
+  return filters
+    .filter((filter) => filter.selected && filter.value !== undefined)
+    .map((filter) => filter.value!);
+}
 
 export function VolunteersBrowserV2() {
   const appNavigate = useAppNavigate();
@@ -52,11 +66,9 @@ export function VolunteersBrowserV2() {
     setAssignmentFilter,
     setCustomFieldFilter,
     setRequirementFilter,
-    setRoleFilterSelection,
+    setRoleFilterValues,
     setSearchValue,
-    setSortMode,
-    setStatusFilterSelection,
-    sortMode,
+    setStatusFilterValues,
     statusFilters,
     visibleVolunteerFamilies,
   } = useVolunteersBrowserViewModel();
@@ -100,6 +112,16 @@ export function VolunteersBrowserV2() {
       );
     },
     [selectedFamilyIds, visibleVolunteerFamilies]
+  );
+  const filterModel = useMemo(
+    () =>
+      gridFilterModelFromVolunteerFilters({
+        logicOperator: 'and',
+        requirementFilter,
+        roleFilters: selectedFilterValues(roleFilters),
+        statusFilters: selectedFilterValues(statusFilters),
+      }),
+    [requirementFilter, roleFilters, statusFilters]
   );
 
   function selectedFamilyContactEmails() {
@@ -150,21 +172,6 @@ export function VolunteersBrowserV2() {
     );
   }
 
-  function handleSearchChange(value: string) {
-    clearSelection();
-    setSearchValue(value);
-  }
-
-  function handleRoleChange(value: string | string[]) {
-    clearSelection();
-    setRoleFilterSelection(value);
-  }
-
-  function handleStatusChange(value: string | string[]) {
-    clearSelection();
-    setStatusFilterSelection(value);
-  }
-
   function handleAssignmentFilterChange(
     arrangementType: string,
     selectedValues: Parameters<typeof setAssignmentFilter>[1]
@@ -181,11 +188,20 @@ export function VolunteersBrowserV2() {
     setCustomFieldFilter(fieldName, selectedValues);
   }
 
-  function handleRequirementFilterChange(
-    value: Parameters<typeof setRequirementFilter>[0]
-  ) {
+  function handleSearchChange(value: string) {
     clearSelection();
-    setRequirementFilter(value);
+    setSearchValue(value);
+  }
+
+  function handleFilterModelChange(model: GridFilterModel) {
+    const filters = volunteerFiltersFromGridFilterModel(model);
+
+    clearSelection();
+    setRoleFilterValues(filters.roleFilters);
+    setStatusFilterValues(filters.statusFilters);
+    setRequirementFilter(
+      filters.requirementFilter as Parameters<typeof setRequirementFilter>[0]
+    );
   }
 
   return (
@@ -213,25 +229,16 @@ export function VolunteersBrowserV2() {
           canUseBulkEmail={canUseBulkEmail}
           canUseBulkSms={canUseBulkSms}
           customFieldCount={customFieldCount}
-          requirementFilter={requirementFilter}
-          requirementFilterOptions={requirementFilterOptions}
           searchValue={searchValue}
-          roleFilters={roleFilters}
-          selectedSort={sortMode}
           selectedVolunteerCount={selectedVolunteerCount}
           smsMode={smsMode}
-          statusFilters={statusFilters}
           onSearchChange={handleSearchChange}
-          onRoleChange={handleRoleChange}
-          onSortChange={setSortMode}
-          onStatusChange={handleStatusChange}
           onAssignmentFiltersClick={openAssignmentFiltersSidePanel}
           onCopyEmailAddresses={copyEmailAddresses}
           onCreateVolunteerFamily={() =>
             setCreateVolunteerFamilyDrawerOpen(true)
           }
           onCustomFieldFiltersClick={openCustomFieldFiltersSidePanel}
-          onRequirementFilterChange={handleRequirementFilterChange}
           onToggleBulkSms={() => setSmsMode(!smsMode)}
         />
       </Paper>
@@ -254,11 +261,16 @@ export function VolunteersBrowserV2() {
       </CustomFieldFiltersSidePanel>
       <VolunteersDataGridV2
         customFields={customFields}
+        filterModel={filterModel}
         loading={loading}
+        onFilterModelChange={handleFilterModelChange}
         onRowClick={(row) => appNavigate.family(row.id)}
         onRowSelectionModelChange={handleRowSelectionModelChange}
+        requirementFilterOptions={requirementFilterOptions}
+        roleFilters={roleFilters}
         rowSelectionModel={rowSelectionModel}
         rows={rows}
+        statusFilters={statusFilters}
         updateTestFamilyFlagEnabled={updateTestFamilyFlagEnabled}
       />
       {createVolunteerFamilyDrawerOpen && (

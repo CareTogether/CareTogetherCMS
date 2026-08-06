@@ -10,15 +10,22 @@ import { Check as CheckIcon } from '@mui/icons-material';
 import {
   DataGrid,
   GridColDef,
+  GridFilterModel,
   GridRowSelectionModel,
 } from '@mui/x-data-grid';
 import { useMemo } from 'react';
 import { CustomField } from '../GeneratedClient';
+import { familyLastName } from '../Families/FamilyUtils';
 import { TestFamilyBadge } from '../Families/TestFamilyBadge';
 import { v2DataGridStyles } from '../Families/v2DataGridStyles';
 import { v2Typography } from '../Families/v2Typography';
+import { filterOption } from './VolunteerApprovalTab/filterOption';
 import { VolunteerApprovalRolesCellV2 } from './VolunteerApprovalRolesCellV2';
 import { renderVolunteerCustomFieldValue } from './VolunteerApprovalTab/volunteerCustomFieldPresentation';
+import {
+  completeRequirementFilterValue,
+  missingRequirementFilterValue,
+} from './VolunteerApprovalTab/volunteerMissingRequirementsPresentation';
 import { VolunteerBrowserRowV2 } from './useVolunteersBrowserViewModel';
 
 const MAX_VISIBLE_MISSING_REQUIREMENTS = 4;
@@ -93,16 +100,64 @@ function MissingRequirementsCell({ row }: { row: VolunteerBrowserRowV2 }) {
 
 type VolunteersDataGridV2Props = {
   customFields: CustomField[];
+  filterModel: GridFilterModel;
   loading?: boolean;
+  onFilterModelChange: (model: GridFilterModel) => void;
   onRowClick: (row: VolunteerBrowserRowV2) => void;
   onRowSelectionModelChange: (model: GridRowSelectionModel) => void;
+  requirementFilterOptions: string[];
+  roleFilters: filterOption[];
   rowSelectionModel: GridRowSelectionModel;
   rows: VolunteerBrowserRowV2[];
+  statusFilters: filterOption[];
   updateTestFamilyFlagEnabled?: boolean;
 };
 
+function displayValues(values: string[]) {
+  return values.length > 0 ? values.join(', ') : '-';
+}
+
+function filterValueOptions(filters: filterOption[]) {
+  return filters
+    .filter((filter) => filter.value !== undefined)
+    .map((filter) => ({
+      label: filter.key,
+      value: filter.value!,
+    }));
+}
+
+function requirementValueOptions(requirementNames: string[]) {
+  return [
+    { label: 'Missing', value: missingRequirementFilterValue },
+    { label: 'Complete', value: completeRequirementFilterValue },
+  ].concat(
+    requirementNames.map((requirementName) => ({
+      label: requirementName,
+      value: requirementName,
+    }))
+  );
+}
+
+function compareByFamilyLastName(
+  firstRow: VolunteerBrowserRowV2 | null,
+  secondRow: VolunteerBrowserRowV2 | null
+) {
+  const firstFamilyName = firstRow ? familyLastName(firstRow.sourceFamily) : '';
+  const secondFamilyName = secondRow
+    ? familyLastName(secondRow.sourceFamily)
+    : '';
+  const familyNameComparison = firstFamilyName.localeCompare(secondFamilyName);
+
+  return familyNameComparison !== 0
+    ? familyNameComparison
+    : (firstRow?.id ?? '').localeCompare(secondRow?.id ?? '');
+}
+
 function buildColumns(
   customFields: CustomField[],
+  roleFilters: filterOption[],
+  statusFilters: filterOption[],
+  requirementFilterOptions: string[],
   updateTestFamilyFlagEnabled?: boolean
 ): GridColDef<VolunteerBrowserRowV2>[] {
   const fixedColumns: GridColDef<VolunteerBrowserRowV2>[] = [
@@ -111,6 +166,14 @@ function buildColumns(
       headerName: 'Family Name',
       flex: 1,
       minWidth: 220,
+      filterable: false,
+      sortComparator: (_value1, _value2, cellParams1, cellParams2) =>
+        compareByFamilyLastName(
+          cellParams1.api.getRow(
+            cellParams1.id
+          ) as VolunteerBrowserRowV2 | null,
+          cellParams2.api.getRow(cellParams2.id) as VolunteerBrowserRowV2 | null
+        ),
       renderCell: ({ row }) => (
         <Box sx={{ alignItems: 'center', display: 'flex', minWidth: 0 }}>
           <Typography noWrap {...v2Typography.browserCell}>
@@ -127,6 +190,7 @@ function buildColumns(
       headerName: 'Primary Contact',
       flex: 0.7,
       minWidth: 160,
+      filterable: false,
       renderCell: ({ row }) => (
         <Typography noWrap {...v2Typography.browserCell}>
           {row.primaryContact}
@@ -138,15 +202,33 @@ function buildColumns(
       headerName: 'Roles',
       flex: 1.5,
       minWidth: 360,
-      sortable: false,
+      type: 'singleSelect',
+      valueGetter: (_value, row) => row.roleFilterValues.join(', '),
+      valueOptions: filterValueOptions(roleFilters),
       renderCell: ({ row }) => <VolunteerApprovalRolesCellV2 roles={row.roles} />,
+    },
+    {
+      field: 'status',
+      headerName: 'Status',
+      flex: 0.6,
+      minWidth: 160,
+      type: 'singleSelect',
+      valueGetter: (_value, row) => row.statusFilterValues.join(', '),
+      valueOptions: filterValueOptions(statusFilters),
+      renderCell: ({ row }) => (
+        <Typography noWrap {...v2Typography.browserCell}>
+          {displayValues(row.statusLabels)}
+        </Typography>
+      ),
     },
     {
       field: 'missingRequirements',
       headerName: 'Missing Requirements',
       flex: 1,
       minWidth: 280,
-      sortable: false,
+      type: 'singleSelect',
+      valueGetter: (_value, row) => row.requirementFilterValues.join(', '),
+      valueOptions: requirementValueOptions(requirementFilterOptions),
       renderCell: ({ row }) => <MissingRequirementsCell row={row} />,
     },
   ];
@@ -157,6 +239,7 @@ function buildColumns(
       headerName: customField.name,
       flex: 0.7,
       minWidth: 160,
+      filterable: false,
       renderCell: ({ row }) =>
         renderVolunteerCustomFieldValue(
           row.customFieldValues[customField.name],
@@ -169,17 +252,35 @@ function buildColumns(
 
 export function VolunteersDataGridV2({
   customFields,
+  filterModel,
   loading = false,
+  onFilterModelChange,
   onRowClick,
   onRowSelectionModelChange,
+  requirementFilterOptions,
+  roleFilters,
   rowSelectionModel,
   rows,
+  statusFilters,
   updateTestFamilyFlagEnabled,
 }: VolunteersDataGridV2Props) {
   const theme = useTheme();
   const columns = useMemo(
-    () => buildColumns(customFields, updateTestFamilyFlagEnabled),
-    [customFields, updateTestFamilyFlagEnabled]
+    () =>
+      buildColumns(
+        customFields,
+        roleFilters,
+        statusFilters,
+        requirementFilterOptions,
+        updateTestFamilyFlagEnabled
+      ),
+    [
+      customFields,
+      requirementFilterOptions,
+      roleFilters,
+      statusFilters,
+      updateTestFamilyFlagEnabled,
+    ]
   );
 
   return (
@@ -194,7 +295,10 @@ export function VolunteersDataGridV2({
         checkboxSelection
         disableRowSelectionOnClick
         disableRowSelectionExcludeModel
+        filterMode="server"
+        filterModel={filterModel}
         onRowClick={({ row }) => onRowClick(row)}
+        onFilterModelChange={onFilterModelChange}
         onRowSelectionModelChange={onRowSelectionModelChange}
         pageSizeOptions={[25, 50, 100]}
         rowSelectionModel={rowSelectionModel}
@@ -210,6 +314,9 @@ export function VolunteersDataGridV2({
         initialState={{
           pagination: {
             paginationModel: { pageSize: 100 },
+          },
+          sorting: {
+            sortModel: [{ field: 'family', sort: 'asc' }],
           },
         }}
       />

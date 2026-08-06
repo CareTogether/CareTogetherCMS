@@ -1,13 +1,12 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useRecoilState, useRecoilValue } from 'recoil';
-import { CombinedFamilyInfo, CustomField } from '../GeneratedClient';
-import { familyNameString } from '../Families/FamilyName';
 import {
-  FamilyNameSortMode,
-  filterFamiliesByText,
-  normalizeFamilyNameSortMode,
-  sortFamiliesByName,
-} from '../Families/FamilyUtils';
+  CombinedFamilyInfo,
+  CustomField,
+  RoleApprovalStatus,
+} from '../GeneratedClient';
+import { familyNameString } from '../Families/FamilyName';
+import { filterFamiliesByText } from '../Families/FamilyUtils';
 import { personNameString } from '../Families/PersonName';
 import { matchesCustomFieldFilters } from '../Generic/CustomFieldsFilter/matchesCustomFieldFilters';
 import {
@@ -16,7 +15,6 @@ import {
   CustomFieldFilterValue,
 } from '../Generic/CustomFieldsFilter/types';
 import { useCustomFieldFilters } from '../Generic/CustomFieldsFilter/useCustomFieldFilters';
-import { useLocalStorage } from '../Hooks/useLocalStorage';
 import { useLoadable } from '../Hooks/useLoadable';
 import {
   allApprovalAndOnboardingRequirementsData,
@@ -29,8 +27,6 @@ import {
   matchesAssignmentFilters,
 } from './VolunteerApprovalTab/assignmentFilters';
 import { filterOption } from './VolunteerApprovalTab/filterOption';
-import { getOptionValueFromSelection } from './VolunteerApprovalTab/getOptionValueFromSelection';
-import { getUpdatedFilters } from './VolunteerApprovalTab/getUpdatedFilters';
 import { roleFiltersState } from './VolunteerApprovalTab/roleFiltersState';
 import { statusFiltersState } from './VolunteerApprovalTab/statusFiltersState';
 import {
@@ -40,23 +36,25 @@ import {
 import { familyOrFamilyMembersMeetRoleStatusFilterCriteria } from './VolunteerApprovalTab/volunteerApprovalRoleStatusFilters';
 import {
   buildVolunteerMissingRequirementGroups,
+  completeRequirementFilterValue,
   familyHasMissingRequirements,
+  missingRequirementFilterValue,
   RequirementFilterValue,
   VolunteerMissingRequirementGroup,
 } from './VolunteerApprovalTab/volunteerMissingRequirementsPresentation';
-
-const VOLUNTEER_APPROVAL_SORT_STORAGE_KEY = 'volunteer-approval-sortMode';
-const DEFAULT_VOLUNTEER_APPROVAL_SORT_MODE =
-  normalizeFamilyNameSortMode(undefined);
 
 export type VolunteerBrowserRowV2 = {
   customFieldValues: Record<string, unknown>;
   id: string;
   family: string;
+  requirementFilterValues: string[];
   missingRequirementGroups: VolunteerMissingRequirementGroup[];
   primaryContact: string;
+  roleFilterValues: string[];
   roles: VolunteerApprovalRolesPresentation;
   sourceFamily: CombinedFamilyInfo;
+  statusFilterValues: string[];
+  statusLabels: string[];
 };
 
 type VolunteersBrowserViewModel = {
@@ -86,11 +84,9 @@ type VolunteersBrowserViewModel = {
     selectedValues: CustomFieldFilterValue[]
   ) => void;
   setRequirementFilter: (value: RequirementFilterValue | undefined) => void;
-  setRoleFilterSelection: (selection: string | string[]) => void;
+  setRoleFilterValues: (values: string[]) => void;
   setSearchValue: (value: string) => void;
-  setSortMode: (value: FamilyNameSortMode) => void;
-  setStatusFilterSelection: (selection: string | string[]) => void;
-  sortMode: FamilyNameSortMode;
+  setStatusFilterValues: (values: string[]) => void;
   statusFilters: filterOption[];
   totalVolunteerFamilies: number;
   visibleVolunteerFamilies: CombinedFamilyInfo[];
@@ -118,12 +114,95 @@ function customFieldValuesForFamily(
   );
 }
 
+function familyRoleNames(family: CombinedFamilyInfo) {
+  return Object.keys(family.volunteerFamilyInfo?.familyRoleApprovals ?? {});
+}
+
+function individualRoleNames(family: CombinedFamilyInfo) {
+  return Object.values(
+    family.volunteerFamilyInfo?.individualVolunteers ?? {}
+  ).flatMap((volunteer) =>
+    Object.keys(volunteer.approvalStatusByRole ?? {})
+  );
+}
+
+function roleFilterValuesForFamily(
+  family: CombinedFamilyInfo,
+  roleFilters: filterOption[]
+) {
+  const roleNames = new Set(familyRoleNames(family).concat(individualRoleNames(family)));
+
+  return roleFilters
+    .filter(
+      (roleFilter) =>
+        roleFilter.value !== undefined && roleNames.has(roleFilter.key)
+    )
+    .map((roleFilter) => roleFilter.value!);
+}
+
+function statusValue(status: RoleApprovalStatus | null | undefined) {
+  return status === null || status === undefined ? '0' : status.toString();
+}
+
+function statusFilterValuesForFamily(family: CombinedFamilyInfo) {
+  return Array.from(
+    new Set(
+      Object.values(family.volunteerFamilyInfo?.familyRoleApprovals ?? {})
+        .map((approval) => statusValue(approval.currentStatus))
+        .concat(
+          Object.values(
+            family.volunteerFamilyInfo?.individualVolunteers ?? {}
+          ).flatMap((volunteer) =>
+            Object.values(volunteer.approvalStatusByRole ?? {}).map(
+              (approval) => statusValue(approval.currentStatus)
+            )
+          )
+        )
+    )
+  );
+}
+
+function statusLabelsForFamily(
+  family: CombinedFamilyInfo,
+  statusFilters: filterOption[]
+) {
+  const statusLabelsByValue = new Map(
+    statusFilters
+      .filter((statusFilter) => statusFilter.value !== undefined)
+      .map((statusFilter) => [statusFilter.value!, statusFilter.key])
+  );
+
+  return statusFilterValuesForFamily(family)
+    .map((value) => statusLabelsByValue.get(value))
+    .filter((label): label is string => Boolean(label));
+}
+
+function requirementFilterValuesForGroups(
+  missingRequirementGroups: VolunteerMissingRequirementGroup[]
+) {
+  const missingRequirements = missingRequirementGroups.flatMap(
+    (group) => group.requirements
+  );
+
+  if (!missingRequirements.length) {
+    return [completeRequirementFilterValue];
+  }
+
+  return Array.from(new Set([missingRequirementFilterValue, ...missingRequirements]));
+}
+
 function toVolunteerBrowserRow(
   family: CombinedFamilyInfo,
   customFields: CustomField[],
   roleFilters: filterOption[],
+  statusFilters: filterOption[],
   customFieldValuesByFamily: CustomFieldValuesByFamily
 ) {
+  const missingRequirementGroups = buildVolunteerMissingRequirementGroups(
+    family,
+    roleFilters
+  );
+
   return {
     customFieldValues: customFieldValuesForFamily(
       family,
@@ -132,13 +211,15 @@ function toVolunteerBrowserRow(
     ),
     id: family.family!.id!,
     family: familyNameString(family),
-    missingRequirementGroups: buildVolunteerMissingRequirementGroups(
-      family,
-      roleFilters
-    ),
+    requirementFilterValues:
+      requirementFilterValuesForGroups(missingRequirementGroups),
+    missingRequirementGroups,
     primaryContact: primaryContactName(family),
+    roleFilterValues: roleFilterValuesForFamily(family, roleFilters),
     roles: buildVolunteerApprovalRolesPresentation(family, roleFilters),
     sourceFamily: family,
+    statusFilterValues: statusFilterValuesForFamily(family),
+    statusLabels: statusLabelsForFamily(family, statusFilters),
   };
 }
 
@@ -245,17 +326,11 @@ function applyFilterStage(
   );
 }
 
-function applySortStage(
-  volunteerFamilies: CombinedFamilyInfo[],
-  sortMode: FamilyNameSortMode
-) {
-  return sortFamiliesByName(volunteerFamilies, sortMode);
-}
-
 function mapRows(
   volunteerFamilies: CombinedFamilyInfo[],
   customFields: CustomField[],
   roleFilters: filterOption[],
+  statusFilters: filterOption[],
   customFieldValuesByFamily: CustomFieldValuesByFamily
 ) {
   return volunteerFamilies.map((family) =>
@@ -263,9 +338,23 @@ function mapRows(
       family,
       customFields,
       roleFilters,
+      statusFilters,
       customFieldValuesByFamily
     )
   );
+}
+
+function withSelectedFilterValues(
+  filters: filterOption[],
+  selectedValues: string[]
+) {
+  const selectedValueSet = new Set(selectedValues);
+
+  return filters.map((filter) => ({
+    ...filter,
+    selected:
+      filter.value !== undefined && selectedValueSet.has(filter.value),
+  }));
 }
 
 export function useVolunteersBrowserViewModel(): VolunteersBrowserViewModel {
@@ -279,12 +368,6 @@ export function useVolunteersBrowserViewModel(): VolunteersBrowserViewModel {
   const [searchValue, setSearchValue] = useState('');
   const [requirementFilter, setRequirementFilter] =
     useState<RequirementFilterValue | undefined>();
-  const [storedSortMode, setStoredSortMode] =
-    useLocalStorage<FamilyNameSortMode>(
-      VOLUNTEER_APPROVAL_SORT_STORAGE_KEY,
-      DEFAULT_VOLUNTEER_APPROVAL_SORT_MODE
-    );
-  const sortMode = normalizeFamilyNameSortMode(storedSortMode);
   const loading = volunteerFamilies == null;
   const sourceFamilies = sourceVolunteerFamilies(volunteerFamilies);
   const arrangementTypes = useMemo(
@@ -355,10 +438,6 @@ export function useVolunteersBrowserViewModel(): VolunteersBrowserViewModel {
     });
   }, [arrangementTypes]);
 
-  function setSortMode(value: FamilyNameSortMode) {
-    setStoredSortMode(value);
-  }
-
   function setAssignmentFilter(
     arrangementType: string,
     selectedValues: AssignmentFilterValue[]
@@ -369,28 +448,12 @@ export function useVolunteersBrowserViewModel(): VolunteersBrowserViewModel {
     }));
   }
 
-  function setRoleFilterSelection(selection: string | string[]) {
-    const filterOptionToUpdate = roleFilters.find(
-      (filter) => filter.value === getOptionValueFromSelection(selection)
-    );
-
-    if (!filterOptionToUpdate) {
-      return;
-    }
-
-    setRoleFilters(getUpdatedFilters(roleFilters, filterOptionToUpdate));
+  function setRoleFilterValues(values: string[]) {
+    setRoleFilters(withSelectedFilterValues(roleFilters, values));
   }
 
-  function setStatusFilterSelection(selection: string | string[]) {
-    const filterOptionToUpdate = statusFilters.find(
-      (filter) => filter.value === getOptionValueFromSelection(selection)
-    );
-
-    if (!filterOptionToUpdate) {
-      return;
-    }
-
-    setStatusFilters(getUpdatedFilters(statusFilters, filterOptionToUpdate));
+  function setStatusFilterValues(values: string[]) {
+    setStatusFilters(withSelectedFilterValues(statusFilters, values));
   }
 
   const visibleVolunteerFamilies = useMemo(() => {
@@ -406,7 +469,7 @@ export function useVolunteersBrowserViewModel(): VolunteersBrowserViewModel {
       requirementFilter
     );
 
-    return applySortStage(filteredFamilies, sortMode);
+    return filteredFamilies;
   }, [
     assignmentFilters,
     customFieldFilters,
@@ -415,7 +478,6 @@ export function useVolunteersBrowserViewModel(): VolunteersBrowserViewModel {
     requirementFilter,
     roleFilters,
     searchValue,
-    sortMode,
     sourceFamilies,
     statusFilters,
   ]);
@@ -425,12 +487,14 @@ export function useVolunteersBrowserViewModel(): VolunteersBrowserViewModel {
         visibleVolunteerFamilies,
         customFields,
         roleFilters,
+        statusFilters,
         customFieldValuesByFamily
       ),
     [
       customFieldValuesByFamily,
       customFields,
       roleFilters,
+      statusFilters,
       visibleVolunteerFamilies,
     ]
   );
@@ -454,11 +518,9 @@ export function useVolunteersBrowserViewModel(): VolunteersBrowserViewModel {
     setAssignmentFilter,
     setCustomFieldFilter,
     setRequirementFilter,
-    setRoleFilterSelection,
+    setRoleFilterValues,
     setSearchValue,
-    setSortMode,
-    setStatusFilterSelection,
-    sortMode,
+    setStatusFilterValues,
     statusFilters,
     totalVolunteerFamilies: sourceFamilies.length,
     visibleVolunteerFamilies,
