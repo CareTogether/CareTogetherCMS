@@ -74,21 +74,24 @@ export function V1Referrals() {
 
   const permissionsLoaded = currentLocationLoadable.state === 'hasValue';
   const referralsLoaded = referralsLoadable.state === 'hasValue';
+  const canCreateReferrals = permissions(Permission.CreateV1Referral);
   const canViewGlobalReferrals = permissions(Permission.ViewV1Referral);
   const canViewContextualReferrals =
     referralsLoaded && referralsLoadable.contents.length > 0;
-  const canViewReferrals = canViewGlobalReferrals || canViewContextualReferrals;
+  const canAccessReferrals =
+    canCreateReferrals || canViewGlobalReferrals || canViewContextualReferrals;
 
   useEffect(() => {
     if (
       permissionsLoaded &&
       referralsLoaded &&
-      (!canViewReferrals || (featureFlagsLoaded && referralsEnabled !== true))
+      (!canAccessReferrals ||
+        (featureFlagsLoaded && referralsEnabled !== true))
     ) {
       appNavigate.dashboard();
     }
   }, [
-    canViewReferrals,
+    canAccessReferrals,
     featureFlagsLoaded,
     permissionsLoaded,
     referralsLoaded,
@@ -112,7 +115,7 @@ export function V1Referrals() {
     );
   }
 
-  if (!canViewReferrals) {
+  if (!canAccessReferrals) {
     return null;
   }
 

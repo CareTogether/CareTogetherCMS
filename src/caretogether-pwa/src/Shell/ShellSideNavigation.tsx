@@ -57,7 +57,8 @@ function SideNavigationMenu({ open }: SideNavigationMenuProps) {
 
   const referralsEnabled = useFeatureFlagEnabledWithLocalOverride('referrals');
   const visibleReferrals = useLoadable(visibleReferralsQuery);
-  const canViewReferrals =
+  const canAccessReferrals =
+    permissions(Permission.CreateV1Referral) ||
     permissions(Permission.ViewV1Referral) ||
     (visibleReferrals?.length ?? 0) > 0;
   const collapsed = !open;
@@ -117,7 +118,7 @@ function SideNavigationMenu({ open }: SideNavigationMenuProps) {
             }
             collapsed={collapsed}
           />
-          {canViewReferrals && referralsEnabled && (
+          {canAccessReferrals && referralsEnabled && (
             <ListItemLink
               className="ph-unmask"
               to={`${locationPrefix}/referrals`}
