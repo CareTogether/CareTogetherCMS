@@ -38,6 +38,7 @@
         EditPersonContactInfo = 158,
 
         ViewPersonDateOfBirth = 159,
+        ViewFamilyChildren = 160,
 
         //EditPersonUserLink = 159,
 
