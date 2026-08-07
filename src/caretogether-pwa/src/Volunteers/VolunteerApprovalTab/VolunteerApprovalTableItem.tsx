@@ -2,7 +2,6 @@ import Grid from '../../Generic/GridLegacyCompat';
 import {
   Box,
   Checkbox,
-  Chip,
   TableCell,
   TableRow,
   Typography,
@@ -17,7 +16,7 @@ import { VolunteerRoleApprovalStatusChip } from '../VolunteerRoleApprovalStatusC
 import { familyLastName } from './familyLastName';
 import { LazyLoadMountTrigger } from '../../Utilities/LazyLoadMountTrigger';
 import { LazyLoad } from '../../Utilities/reactLazyLoadInterop';
-import { sortByPolicyOrder } from '../../Generic/sortByPolicyOrder';
+import { renderVolunteerCustomFieldValue } from './volunteerCustomFieldPresentation';
 
 type VolunteerApprovalTableItemProps = {
   volunteerFamily: CombinedFamilyInfo;
@@ -41,35 +40,6 @@ function getRowGroupHeight(
   }
 
   return 39 + (activeAdultsCount + activeChildrenCount) * 33;
-}
-
-function renderCustomFieldValue(
-  value: unknown,
-  validValues?: string[]
-): React.ReactNode {
-  if (value === null || typeof value === 'undefined') {
-    return '';
-  }
-  if (value === true) {
-    return 'Yes';
-  }
-  if (value === false) {
-    return 'No';
-  }
-  if (Array.isArray(value)) {
-    const sortedValue =
-      validValues && validValues.length > 0
-        ? sortByPolicyOrder(value.map(String), validValues)
-        : value;
-    return (
-      <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: '.25rem' }}>
-        {sortedValue.map((item) => (
-          <Chip key={String(item)} size="small" label={String(item)} />
-        ))}
-      </Box>
-    );
-  }
-  return String(value);
 }
 
 function VolunteerApprovalPlaceholderRow(
@@ -330,7 +300,7 @@ function VolunteerApprovalTableRows(props: VolunteerApprovalTableItemProps) {
             familyCustomField?.value ?? volunteerFamilyCustomField?.value;
           return (
             <TableCell key={customFieldName}>
-              {renderCustomFieldValue(
+              {renderVolunteerCustomFieldValue(
                 familyCustomFieldValue,
                 fieldPolicy?.validValues
               )}
