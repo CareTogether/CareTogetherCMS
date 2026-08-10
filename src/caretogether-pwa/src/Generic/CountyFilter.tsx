@@ -1,6 +1,7 @@
+import type { SelectProps } from '@mui/material';
 import { CombinedFamilyInfo } from '../GeneratedClient';
-import { CustomFieldsFilterSelect } from '../Generic/CustomFieldsFilter/CustomFieldsFilterSelect';
-import { CustomFieldFilterOption } from '../Generic/CustomFieldsFilter/types';
+import { CustomFieldsFilterSelect } from './CustomFieldsFilter/CustomFieldsFilterSelect';
+import { CustomFieldFilterOption } from './CustomFieldsFilter/types';
 import { getFamilyCounty } from '../Utilities/getFamilyCounty';
 
 type CountyFilterValue = string | null;
@@ -9,9 +10,17 @@ type CountyFilterProps = {
   families: CombinedFamilyInfo[];
   value: CountyFilterValue[];
   onChange: (value: CountyFilterValue[]) => void;
+  size?: SelectProps<string[]>['size'];
+  variant?: SelectProps<string[]>['variant'];
 };
 
-export function CountyFilter({ families, value, onChange }: CountyFilterProps) {
+export function CountyFilter({
+  families,
+  value,
+  onChange,
+  size,
+  variant,
+}: CountyFilterProps) {
   const counties = Array.from(
     new Set(
       families
@@ -34,6 +43,8 @@ export function CountyFilter({ families, value, onChange }: CountyFilterProps) {
       label="County"
       options={options}
       selectedValues={value}
+      size={size}
+      variant={variant}
       onChange={(selected) => {
         onChange(
           selected.filter(
