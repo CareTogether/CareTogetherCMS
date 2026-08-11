@@ -197,9 +197,13 @@ export function VolunteersBrowserV2() {
   }
 
   return (
-    <Stack spacing={2}>
+    <Stack spacing={2} sx={{ flex: 1, minHeight: 0 }}>
       <Box>
-        <Typography className="ph-unmask" {...v2Typography.pageTitle}>
+        <Typography
+          className="ph-unmask"
+          {...v2Typography.pageTitle}
+          sx={{ mt: 2 }}
+        >
           Volunteers
         </Typography>
         <Typography className="ph-unmask" {...v2Typography.secondaryValue}>
@@ -241,20 +245,22 @@ export function VolunteersBrowserV2() {
           onClose={closeCustomFieldFiltersSidePanel}
         />
       </CustomFieldFiltersSidePanel>
-      <VolunteersDataGridV2
-        customFields={customFields}
-        filterModel={filterModel}
-        loading={loading}
-        onFilterModelChange={handleFilterModelChange}
-        onRowClick={(row) => appNavigate.family(row.id)}
-        onRowSelectionModelChange={handleRowSelectionModelChange}
-        requirementFilterOptions={requirementFilterOptions}
-        roleFilters={roleFilters}
-        rowSelectionModel={rowSelectionModel}
-        rows={rows}
-        statusFilters={statusFilters}
-        updateTestFamilyFlagEnabled={updateTestFamilyFlagEnabled}
-      />
+      <Box sx={{ flex: 1, minHeight: 0 }}>
+        <VolunteersDataGridV2
+          customFields={customFields}
+          filterModel={filterModel}
+          loading={loading}
+          onFilterModelChange={handleFilterModelChange}
+          onRowClick={(row) => appNavigate.family(row.id)}
+          onRowSelectionModelChange={handleRowSelectionModelChange}
+          requirementFilterOptions={requirementFilterOptions}
+          roleFilters={roleFilters}
+          rowSelectionModel={rowSelectionModel}
+          rows={rows}
+          statusFilters={statusFilters}
+          updateTestFamilyFlagEnabled={updateTestFamilyFlagEnabled}
+        />
+      </Box>
       {createVolunteerFamilyDrawerOpen && (
         <CreateVolunteerFamilyDrawer
           onClose={(volunteerFamilyId) => {

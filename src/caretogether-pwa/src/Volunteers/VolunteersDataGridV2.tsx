@@ -284,7 +284,7 @@ export function VolunteersDataGridV2({
   );
 
   return (
-    <Box sx={v2DataGridStyles(theme, { height: 560 })}>
+    <Box sx={v2DataGridStyles(theme, { height: '100%' })}>
       <DataGrid
         rows={rows}
         columns={columns}

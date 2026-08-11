@@ -1,18 +1,20 @@
-const FEATUREBASE_CHAT_WIDGET_SAFE_HEIGHT = 96;
-const MOBILE_BOTTOM_NAVIGATION_HEIGHT = 56;
-const MOBILE_BOTTOM_SAFE_HEIGHT =
-  FEATUREBASE_CHAT_WIDGET_SAFE_HEIGHT + MOBILE_BOTTOM_NAVIGATION_HEIGHT;
+import {
+  DESKTOP_BOTTOM_SAFE_AREA,
+  MOBILE_BOTTOM_NAV_HEIGHT,
+  MOBILE_BOTTOM_SAFE_AREA,
+  SHELL_APP_BAR_HEIGHT,
+} from '../Shell/shellLayoutConstants';
 
 function wideTablePageSx(hasFeaturebaseChat: boolean) {
   const bottomOffset = hasFeaturebaseChat
     ? {
-        xs: `${MOBILE_BOTTOM_SAFE_HEIGHT}px`,
-        sm: `${MOBILE_BOTTOM_SAFE_HEIGHT}px`,
-        md: `${FEATUREBASE_CHAT_WIDGET_SAFE_HEIGHT}px`,
+        xs: `${MOBILE_BOTTOM_SAFE_AREA}px`,
+        sm: `${MOBILE_BOTTOM_SAFE_AREA}px`,
+        md: `${DESKTOP_BOTTOM_SAFE_AREA}px`,
       }
     : {
-        xs: `${MOBILE_BOTTOM_NAVIGATION_HEIGHT}px`,
-        sm: `${MOBILE_BOTTOM_NAVIGATION_HEIGHT}px`,
+        xs: `${MOBILE_BOTTOM_NAV_HEIGHT}px`,
+        sm: `${MOBILE_BOTTOM_NAV_HEIGHT}px`,
         md: '0px',
       };
 
@@ -21,9 +23,9 @@ function wideTablePageSx(hasFeaturebaseChat: boolean) {
     flexDirection: 'column',
     flexWrap: 'nowrap',
     height: {
-      xs: `calc(100dvh - 56px - ${bottomOffset.xs})`,
-      sm: `calc(100dvh - 64px - ${bottomOffset.sm})`,
-      md: `calc(100dvh - 48px - ${bottomOffset.md})`,
+      xs: `calc(100dvh - ${SHELL_APP_BAR_HEIGHT.xs} - ${bottomOffset.xs})`,
+      sm: `calc(100dvh - ${SHELL_APP_BAR_HEIGHT.sm} - ${bottomOffset.sm})`,
+      md: `calc(100dvh - ${SHELL_APP_BAR_HEIGHT.md} - ${bottomOffset.md})`,
     },
     // ShellRootLayout always reserves Featurebase space; reclaim it when chat is hidden.
     minHeight: 0,
@@ -36,7 +38,7 @@ function wideTablePageSx(hasFeaturebaseChat: boolean) {
 
   return {
     ...sx,
-    marginBottom: `-${FEATUREBASE_CHAT_WIDGET_SAFE_HEIGHT}px`,
+    marginBottom: `-${DESKTOP_BOTTOM_SAFE_AREA}px`,
   } as const;
 }
 
