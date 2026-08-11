@@ -4,7 +4,6 @@ import {
   Sort as SortIcon,
 } from '@mui/icons-material';
 import {
-  Box,
   Button,
   FormControl,
   InputAdornment,
@@ -15,13 +14,8 @@ import {
   TextField,
 } from '@mui/material';
 import type { SelectChangeEvent } from '@mui/material/Select';
-import type {
-  AssignedIndividualVolunteer,
-  Person,
-} from '../GeneratedClient';
-import type {
-  AssignmentFilterSelectionsByRole,
-} from '../FunctionAssignments/assignmentRoleColumns';
+import type { AssignedIndividualVolunteer, Person } from '../GeneratedClient';
+import type { AssignmentFilterSelectionsByRole } from '../FunctionAssignments/assignmentRoleColumns';
 import { AssignmentRoleFilters } from '../FunctionAssignments/AssignmentRoleFilters';
 import { PartneringFamiliesSortMode } from './PartneringFamilies/sortPartneringFamilies';
 import { ArrangementsFilter } from './PartneringFamilies/types';
@@ -88,14 +82,16 @@ export function ClientsBrowserToolbarV2({
     assignmentRoles.length > 0 &&
     !!assignmentPersonLookup &&
     !!onAssignmentFilterChange;
-  const shouldRenderMoreFilters =
-    customFieldCount > 0 && !!onMoreFiltersClick;
+  const shouldRenderMoreFilters = customFieldCount > 0 && !!onMoreFiltersClick;
 
   return (
     <Stack
-      direction={{ xs: 'column', md: 'row' }}
-      spacing={1}
-      sx={{ alignItems: { xs: 'stretch', md: 'center' } }}
+      direction={{ xs: 'column', sm: 'row' }}
+      sx={{
+        alignItems: { xs: 'stretch', sm: 'center' },
+        flexWrap: { xs: 'nowrap', sm: 'wrap' },
+        gap: 1,
+      }}
     >
       <TextField
         slotProps={{
@@ -196,7 +192,6 @@ export function ClientsBrowserToolbarV2({
           More Filters ({activeCustomFieldFilterCount}/{customFieldCount})
         </Button>
       )}
-      <Box sx={{ flex: 1 }} />
     </Stack>
   );
 }
