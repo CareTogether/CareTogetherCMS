@@ -1,9 +1,4 @@
-import {
-  Checkbox,
-  ListItemText,
-  Menu,
-  MenuItem,
-} from '@mui/material';
+import { Checkbox, ListItemText, Menu, MenuItem } from '@mui/material';
 import { useState } from 'react';
 import { VolunteerBrowserFilterButtonV2 } from '../VolunteerBrowserFilterButtonV2';
 import { filterOption } from './filterOption';
@@ -31,6 +26,7 @@ export function VolunteerFilter({
         activeCount={selectedCount}
         label={label}
         totalCount={options.length}
+        size="small"
         onClick={(event) => setAnchorEl(event.currentTarget)}
       />
       <Menu

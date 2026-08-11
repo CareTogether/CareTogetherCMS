@@ -9,6 +9,7 @@ type VolunteerBrowserFilterButtonV2Props = {
   label: string;
   selectedLabel?: string;
   totalCount?: number;
+  size?: 'small' | 'medium';
   onClick: (event: React.MouseEvent<HTMLButtonElement>) => void;
 };
 
@@ -17,6 +18,7 @@ export function VolunteerBrowserFilterButtonV2({
   label,
   selectedLabel,
   totalCount,
+  size,
   onClick,
 }: VolunteerBrowserFilterButtonV2Props) {
   const displayText =
@@ -28,7 +30,7 @@ export function VolunteerBrowserFilterButtonV2({
       startIcon={<FilterListIcon />}
       endIcon={<ArrowDropDownIcon />}
       onClick={onClick}
-      size="small"
+      size={size}
       sx={{
         borderColor: 'divider',
         color: 'text.primary',
