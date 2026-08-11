@@ -1,8 +1,5 @@
-import { Box, Paper, Stack, Typography } from '@mui/material';
-import type {
-  GridFilterModel,
-  GridRowSelectionModel,
-} from '@mui/x-data-grid';
+import { Box, Stack, Typography } from '@mui/material';
+import type { GridFilterModel, GridRowSelectionModel } from '@mui/x-data-grid';
 import { useMemo, useState } from 'react';
 import { useFeatureFlagEnabled } from 'posthog-js/react';
 import { useRecoilValue } from 'recoil';
@@ -103,16 +100,13 @@ export function VolunteersBrowserV2() {
     [selectedFamilyIds, visibleRowIds]
   );
   const selectedVolunteerCount = rowSelectionModel.ids.size;
-  const selectedVolunteerFamilies = useMemo(
-    () => {
-      const selectedFamilyIdSet = new Set(selectedFamilyIds);
+  const selectedVolunteerFamilies = useMemo(() => {
+    const selectedFamilyIdSet = new Set(selectedFamilyIds);
 
-      return visibleVolunteerFamilies.filter((family) =>
-        selectedFamilyIdSet.has(family.family!.id!)
-      );
-    },
-    [selectedFamilyIds, visibleVolunteerFamilies]
-  );
+    return visibleVolunteerFamilies.filter((family) =>
+      selectedFamilyIdSet.has(family.family!.id!)
+    );
+  }, [selectedFamilyIds, visibleVolunteerFamilies]);
   const filterModel = useMemo(
     () =>
       gridFilterModelFromVolunteerFilters({
@@ -159,9 +153,7 @@ export function VolunteersBrowserV2() {
     const visibleRowIdSet = new Set(visibleRowIds);
 
     if (model.type === 'exclude') {
-      setSelectedFamilyIds(
-        visibleRowIds.filter((id) => !model.ids.has(id))
-      );
+      setSelectedFamilyIds(visibleRowIds.filter((id) => !model.ids.has(id)));
       return;
     }
 
@@ -214,34 +206,24 @@ export function VolunteersBrowserV2() {
           Review volunteer families.
         </Typography>
       </Box>
-      <Paper
-        variant="outlined"
-        sx={{
-          borderRadius: 1,
-          p: 2,
-        }}
-      >
-        <VolunteersToolbarV2
-          activeAssignmentFilterCount={activeAssignmentFilterCount}
-          activeCustomFieldFilterCount={activeCustomFieldFilterCount}
-          arrangementTypeCount={arrangementTypes.length}
-          canCreateVolunteerFamily={canCreateVolunteerFamily}
-          canUseBulkEmail={canUseBulkEmail}
-          canUseBulkSms={canUseBulkSms}
-          customFieldCount={customFieldCount}
-          searchValue={searchValue}
-          selectedVolunteerCount={selectedVolunteerCount}
-          smsMode={smsMode}
-          onSearchChange={handleSearchChange}
-          onAssignmentFiltersClick={openAssignmentFiltersSidePanel}
-          onCopyEmailAddresses={copyEmailAddresses}
-          onCreateVolunteerFamily={() =>
-            setCreateVolunteerFamilyDrawerOpen(true)
-          }
-          onCustomFieldFiltersClick={openCustomFieldFiltersSidePanel}
-          onToggleBulkSms={() => setSmsMode(!smsMode)}
-        />
-      </Paper>
+      <VolunteersToolbarV2
+        activeAssignmentFilterCount={activeAssignmentFilterCount}
+        activeCustomFieldFilterCount={activeCustomFieldFilterCount}
+        arrangementTypeCount={arrangementTypes.length}
+        canCreateVolunteerFamily={canCreateVolunteerFamily}
+        canUseBulkEmail={canUseBulkEmail}
+        canUseBulkSms={canUseBulkSms}
+        customFieldCount={customFieldCount}
+        searchValue={searchValue}
+        selectedVolunteerCount={selectedVolunteerCount}
+        smsMode={smsMode}
+        onSearchChange={handleSearchChange}
+        onAssignmentFiltersClick={openAssignmentFiltersSidePanel}
+        onCopyEmailAddresses={copyEmailAddresses}
+        onCreateVolunteerFamily={() => setCreateVolunteerFamilyDrawerOpen(true)}
+        onCustomFieldFiltersClick={openCustomFieldFiltersSidePanel}
+        onToggleBulkSms={() => setSmsMode(!smsMode)}
+      />
       <AssignmentFiltersSidePanel>
         <VolunteerAssignmentFiltersSidePanel
           arrangementTypes={arrangementTypes}
