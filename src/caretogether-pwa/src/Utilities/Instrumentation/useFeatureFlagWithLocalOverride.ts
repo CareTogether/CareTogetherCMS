@@ -1,5 +1,9 @@
 import { useFeatureFlagEnabled, usePostHog } from 'posthog-js/react';
 
+function postHogFeatureFlagsConfigured() {
+  return Boolean(import.meta.env.VITE_APP_PUBLIC_POSTHOG_KEY?.trim());
+}
+
 function normalizedLocalFeatureFlags() {
   return (import.meta.env.VITE_APP_LOCAL_FEATURE_FLAGS ?? '')
     .split(',')
@@ -23,6 +27,10 @@ export function useFeatureFlagsLoadedWithLocalOverride(
   const posthog = usePostHog();
 
   if (featureFlags.every(isLocalFeatureFlagEnabled)) {
+    return true;
+  }
+
+  if (!postHogFeatureFlagsConfigured()) {
     return true;
   }
 

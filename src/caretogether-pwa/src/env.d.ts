@@ -10,6 +10,7 @@ interface ImportMetaEnv {
   readonly VITE_APP_AUTH_REDIRECT_URI: string;
   readonly VITE_APP_AUTH_SCOPES: string;
   readonly VITE_APP_LOCAL_FEATURE_FLAGS?: string;
+  readonly VITE_APP_PUBLIC_POSTHOG_KEY?: string;
 }
 
 interface ImportMeta {

@@ -199,7 +199,7 @@ namespace CareTogether.Api
                 TimeSpan.FromMinutes(1)
             );
 
-            if (Configuration["OpenApiGen"] != "true")
+/*             if (Configuration["OpenApiGen"] != "true")
             {
                 // Reset and populate data in the test tenant for debugging. Note that this will not affect other tenants.
                 TestData.TestStorageHelper.ResetTestTenantData(immutableBlobServiceClient);
@@ -221,7 +221,7 @@ namespace CareTogether.Api
                         Configuration["TestData:SourceSmsPhoneNumber"]
                     )
                     .Wait();
-            }
+            } */
 
             // Other utility services
             var telephony = new PlivoTelephony(

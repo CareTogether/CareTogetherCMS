@@ -1,10 +1,12 @@
-import { useEffect, useState } from 'react';
-import { useFeatureFlagEnabled, usePostHog } from 'posthog-js/react';
 import { Navigate, Route, Routes, useParams } from 'react-router-dom';
 import { FAMILY_SCREEN_V2_EARLY_ACCESS_FEATURE_FLAG } from '../featureFlags';
 import { ProgressBackdrop } from '../Shell/ProgressBackdrop';
 import { V1Cases } from './V1Cases';
 import { ClientsScreenV2 } from './ClientsScreenV2';
+import {
+  useFeatureFlagEnabledWithLocalOverride,
+  useFeatureFlagsLoadedWithLocalOverride,
+} from '../Utilities/Instrumentation/useFeatureFlagWithLocalOverride';
 
 function ClientFamilyRedirect() {
   const { familyId } = useParams<{ familyId: string }>();
@@ -13,21 +15,12 @@ function ClientFamilyRedirect() {
 }
 
 export function ClientsScreenRoute() {
-  const posthog = usePostHog();
-  const earlyAccessEnabled = useFeatureFlagEnabled(
+  const earlyAccessEnabled = useFeatureFlagEnabledWithLocalOverride(
     FAMILY_SCREEN_V2_EARLY_ACCESS_FEATURE_FLAG
   );
-  const [featureFlagsLoaded, setFeatureFlagsLoaded] = useState(
-    () => posthog.featureFlags.hasLoadedFlags
+  const featureFlagsLoaded = useFeatureFlagsLoadedWithLocalOverride(
+    FAMILY_SCREEN_V2_EARLY_ACCESS_FEATURE_FLAG
   );
-
-  useEffect(() => {
-    setFeatureFlagsLoaded(posthog.featureFlags.hasLoadedFlags);
-
-    return posthog.onFeatureFlags(() => {
-      setFeatureFlagsLoaded(true);
-    });
-  }, [posthog]);
 
   if (!featureFlagsLoaded) {
     return (
