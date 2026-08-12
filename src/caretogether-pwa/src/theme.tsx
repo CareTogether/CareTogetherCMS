@@ -1,5 +1,10 @@
 import { createTheme } from '@mui/material/styles';
 import { amber } from '@mui/material/colors';
+import { drawerClasses } from '@mui/material/Drawer';
+import {
+  DESKTOP_BOTTOM_SAFE_AREA,
+  MOBILE_BOTTOM_SAFE_AREA,
+} from './Shell/shellLayoutConstants';
 
 export const theme = createTheme({
   palette: {
@@ -20,6 +25,21 @@ export const theme = createTheme({
     h3: {
       fontSize: '1.17rem',
       fontWeight: 700,
+    },
+  },
+  components: {
+    MuiDrawer: {
+      styleOverrides: {
+        root: ({ theme }) => ({
+          [`&.${drawerClasses.anchorRight} .${drawerClasses.paper}, &.${drawerClasses.anchorBottom} .${drawerClasses.paper}`]:
+            {
+              paddingBottom: `${MOBILE_BOTTOM_SAFE_AREA}px`,
+              [theme.breakpoints.up('md')]: {
+                paddingBottom: `${DESKTOP_BOTTOM_SAFE_AREA}px`,
+              },
+            },
+        }),
+      },
     },
   },
 });
