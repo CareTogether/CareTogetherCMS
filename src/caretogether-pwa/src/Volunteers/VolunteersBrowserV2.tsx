@@ -31,6 +31,16 @@ function selectedFilterValues(filters: filterOption[]) {
     .map((filter) => filter.value!);
 }
 
+function hasIncompleteFilter(filterModel: GridFilterModel) {
+  return filterModel.items.some(
+    (item) =>
+      item.value === undefined ||
+      item.value === null ||
+      item.value === '' ||
+      (Array.isArray(item.value) && item.value.length === 0)
+  );
+}
+
 export function VolunteersBrowserV2() {
   const appNavigate = useAppNavigate();
   const permissions = useAllVolunteerFamiliesPermissions();
@@ -107,7 +117,7 @@ export function VolunteersBrowserV2() {
       selectedFamilyIdSet.has(family.family!.id!)
     );
   }, [selectedFamilyIds, visibleVolunteerFamilies]);
-  const filterModel = useMemo(
+  const appliedFilterModel = useMemo(
     () =>
       gridFilterModelFromVolunteerFilters({
         logicOperator: 'and',
@@ -117,6 +127,9 @@ export function VolunteersBrowserV2() {
       }),
     [requirementFilter, roleFilters, statusFilters]
   );
+  const [pendingFilterModel, setPendingFilterModel] =
+    useState<GridFilterModel | null>(null);
+  const filterModel = pendingFilterModel ?? appliedFilterModel;
 
   function selectedFamilyContactEmails() {
     return selectedVolunteerFamilies
@@ -188,6 +201,7 @@ export function VolunteersBrowserV2() {
   function handleFilterModelChange(model: GridFilterModel) {
     const filters = volunteerFiltersFromGridFilterModel(model);
 
+    setPendingFilterModel(hasIncompleteFilter(model) ? model : null);
     clearSelection();
     setRoleFilterValues(filters.roleFilters);
     setStatusFilterValues(filters.statusFilters);
