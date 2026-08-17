@@ -10,7 +10,6 @@ import {
 import {
   Delete as DeleteIcon,
   Download as DownloadIcon,
-  Visibility as PreviewIcon,
 } from '@mui/icons-material';
 import { DataGrid, GridColDef, GridToolbar } from '@mui/x-data-grid';
 import { useMemo } from 'react';
@@ -21,8 +20,6 @@ import { v2Typography } from './v2Typography';
 type FamilyDocumentsDataGridV2Props = {
   onDelete: (row: FamilyDocumentRowV2) => void;
   onDownload: (row: FamilyDocumentRowV2) => void;
-  onPreview: (row: FamilyDocumentRowV2) => void;
-  onRowClick: (row: FamilyDocumentRowV2) => void;
   rows: FamilyDocumentRowV2[];
 };
 
@@ -42,10 +39,9 @@ function familyDocumentSearchText(row: FamilyDocumentRowV2) {
 function buildColumns({
   onDelete,
   onDownload,
-  onPreview,
 }: Pick<
   FamilyDocumentsDataGridV2Props,
-  'onDelete' | 'onDownload' | 'onPreview'
+  'onDelete' | 'onDownload'
 >): GridColDef<FamilyDocumentRowV2>[] {
   return [
     {
@@ -115,7 +111,7 @@ function buildColumns({
       field: 'actions',
       headerClassName: 'ph-unmask',
       headerName: 'Actions',
-      width: 132,
+      width: 92,
       sortable: false,
       filterable: false,
       disableColumnMenu: true,
@@ -125,22 +121,13 @@ function buildColumns({
         <Stack
           direction="row"
           spacing={0.5}
-          sx={{ alignItems: 'center', justifyContent: 'flex-end', width: '100%' }}
+          sx={{
+            alignItems: 'center',
+            justifyContent: 'flex-end',
+            width: '100%',
+          }}
           onClick={(event) => event.stopPropagation()}
         >
-          <Tooltip title="Preview">
-            <span>
-              <IconButton
-                className="ph-unmask"
-                aria-label={`Preview ${row.documentName}`}
-                disabled={!row.permissionFlags.canPreview}
-                onClick={() => onPreview(row)}
-                size="small"
-              >
-                <PreviewIcon fontSize="small" />
-              </IconButton>
-            </span>
-          </Tooltip>
           <Tooltip title="Download">
             <span>
               <IconButton
@@ -188,14 +175,12 @@ function buildColumns({
 export function FamilyDocumentsDataGridV2({
   onDelete,
   onDownload,
-  onPreview,
-  onRowClick,
   rows,
 }: FamilyDocumentsDataGridV2Props) {
   const theme = useTheme();
   const columns = useMemo(
-    () => buildColumns({ onDelete, onDownload, onPreview }),
-    [onDelete, onDownload, onPreview]
+    () => buildColumns({ onDelete, onDownload }),
+    [onDelete, onDownload]
   );
 
   return (
@@ -219,7 +204,6 @@ export function FamilyDocumentsDataGridV2({
             sortModel: [{ field: 'uploadedAtUtc', sort: 'desc' }],
           },
         }}
-        onRowClick={({ row }) => onRowClick(row)}
         slots={{ toolbar: GridToolbar }}
         slotProps={{
           toolbar: {

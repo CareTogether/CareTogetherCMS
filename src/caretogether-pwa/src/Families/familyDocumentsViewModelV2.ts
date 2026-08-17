@@ -11,7 +11,6 @@ export type FamilyDocumentSourceTypeV2 = 'family' | 'referral';
 export type FamilyDocumentPermissionFlagsV2 = {
   canDelete: boolean;
   canDownload: boolean;
-  canPreview: boolean;
 };
 
 export type FamilyDocumentFamilySourceV2 = {
@@ -121,7 +120,6 @@ function buildFamilyDocumentRows({
       permissionFlags: {
         canDelete,
         canDownload: canRead,
-        canPreview: canRead,
       },
       source: {
         document,
@@ -161,7 +159,6 @@ function buildReferralDocumentRows(
         permissionFlags: {
           canDelete: false,
           canDownload: true,
-          canPreview: true,
         },
         source: {
           document,
@@ -193,7 +190,8 @@ export function buildFamilyDocumentRowsV2({
     ...buildReferralDocumentRows(referrals, uploaderLabel),
   ].sort((a, b) => {
     return (
-      documentTimestamp(b.source.document) - documentTimestamp(a.source.document)
+      documentTimestamp(b.source.document) -
+      documentTimestamp(a.source.document)
     );
   });
 }
