@@ -12,8 +12,6 @@ export interface AppNavigate {
     options?: { replace?: boolean }
   ) => void;
   organization: (organizationId: string) => void;
-  /** @deprecated Use organization. Kept for backwards compatibility. */
-  community: (communityId: string) => void;
   settings: () => void;
   role: (roleId: string) => void;
   locationEdit: (locationId: string, options?: AppNavigateOptions) => void;
@@ -72,8 +70,6 @@ export function useAppNavigate(): AppNavigate {
 
     organization: (organizationId: string) =>
       inContext(`organizations/organization/${organizationId}`),
-    community: (communityId: string) =>
-      inContext(`organizations/organization/${communityId}`),
     settings: () => inContext(`settings`),
     role: (roleId: string) => inContext(`settings/roles/${roleId}`),
     locationEdit: (locationId: string, options?: AppNavigateOptions) =>
