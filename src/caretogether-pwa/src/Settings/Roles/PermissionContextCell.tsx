@@ -453,8 +453,8 @@ function OwnCommunityRoleSelector({
             }
             label={
               hasValue
-                ? 'Only when own community role is:'
-                : 'Regardless of any assigned community role'
+                ? 'Only when own organization role is:'
+                : 'Regardless of any assigned organization role'
             }
           />
           {hasValue && (
@@ -525,15 +525,15 @@ export function PermissionContextCell({
                         OwnV1CaseAssigneeFamiliesPermissionContext
                       ? 'Own Case - Assigned Families'
                       : context instanceof CommunityMemberPermissionContext
-                        ? 'Community Member - Community'
+                        ? 'Organization Member - Organization'
                         : context instanceof
                             CommunityCoMemberFamiliesPermissionContext
-                          ? 'Community Member - Co-Member Families'
+                          ? 'Organization Member - Co-Member Families'
                           : context instanceof
                               CommunityCoMemberFamiliesAssignedFunctionsInV1CasePartneringFamilyPermissionContext
-                            ? 'Community Member - Co-Member Families - Assigned Functions in Case - Partnering Family'
+                            ? 'Organization Member - Co-Member Families - Assigned Functions in Case - Partnering Family'
                             : CommunityCoMemberFamiliesAssignedFunctionsInV1CaseCoAssignedFamiliesPermissionContext
-                              ? 'Community Member - Co-Member Families - Assigned Functions in Case - Co-Assigned Families'
+                              ? 'Organization Member - Co-Member Families - Assigned Functions in Case - Co-Assigned Families'
                               : JSON.stringify(context);
 
   function assignedFunctionsInV1CasePartneringFamilyPermissionContextFactory(

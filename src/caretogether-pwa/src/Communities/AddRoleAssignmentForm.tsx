@@ -99,7 +99,7 @@ export function AddRoleAssignmentForm({
   return (
     <Grid container spacing={2} sx={{ maxWidth: 500 }}>
       <Grid size={12}>
-        <h3>Add Community Role Assignments</h3>
+        <h3>Add Organization Role Assignments</h3>
       </Grid>
       <Grid size={12}>
         <FormControl required fullWidth size="small" sx={{ marginTop: 1 }}>
@@ -114,7 +114,7 @@ export function AddRoleAssignmentForm({
               <TextField
                 required
                 {...params}
-                label="Select an adult to assign to this community"
+                label="Select an adult to assign to this organization"
               />
             )}
           />
@@ -142,7 +142,7 @@ export function AddRoleAssignmentForm({
       <Grid size={12}>
         {duplicate && (
           <Alert severity="error">
-            {person?.label} already has the {role} role in this community!
+            {person?.label} already has the {role} role in this organization!
           </Alert>
         )}
       </Grid>

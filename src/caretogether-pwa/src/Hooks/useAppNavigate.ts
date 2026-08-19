@@ -11,6 +11,8 @@ export interface AppNavigate {
     arrangementId?: string,
     options?: { replace?: boolean }
   ) => void;
+  organization: (organizationId: string) => void;
+  /** @deprecated Use organization. Kept for backwards compatibility. */
   community: (communityId: string) => void;
   settings: () => void;
   role: (roleId: string) => void;
@@ -68,8 +70,10 @@ export function useAppNavigate(): AppNavigate {
       });
     },
 
+    organization: (organizationId: string) =>
+      inContext(`organizations/organization/${organizationId}`),
     community: (communityId: string) =>
-      inContext(`communities/community/${communityId}`),
+      inContext(`organizations/organization/${communityId}`),
     settings: () => inContext(`settings`),
     role: (roleId: string) => inContext(`settings/roles/${roleId}`),
     locationEdit: (locationId: string, options?: AppNavigateOptions) =>

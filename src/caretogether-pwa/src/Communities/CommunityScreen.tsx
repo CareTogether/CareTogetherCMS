@@ -57,7 +57,7 @@ export function CommunityScreen() {
 
   return !dataLoaded || !community ? (
     <ProgressBackdrop>
-      <p>Loading community...</p>
+      <p>Loading organization...</p>
     </ProgressBackdrop>
   ) : (
     <Container maxWidth={false} sx={{ paddingLeft: '12px' }}>

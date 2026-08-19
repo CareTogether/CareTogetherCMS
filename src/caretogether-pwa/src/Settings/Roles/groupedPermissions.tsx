@@ -93,7 +93,7 @@ const groupedPermissionsWithoutOther = {
     Permission.TrackChildLocationChange,
   ],
   Communication: [Permission.SendBulkSms],
-  Communities: [
+  Organizations: [
     Permission.CreateCommunity,
     Permission.EditCommunity,
     Permission.DeleteCommunity,

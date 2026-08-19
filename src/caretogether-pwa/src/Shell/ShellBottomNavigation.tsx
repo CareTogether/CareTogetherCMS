@@ -43,7 +43,7 @@ export function ShellBottomNavigation() {
     new RegExp(`^${locationPrefix}/*$`),
     new RegExp(`^${locationPrefix}/clients/*.*$`),
     new RegExp(`^${locationPrefix}/volunteers/*.*$`),
-    new RegExp(`^${locationPrefix}/communities/*.*$`),
+    new RegExp(`^${locationPrefix}/organizations/*.*$`),
   ];
   const selectedLink = Math.max(
     links.findIndex((link) => location.pathname.match(link) != null),
@@ -148,8 +148,8 @@ export function ShellBottomNavigation() {
                 {permissions(Permission.AccessCommunitiesScreen) && (
                   <ListItemLink
                     darkColor
-                    to={`${locationPrefix}/communities`}
-                    primary="Communities"
+                    to={`${locationPrefix}/organizations`}
+                    primary="Organizations"
                     icon={<Diversity3Icon />}
                   />
                 )}

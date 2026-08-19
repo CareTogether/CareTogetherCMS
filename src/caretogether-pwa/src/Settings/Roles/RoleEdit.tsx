@@ -324,7 +324,7 @@ export function RoleEdit({
             addPermissionSet(() => new CommunityMemberPermissionContext())
           }
         >
-          Community Member - Community
+          Organization Member - Organization
         </MenuItem>
         <MenuItem
           dense
@@ -334,7 +334,7 @@ export function RoleEdit({
             )
           }
         >
-          Community Member - Co-Member Families
+          Organization Member - Co-Member Families
         </MenuItem>
         <MenuItem
           dense
@@ -345,8 +345,8 @@ export function RoleEdit({
             )
           }
         >
-          Community Member - Co-Member Families - Assigned Functions in Case -
-          Partnering Family
+          Organization Member - Co-Member Families - Assigned Functions in Case
+          - Partnering Family
         </MenuItem>
         <MenuItem
           dense
@@ -357,8 +357,8 @@ export function RoleEdit({
             )
           }
         >
-          Community Member - Co-Member Families - Assigned Functions in Case -
-          Co-Assigned Families
+          Organization Member - Co-Member Families - Assigned Functions in Case
+          - Co-Assigned Families
         </MenuItem>
       </Menu>
 

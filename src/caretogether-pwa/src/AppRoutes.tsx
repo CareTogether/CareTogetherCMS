@@ -34,7 +34,7 @@ import { FamilyScreenRoute } from './Families/FamilyScreenRoute';
 import { ClientsScreenRoute } from './V1Cases/ClientsScreenRoute';
 import { V1Referrals } from './V1Referrals/V1Referrals';
 import { VolunteersScreenRoute } from './Volunteers/VolunteersScreenRoute';
-import { Communities } from './Communities/Communities';
+import { Organizations } from './Communities/Communities';
 import { Reports } from './Reports/Reports';
 import { Settings } from './Settings/SettingsRoutes';
 import { Support } from './Support';
@@ -129,6 +129,17 @@ function CasesToClientsRedirect() {
   );
 }
 
+function CommunitiesToOrganizationsRedirect() {
+  const location = useLocation();
+  const targetPath = location.pathname
+    .replace('/communities/community/', '/organizations/organization/')
+    .replace('/communities', '/organizations');
+
+  return (
+    <Navigate to={`${targetPath}${location.search}${location.hash}`} replace />
+  );
+}
+
 // function RouteDisplay(): React.ReactElement {
 //   throw new Error(`The URL path '${window.location.href}' is invalid.`);
 // }
@@ -184,15 +195,16 @@ function AuthorizedLocationContextWrapper({
         <Routes>
           <Route index element={<Dashboard />} />
           <Route path="inbox/*" element={<InboxScreen />} />
-          <Route
-            path="families/:familyId"
-            element={<FamilyScreenRoute />}
-          />
+          <Route path="families/:familyId" element={<FamilyScreenRoute />} />
           <Route path="clients/*" element={<ClientsScreenRoute />} />
           <Route path="cases/*" element={<CasesToClientsRedirect />} />
           <Route path="referrals/*" element={<V1Referrals />} />
           <Route path="volunteers/*" element={<VolunteersScreenRoute />} />
-          <Route path="communities/*" element={<Communities />} />
+          <Route path="organizations/*" element={<Organizations />} />
+          <Route
+            path="communities/*"
+            element={<CommunitiesToOrganizationsRedirect />}
+          />
           <Route path="reports/*" element={<Reports />} />
           <Route path="settings/*" element={<Settings />} />
           <Route path="support/*" element={<Support />} />
@@ -269,10 +281,7 @@ export function AppRoutes() {
         path="/org/:organizationId/:locationId/*"
         element={<LocationContextWrapper />}
       />
-      <Route
-        path="/me/redeemPersonInvite"
-        element={<RedeemPersonInvite />}
-      />
+      <Route path="/me/redeemPersonInvite" element={<RedeemPersonInvite />} />
       <Route
         path="/me/*"
         element={
@@ -286,6 +295,7 @@ export function AppRoutes() {
       <Route path="/cases/*" element={<CasesToClientsRedirect />} />
       <Route path="/clients/*" element={<RouteMigrator />} />
       <Route path="/volunteers/*" element={<RouteMigrator />} />
+      <Route path="/organizations/*" element={<RouteMigrator />} />
       <Route path="/communities/*" element={<RouteMigrator />} />
       <Route path="/settings/*" element={<RouteMigrator />} />
       <Route path="/support/*" element={<RouteMigrator />} />

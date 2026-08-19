@@ -107,7 +107,7 @@ namespace CareTogether.Resources.Communities
                 community == null
                 || !community.UploadedDocuments.Any(doc => doc.UploadedDocumentId == documentId)
             )
-                throw new Exception("The specified community document does not exist.");
+                throw new Exception("The specified organization document does not exist.");
 
             var documentSubpath = GetCommunityDocumentSubpath(communityId, documentId);
 
@@ -132,7 +132,7 @@ namespace CareTogether.Resources.Communities
                 community == null
                 || community.UploadedDocuments.Any(doc => doc.UploadedDocumentId == documentId)
             )
-                throw new Exception("The specified community document already exists.");
+                throw new Exception("The specified organization document already exists.");
 
             var documentSubpath = GetCommunityDocumentSubpath(communityId, documentId);
 

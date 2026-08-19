@@ -149,8 +149,8 @@ function SideNavigationMenu({ open }: SideNavigationMenuProps) {
           {permissions(Permission.AccessCommunitiesScreen) && (
             <ListItemLink
               className="ph-unmask"
-              to={`${locationPrefix}/communities`}
-              primary="Communities"
+              to={`${locationPrefix}/organizations`}
+              primary="Organizations"
               icon={<Diversity3Icon />}
               collapsed={collapsed}
             />
@@ -263,10 +263,7 @@ export function ShellSideNavigation({ open, width }: ShellSideNavigationProps) {
             borderTop: `1px solid ${theme.palette.divider}`,
           }}
         >
-          <Stack
-            className="ph-unmask"
-            sx={{ alignItems: 'center', py: 2 }}
-          >
+          <Stack className="ph-unmask" sx={{ alignItems: 'center', py: 2 }}>
             <Box sx={{ mb: 2 }}>
               <Feedback />
             </Box>

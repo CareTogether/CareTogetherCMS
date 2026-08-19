@@ -57,7 +57,7 @@ namespace CareTogether.Resources.Communities
             {
                 if (!communities.TryGetValue(command.CommunityId, out community))
                     throw new KeyNotFoundException(
-                        "A community with the specified ID does not exist."
+                        "An organization with the specified ID does not exist."
                     );
 
                 community = command switch
