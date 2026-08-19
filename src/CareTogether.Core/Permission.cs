@@ -23,7 +23,7 @@
         AccessPartneringFamiliesScreen = 101,
         AccessSettingsScreen = 102,
         AddEditRoles = 103,
-        AccessCommunitiesScreen = 104,
+        AccessOrganizationsScreen = 104,
         AccessReportsScreen = 105,
         AccessSupportScreen = 106,
 
@@ -103,16 +103,16 @@
 
         SendBulkSms = 400,
 
-        // ---- Communities ---- //
+        // ---- Organizations ---- //
 
-        CreateCommunity = 500,
-        EditCommunity = 501,
-        DeleteCommunity = 502,
-        EditCommunityMemberFamilies = 503,
-        EditCommunityRoleAssignments = 504,
-        ViewCommunityDocumentMetadata = 505,
-        ReadCommunityDocuments = 506,
-        UploadCommunityDocuments = 507,
-        DeleteCommunityDocuments = 508,
+        CreateOrganization = 500,
+        EditOrganization = 501,
+        DeleteOrganization = 502,
+        EditOrganizationMemberFamilies = 503,
+        EditOrganizationRoleAssignments = 504,
+        ViewOrganizationDocumentMetadata = 505,
+        ReadOrganizationDocuments = 506,
+        UploadOrganizationDocuments = 507,
+        DeleteOrganizationDocuments = 508,
     }
 }

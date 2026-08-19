@@ -774,15 +774,15 @@ namespace CareTogether.Engines.Authorization
             return permissions.Contains(
                 command switch
                 {
-                    CreateCommunity => Permission.CreateCommunity,
-                    RenameCommunity => Permission.EditCommunity,
-                    EditCommunityDescription => Permission.EditCommunity,
-                    AddCommunityMemberFamily => Permission.EditCommunityMemberFamilies,
-                    RemoveCommunityMemberFamily => Permission.EditCommunityMemberFamilies,
-                    AddCommunityRoleAssignment => Permission.EditCommunityRoleAssignments,
-                    RemoveCommunityRoleAssignment => Permission.EditCommunityRoleAssignments,
-                    UploadCommunityDocument => Permission.UploadCommunityDocuments,
-                    DeleteUploadedCommunityDocument => Permission.DeleteCommunityDocuments,
+                    CreateCommunity => Permission.CreateOrganization,
+                    RenameCommunity => Permission.EditOrganization,
+                    EditCommunityDescription => Permission.EditOrganization,
+                    AddCommunityMemberFamily => Permission.EditOrganizationMemberFamilies,
+                    RemoveCommunityMemberFamily => Permission.EditOrganizationMemberFamilies,
+                    AddCommunityRoleAssignment => Permission.EditOrganizationRoleAssignments,
+                    RemoveCommunityRoleAssignment => Permission.EditOrganizationRoleAssignments,
+                    UploadCommunityDocument => Permission.UploadOrganizationDocuments,
+                    DeleteUploadedCommunityDocument => Permission.DeleteOrganizationDocuments,
                     _ => throw new NotImplementedException(
                         $"The command type '{command.GetType().FullName}' has not been implemented."
                     ),
@@ -969,7 +969,7 @@ namespace CareTogether.Engines.Authorization
                     Community = community.Community with
                     {
                         UploadedDocuments = contextPermissions.Contains(
-                            Permission.ViewCommunityDocumentMetadata
+                            Permission.ViewOrganizationDocumentMetadata
                         )
                             ? community.Community.UploadedDocuments
                             : ImmutableList<UploadedDocumentInfo>.Empty,

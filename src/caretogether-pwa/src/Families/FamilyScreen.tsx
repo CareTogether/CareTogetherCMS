@@ -624,9 +624,7 @@ export function FamilyScreen() {
           ></AddAdultDialog>
         )}
         {addChildDialogOpen && (
-          <AddChildDialog
-            onClose={() => setAddChildDialogOpen(false)}
-          />
+          <AddChildDialog onClose={() => setAddChildDialogOpen(false)} />
         )}
         {addNoteDialogOpen && (
           <AddEditNoteDrawer
@@ -765,7 +763,7 @@ export function FamilyScreen() {
                 variant="h3"
                 style={{ marginTop: 0, marginBottom: 0 }}
               >
-                Communities
+                Organizations
               </Typography>
 
               {familyCommunityInfo?.map((communityInfo) => {
@@ -779,7 +777,7 @@ export function FamilyScreen() {
                     }}
                     onClick={() =>
                       communityInfo.community && communityInfo.community.id
-                        ? appNavigate.community(communityInfo.community.id)
+                        ? appNavigate.organization(communityInfo.community.id)
                         : {}
                     }
                   >

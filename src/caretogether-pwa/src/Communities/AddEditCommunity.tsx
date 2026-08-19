@@ -63,7 +63,7 @@ export function AddEditCommunity({
         const communityId = crypto.randomUUID();
         await createCommunity(communityId);
         onClose();
-        appNavigate.community(communityId);
+        appNavigate.organization(communityId);
       }
     });
   }
@@ -71,7 +71,7 @@ export function AddEditCommunity({
   return (
     <Grid container spacing={2} sx={{ maxWidth: 500 }}>
       <Grid size={12}>
-        <h3>{community ? 'Edit Community' : 'Add New Community'}</h3>
+        <h3>{community ? 'Edit Organization' : 'Add New Organization'}</h3>
       </Grid>
       <Grid size={12}>
         <TextField
@@ -79,7 +79,7 @@ export function AddEditCommunity({
           fullWidth
           required
           label="Name"
-          placeholder="Enter a name for the community"
+          placeholder="Enter a name for the organization"
           error={name.length === 0}
           value={name}
           onChange={(e) => setName(e.target.value)}
@@ -92,7 +92,7 @@ export function AddEditCommunity({
           multiline
           minRows={4}
           label="Description"
-          placeholder="Provide a description for the community"
+          placeholder="Provide a description for the organization"
           value={description}
           onChange={(e) => setDescription(e.target.value)}
         />

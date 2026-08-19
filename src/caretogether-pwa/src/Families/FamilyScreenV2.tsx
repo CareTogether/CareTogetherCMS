@@ -154,7 +154,7 @@ export function FamilyScreenV2() {
           communityInfo.community?.id &&
           !(communityInfo.community.memberFamilies ?? []).includes(familyId) &&
           communityInfo.userPermissions?.includes(
-            Permission.EditCommunityMemberFamilies
+            Permission.EditOrganizationMemberFamilies
           )
       ),
     [allCommunityInfo, familyId]
@@ -1219,7 +1219,7 @@ export function FamilyScreenV2() {
             volunteerFamilyCustomFields={overviewVolunteerFamilyCustomFields}
             onAddCommunity={openAddCommunityDrawer}
             onCommunityClick={(communityId) =>
-              appNavigate.community(communityId)
+              appNavigate.organization(communityId)
             }
             onFamilyMemberClick={openFamilyMemberDrawer}
             onViewAllRecentActivity={() => setSelectedTab('timelineAndNotes')}
