@@ -145,7 +145,7 @@ export function ShellBottomNavigation() {
                   primary="Dashboard"
                   icon={<DashboardIcon />}
                 />
-                {permissions(Permission.AccessCommunitiesScreen) && (
+                {permissions(Permission.AccessOrganizationsScreen) && (
                   <ListItemLink
                     darkColor
                     to={`${locationPrefix}/organizations`}

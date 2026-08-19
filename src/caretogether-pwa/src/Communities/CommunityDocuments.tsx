@@ -90,7 +90,7 @@ export function CommunityDocuments({ communityInfo }: CommunityDocumentsProps) {
           key={doc.document.uploadedDocumentId}
           disablePadding
           secondaryAction={
-            permissions(Permission.DeleteCommunityDocuments) ? (
+            permissions(Permission.DeleteOrganizationDocuments) ? (
               <IconButton
                 edge="end"
                 aria-label="delete"
@@ -102,7 +102,7 @@ export function CommunityDocuments({ communityInfo }: CommunityDocumentsProps) {
             ) : null
           }
         >
-          {permissions(Permission.ReadCommunityDocuments) ? (
+          {permissions(Permission.ReadOrganizationDocuments) ? (
             <ListItemButton
               disableGutters
               sx={{ paddingTop: 0, paddingBottom: 0 }}

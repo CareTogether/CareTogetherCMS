@@ -2374,7 +2374,7 @@ namespace CareTogether.TestData
                                     [
                                         Permission.AccessPartneringFamiliesScreen,
                                         Permission.AccessVolunteersScreen,
-                                        Permission.AccessCommunitiesScreen,
+                                        Permission.AccessOrganizationsScreen,
                                     ]
                                 ),
                                 new ContextualPermissionSet(
@@ -2422,7 +2422,7 @@ namespace CareTogether.TestData
                                     new CommunityMemberPermissionContext(
                                         WhenOwnCommunityRoleIsIn: null
                                     ),
-                                    [Permission.ViewCommunityDocumentMetadata]
+                                    [Permission.ViewOrganizationDocumentMetadata]
                                 ),
                                 new ContextualPermissionSet(
                                     new CommunityMemberPermissionContext(
@@ -2432,7 +2432,7 @@ namespace CareTogether.TestData
                                             "Community Co-Organizer",
                                         ]
                                     ),
-                                    [Permission.ReadCommunityDocuments]
+                                    [Permission.ReadOrganizationDocuments]
                                 ),
                                 new ContextualPermissionSet(
                                     new CommunityCoMemberFamiliesPermissionContext(

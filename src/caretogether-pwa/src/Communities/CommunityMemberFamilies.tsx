@@ -210,7 +210,7 @@ export function CommunityMemberFamilies({
   }
 
   const canEditMemberFamilies = permissions(
-    Permission.EditCommunityMemberFamilies
+    Permission.EditOrganizationMemberFamilies
   );
 
   function canViewContactInfo(family: CombinedFamilyInfo) {

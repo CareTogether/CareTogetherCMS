@@ -98,7 +98,7 @@ export function CommunitiesList() {
           </TableBody>
         </Table>
       </TableContainer>
-      {permissions(Permission.CreateCommunity) && (
+      {permissions(Permission.CreateOrganization) && (
         <Drawer
           anchor="right"
           open={addDrawerOpen}

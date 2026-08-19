@@ -154,7 +154,7 @@ export function FamilyScreenV2() {
           communityInfo.community?.id &&
           !(communityInfo.community.memberFamilies ?? []).includes(familyId) &&
           communityInfo.userPermissions?.includes(
-            Permission.EditCommunityMemberFamilies
+            Permission.EditOrganizationMemberFamilies
           )
       ),
     [allCommunityInfo, familyId]
