@@ -3,6 +3,7 @@ using System.Collections.Immutable;
 using System.Linq;
 using System.Threading.Tasks;
 using CareTogether.Engines.Authorization;
+using CareTogether.Managers.OrganizationCategories;
 using CareTogether.Resources.Accounts;
 using CareTogether.Resources.Approvals;
 using CareTogether.Resources.Directory;
@@ -32,6 +33,8 @@ namespace CareTogether.Api.Controllers
         ImmutableList<string>? caseCloseReasons
     );
 
+    public sealed record PutOrganizationCategoryPayload(string name);
+
     [ApiController]
     [Authorize(
         Policies.ForbidAnonymous,
@@ -45,6 +48,7 @@ namespace CareTogether.Api.Controllers
         private readonly IApprovalsResource approvalsResource;
         private readonly IFeatureManager featureManager;
         private readonly IAuthorizationEngine authorizationEngine;
+        private readonly IOrganizationCategoriesManager organizationCategoriesManager;
 
         public ConfigurationController(
             IPoliciesResource policiesResource,
@@ -52,7 +56,8 @@ namespace CareTogether.Api.Controllers
             IAccountsResource accountsResource,
             IApprovalsResource approvalsResource,
             IFeatureManager featureManager,
-            IAuthorizationEngine authorizationEngine
+            IAuthorizationEngine authorizationEngine,
+            IOrganizationCategoriesManager organizationCategoriesManager
         )
         {
             //TODO: Delegate this controller's methods to a manager service
@@ -62,6 +67,7 @@ namespace CareTogether.Api.Controllers
             this.approvalsResource = approvalsResource;
             this.featureManager = featureManager;
             this.authorizationEngine = authorizationEngine;
+            this.organizationCategoriesManager = organizationCategoriesManager;
         }
 
         [HttpGet("/api/{organizationId:guid}/[controller]")]
@@ -428,6 +434,43 @@ namespace CareTogether.Api.Controllers
                 organizationId,
                 payload.referralCloseReasons,
                 payload.caseCloseReasons
+            );
+            return Ok(result);
+        }
+
+        [HttpPut(
+            "/api/{organizationId:guid}/[controller]/organization-categories/{categoryId:guid}"
+        )]
+        public async Task<ActionResult<OrganizationConfiguration>> PutOrganizationCategory(
+            Guid organizationId,
+            Guid categoryId,
+            [FromBody] PutOrganizationCategoryPayload payload
+        )
+        {
+            if (!User.IsInRole(SystemConstants.ORGANIZATION_ADMINISTRATOR))
+                return Forbid();
+
+            var result = await organizationCategoriesManager.UpsertCategoryAsync(
+                organizationId,
+                new OrganizationCategory(categoryId, payload.name)
+            );
+            return Ok(result);
+        }
+
+        [HttpDelete(
+            "/api/{organizationId:guid}/[controller]/organization-categories/{categoryId:guid}"
+        )]
+        public async Task<ActionResult<OrganizationConfiguration>> DeleteOrganizationCategory(
+            Guid organizationId,
+            Guid categoryId
+        )
+        {
+            if (!User.IsInRole(SystemConstants.ORGANIZATION_ADMINISTRATOR))
+                return Forbid();
+
+            var result = await organizationCategoriesManager.DeleteCategoryAsync(
+                organizationId,
+                categoryId
             );
             return Ok(result);
         }

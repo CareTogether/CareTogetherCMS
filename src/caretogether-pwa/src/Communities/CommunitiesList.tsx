@@ -1,5 +1,7 @@
 import {
+  Box,
   Button,
+  Chip,
   Drawer,
   Table,
   TableBody,
@@ -18,6 +20,7 @@ import { useGlobalPermissions } from '../Model/SessionModel';
 import { AddEditCommunity } from './AddEditCommunity';
 import { useDataLoaded, visibleCommunitiesQuery } from '../Model/Data';
 import { useAppNavigate } from '../Hooks/useAppNavigate';
+import { organizationConfigurationQuery } from '../Model/ConfigurationModel';
 
 export function CommunitiesList() {
   useScreenTitle('Organizations');
@@ -29,6 +32,12 @@ export function CommunitiesList() {
   const communities = (communitiesLoadable || [])
     .map((x) => x.community!)
     .sort((a, b) => (a.name! < b.name! ? -1 : a.name! > b.name! ? 1 : 0));
+  const organizationConfiguration = useLoadable(organizationConfigurationQuery);
+  const categoriesById = new Map(
+    (organizationConfiguration?.organizationCategories ?? []).map(
+      (category) => [category.id, category]
+    )
+  );
 
   const appNavigate = useAppNavigate();
   function openCommunity(community: Community) {
@@ -63,6 +72,9 @@ export function CommunitiesList() {
               <TableCell align="left" sx={{ minWidth: 400 }}>
                 Description
               </TableCell>
+              <TableCell align="left" sx={{ minWidth: 220 }}>
+                Categories
+              </TableCell>
               <TableCell align="right" sx={{ minWidth: 50 }}>
                 Member Families
               </TableCell>
@@ -86,6 +98,26 @@ export function CommunitiesList() {
                 </TableCell>
                 <TableCell align="left" sx={{ minWidth: 400 }}>
                   {community.description}
+                </TableCell>
+                <TableCell align="left" sx={{ minWidth: 220 }}>
+                  <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                    {(community.categoryIds ?? [])
+                      .map((categoryId) => categoriesById.get(categoryId))
+                      .filter((category) => category != null)
+                      .sort((first, second) =>
+                        first.name!.localeCompare(second.name!, undefined, {
+                          sensitivity: 'base',
+                        })
+                      )
+                      .map((category) => (
+                        <Chip
+                          key={category.id}
+                          label={category.name}
+                          size="small"
+                          variant="outlined"
+                        />
+                      ))}
+                  </Box>
                 </TableCell>
                 <TableCell align="right" sx={{ minWidth: 50 }}>
                   {community.memberFamilies?.length}

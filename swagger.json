@@ -284,6 +284,100 @@
         }
       }
     },
+    "/api/{organizationId}/Configuration/organization-categories/{categoryId}": {
+      "put": {
+        "tags": [
+          "Configuration"
+        ],
+        "operationId": "Configuration_PutOrganizationCategory",
+        "parameters": [
+          {
+            "name": "organizationId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "guid"
+            },
+            "x-position": 1
+          },
+          {
+            "name": "categoryId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "guid"
+            },
+            "x-position": 2
+          }
+        ],
+        "requestBody": {
+          "x-name": "payload",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PutOrganizationCategoryPayload"
+              }
+            }
+          },
+          "required": true,
+          "x-position": 3
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OrganizationConfiguration"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Configuration"
+        ],
+        "operationId": "Configuration_DeleteOrganizationCategory",
+        "parameters": [
+          {
+            "name": "organizationId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "guid"
+            },
+            "x-position": 1
+          },
+          {
+            "name": "categoryId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "guid"
+            },
+            "x-position": 2
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OrganizationConfiguration"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/{organizationId}/{locationId}/Configuration/policy": {
       "get": {
         "tags": [
@@ -1391,7 +1485,8 @@
           "organizationName",
           "locations",
           "roles",
-          "communityRoles"
+          "communityRoles",
+          "organizationCategories"
         ],
         "properties": {
           "organizationName": {
@@ -1427,6 +1522,12 @@
             "nullable": true,
             "items": {
               "type": "string"
+            }
+          },
+          "organizationCategories": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/OrganizationCategory"
             }
           }
         }
@@ -2069,6 +2170,23 @@
           508
         ]
       },
+      "OrganizationCategory": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "name"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "guid"
+          },
+          "name": {
+            "type": "string"
+          }
+        }
+      },
       "PutLocationPayload": {
         "type": "object",
         "additionalProperties": false,
@@ -2103,6 +2221,18 @@
             "items": {
               "type": "string"
             }
+          }
+        }
+      },
+      "PutOrganizationCategoryPayload": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name"
+        ],
+        "properties": {
+          "name": {
+            "type": "string"
           }
         }
       },
@@ -3298,7 +3428,8 @@
           "description",
           "memberFamilies",
           "communityRoleAssignments",
-          "uploadedDocuments"
+          "uploadedDocuments",
+          "categoryIds"
         ],
         "properties": {
           "id": {
@@ -3328,6 +3459,13 @@
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/UploadedDocumentInfo"
+            }
+          },
+          "categoryIds": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "guid"
             }
           }
         }
@@ -7048,6 +7186,7 @@
             "RemoveCommunityMemberFamily": "#/components/schemas/RemoveCommunityMemberFamily",
             "RemoveCommunityRoleAssignment": "#/components/schemas/RemoveCommunityRoleAssignment",
             "RenameCommunity": "#/components/schemas/RenameCommunity",
+            "SetOrganizationCategories": "#/components/schemas/SetOrganizationCategories",
             "UploadCommunityDocument": "#/components/schemas/UploadCommunityDocument"
           }
         },
@@ -7231,6 +7370,29 @@
             "properties": {
               "name": {
                 "type": "string"
+              }
+            }
+          }
+        ]
+      },
+      "SetOrganizationCategories": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/CommunityCommand"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "categoryIds"
+            ],
+            "properties": {
+              "categoryIds": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "format": "guid"
+                }
               }
             }
           }
