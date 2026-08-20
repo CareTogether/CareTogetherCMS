@@ -1,7 +1,6 @@
 import { useMemo, useState } from 'react';
-import { useRecoilValue } from 'recoil';
 import { Permission } from '../GeneratedClient';
-import { policyData } from '../Model/ConfigurationModel';
+import { usePolicy } from '../Model/PolicyModel';
 import { VolunteerFamilyContext } from '../Requirements/RequirementContext';
 import { useDialogHandle } from '../Hooks/useDialogHandle';
 import { CompleteOtherDialog } from '../Requirements/CompleteOtherDialog';
@@ -19,7 +18,7 @@ export function FamilyCompleteOtherController({
   open,
   onClose,
 }: FamilyCompleteOtherControllerProps) {
-  const policy = useRecoilValue(policyData);
+  const policy = usePolicy();
   const permissions = useFamilyIdPermissions(familyId);
   const requirementDialogHandle = useDialogHandle();
   const canComplete = permissions(Permission.EditApprovalRequirementCompletion);

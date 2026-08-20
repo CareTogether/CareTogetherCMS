@@ -9,21 +9,17 @@ import {
   Typography,
 } from '@mui/material';
 import { useAppNavigate } from '../../Hooks/useAppNavigate';
-import { useLoadable } from '../../Hooks/useLoadable';
-import { organizationConfigurationQuery } from '../../Model/ConfigurationModel';
+import { useOrganizationConfiguration } from '../../Model/ConfigurationModel';
 import { useUserIsOrganizationAdministrator } from '../../Model/SessionModel';
 import { useSidePanel } from '../../Hooks/useSidePanel';
 import { AddLocation } from './AddLocationSidePanel';
-import { useRecoilValue } from 'recoil';
-import { selectedLocationContextState } from '../../Model/Data';
+import { useRequiredSelectedLocationContext } from '../../Model/Data';
 import { Breadcrumbs } from '../../Generic/Breadcrumbs';
 
 export function LocationsSection() {
-  const configuration = useLoadable(organizationConfigurationQuery);
+  const configuration = useOrganizationConfiguration();
 
-  const { organizationId, locationId } = useRecoilValue(
-    selectedLocationContextState
-  );
+  const { organizationId, locationId } = useRequiredSelectedLocationContext();
 
   const appNavigate = useAppNavigate();
 

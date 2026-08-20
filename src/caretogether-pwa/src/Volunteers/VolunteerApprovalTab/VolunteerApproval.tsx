@@ -27,12 +27,15 @@ import {
   Permission,
   VolunteerInfo,
 } from '../../GeneratedClient';
-import { useRecoilState, useRecoilValue } from 'recoil';
-import { volunteerFamiliesData } from '../../Model/VolunteersModel';
+import { useVolunteerFamilies } from '../../Model/VolunteersModel';
 import {
-  organizationConfigurationQuery,
-  policyData,
+  useOrganizationConfiguration,
 } from '../../Model/ConfigurationModel';
+import {
+  usePolicy,
+  useRoleFilters,
+  useStatusFilters,
+} from '../../Model/PolicyModel';
 import React, { useEffect, useMemo, useState } from 'react';
 import {
   Add as AddIcon,
@@ -54,16 +57,13 @@ import {
 import { BulkSmsSideSheet } from '../BulkSmsSideSheet';
 import { useWindowSize } from '../../Hooks/useWindowSize';
 import { useScreenTitle } from '../../Shell/ShellScreenTitle';
-import { useLoadable } from '../../Hooks/useLoadable';
 import { ProgressBackdrop } from '../../Shell/ProgressBackdrop';
-import { selectedLocationContextState } from '../../Model/Data';
+import { useRequiredSelectedLocationContext } from '../../Model/Data';
 import { useAppNavigate } from '../../Hooks/useAppNavigate';
 import { useGlobalSnackBar } from '../../Hooks/useGlobalSnackBar';
-import { statusFiltersState } from './statusFiltersState';
 import { checkStatusEquivalence } from './checkStatusEquivalence';
 import { simplify } from './simplify';
 import { filterType } from './filterType';
-import { roleFiltersState } from './roleFiltersState';
 import { VolunteerFilter } from './VolunteerFilter';
 import { notAppliedLabel } from './catchAllLabel';
 import { getOptionValueFromSelection } from './getOptionValueFromSelection';
@@ -110,7 +110,7 @@ function VolunteerApproval(props: { onOpen: () => void }) {
     closeSidePanel: closeAssignmentFiltersSidePanel,
   } = useSidePanel();
 
-  const policy = useRecoilValue(policyData);
+  const policy = usePolicy();
 
   const customFieldNames = (
     policy.customFamilyFields?.map((field) => field.name) || []
@@ -119,8 +119,8 @@ function VolunteerApproval(props: { onOpen: () => void }) {
   );
 
   //#region Role/Status Selection Code
-  const [roleFilters, setRoleFilters] = useRecoilState(roleFiltersState);
-  const [statusFilters, setStatusFilters] = useRecoilState(statusFiltersState);
+  const [roleFilters, setRoleFilters] = useRoleFilters();
+  const [statusFilters, setStatusFilters] = useStatusFilters();
 
   function changeRoleFilterSelection(selection: string | string[]) {
     setUncheckedFamilies([]);
@@ -158,8 +158,8 @@ function VolunteerApproval(props: { onOpen: () => void }) {
   }
   //#endregion
 
-  // The array object returned by Recoil is read-only. We need to copy it before we can do an in-place sort.
-  const volunteerFamiliesLoadable = useLoadable(volunteerFamiliesData);
+  // The array object returned by state is read-only. We need to copy it before we can do an in-place sort.
+  const volunteerFamiliesLoadable = useVolunteerFamilies();
   const [storedSortMode, setStoredSortMode] =
     useLocalStorage<FamilyNameSortMode>(
       VOLUNTEER_APPROVAL_SORT_STORAGE_KEY,
@@ -575,10 +575,8 @@ function VolunteerApproval(props: { onOpen: () => void }) {
     }
   };
 
-  const { locationId } = useRecoilValue(selectedLocationContextState);
-  const organizationConfiguration = useRecoilValue(
-    organizationConfigurationQuery
-  );
+  const { locationId } = useRequiredSelectedLocationContext();
+  const organizationConfiguration = useOrganizationConfiguration();
   const smsSourcePhoneNumbers = organizationConfiguration?.locations?.find(
     (loc) => loc.id === locationId
   )?.smsSourcePhoneNumbers;

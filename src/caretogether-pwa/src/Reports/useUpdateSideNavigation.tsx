@@ -1,10 +1,10 @@
 import { useCallback, useEffect } from 'react';
-import { useSetRecoilState } from 'recoil';
+import { useSetAtom } from 'jotai';
 import { reportSubmenuItemsAtom } from '../Model/UI';
 import { Report } from 'powerbi-client';
 
 export function useUpdateSideNavigation() {
-  const setReportsSubmenuItems = useSetRecoilState(reportSubmenuItemsAtom);
+  const setReportsSubmenuItems = useSetAtom(reportSubmenuItemsAtom);
 
   const updateSideNavigation = async (report: Report) => {
     const pages = await report.getPages();

@@ -1,16 +1,14 @@
 import { Button } from '@mui/material';
+import { useAtomValue } from 'jotai';
+import { loadable } from 'jotai/utils';
 import { useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import {
-  useRecoilRefresher_UNSTABLE,
-  useRecoilValueLoadable,
-} from 'recoil';
 import { useBackdrop } from '../Hooks/useBackdrop';
 import { inviteReviewInfoQuery } from '../Model/SessionModel';
 import { ProgressBackdrop } from '../Shell/ProgressBackdrop';
 import { useScreenTitle } from '../Shell/ShellScreenTitle';
 import { api } from '../Api/Api';
-import { userOrganizationAccessQuery } from '../Model/Data';
+import { useRefreshUserOrganizationAccess } from '../Model/Data';
 
 function RedeemPersonInvite() {
   const [searchParams] = useSearchParams();
@@ -19,18 +17,16 @@ function RedeemPersonInvite() {
   // Attempt to retrieve the invite review info for the redemption session.
   // If it can be retrieved, then render the invite review to allow the user the
   // option to confirm accepting the invite.
-  const inviteReviewInfo = useRecoilValueLoadable(
-    inviteReviewInfoQuery(redemptionSessionId)
+  const inviteReviewInfo = useAtomValue(
+    loadable(inviteReviewInfoQuery(redemptionSessionId))
   );
 
   const withBackdrop = useBackdrop();
   const navigate = useNavigate();
 
-  const refreshUserOrganizationAccess = useRecoilRefresher_UNSTABLE(
-    userOrganizationAccessQuery
-  );
+  const refreshUserOrganizationAccess = useRefreshUserOrganizationAccess();
   async function redeem() {
-    if (inviteReviewInfo.state === 'hasValue') {
+    if (inviteReviewInfo.state === 'hasData') {
       await withBackdrop(async () => {
         const result = await api.users.completePersonInviteRedemptionSession(
           redemptionSessionId ?? undefined
@@ -39,7 +35,7 @@ function RedeemPersonInvite() {
         console.log(result);
         refreshUserOrganizationAccess();
         navigate(
-          `/org/${inviteReviewInfo.contents!.organizationId}/${inviteReviewInfo.contents!.locationId}/`
+          `/org/${inviteReviewInfo.data!.organizationId}/${inviteReviewInfo.data!.locationId}/`
         );
       });
     }
@@ -50,8 +46,7 @@ function RedeemPersonInvite() {
   useEffect(() => {
     if (
       inviteReviewInfo.state === 'hasError' ||
-      (inviteReviewInfo.state === 'hasValue' &&
-        inviteReviewInfo.contents == null)
+      (inviteReviewInfo.state === 'hasData' && inviteReviewInfo.data == null)
     ) {
       // If the invite review info is available but the contents are null, then the invite
       // has already been redeemed.
@@ -71,8 +66,7 @@ function RedeemPersonInvite() {
     <ProgressBackdrop>
       <p>Loading invitation...</p>
     </ProgressBackdrop>
-  ) : inviteReviewInfo.state === 'hasError' ||
-    inviteReviewInfo.contents == null ? (
+  ) : inviteReviewInfo.state === 'hasError' || inviteReviewInfo.data == null ? (
     <p>
       An error occurred while trying to retrieve the invitation information.
       Please try clicking the invite link you were provided again. If the
@@ -84,19 +78,18 @@ function RedeemPersonInvite() {
       <p>
         The link you clicked is an invitation to link your CareTogether account
         to
-        <strong> {inviteReviewInfo.contents.organizationName}</strong> at the
-        <strong> {inviteReviewInfo.contents.locationName}</strong> location.
+        <strong> {inviteReviewInfo.data.organizationName}</strong> at the
+        <strong> {inviteReviewInfo.data.locationName}</strong> location.
       </p>
       <p>
         You are being invited as
-        <strong> {inviteReviewInfo.contents.firstName}</strong>
-        <strong> {inviteReviewInfo.contents.lastName}</strong>.
+        <strong> {inviteReviewInfo.data.firstName}</strong>
+        <strong> {inviteReviewInfo.data.lastName}</strong>.
       </p>
       <p>Your assigned permissions:</p>
-      {inviteReviewInfo.contents.roles &&
-      inviteReviewInfo.contents.roles.length > 0 ? (
+      {inviteReviewInfo.data.roles && inviteReviewInfo.data.roles.length > 0 ? (
         <ul>
-          {inviteReviewInfo.contents.roles?.map((role) => (
+          {inviteReviewInfo.data.roles?.map((role) => (
             <li key={role}>{role}</li>
           ))}
         </ul>

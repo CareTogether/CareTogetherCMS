@@ -55,8 +55,7 @@ import {
 } from '../../Model/DirectoryModel';
 import { useV1CasesModel } from '../../Model/V1CasesModel';
 import { PersonName } from '../../Families/PersonName';
-import { useRecoilValue } from 'recoil';
-import { policyData } from '../../Model/ConfigurationModel';
+import { usePolicy } from '../../Model/PolicyModel';
 import { format } from 'date-fns';
 import { a11yProps, TabPanel } from '../../Generic/TabPanel';
 import { isBackdropClick } from '../../Utilities/handleBackdropClick';
@@ -261,7 +260,7 @@ export function TrackChildLocationDialog({
   initialMode,
   initialPlannedEntry,
 }: TrackChildLocationDialogProps) {
-  const policy = useRecoilValue(policyData);
+  const policy = usePolicy();
   const arrangementPolicy = policy.referralPolicy!.arrangementPolicies!.find(
     (x) => x.arrangementType === arrangement.arrangementType
   );

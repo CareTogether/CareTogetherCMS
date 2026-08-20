@@ -3,7 +3,7 @@ import { Badge } from '@mui/material';
 import { useGlobalPermissions } from '../Model/SessionModel';
 import { Permission } from '../GeneratedClient';
 import { ListItemLink } from './ListItemLink';
-import { useRecoilValue } from 'recoil';
+import { useAtomValue } from 'jotai';
 import { changelogUnreadCountState } from '../Hooks/useFeaturebase';
 
 interface WhatsNewProps {
@@ -14,7 +14,7 @@ export default function WhatsNew({ collapsed }: WhatsNewProps) {
   const permissions = useGlobalPermissions();
   const hasAccess = permissions(Permission.AccessSupportScreen);
 
-  const unreadCount = useRecoilValue(changelogUnreadCountState);
+  const unreadCount = useAtomValue(changelogUnreadCountState);
 
   if (!hasAccess) return null;
 

@@ -26,7 +26,7 @@ import {
   useGlobalPermissions,
 } from '../Model/SessionModel';
 import { useBackdrop } from '../Hooks/useBackdrop';
-import { useRecoilCallback, useRecoilValue } from 'recoil';
+import { useSetAtom } from 'jotai';
 import { personNameString } from './PersonName';
 import {
   AccountCircle,
@@ -34,11 +34,11 @@ import {
   NoAccounts,
   PersonAdd,
 } from '@mui/icons-material';
-import { organizationConfigurationQuery } from '../Model/ConfigurationModel';
+import { useOrganizationConfiguration } from '../Model/ConfigurationModel';
 import { useState } from 'react';
 import { api } from '../Api/Api';
 import {
-  selectedLocationContextState,
+  useRequiredSelectedLocationContext,
   visibleAggregatesState,
 } from '../Model/Data';
 import { UserLoginInfoDisplay } from './UserLoginInfoDisplay';
@@ -59,10 +59,8 @@ export function ManageUserDrawer({
   user,
   fullWidth = false,
 }: ManageUserDrawerProps) {
-  const { organizationId, locationId } = useRecoilValue(
-    selectedLocationContextState
-  );
-  const configuration = useRecoilValue(organizationConfigurationQuery);
+  const { organizationId, locationId } = useRequiredSelectedLocationContext();
+  const configuration = useOrganizationConfiguration();
 
   const withBackdrop = useBackdrop();
 
@@ -121,32 +119,31 @@ export function ManageUserDrawer({
 
   const unsavedChanges = rolesChanged;
 
-  const savePersonRoles = useRecoilCallback(({ set }) => {
-    const asyncCallback = async () => {
-      const updatedAggregate = await api.users.changePersonRoles(
-        organizationId,
-        locationId,
-        adult.id,
-        selectedRoles
-      );
+  const setVisibleAggregates = useSetAtom(visibleAggregatesState);
 
-      set(visibleAggregatesState, (current) =>
-        current.some(
-          (currentEntry) =>
+  const savePersonRoles = async () => {
+    const updatedAggregate = await api.users.changePersonRoles(
+      organizationId,
+      locationId,
+      adult.id,
+      selectedRoles
+    );
+
+    setVisibleAggregates((current) =>
+      current.some(
+        (currentEntry) =>
+          currentEntry.id === updatedAggregate.id &&
+          currentEntry.constructor === updatedAggregate.constructor
+      )
+        ? current.map((currentEntry) =>
             currentEntry.id === updatedAggregate.id &&
             currentEntry.constructor === updatedAggregate.constructor
-        )
-          ? current.map((currentEntry) =>
-            currentEntry.id === updatedAggregate.id &&
-              currentEntry.constructor === updatedAggregate.constructor
-              ? updatedAggregate
-              : currentEntry
+            ? updatedAggregate
+            : currentEntry
           )
-          : current.concat(updatedAggregate)
-      );
-    };
-    return asyncCallback;
-  });
+        : current.concat(updatedAggregate)
+    );
+  };
 
   function revert() {
     setSelectedRoles(user?.locationRoles ?? []);

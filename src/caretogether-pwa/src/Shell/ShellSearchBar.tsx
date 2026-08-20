@@ -12,10 +12,9 @@ import {
   useMediaQuery,
   useTheme,
 } from '@mui/material';
-import { useLoadable } from '../Hooks/useLoadable';
 import { familyNameString } from '../Families/FamilyName';
 import { CombinedFamilyInfo } from '../GeneratedClient';
-import { visibleFamiliesQuery } from '../Model/Data';
+import { useVisibleFamilies } from '../Model/Data';
 import { useAppNavigate } from '../Hooks/useAppNavigate';
 import { personNameString } from '../Families/PersonName';
 
@@ -30,7 +29,7 @@ export function ShellSearchBar({
   const theme = useTheme();
   const isDesktop = useMediaQuery(theme.breakpoints.up('md'));
 
-  const families = useLoadable(visibleFamiliesQuery) || [];
+  const families = useVisibleFamilies();
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const searchBoxRef = useRef<any | null>(null);

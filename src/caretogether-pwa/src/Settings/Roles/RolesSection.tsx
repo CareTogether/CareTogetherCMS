@@ -11,29 +11,25 @@ import {
 } from '@mui/material';
 import { Permission } from '../../GeneratedClient';
 import { useAppNavigate } from '../../Hooks/useAppNavigate';
-import { useLoadable } from '../../Hooks/useLoadable';
-import { organizationConfigurationQuery } from '../../Model/ConfigurationModel';
+import { useOrganizationConfiguration } from '../../Model/ConfigurationModel';
 import { useGlobalPermissions } from '../../Model/SessionModel';
 import { AddRole } from './AddRole';
 import { useSidePanel } from '../../Hooks/useSidePanel';
 import { DeleteRoleButton } from './DeleteRoleButton';
 import { isRoleEditable } from './isRoleEditable';
-import { useRecoilValue } from 'recoil';
-import { selectedLocationContextState } from '../../Model/Data';
+import { useRequiredSelectedLocationContext } from '../../Model/Data';
 import { camelCaseToSpaces } from '../../Utilities/stringUtils';
 import { Breadcrumbs } from '../../Generic/Breadcrumbs';
 
 export function RolesSection() {
-  const configuration = useLoadable(organizationConfigurationQuery);
+  const configuration = useOrganizationConfiguration();
   const roles = configuration?.roles;
 
   const sortedRoles = [...(roles || [])].sort((a, b) =>
     a.roleName! < b.roleName! ? -1 : a.roleName! > b.roleName! ? 1 : 0
   );
 
-  const { organizationId, locationId } = useRecoilValue(
-    selectedLocationContextState
-  );
+  const { organizationId, locationId } = useRequiredSelectedLocationContext();
 
   const appNavigate = useAppNavigate();
 

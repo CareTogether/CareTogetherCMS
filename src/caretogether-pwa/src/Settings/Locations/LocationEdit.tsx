@@ -8,16 +8,15 @@ import {
   Button,
 } from '@mui/material';
 import { useState, useEffect, useMemo } from 'react';
-import { useLoadable } from '../../Hooks/useLoadable';
 import { useBackdrop } from '../../Hooks/useBackdrop';
-import {
-  organizationConfigurationQuery,
-  policyData,
-} from '../../Model/ConfigurationModel';
+import { useOrganizationConfiguration } from '../../Model/ConfigurationModel';
+import { usePolicyLoadable, useRefreshPolicy } from '../../Model/PolicyModel';
 import { ProgressBackdrop } from '../../Shell/ProgressBackdrop';
 import { useScreenTitle } from '../../Shell/ShellScreenTitle';
-import { useRecoilRefresher_UNSTABLE, useRecoilValue } from 'recoil';
-import { selectedLocationContextState, useDataLoaded } from '../../Model/Data';
+import {
+  useDataLoaded,
+  useRequiredSelectedLocationContext,
+} from '../../Model/Data';
 import { useParams } from 'react-router-dom';
 import { Box } from '@mui/system';
 import BasicConfiguration from './Tabs/BasicConfiguration';
@@ -51,8 +50,8 @@ export function LocationEdit() {
     editingLocationId: string;
   }>();
 
-  const configuration = useLoadable(organizationConfigurationQuery);
-  const { organizationId } = useRecoilValue(selectedLocationContextState);
+  const configuration = useOrganizationConfiguration();
+  const { organizationId } = useRequiredSelectedLocationContext();
   const targetLocationId = editingLocationId ?? locationId;
 
   const location = configuration?.locations?.find(
@@ -73,7 +72,7 @@ export function LocationEdit() {
       setIsSidebarCollapsed(false);
     }
   }, [isMobile]);
-  const policy = useLoadable(policyData);
+  const policy = usePolicyLoadable();
   const posthog = usePostHog();
   const showPolicySelfService = useFeatureFlagEnabled(
     SELF_SERVICE_POLICY_FEATURE_FLAG
@@ -170,7 +169,7 @@ export function LocationEdit() {
 
   const appNavigate = useAppNavigate();
   const withBackdrop = useBackdrop();
-  const refreshPolicy = useRecoilRefresher_UNSTABLE(policyData);
+  const refreshPolicy = useRefreshPolicy();
 
   const policyTabIds = [
     'actionDefinitions',

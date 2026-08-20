@@ -12,10 +12,9 @@ import { personNameString } from '../Families/PersonName';
 import {
   usePersonAndFamilyLookup,
 } from '../Model/DirectoryModel';
-import { useLoadable } from '../Hooks/useLoadable';
-import { partneringFamiliesData } from '../Model/V1CasesModel';
-import { policyData } from '../Model/ConfigurationModel';
-import { visibleReferralsQuery } from '../Model/Data';
+import { usePartneringFamilies } from '../Model/V1CasesModel';
+import { usePolicyLoadable } from '../Model/PolicyModel';
+import { useVisibleReferralsLoadable } from '../Model/Data';
 import { matchesCustomFieldFilters } from '../Generic/CustomFieldsFilter/matchesCustomFieldFilters';
 import { CustomFieldFilterSelectionsByField } from '../Generic/CustomFieldsFilter/types';
 import { getFamilyCounty } from '../Utilities/getFamilyCounty';
@@ -235,19 +234,19 @@ export function useClientsBrowserViewModel({
   selectedCustomFieldValuesByField = {},
   sortMode = 'lastNameAsc',
 }: UseClientsBrowserViewModelParameters = {}) {
-  const partneringFamiliesLoadable = useLoadable(partneringFamiliesData);
+  const partneringFamiliesLoadable = usePartneringFamilies();
   const partneringFamilies = useMemo(
     () => partneringFamiliesLoadable ?? [],
     [partneringFamiliesLoadable]
   );
-  const visibleReferralsLoadable = useLoadable(visibleReferralsQuery);
+  const visibleReferralsLoadable = useVisibleReferralsLoadable();
   const visibleReferrals = useMemo(
     () =>
       visibleReferralsLoadable?.map((referralInfo) => referralInfo.referral) ??
       [],
     [visibleReferralsLoadable]
   );
-  const policy = useLoadable(policyData);
+  const policy = usePolicyLoadable();
   const personAndFamilyLookup = usePersonAndFamilyLookup();
   const isLoading =
     partneringFamiliesLoadable === null ||

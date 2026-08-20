@@ -9,9 +9,8 @@ import {
   Typography,
 } from '@mui/material';
 import { CloudUpload as CloudUploadIcon } from '@mui/icons-material';
-import { useRecoilValue } from 'recoil';
 
-import { selectedLocationContextState } from '../Model/Data';
+import { useRequiredSelectedLocationContext } from '../Model/Data';
 import { uploadV1ReferralFileToTenant } from '../Model/FilesModel';
 import { useV1ReferralsModel } from '../Model/V1ReferralsModel';
 
@@ -50,9 +49,7 @@ export function UploadV1ReferralDocumentsDialog(props: {
 }) {
   const { referralId, onClose } = props;
 
-  const { organizationId, locationId } = useRecoilValue(
-    selectedLocationContextState
-  );
+  const { organizationId, locationId } = useRequiredSelectedLocationContext();
 
   const { uploadReferralDocumentMetadata } = useV1ReferralsModel();
 

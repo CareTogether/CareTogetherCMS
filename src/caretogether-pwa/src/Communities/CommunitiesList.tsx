@@ -9,14 +9,13 @@ import {
   TableRow,
 } from '@mui/material';
 import { Community, Permission } from '../GeneratedClient';
-import { useLoadable } from '../Hooks/useLoadable';
 import { ProgressBackdrop } from '../Shell/ProgressBackdrop';
 import { useScreenTitle } from '../Shell/ShellScreenTitle';
 import { Add as AddIcon } from '@mui/icons-material';
 import { useState } from 'react';
 import { useGlobalPermissions } from '../Model/SessionModel';
 import { AddEditCommunity } from './AddEditCommunity';
-import { useDataLoaded, visibleCommunitiesQuery } from '../Model/Data';
+import { useDataLoaded, useVisibleCommunitiesLoadable } from '../Model/Data';
 import { useAppNavigate } from '../Hooks/useAppNavigate';
 
 export function CommunitiesList() {
@@ -24,8 +23,8 @@ export function CommunitiesList() {
 
   const dataLoaded = useDataLoaded();
 
-  // The array object returned by Recoil is read-only. We need to copy it before we can do an in-place sort.
-  const communitiesLoadable = useLoadable(visibleCommunitiesQuery);
+  // The array object returned by state is read-only. We need to copy it before we can do an in-place sort.
+  const communitiesLoadable = useVisibleCommunitiesLoadable();
   const communities = (communitiesLoadable || [])
     .map((x) => x.community!)
     .sort((a, b) => (a.name! < b.name! ? -1 : a.name! > b.name! ? 1 : 0));

@@ -1,10 +1,9 @@
 import { Accordion, AccordionDetails, AccordionSummary, Box, Button, Stack, Typography } from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import { useMemo, useState } from 'react';
-import { useRecoilValue } from 'recoil';
 import { ArrangementPolicy, EffectiveLocationPolicy, FunctionAssignmentPolicy, V1CasePolicy } from '../../../../GeneratedClient';
 import { useSidePanel } from '../../../../Hooks/useSidePanel';
-import { visibleFamiliesQuery } from '../../../../Model/Data';
+import { useVisibleFamilies } from '../../../../Model/Data';
 import { ArrangementPolicySidePanel, FunctionAssignmentPolicySidePanel } from './sidePanels';
 import { FunctionAssignmentPoliciesTable } from './tables';
 import { clonePolicyWithCasePolicy, nextCopyName, personOptionsFromFamilies, removeByName, upsertByName } from './policyUtils';
@@ -29,7 +28,7 @@ export function CasePolicyTab({
   const volunteerFamilyRoles = Object.keys(
     policy.volunteerPolicy?.volunteerFamilyRoles ?? {}
   );
-  const visibleFamilies = useRecoilValue(visibleFamiliesQuery);
+  const visibleFamilies = useVisibleFamilies();
   const personOptions = useMemo(
     () => personOptionsFromFamilies(visibleFamilies),
     [visibleFamilies]

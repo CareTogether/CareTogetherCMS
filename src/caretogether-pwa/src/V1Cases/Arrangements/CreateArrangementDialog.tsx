@@ -21,12 +21,11 @@ import {
   ChildInvolvement,
 } from '../../GeneratedClient';
 import { ValidateDatePicker } from '../../Generic/Forms/ValidateDatePicker';
-import { useRecoilValue } from 'recoil';
 import { useParams } from 'react-router-dom';
 import { useBackdrop } from '../../Hooks/useBackdrop';
 import { useV1CasesModel } from '../../Model/V1CasesModel';
-import { visibleFamiliesQuery } from '../../Model/Data';
-import { locationConfigurationQuery } from '../../Model/ConfigurationModel';
+import { useVisibleFamilies } from '../../Model/Data';
+import { useLocationConfiguration } from '../../Model/ConfigurationModel';
 import { isBackdropClick } from '../../Utilities/handleBackdropClick';
 import {
   getAutomaticPolicyVersion,
@@ -47,14 +46,12 @@ export function CreateArrangementDialog({
   onClose,
 }: CreateArrangementDialogProps) {
   const { familyId } = useParams<{ familyId: string }>();
-  const visibleFamilies = useRecoilValue(visibleFamiliesQuery);
+  const visibleFamilies = useVisibleFamilies();
   const family = visibleFamilies.find(
     (x) => x.family?.id === familyId
   ) as CombinedFamilyInfo;
 
-  const arrangementReasons = useRecoilValue(
-    locationConfigurationQuery
-  )?.arrangementReasons;
+  const arrangementReasons = useLocationConfiguration()?.arrangementReasons;
   const isReasonRequired = arrangementReasons && arrangementReasons.length > 0;
   const availablePolicyVersions = getAvailablePolicyVersions(arrangementPolicy);
   const policyHasVersions = hasPolicyVersions(arrangementPolicy);

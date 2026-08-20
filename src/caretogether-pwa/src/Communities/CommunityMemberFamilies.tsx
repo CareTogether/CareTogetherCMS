@@ -34,10 +34,9 @@ import {
   Phone as PhoneIcon,
 } from '@mui/icons-material';
 import { useBackdrop } from '../Hooks/useBackdrop';
-import { useRecoilValue } from 'recoil';
 import { FamilyName, familyNameString } from '../Families/FamilyName';
 import { familyLastName } from '../Families/FamilyUtils';
-import { visibleFamiliesQuery } from '../Model/Data';
+import { useVisibleFamilies } from '../Model/Data';
 import { useAppNavigate } from '../Hooks/useAppNavigate';
 import { VolunteerRoleApprovalStatusChip } from '../Volunteers/VolunteerRoleApprovalStatusChip';
 import { PersonName } from '../Families/PersonName';
@@ -160,7 +159,7 @@ export function CommunityMemberFamilies({
   const permissions = useCommunityPermissions(communityInfo);
   const community = communityInfo.community!;
 
-  const visibleFamilies = useRecoilValue(visibleFamiliesQuery);
+  const visibleFamilies = useVisibleFamilies();
 
   const memberFamilies = (community?.memberFamilies || [])
     .map((familyId) =>
