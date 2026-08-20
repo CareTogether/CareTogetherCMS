@@ -388,6 +388,45 @@ namespace CareTogether.Core.Test.ApprovalCalculationTests
         }
 
         [TestMethod]
+        public void ProspectiveSupersededIndividualRoleShowsOnlyActiveVersionApplication()
+        {
+            var family = CreateTestFamily();
+            var locationPolicy = CreateIndividualRenewalPolicy();
+            var completedIndividualRequirements = H.CompletedIndividualRequirements(
+                (H.guid1, "LegacyApplication", 1)
+            );
+
+            var result = ApprovalCalculations.CalculateCombinedFamilyApprovals(
+                locationPolicy: locationPolicy,
+                family: family,
+                completedFamilyRequirements: ImmutableList<Resources.CompletedRequirementInfo>.Empty,
+                exemptedFamilyRequirements: ImmutableList<Resources.ExemptedRequirementInfo>.Empty,
+                familyRoleRemovals: ImmutableList<RoleRemoval>.Empty,
+                completedIndividualRequirements: completedIndividualRequirements,
+                exemptedIndividualRequirements: ImmutableDictionary<
+                    Guid,
+                    ImmutableList<Resources.ExemptedRequirementInfo>
+                >.Empty,
+                individualRoleRemovals: ImmutableDictionary<Guid, ImmutableList<RoleRemoval>>.Empty
+            );
+
+            Assert.AreEqual(
+                RoleApprovalStatus.Prospective,
+                result.IndividualApprovals[H.guid1].ApprovalStatusByRole["Role1"].CurrentStatus
+            );
+            CollectionAssert.AreEqual(
+                new[] { "CurrentApplication" },
+                result
+                    .CurrentAvailableIndividualApplications.Where(x => x.PersonId == H.guid1)
+                    .Select(x => x.ActionName)
+                    .ToArray()
+            );
+            Assert.IsFalse(
+                result.CurrentMissingIndividualRequirements.Any(x => x.PersonId == H.guid1)
+            );
+        }
+
+        [TestMethod]
         public void ExpiredSupersededIndividualRoleShowsActiveVersionMissingApproval()
         {
             var family = CreateTestFamily();
@@ -457,6 +496,40 @@ namespace CareTogether.Core.Test.ApprovalCalculationTests
         }
 
         [TestMethod]
+        public void OnboardedSupersededIndividualRoleHidesActiveVersionMissingRequirements()
+        {
+            var family = CreateTestFamily();
+            var locationPolicy = CreateIndividualRenewalPolicy();
+            var completedIndividualRequirements = H.CompletedIndividualRequirements(
+                (H.guid1, "LegacyApplication", 1),
+                (H.guid1, "LegacyApproval", 1),
+                (H.guid1, "CurrentApplication", 11)
+            );
+
+            var result = ApprovalCalculations.CalculateCombinedFamilyApprovals(
+                locationPolicy: locationPolicy,
+                family: family,
+                completedFamilyRequirements: ImmutableList<Resources.CompletedRequirementInfo>.Empty,
+                exemptedFamilyRequirements: ImmutableList<Resources.ExemptedRequirementInfo>.Empty,
+                familyRoleRemovals: ImmutableList<RoleRemoval>.Empty,
+                completedIndividualRequirements: completedIndividualRequirements,
+                exemptedIndividualRequirements: ImmutableDictionary<
+                    Guid,
+                    ImmutableList<Resources.ExemptedRequirementInfo>
+                >.Empty,
+                individualRoleRemovals: ImmutableDictionary<Guid, ImmutableList<RoleRemoval>>.Empty
+            );
+
+            Assert.AreEqual(
+                RoleApprovalStatus.Onboarded,
+                result.IndividualApprovals[H.guid1].ApprovalStatusByRole["Role1"].CurrentStatus
+            );
+            Assert.IsFalse(
+                result.CurrentMissingIndividualRequirements.Any(x => x.PersonId == H.guid1)
+            );
+        }
+
+        [TestMethod]
         public void OnboardedSupersededFamilyRoleHidesActiveVersionMissingRequirements()
         {
             var family = CreateTestFamily();
@@ -488,16 +561,44 @@ namespace CareTogether.Core.Test.ApprovalCalculationTests
                 RoleApprovalStatus.Onboarded,
                 result.FamilyRoleApprovals["FamilyRole1"].CurrentStatus
             );
-            Assert.IsFalse(
-                result.CurrentMissingFamilyRequirements.Any(x =>
-                    x.ActionName == "CurrentFamilyApproval"
-                )
+            Assert.IsFalse(result.CurrentMissingFamilyRequirements.Any());
+            Assert.IsFalse(result.CurrentMissingIndividualRequirements.Any());
+        }
+
+        [TestMethod]
+        public void ProspectiveSupersededFamilyRoleShowsOnlyActiveVersionApplication()
+        {
+            var family = CreateTestFamily();
+            var locationPolicy = CreateFamilyRenewalPolicy();
+            var completedFamilyRequirements = H.Completed(("LegacyApplication", 1));
+
+            var result = ApprovalCalculations.CalculateCombinedFamilyApprovals(
+                locationPolicy: locationPolicy,
+                family: family,
+                completedFamilyRequirements: completedFamilyRequirements,
+                exemptedFamilyRequirements: ImmutableList<Resources.ExemptedRequirementInfo>.Empty,
+                familyRoleRemovals: ImmutableList<RoleRemoval>.Empty,
+                completedIndividualRequirements: ImmutableDictionary<
+                    Guid,
+                    ImmutableList<Resources.CompletedRequirementInfo>
+                >.Empty,
+                exemptedIndividualRequirements: ImmutableDictionary<
+                    Guid,
+                    ImmutableList<Resources.ExemptedRequirementInfo>
+                >.Empty,
+                individualRoleRemovals: ImmutableDictionary<Guid, ImmutableList<RoleRemoval>>.Empty
             );
-            Assert.IsFalse(
-                result.CurrentMissingIndividualRequirements.Any(x =>
-                    x.ActionName == "CurrentAdultApproval"
-                )
+
+            Assert.AreEqual(
+                RoleApprovalStatus.Prospective,
+                result.FamilyRoleApprovals["FamilyRole1"].CurrentStatus
             );
+            CollectionAssert.AreEqual(
+                new[] { "CurrentApplication" },
+                result.CurrentAvailableFamilyApplications.ToArray()
+            );
+            Assert.IsFalse(result.CurrentMissingFamilyRequirements.Any());
+            Assert.IsFalse(result.CurrentMissingIndividualRequirements.Any());
         }
 
         [TestMethod]

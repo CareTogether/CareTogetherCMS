@@ -367,7 +367,7 @@ export function AddChildDrawer({ onClose }: AddChildDrawerProps) {
           gap: 1,
           justifyContent: 'flex-end',
           p: 2,
-          pb: 'calc(16px + env(safe-area-inset-bottom))',
+          pb: 'env(safe-area-inset-bottom)',
           backgroundColor: 'background.paper',
         }}
       >

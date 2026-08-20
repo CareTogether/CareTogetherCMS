@@ -34,17 +34,17 @@ namespace CareTogether.Core.Test.ApprovalCalculationTests
             }
 
             [TestMethod]
-            public void EmptyList_ReturnsDefault()
+            public void EmptyList_ReturnsNull()
             {
                 var result = PolicyEvaluationHelpers.GetMaxRoleStatus(
                     ImmutableList<IndividualRoleVersionApprovalStatus>.Empty
                 );
 
-                Assert.AreEqual((RoleApprovalStatus)0, result);
+                Assert.IsNull(result);
             }
 
             [TestMethod]
-            public void AllNullStatuses_ReturnsDefault()
+            public void AllNullStatuses_ReturnsNull()
             {
                 var versions = ImmutableList.Create(
                     CreateIndividualVersion("v1", null),
@@ -53,7 +53,7 @@ namespace CareTogether.Core.Test.ApprovalCalculationTests
 
                 var result = PolicyEvaluationHelpers.GetMaxRoleStatus(versions);
 
-                Assert.AreEqual((RoleApprovalStatus)0, result);
+                Assert.IsNull(result);
             }
 
             [DataTestMethod]
@@ -180,17 +180,17 @@ namespace CareTogether.Core.Test.ApprovalCalculationTests
             }
 
             [TestMethod]
-            public void EmptyList_ReturnsDefault()
+            public void EmptyList_ReturnsNull()
             {
                 var result = PolicyEvaluationHelpers.GetMaxRoleStatus(
                     ImmutableList<FamilyRoleVersionApprovalStatus>.Empty
                 );
 
-                Assert.AreEqual((RoleApprovalStatus)0, result);
+                Assert.IsNull(result);
             }
 
             [TestMethod]
-            public void AllNullStatuses_ReturnsDefault()
+            public void AllNullStatuses_ReturnsNull()
             {
                 var versions = ImmutableList.Create(
                     CreateFamilyVersion("v1", null),
@@ -199,7 +199,7 @@ namespace CareTogether.Core.Test.ApprovalCalculationTests
 
                 var result = PolicyEvaluationHelpers.GetMaxRoleStatus(versions);
 
-                Assert.AreEqual((RoleApprovalStatus)0, result);
+                Assert.IsNull(result);
             }
 
             [DataTestMethod]
@@ -302,6 +302,107 @@ namespace CareTogether.Core.Test.ApprovalCalculationTests
 
                 Assert.AreEqual(RoleApprovalStatus.Approved, result);
             }
+        }
+
+        [TestClass]
+        public class SelectPromptableVersionsTests
+        {
+            [TestMethod]
+            public void IndividualVersions_ReturnsOnlyMostAdvancedActiveVersions()
+            {
+                var versions = ImmutableList.Create(
+                    CreateIndividualVersion("unstarted", null),
+                    CreateIndividualVersion("prospective", RoleApprovalStatus.Prospective),
+                    CreateIndividualVersion("approved", RoleApprovalStatus.Approved),
+                    CreateIndividualVersion(
+                        "superseded-onboarded",
+                        RoleApprovalStatus.Onboarded,
+                        DateTime.UtcNow.AddDays(-1)
+                    )
+                );
+
+                var result = PolicyEvaluationHelpers.SelectPromptableVersions(
+                    versions,
+                    RoleApprovalStatus.Approved
+                );
+
+                CollectionAssert.AreEqual(
+                    new[] { "approved" },
+                    result.Select(version => version.Version).ToArray()
+                );
+            }
+
+            [TestMethod]
+            public void OnboardedEffectiveStatus_ReturnsNoFamilyVersions()
+            {
+                var versions = ImmutableList.Create(
+                    CreateFamilyVersion("active", RoleApprovalStatus.Prospective),
+                    CreateFamilyVersion(
+                        "superseded",
+                        RoleApprovalStatus.Onboarded,
+                        DateTime.UtcNow.AddDays(-1)
+                    )
+                );
+
+                var result = PolicyEvaluationHelpers.SelectPromptableVersions(
+                    versions,
+                    RoleApprovalStatus.Onboarded
+                );
+
+                Assert.IsFalse(result.Any());
+            }
+
+            [TestMethod]
+            public void UnstartedActiveVersions_AreAllPromptable()
+            {
+                var versions = ImmutableList.Create(
+                    CreateFamilyVersion("v1", null),
+                    CreateFamilyVersion("v2", null)
+                );
+
+                var result = PolicyEvaluationHelpers.SelectPromptableVersions(
+                    versions,
+                    effectiveStatus: null
+                );
+
+                CollectionAssert.AreEqual(
+                    new[] { "v1", "v2" },
+                    result.Select(version => version.Version).ToArray()
+                );
+            }
+
+            private static IndividualRoleVersionApprovalStatus CreateIndividualVersion(
+                string version,
+                RoleApprovalStatus? status,
+                DateTime? supersededAtUtc = null
+            ) =>
+                new(
+                    "TestRole",
+                    version,
+                    supersededAtUtc,
+                    CreateStatusTimeline(status),
+                    ImmutableList<IndividualRoleRequirementCompletionStatus>.Empty
+                );
+
+            private static FamilyRoleVersionApprovalStatus CreateFamilyVersion(
+                string version,
+                RoleApprovalStatus? status,
+                DateTime? supersededAtUtc = null
+            ) =>
+                new(
+                    "TestRole",
+                    version,
+                    supersededAtUtc,
+                    CreateStatusTimeline(status),
+                    ImmutableList<FamilyRoleRequirementCompletionStatus>.Empty
+                );
+
+            private static DateOnlyTimeline<RoleApprovalStatus>? CreateStatusTimeline(
+                RoleApprovalStatus? status
+            ) =>
+                status.HasValue
+                    ? new DateOnlyTimeline<RoleApprovalStatus>([H.DR(1, null, status.Value)])
+                    : null;
         }
     }
 }

@@ -159,17 +159,15 @@ export function ClientsScreenV2() {
     <Box
       sx={{
         ...wideTablePageSx(hasFeaturebaseChat),
-        boxSizing: 'border-box',
-        display: 'flex',
-        flexDirection: 'column',
-        gap: 2,
-        px: { xs: 2, md: 3 },
-        py: { xs: 2, md: 3 },
       }}
     >
       <Stack spacing={2.5} sx={{ flex: 1, minHeight: 0 }}>
         <Box>
-          <Typography className="ph-unmask" {...v2Typography.pageTitle}>
+          <Typography
+            className="ph-unmask"
+            {...v2Typography.pageTitle}
+            sx={{ mt: 2 }}
+          >
             Clients
           </Typography>
           <Typography

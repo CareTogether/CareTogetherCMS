@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useMediaQuery, useTheme } from '@mui/material';
 import { atom, useSetAtom } from 'jotai';
 import { useAccountInfo } from '../Authentication/Auth';
@@ -13,6 +13,14 @@ import { Permission } from '../GeneratedClient';
 
 // Jotai atom for changelog unread count
 export const changelogUnreadCountState = atom<number>(0);
+
+const FEATUREBASE_DESKTOP_VERTICAL_PADDING = 20;
+const FEATUREBASE_MOBILE_VERTICAL_PADDING = 70;
+
+type FeaturebaseIdentity = {
+  userHash: string;
+  userId: string;
+};
 
 // Extend the Window interface to include Featurebase
 declare global {
@@ -34,14 +42,39 @@ export const useFeaturebase = () => {
   const locationConfiguration = useLocationConfiguration();
   const locationContext = useSelectedLocationContext();
   const setChangelogUnreadCount = useSetAtom(changelogUnreadCountState);
+  const [featurebaseIdentity, setFeaturebaseIdentity] =
+    useState<FeaturebaseIdentity>();
 
   // Check if user has permission to access support screen
   const permissions = useGlobalPermissions();
   const hasAccessToSupport = permissions(Permission.AccessSupportScreen);
 
   useEffect(() => {
-    // Only initialize Featurebase if user has access to support screen
-    if (!hasAccessToSupport) {
+    if (!hasAccessToSupport || !accountInfo?.userId) {
+      setFeaturebaseIdentity(undefined);
+      return;
+    }
+
+    let cancelled = false;
+    const userId = accountInfo.userId;
+
+    void api.users.getFeaturebaseIdentityHash().then((userHash) => {
+      if (cancelled) return;
+
+      setFeaturebaseIdentity({ userHash, userId });
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [accountInfo?.userId, hasAccessToSupport]);
+
+  useEffect(() => {
+    if (
+      !hasAccessToSupport ||
+      !accountInfo?.userId ||
+      featurebaseIdentity?.userId !== accountInfo.userId
+    ) {
       return;
     }
 
@@ -54,64 +87,61 @@ export const useFeaturebase = () => {
       };
     }
 
-    // Only boot Featurebase if we have user data
-    if (accountInfo?.userId) {
-      // Fetch the userHash from the backend for identity verification
-      api.users.getFeaturebaseIdentityHash().then((userHash) => {
-        // Boot Featurebase messenger with configuration including user attributes
-        win.Featurebase('boot', {
-          appId: '6890e41acb9e844a4374a7a8', // required
-          email: accountInfo.email,
-          userId: accountInfo.userId,
-          name: accountInfo.name,
-          userHash: userHash, // Add the generated userHash for identity verification
-          theme: 'light',
-          language: 'en',
-          ...(isMobile ? { verticalPadding: 70 } : {}),
-          companies: [
-            {
-              id: locationContext?.organizationId,
-              name: organizationConfiguration?.organizationName,
-              customFields: {
-                locationId: locationContext?.locationId,
-                locationName: locationConfiguration?.name,
-              },
-            },
-          ],
-        });
-
-        // Initialize changelog widget after Featurebase is booted
-        win.Featurebase(
-          'init_changelog_widget',
-          {
-            organization: 'caretogether',
-            theme: 'light',
-            locale: 'en',
-            dropdown: {
-              enabled: true,
-              placement: 'left',
-            },
-            popup: {
-              enabled: false,
-              autoOpenForNewUpdates: false,
-            },
+    // Boot Featurebase messenger with configuration including user attributes
+    win.Featurebase('boot', {
+      appId: '6890e41acb9e844a4374a7a8', // required
+      email: accountInfo.email,
+      userId: accountInfo.userId,
+      name: accountInfo.name,
+      userHash: featurebaseIdentity.userHash,
+      theme: 'light',
+      language: 'en',
+      verticalPadding: isMobile
+        ? FEATUREBASE_MOBILE_VERTICAL_PADDING
+        : FEATUREBASE_DESKTOP_VERTICAL_PADDING,
+      companies: [
+        {
+          id: locationContext?.organizationId,
+          name: organizationConfiguration?.organizationName,
+          customFields: {
+            locationId: locationContext?.locationId,
+            locationName: locationConfiguration?.name,
           },
-          (
-            error: unknown,
-            data: { action?: string; unreadCount?: number } | null
-          ) => {
-            if (error) return;
+        },
+      ],
+    });
 
-            if (data?.action === 'unreadChangelogsCountChanged') {
-              setChangelogUnreadCount(data.unreadCount ?? 0);
-            }
-          }
-        );
-      });
-    }
+    // Initialize changelog widget after Featurebase is booted
+    win.Featurebase(
+      'init_changelog_widget',
+      {
+        organization: 'caretogether',
+        theme: 'light',
+        locale: 'en',
+        dropdown: {
+          enabled: true,
+          placement: 'left',
+        },
+        popup: {
+          enabled: false,
+          autoOpenForNewUpdates: false,
+        },
+      },
+      (
+        error: unknown,
+        data: { action?: string; unreadCount?: number } | null
+      ) => {
+        if (error) return;
+
+        if (data?.action === 'unreadChangelogsCountChanged') {
+          setChangelogUnreadCount(data.unreadCount ?? 0);
+        }
+      }
+    );
   }, [
     hasAccessToSupport,
     accountInfo,
+    featurebaseIdentity,
     organizationConfiguration,
     locationConfiguration,
     locationContext,

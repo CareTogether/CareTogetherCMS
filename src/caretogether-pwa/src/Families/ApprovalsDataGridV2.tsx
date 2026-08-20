@@ -1,7 +1,13 @@
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import { Box, Chip, Tooltip, Typography, useTheme } from '@mui/material';
-import { DataGrid, GridColDef, GridToolbar } from '@mui/x-data-grid';
-import { useCallback, useLayoutEffect, useRef, useState } from 'react';
+import {
+  DataGrid,
+  GridColDef,
+  GridFilterInputSingleSelect,
+  GridFilterOperator,
+  GridToolbar,
+} from '@mui/x-data-grid';
+import { useCallback, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { useUserLookup } from '../Model/DirectoryModel';
 import { PersonName } from './PersonName';
 import type { ApprovalLedgerRow } from './approvalLedgerViewModel';
@@ -20,6 +26,11 @@ import { v2Typography } from './v2Typography';
 type ApprovalsDataGridV2Props = {
   onRowClick: (row: ApprovalLedgerRow) => void;
   rows: ApprovalLedgerRow[];
+};
+
+type NeededForRoleValueOption = {
+  label: string;
+  value: string;
 };
 
 function OverflowRoleChipList({ labels }: { labels: string[] }) {
@@ -260,8 +271,51 @@ function AppliesToChips({ row }: { row: ApprovalLedgerRow }) {
   );
 }
 
+function neededForRoleValueOptions(
+  rows: ApprovalLedgerRow[]
+): NeededForRoleValueOption[] {
+  const roleLabelsByValue = new Map<string, string>();
+
+  rows.forEach((row) => {
+    row.neededForRoles.forEach((role, index) => {
+      if (roleLabelsByValue.has(role)) {
+        return;
+      }
+
+      roleLabelsByValue.set(role, row.neededForRoleLabels[index] ?? role);
+    });
+  });
+
+  return Array.from(roleLabelsByValue.entries())
+    .map(([value, label]) => ({ label, value }))
+    .sort((firstOption, secondOption) =>
+      firstOption.label.localeCompare(secondOption.label)
+    );
+}
+
+const neededForRoleFilterOperators: GridFilterOperator<
+  ApprovalLedgerDataGridRowV2,
+  string
+>[] = [
+  {
+    label: 'is',
+    value: 'is',
+    getApplyFilterFn: (filterItem) => {
+      if (filterItem.value == null || filterItem.value === '') {
+        return null;
+      }
+
+      const role = String(filterItem.value);
+
+      return (_value, row) => row.neededForRoles.includes(role);
+    },
+    InputComponent: GridFilterInputSingleSelect,
+  },
+];
+
 function buildColumns(
-  userLookup: ReturnType<typeof useUserLookup>
+  userLookup: ReturnType<typeof useUserLookup>,
+  neededForRoleOptions: NeededForRoleValueOption[]
 ): GridColDef<ApprovalLedgerDataGridRowV2>[] {
   return [
     {
@@ -325,7 +379,10 @@ function buildColumns(
       headerName: 'Needed For Roles',
       minWidth: 220,
       flex: 0.9,
+      type: 'singleSelect',
       valueGetter: (_value, row) => row.neededForRoleLabels.join(', '),
+      valueOptions: neededForRoleOptions,
+      filterOperators: neededForRoleFilterOperators,
       renderCell: ({ row }) => (
         <OverflowRoleChipList labels={row.neededForRoleLabels} />
       ),
@@ -412,7 +469,14 @@ export function ApprovalsDataGridV2({
   const theme = useTheme();
   const userLookup = useUserLookup();
   const gridContainerRef = useRef<HTMLDivElement | null>(null);
-  const columns = buildColumns(userLookup);
+  const neededForRoleOptions = useMemo(
+    () => neededForRoleValueOptions(rows),
+    [rows]
+  );
+  const columns = useMemo(
+    () => buildColumns(userLookup, neededForRoleOptions),
+    [neededForRoleOptions, userLookup]
+  );
 
   const clearGridFocus = () => {
     const activeElement = document.activeElement;

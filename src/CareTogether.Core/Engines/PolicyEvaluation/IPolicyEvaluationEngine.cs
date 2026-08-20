@@ -41,7 +41,7 @@ namespace CareTogether.Engines.PolicyEvaluation
             (string Version, string RoleName)[] Versions
         )> CurrentMissingIndividualRequirements =>
             FamilyRoleApprovals
-                .SelectMany(fra => GetMissingRequirementsFromFamilyRole(fra.Key, fra.Value))
+                .SelectMany(fra => GetMissingRequirementsFromFamilyRole(fra.Value))
                 .Concat(
                     IndividualApprovals.SelectMany(ia =>
                         GetMissingRequirementsFromIndividual(ia.Key, ia.Value)
@@ -62,7 +62,6 @@ namespace CareTogether.Engines.PolicyEvaluation
             string ActionName,
             (string Version, string RoleName) Version
         )> GetMissingRequirementsFromFamilyRole(
-            string roleName,
             FamilyRoleApprovalStatus familyRoleStatus
         )
         {
@@ -72,12 +71,8 @@ namespace CareTogether.Engines.PolicyEvaluation
                 familyRoleStatus.RoleVersionApprovals,
                 familyRoleStatus.CurrentStatus
             );
-            var maxVersionStatus = PolicyEvaluationHelpers.GetMaxRoleStatus(
-                promptableVersions
-            );
 
             return promptableVersions
-                .Where(r => maxVersionStatus == null || r.CurrentStatus == maxVersionStatus)
                 .SelectMany(r =>
                     r.CurrentMissingRequirements.Where(cmr =>
                             cmr.Scope == VolunteerFamilyRequirementScope.AllAdultsInTheFamily
@@ -111,19 +106,14 @@ namespace CareTogether.Engines.PolicyEvaluation
         {
             return individualStatus.ApprovalStatusByRole.SelectMany(kv =>
             {
-                var roleName = kv.Key;
                 // Older policy versions can prove the role is already approved/onboarded.
                 // Only active policy versions can ask for missing requirements.
                 var promptableVersions = PolicyEvaluationHelpers.SelectPromptableVersions(
                     kv.Value.RoleVersionApprovals,
                     kv.Value.CurrentStatus
                 );
-                var maxVersionStatus = PolicyEvaluationHelpers.GetMaxRoleStatus(
-                    promptableVersions
-                );
 
                 return promptableVersions
-                    .Where(r => maxVersionStatus == null || r.CurrentStatus == maxVersionStatus)
                     .SelectMany(r =>
                         r.CurrentMissingRequirements.Where(cmr =>
                                 cmr.WhenMet?.Contains(DateOnly.FromDateTime(DateTime.UtcNow))
@@ -148,20 +138,11 @@ namespace CareTogether.Engines.PolicyEvaluation
                 .SelectMany(ia =>
                     ia.Value.ApprovalStatusByRole.SelectMany(kv =>
                     {
-                        var roleName = kv.Key;
-
-                        if (
-                            !PolicyEvaluationHelpers.ShouldShowApplicationPrompt(
-                                kv.Value.CurrentStatus
-                            )
-                        )
-                            return Enumerable.Empty<(Guid, string)>();
-
                         var promptableVersions = PolicyEvaluationHelpers.SelectPromptableVersions(
-                            kv.Value.RoleVersionApprovals
+                            kv.Value.RoleVersionApprovals,
+                            kv.Value.CurrentStatus
                         );
                         return promptableVersions
-                            .Where(r => r.CurrentStatus == null)
                             .SelectMany(r => r.CurrentAvailableApplications)
                             .Select(a => (ia.Key, a.ActionName));
                     })
@@ -231,15 +212,17 @@ namespace CareTogether.Engines.PolicyEvaluation
             }
         }
 
-        public ImmutableList<string> CurrentAvailableApplications =>
-            !PolicyEvaluationHelpers.ShouldShowApplicationPrompt(CurrentStatus)
-                ? ImmutableList<string>.Empty
-                : PolicyEvaluationHelpers
-                    .SelectPromptableVersions(RoleVersionApprovals)
-                    .Where(r => r.CurrentStatus == null)
+        public ImmutableList<string> CurrentAvailableApplications
+        {
+            get
+            {
+                return PolicyEvaluationHelpers
+                    .SelectPromptableVersions(RoleVersionApprovals, CurrentStatus)
                     .SelectMany(r => r.CurrentAvailableApplications)
                     .Select(r => r.ActionName)
                     .ToImmutableList();
+            }
+        }
     }
 
     public sealed record IndividualRoleVersionApprovalStatus(
@@ -316,12 +299,8 @@ namespace CareTogether.Engines.PolicyEvaluation
                     RoleVersionApprovals,
                     CurrentStatus
                 );
-                var maxVersionStatus = PolicyEvaluationHelpers.GetMaxRoleStatus(
-                    promptableVersions
-                );
 
                 return promptableVersions
-                    .Where(r => maxVersionStatus == null || r.CurrentStatus == maxVersionStatus)
                     .SelectMany(r =>
                         r.CurrentMissingRequirements.Select(cmr =>
                             (CurrentMissingRequirement: cmr, Version: (r.Version, r.RoleName))
@@ -341,15 +320,12 @@ namespace CareTogether.Engines.PolicyEvaluation
         {
             get
             {
-                return !PolicyEvaluationHelpers.ShouldShowApplicationPrompt(CurrentStatus)
-                    ? ImmutableList<string>.Empty
-                    : PolicyEvaluationHelpers
-                        .SelectPromptableVersions(RoleVersionApprovals)
-                        .Where(r => r.CurrentStatus == null)
-                        .SelectMany(r => r.CurrentAvailableApplications)
-                        .Where(r => r.Scope == VolunteerFamilyRequirementScope.OncePerFamily)
-                        .Select(r => r.ActionName)
-                        .ToImmutableList();
+                return PolicyEvaluationHelpers
+                    .SelectPromptableVersions(RoleVersionApprovals, CurrentStatus)
+                    .SelectMany(r => r.CurrentAvailableApplications)
+                    .Where(r => r.Scope == VolunteerFamilyRequirementScope.OncePerFamily)
+                    .Select(r => r.ActionName)
+                    .ToImmutableList();
             }
         }
 
