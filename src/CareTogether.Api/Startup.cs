@@ -11,6 +11,7 @@ using CareTogether.Engines.PolicyEvaluation;
 using CareTogether.Managers;
 using CareTogether.Managers.Communications;
 using CareTogether.Managers.Membership;
+using CareTogether.Managers.OrganizationCategories;
 using CareTogether.Managers.Records;
 using CareTogether.Resources.Accounts;
 using CareTogether.Resources.Approvals;
@@ -253,7 +254,11 @@ namespace CareTogether.Api
                 v1ReferralNotesEventLog,
                 v1ReferralDraftNotesStore
             );
-            var communitiesResource = new CommunitiesResource(communitiesEventLog, uploadsStore);
+            var communitiesResource = new CommunitiesResource(
+                communitiesEventLog,
+                uploadsStore,
+                policiesResource
+            );
 
             //TODO: If we want to be strict about conventions, this should have a manager intermediary for authz.
             services.AddSingleton<IPoliciesResource>(policiesResource);
@@ -298,6 +303,9 @@ namespace CareTogether.Api
             );
 
             // Manager services
+            services.AddSingleton<IOrganizationCategoriesManager>(
+                new OrganizationCategoriesManager(policiesResource, communitiesResource)
+            );
             services.AddSingleton<ICommunicationsManager>(
                 new CommunicationsManager(
                     authorizationEngine,

@@ -64,6 +64,10 @@ namespace CareTogether.Resources.Communities
                 {
                     RenameCommunity c => community with { Name = c.Name },
                     EditCommunityDescription c => community with { Description = c.Description },
+                    SetOrganizationCategories c => community with
+                    {
+                        CategoryIds = c.CategoryIds.Distinct().ToImmutableList(),
+                    },
                     AddCommunityMemberFamily c => community with
                     {
                         MemberFamilies = community.MemberFamilies.Add(c.FamilyId),

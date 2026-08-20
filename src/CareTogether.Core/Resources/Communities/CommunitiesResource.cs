@@ -2,6 +2,7 @@
 using System.Collections.Immutable;
 using System.Linq;
 using System.Threading.Tasks;
+using CareTogether.Resources.Policies;
 using CareTogether.Utilities.EventLog;
 using CareTogether.Utilities.FileStore;
 
@@ -11,6 +12,7 @@ namespace CareTogether.Resources.Communities
     {
         private readonly IEventLog<CommunityCommandExecutedEvent> communitiesEventLog;
         private readonly IFileStore fileStore;
+        private readonly IPoliciesResource policiesResource;
         private readonly ConcurrentLockingStore<
             (Guid organizationId, Guid locationId),
             CommunitiesModel
@@ -18,11 +20,13 @@ namespace CareTogether.Resources.Communities
 
         public CommunitiesResource(
             IEventLog<CommunityCommandExecutedEvent> communitiesEventLog,
-            IFileStore fileStore
+            IFileStore fileStore,
+            IPoliciesResource policiesResource
         )
         {
             this.communitiesEventLog = communitiesEventLog;
             this.fileStore = fileStore;
+            this.policiesResource = policiesResource;
             tenantCommunitiesModels = new ConcurrentLockingStore<
                 (Guid organizationId, Guid locationId),
                 CommunitiesModel
@@ -40,6 +44,12 @@ namespace CareTogether.Resources.Communities
             Guid userId
         )
         {
+            if (command is SetOrganizationCategories setCategories)
+                await ValidateOrganizationCategoriesAsync(
+                    organizationId,
+                    setCategories.CategoryIds
+                );
+
             using (
                 var lockedModel = await tenantCommunitiesModels.WriteLockItemAsync(
                     (organizationId, locationId)
@@ -61,6 +71,28 @@ namespace CareTogether.Resources.Communities
                 result.OnCommit();
                 return result.Community;
             }
+        }
+
+        private async Task ValidateOrganizationCategoriesAsync(
+            Guid organizationId,
+            ImmutableList<Guid> categoryIds
+        )
+        {
+            if (categoryIds.Count != categoryIds.Distinct().Count())
+                throw new InvalidOperationException(
+                    "An organization category cannot be assigned more than once."
+                );
+
+            var configuration = await policiesResource.GetConfigurationAsync(organizationId);
+            var configuredCategoryIds = configuration
+                .OrganizationCategories.Select(category => category.Id)
+                .ToImmutableHashSet();
+            if (categoryIds.All(configuredCategoryIds.Contains))
+                return;
+
+            throw new InvalidOperationException(
+                "One or more organization categories are not configured for this tenant."
+            );
         }
 
         public async Task<ImmutableList<Community>> ListLocationCommunitiesAsync(

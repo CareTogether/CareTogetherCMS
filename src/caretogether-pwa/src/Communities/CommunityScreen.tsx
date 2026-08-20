@@ -29,12 +29,18 @@ import { CommunityMemberFamilies } from './CommunityMemberFamilies';
 import { CommunityRoleAssignments } from './CommunityRoleAssignments';
 import { useDrawer } from '../Generic/ShellDrawer';
 import { useDataLoaded } from '../Model/Data';
+import { useState } from 'react';
+import { useLoadable } from '../Hooks/useLoadable';
+import { organizationConfigurationQuery } from '../Model/ConfigurationModel';
+import { OrganizationCategoriesSection } from './OrganizationCategoriesSection';
+import { EditOrganizationCategoriesDrawer } from './EditOrganizationCategoriesDrawer';
 
 export function CommunityScreen() {
   const communityIdMaybe = useParams<{ communityId: string }>();
   const communityId = communityIdMaybe.communityId as string;
 
   const dataLoaded = useDataLoaded();
+  const organizationConfiguration = useLoadable(organizationConfigurationQuery);
 
   const communityLookup = useCommunityLookup();
   const communityInfo = communityLookup(communityId)!;
@@ -53,6 +59,7 @@ export function CommunityScreen() {
   const uploadDrawer = useDrawer();
   const addMemberFamilyDrawer = useDrawer();
   const addRoleAssignmentDrawer = useDrawer();
+  const [categoriesDrawerOpen, setCategoriesDrawerOpen] = useState(false);
   // const deleteCommunityDrawer = useDrawer();
 
   return !dataLoaded || !community ? (
@@ -82,6 +89,14 @@ export function CommunityScreen() {
             Delete
           </Button>} */}
       </Toolbar>
+      <OrganizationCategoriesSection
+        availableCategories={
+          organizationConfiguration?.organizationCategories ?? []
+        }
+        categoryIds={community.categoryIds ?? []}
+        canEdit={permissions(Permission.EditOrganization)}
+        onEdit={() => setCategoriesDrawerOpen(true)}
+      />
       <Grid container spacing={2} sx={{ marginTop: 0 }}>
         <Grid size={{ xs: 12, sm: 6 }}>
           <Typography variant="h5">
@@ -173,6 +188,16 @@ export function CommunityScreen() {
             onClose={editDrawer.closeDrawer}
           />
         )}
+      {permissions(Permission.EditOrganization) && categoriesDrawerOpen && (
+        <EditOrganizationCategoriesDrawer
+          availableCategories={
+            organizationConfiguration?.organizationCategories ?? []
+          }
+          categoryIds={community.categoryIds ?? []}
+          communityId={community.id!}
+          onClose={() => setCategoriesDrawerOpen(false)}
+        />
+      )}
       {permissions(Permission.UploadOrganizationDocuments) &&
         uploadDrawer.drawerFor(
           <CommunityDocumentUpload

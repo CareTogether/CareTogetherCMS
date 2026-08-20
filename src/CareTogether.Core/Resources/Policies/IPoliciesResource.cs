@@ -13,7 +13,12 @@ namespace CareTogether.Resources.Policies
         ImmutableList<string> CommunityRoles,
         ImmutableList<string>? ReferralCloseReasons,
         ImmutableList<string>? CaseCloseReasons
-    );
+    )
+    {
+        public ImmutableList<OrganizationCategory> OrganizationCategories { get; init; } = [];
+    }
+
+    public sealed record OrganizationCategory(Guid Id, string Name);
 
     public sealed record LocationConfiguration(
         Guid? Id,
@@ -476,6 +481,16 @@ namespace CareTogether.Resources.Policies
             Guid organizationId,
             ImmutableList<string>? referralCloseReasons,
             ImmutableList<string>? caseCloseReasons
+        );
+
+        Task<OrganizationConfiguration> UpsertOrganizationCategoryAsync(
+            Guid organizationId,
+            OrganizationCategory category
+        );
+
+        Task<OrganizationConfiguration> DeleteOrganizationCategoryAsync(
+            Guid organizationId,
+            Guid categoryId
         );
 
         Task<EffectiveLocationPolicy> UpsertEffectiveLocationPolicyAsync(

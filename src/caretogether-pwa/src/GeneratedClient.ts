@@ -282,6 +282,90 @@ export class ConfigurationClient {
         return Promise.resolve<OrganizationConfiguration>(null as any);
     }
 
+    putOrganizationCategory(organizationId: string, categoryId: string, payload: PutOrganizationCategoryPayload): Promise<OrganizationConfiguration> {
+        let url_ = this.baseUrl + "/api/{organizationId}/Configuration/organization-categories/{categoryId}";
+        if (organizationId === undefined || organizationId === null)
+            throw new globalThis.Error("The parameter 'organizationId' must be defined.");
+        url_ = url_.replace("{organizationId}", encodeURIComponent("" + organizationId));
+        if (categoryId === undefined || categoryId === null)
+            throw new globalThis.Error("The parameter 'categoryId' must be defined.");
+        url_ = url_.replace("{categoryId}", encodeURIComponent("" + categoryId));
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(payload);
+
+        let options_: RequestInit = {
+            body: content_,
+            method: "PUT",
+            headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processPutOrganizationCategory(_response);
+        });
+    }
+
+    protected processPutOrganizationCategory(response: Response): Promise<OrganizationConfiguration> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result200 = OrganizationConfiguration.fromJS(resultData200);
+            return result200;
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<OrganizationConfiguration>(null as any);
+    }
+
+    deleteOrganizationCategory(organizationId: string, categoryId: string): Promise<OrganizationConfiguration> {
+        let url_ = this.baseUrl + "/api/{organizationId}/Configuration/organization-categories/{categoryId}";
+        if (organizationId === undefined || organizationId === null)
+            throw new globalThis.Error("The parameter 'organizationId' must be defined.");
+        url_ = url_.replace("{organizationId}", encodeURIComponent("" + organizationId));
+        if (categoryId === undefined || categoryId === null)
+            throw new globalThis.Error("The parameter 'categoryId' must be defined.");
+        url_ = url_.replace("{categoryId}", encodeURIComponent("" + categoryId));
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "DELETE",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processDeleteOrganizationCategory(_response);
+        });
+    }
+
+    protected processDeleteOrganizationCategory(response: Response): Promise<OrganizationConfiguration> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result200 = OrganizationConfiguration.fromJS(resultData200);
+            return result200;
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<OrganizationConfiguration>(null as any);
+    }
+
     getEffectiveLocationPolicy(organizationId: string, locationId: string): Promise<EffectiveLocationPolicy> {
         let url_ = this.baseUrl + "/api/{organizationId}/{locationId}/Configuration/policy";
         if (organizationId === undefined || organizationId === null)
@@ -1395,6 +1479,7 @@ export class OrganizationConfiguration implements IOrganizationConfiguration {
     communityRoles!: string[];
     referralCloseReasons?: string[] | undefined;
     caseCloseReasons?: string[] | undefined;
+    organizationCategories!: OrganizationCategory[];
 
     constructor(data?: IOrganizationConfiguration) {
         if (data) {
@@ -1407,6 +1492,7 @@ export class OrganizationConfiguration implements IOrganizationConfiguration {
             this.locations = [];
             this.roles = [];
             this.communityRoles = [];
+            this.organizationCategories = [];
         }
     }
 
@@ -1437,6 +1523,11 @@ export class OrganizationConfiguration implements IOrganizationConfiguration {
                 this.caseCloseReasons = [] as any;
                 for (let item of _data["caseCloseReasons"])
                     this.caseCloseReasons!.push(item);
+            }
+            if (Array.isArray(_data["organizationCategories"])) {
+                this.organizationCategories = [] as any;
+                for (let item of _data["organizationCategories"])
+                    this.organizationCategories!.push(OrganizationCategory.fromJS(item));
             }
         }
     }
@@ -1476,6 +1567,11 @@ export class OrganizationConfiguration implements IOrganizationConfiguration {
             for (let item of this.caseCloseReasons)
                 data["caseCloseReasons"].push(item);
         }
+        if (Array.isArray(this.organizationCategories)) {
+            data["organizationCategories"] = [];
+            for (let item of this.organizationCategories)
+                data["organizationCategories"].push(item ? item.toJSON() : undefined as any);
+        }
         return data;
     }
 }
@@ -1487,6 +1583,7 @@ export interface IOrganizationConfiguration {
     communityRoles: string[];
     referralCloseReasons?: string[] | undefined;
     caseCloseReasons?: string[] | undefined;
+    organizationCategories: OrganizationCategory[];
 }
 
 export class LocationConfiguration implements ILocationConfiguration {
@@ -2575,6 +2672,46 @@ export enum Permission {
     DeleteOrganizationDocuments = 508,
 }
 
+export class OrganizationCategory implements IOrganizationCategory {
+    id!: string;
+    name!: string;
+
+    constructor(data?: IOrganizationCategory) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.id = _data["id"];
+            this.name = _data["name"];
+        }
+    }
+
+    static fromJS(data: any): OrganizationCategory {
+        data = typeof data === 'object' ? data : {};
+        let result = new OrganizationCategory();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["id"] = this.id;
+        data["name"] = this.name;
+        return data;
+    }
+}
+
+export interface IOrganizationCategory {
+    id: string;
+    name: string;
+}
+
 export class PutLocationPayload implements IPutLocationPayload {
     locationConfiguration!: LocationConfiguration;
     copyPoliciesFromLocationId?: string | undefined;
@@ -2672,6 +2809,42 @@ export class PutOrganizationConfigurationPayload implements IPutOrganizationConf
 export interface IPutOrganizationConfigurationPayload {
     referralCloseReasons?: string[] | undefined;
     caseCloseReasons?: string[] | undefined;
+}
+
+export class PutOrganizationCategoryPayload implements IPutOrganizationCategoryPayload {
+    name!: string;
+
+    constructor(data?: IPutOrganizationCategoryPayload) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.name = _data["name"];
+        }
+    }
+
+    static fromJS(data: any): PutOrganizationCategoryPayload {
+        data = typeof data === 'object' ? data : {};
+        let result = new PutOrganizationCategoryPayload();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["name"] = this.name;
+        return data;
+    }
+}
+
+export interface IPutOrganizationCategoryPayload {
+    name: string;
 }
 
 export class EffectiveLocationPolicy implements IEffectiveLocationPolicy {
@@ -5051,6 +5224,7 @@ export class Community implements ICommunity {
     memberFamilies!: string[];
     communityRoleAssignments!: CommunityRoleAssignment[];
     uploadedDocuments!: UploadedDocumentInfo[];
+    categoryIds!: string[];
 
     constructor(data?: ICommunity) {
         if (data) {
@@ -5063,6 +5237,7 @@ export class Community implements ICommunity {
             this.memberFamilies = [];
             this.communityRoleAssignments = [];
             this.uploadedDocuments = [];
+            this.categoryIds = [];
         }
     }
 
@@ -5085,6 +5260,11 @@ export class Community implements ICommunity {
                 this.uploadedDocuments = [] as any;
                 for (let item of _data["uploadedDocuments"])
                     this.uploadedDocuments!.push(UploadedDocumentInfo.fromJS(item));
+            }
+            if (Array.isArray(_data["categoryIds"])) {
+                this.categoryIds = [] as any;
+                for (let item of _data["categoryIds"])
+                    this.categoryIds!.push(item);
             }
         }
     }
@@ -5116,6 +5296,11 @@ export class Community implements ICommunity {
             for (let item of this.uploadedDocuments)
                 data["uploadedDocuments"].push(item ? item.toJSON() : undefined as any);
         }
+        if (Array.isArray(this.categoryIds)) {
+            data["categoryIds"] = [];
+            for (let item of this.categoryIds)
+                data["categoryIds"].push(item);
+        }
         return data;
     }
 }
@@ -5127,6 +5312,7 @@ export interface ICommunity {
     memberFamilies: string[];
     communityRoleAssignments: CommunityRoleAssignment[];
     uploadedDocuments: UploadedDocumentInfo[];
+    categoryIds: string[];
 }
 
 export class CommunityRoleAssignment implements ICommunityRoleAssignment {
@@ -11311,6 +11497,11 @@ export abstract class CommunityCommand implements ICommunityCommand {
             result.init(data);
             return result;
         }
+        if (data["discriminator"] === "SetOrganizationCategories") {
+            let result = new SetOrganizationCategories();
+            result.init(data);
+            return result;
+        }
         if (data["discriminator"] === "UploadCommunityDocument") {
             let result = new UploadCommunityDocument();
             result.init(data);
@@ -11613,6 +11804,51 @@ export class RenameCommunity extends CommunityCommand implements IRenameCommunit
 
 export interface IRenameCommunity extends ICommunityCommand {
     name: string;
+}
+
+export class SetOrganizationCategories extends CommunityCommand implements ISetOrganizationCategories {
+    categoryIds!: string[];
+
+    constructor(data?: ISetOrganizationCategories) {
+        super(data);
+        if (!data) {
+            this.categoryIds = [];
+        }
+        this._discriminator = "SetOrganizationCategories";
+    }
+
+    override init(_data?: any) {
+        super.init(_data);
+        if (_data) {
+            if (Array.isArray(_data["categoryIds"])) {
+                this.categoryIds = [] as any;
+                for (let item of _data["categoryIds"])
+                    this.categoryIds!.push(item);
+            }
+        }
+    }
+
+    static override fromJS(data: any): SetOrganizationCategories {
+        data = typeof data === 'object' ? data : {};
+        let result = new SetOrganizationCategories();
+        result.init(data);
+        return result;
+    }
+
+    override toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        if (Array.isArray(this.categoryIds)) {
+            data["categoryIds"] = [];
+            for (let item of this.categoryIds)
+                data["categoryIds"].push(item);
+        }
+        super.toJSON(data);
+        return data;
+    }
+}
+
+export interface ISetOrganizationCategories extends ICommunityCommand {
+    categoryIds: string[];
 }
 
 export class UploadCommunityDocument extends CommunityCommand implements IUploadCommunityDocument {
