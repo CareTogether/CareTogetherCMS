@@ -101,7 +101,8 @@ namespace CareTogether.Core.Test.AuthorizationEngineTests
             var approvalsResource = new ApprovalsResource(approvalsEventLog);
             var communitiesResource = new CommunitiesResource(
                 communitiesEventLog,
-                Mock.Of<IFileStore>()
+                Mock.Of<IFileStore>(),
+                policiesResource
             );
 
             userAccessCalculation = new UserAccessCalculation(
