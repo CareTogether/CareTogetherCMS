@@ -4,10 +4,10 @@ import {
   InteractionRequiredAuthError,
   AuthenticationResult,
 } from '@azure/msal-browser';
-import { AtomEffect, atom } from 'recoil';
-import { loggingEffect } from '../Utilities/loggingEffect';
+import { atom } from 'jotai';
 import { appInsights } from '../ApplicationInsightsService';
 import posthog from 'posthog-js';
+import { useJotaiLoadable } from '../State/jotai/useJotaiLoadable';
 
 // MSAL configuration for single page application authorization. For guidance, see
 // https://docs.microsoft.com/en-us/azure/active-directory/develop/scenario-spa-app-configuration?tabs=react and
@@ -100,7 +100,7 @@ type KeycloakPkceState = {
   returnUrl: string;
 };
 
-type AccountInfo = {
+export type AccountInfo = {
   userId: string;
   email?: string;
   name?: string;
@@ -432,7 +432,7 @@ async function loginAndSetActiveAccountAsync(): Promise<AccountInfo> {
   }
 
   // Step 5: One the user is authenticated, store the user's account ID for future reference.
-  //         This account ID becomes the root of the Recoil dataflow graph. That is, all other
+  //         This account ID becomes the root of the authenticated state graph. That is, all other
   //         API queries should be designed to only execute once this atom is initialized.
   if (result && result.account) {
     return {
@@ -480,8 +480,9 @@ async function loginAndSetActiveAccountAsync(): Promise<AccountInfo> {
 }
 
 let accountInfoStateInitializationPromise: Promise<AccountInfo> | null = null;
-const initializeAccountInfoStateAsync: AtomEffect<AccountInfo> = (params) => {
-  trace(`InitializeAccountInfoStateAsync`, params.node.key);
+async function initializeAccountInfoStateAsync() {
+  trace(`InitializeAccountInfoStateAsync`, 'accountInfoState');
+  console.info('LOGGING: accountInfoState');
 
   if (!accountInfoStateInitializationPromise) {
     accountInfoStateInitializationPromise = loginAndSetActiveAccountAsync();
@@ -492,14 +493,19 @@ const initializeAccountInfoStateAsync: AtomEffect<AccountInfo> = (params) => {
     );
   }
 
-  params.setSelf(accountInfoStateInitializationPromise);
-};
+  const accountInfo = await accountInfoStateInitializationPromise;
+  console.info(
+    `SET: [accountInfoState]: ${JSON.stringify(accountInfo)} (was undefined)`
+  );
+  return accountInfo;
+}
 
 // This will be set by AuthenticationWrapper once the user has authenticated and the default account is set.
-export const accountInfoState = atom<AccountInfo>({
-  key: 'accountInfoState',
-  effects: [loggingEffect, initializeAccountInfoStateAsync],
-});
+export const accountInfoState = atom(async () => initializeAccountInfoStateAsync());
+
+export function useAccountInfo() {
+  return useJotaiLoadable(accountInfoState);
+}
 
 export async function tryAcquireAccessToken(): Promise<string | null> {
   if (keycloakAuthEnabled) {

@@ -2,16 +2,15 @@ import Grid from '@mui/material/Grid';
 import { Button, TextField, Typography } from '@mui/material';
 import { useBackdrop } from '../../Hooks/useBackdrop';
 import { api } from '../../Api/Api';
+import { useSetAtom } from 'jotai';
 import {
-  useRecoilRefresher_UNSTABLE,
-  useRecoilValue,
-  useSetRecoilState,
-} from 'recoil';
-import {
-  selectedLocationContextState,
-  userOrganizationAccessQuery,
+  useRefreshUserOrganizationAccess,
+  useRequiredSelectedLocationContext,
 } from '../../Model/Data';
-import { organizationConfigurationEdited } from '../../Model/ConfigurationModel';
+import {
+  organizationConfigurationEdited,
+  useOrganizationConfiguration,
+} from '../../Model/ConfigurationModel';
 import {
   ApiException,
   LocationConfiguration,
@@ -19,8 +18,6 @@ import {
 } from '../../GeneratedClient';
 import { useForm, Controller } from 'react-hook-form';
 import { useAppNavigate } from '../../Hooks/useAppNavigate';
-import { useLoadable } from '../../Hooks/useLoadable';
-import { organizationConfigurationQuery } from '../../Model/ConfigurationModel';
 import MenuItem from '@mui/material/MenuItem';
 import { useState } from 'react';
 
@@ -35,16 +32,12 @@ interface AddLocationFormValues {
 }
 
 export function AddLocation({ onClose }: DrawerProps) {
-  const { organizationId, locationId } = useRecoilValue(
-    selectedLocationContextState
-  );
-  const storeEdits = useSetRecoilState(organizationConfigurationEdited);
+  const { organizationId, locationId } = useRequiredSelectedLocationContext();
+  const storeEdits = useSetAtom(organizationConfigurationEdited);
   const withBackdrop = useBackdrop();
   const appNavigate = useAppNavigate();
-  const configuration = useLoadable(organizationConfigurationQuery);
-  const refreshUserOrganizationAccess = useRecoilRefresher_UNSTABLE(
-    userOrganizationAccessQuery
-  );
+  const configuration = useOrganizationConfiguration();
+  const refreshUserOrganizationAccess = useRefreshUserOrganizationAccess();
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const {

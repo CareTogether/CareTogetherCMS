@@ -1,7 +1,6 @@
 import { Autocomplete, Box, Button, TextField } from '@mui/material';
 import { useMemo, useState } from 'react';
-import { useRecoilValue } from 'recoil';
-import { policyData } from '../Model/ConfigurationModel';
+import { usePolicy } from '../Model/PolicyModel';
 import type { RequirementContext } from '../Requirements/RequirementContext';
 import type { ApprovalLedgerSubject } from './approvalLedgerViewModel';
 import { createSyntheticApprovalOccurrence } from './approvalOccurrenceFactory';
@@ -21,7 +20,7 @@ export function ApprovalWorkflowLauncherV2({
   context,
   onSuccess,
 }: ApprovalWorkflowLauncherV2Props) {
-  const policy = useRecoilValue(policyData);
+  const policy = usePolicy();
   const [selectedRequirement, setSelectedRequirement] = useState<string | null>(
     null
   );

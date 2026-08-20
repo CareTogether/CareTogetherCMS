@@ -14,7 +14,6 @@ import {
 } from '@mui/material';
 import { add, format, formatDuration, isValid } from 'date-fns';
 import { useState } from 'react';
-import { useRecoilValue } from 'recoil';
 import {
   ActionRequirement,
   DocumentLinkRequirement,
@@ -23,8 +22,8 @@ import {
 } from '../GeneratedClient';
 import { ValidateDatePicker } from '../Generic/Forms/ValidateDatePicker';
 import { useBackdrop } from '../Hooks/useBackdrop';
-import { policyData } from '../Model/ConfigurationModel';
-import { selectedLocationContextState } from '../Model/Data';
+import { usePolicy } from '../Model/PolicyModel';
+import { useRequiredSelectedLocationContext } from '../Model/Data';
 import { useDirectoryModel, useFamilyLookup } from '../Model/DirectoryModel';
 import { uploadFamilyFileToTenant } from '../Model/FilesModel';
 import { useVolunteersModel } from '../Model/VolunteersModel';
@@ -97,12 +96,10 @@ export function ApprovalWorkflowMissingSectionV2({
 }: ApprovalWorkflowMissingSectionV2Props) {
   const directory = useDirectoryModel();
   const familyLookup = useFamilyLookup();
-  const policy = useRecoilValue(policyData);
+  const policy = usePolicy();
   const volunteers = useVolunteersModel();
   const withBackdrop = useBackdrop();
-  const { organizationId, locationId } = useRecoilValue(
-    selectedLocationContextState
-  );
+  const { organizationId, locationId } = useRequiredSelectedLocationContext();
 
   const requirementName = requirementNameFromOccurrence(occurrence);
   const requirementPolicy = findRequirementPolicy(

@@ -7,10 +7,9 @@ import {
 } from '@mui/material';
 import { CombinedFamilyInfo } from '../GeneratedClient';
 import { uploadFamilyFileToTenant } from '../Model/FilesModel';
-import { useRecoilValue } from 'recoil';
 import { useBackdrop } from '../Hooks/useBackdrop';
 import { useDirectoryModel } from '../Model/DirectoryModel';
-import { selectedLocationContextState } from '../Model/Data';
+import { useRequiredSelectedLocationContext } from '../Model/Data';
 
 interface UploadFamilyDocumentsDrawerProps {
   family: CombinedFamilyInfo;
@@ -22,9 +21,7 @@ export function UploadFamilyDocumentsDrawer({
   onClose,
 }: UploadFamilyDocumentsDrawerProps) {
   const [documentFiles, setDocumentFiles] = useState<FileList>();
-  const { organizationId, locationId } = useRecoilValue(
-    selectedLocationContextState
-  );
+  const { organizationId, locationId } = useRequiredSelectedLocationContext();
   const directoryModel = useDirectoryModel();
   const withBackdrop = useBackdrop();
 

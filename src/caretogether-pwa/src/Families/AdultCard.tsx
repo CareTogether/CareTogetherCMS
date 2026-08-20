@@ -16,7 +16,6 @@ import {
   Tooltip,
 } from '@mui/material';
 import { useState } from 'react';
-import { useRecoilValue } from 'recoil';
 import {
   Gender,
   Person,
@@ -43,7 +42,8 @@ import { useDialogHandle } from '../Hooks/useDialogHandle';
 import { EditAdultDialog } from './EditAdultDialog';
 import { useCollapsed } from '../Hooks/useCollapsed';
 import { useFamilyLookup } from '../Model/DirectoryModel';
-import { policyData, useFeatureFlags } from '../Model/ConfigurationModel';
+import { useFeatureFlags } from '../Model/ConfigurationModel';
+import { usePolicy } from '../Model/PolicyModel';
 import { useDrawer } from '../Generic/ShellDrawer';
 import { ManageUserDrawer } from './ManageUserDrawer';
 import { format } from 'date-fns';
@@ -85,7 +85,7 @@ export function AdultCard({
   const editDialogHandle = useDialogHandle();
 
   const featureFlags = useFeatureFlags();
-  const policy = useRecoilValue(policyData);
+  const policy = usePolicy();
   const familyMemberCustomFieldsEnabled = useFeatureFlagEnabled(
     FAMILY_MEMBER_CUSTOM_FIELDS_FEATURE_FLAG
   );

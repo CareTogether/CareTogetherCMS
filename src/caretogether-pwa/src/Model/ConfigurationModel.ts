@@ -1,19 +1,22 @@
-import { atom, selector } from 'recoil';
+import { atom as jotaiAtom, type Atom } from 'jotai';
+import { atomFamily } from 'jotai/utils';
 import {
+  CurrentFeatureFlags,
+  LocationConfiguration,
   OrganizationConfiguration,
-  RequirementStage,
-  VolunteerFamilyRequirementScope,
 } from '../GeneratedClient';
-import { useLoadable } from '../Hooks/useLoadable';
 import { api } from '../Api/Api';
-import { selectedLocationContextState } from './Data';
+import { LocationContext, useSelectedLocationContext } from './Data';
+import { isSameLocationScope } from './LocationScope';
+import {
+  type LoadableState,
+  useAtomLoadable,
+  useJotaiLoadable,
+} from '../State/jotai/useJotaiLoadable';
 
 //TODO: Distinguish by organization ID
 export const organizationConfigurationEdited =
-  atom<OrganizationConfiguration | null>({
-    key: 'organizationConfigurationEdited',
-    default: null,
-  });
+  jotaiAtom<OrganizationConfiguration | null>(null);
 
 export type ExtendedOrganizationConfiguration = OrganizationConfiguration & {
   availableTimeZones?: string[];
@@ -24,248 +27,185 @@ export type ExtendedOrganizationConfiguration = OrganizationConfiguration & {
   referralCloseReasons?: string[];
 };
 
-export const organizationConfigurationQuery = selector({
-  key: 'organizationConfigurationQuery',
-  get: async ({ get }) => {
-    const { organizationId } = get(selectedLocationContextState);
-    if (organizationId == null) return null;
+const noOrganizationConfiguration = jotaiAtom(
+  async (): Promise<ExtendedOrganizationConfiguration | null> => null
+);
+
+const organizationConfigurationAtomFamily = atomFamily((organizationId: string) =>
+  jotaiAtom(async (get): Promise<ExtendedOrganizationConfiguration | null> => {
     const edited = get(organizationConfigurationEdited);
     if (edited) {
       return edited as ExtendedOrganizationConfiguration;
-    } else {
-      const dataResponse =
-        await api.configuration.getOrganizationConfiguration(organizationId);
-      return dataResponse as ExtendedOrganizationConfiguration;
     }
-  },
-});
 
-export const locationConfigurationQuery = selector({
-  key: 'locationConfigurationQuery',
-  get: ({ get }) => {
-    const organizationConfiguration = get(organizationConfigurationQuery);
-    const { locationId } = get(selectedLocationContextState);
-    return organizationConfiguration?.locations!.find(
-      (x) => x.id === locationId
+    const dataResponse =
+      await api.configuration.getOrganizationConfiguration(organizationId);
+    return dataResponse as ExtendedOrganizationConfiguration;
+  })
+);
+
+const noLocationConfiguration = jotaiAtom(
+  async (): Promise<LocationConfiguration | null> => null
+);
+
+const locationConfigurationAtomFamily = atomFamily(
+  ({ organizationId, locationId }: LocationContext) =>
+    jotaiAtom(async (get): Promise<LocationConfiguration | null> => {
+      const organizationConfiguration = await get(
+        organizationConfigurationAtomFamily(organizationId)
+      );
+
+      return (
+        organizationConfiguration?.locations!.find(
+          (x) => x.id === locationId
+        ) ?? null
+      );
+    }),
+  isSameLocationScope
+);
+
+const ethnicitiesAtomFamily = atomFamily(
+  (locationContext: LocationContext) =>
+    jotaiAtom(async (get) => {
+      const locationConfiguration = await get(
+        locationConfigurationAtomFamily(locationContext)
+      );
+      return locationConfiguration!.ethnicities!;
+    }),
+  isSameLocationScope
+);
+
+const adultFamilyRelationshipsAtomFamily = atomFamily(
+  (locationContext: LocationContext) =>
+    jotaiAtom(async (get) => {
+      const locationConfiguration = await get(
+        locationConfigurationAtomFamily(locationContext)
+      );
+      return locationConfiguration!.adultFamilyRelationships!;
+    }),
+  isSameLocationScope
+);
+
+const referralCloseReasonsAtomFamily = atomFamily((organizationId: string) =>
+  jotaiAtom(async (get) => {
+    const organizationConfiguration = await get(
+      organizationConfigurationAtomFamily(organizationId)
     );
-  },
-});
-
-export const ethnicitiesData = selector({
-  //TODO: Rename to 'query'
-  key: 'COMPATIBILITY__ethnicitiesData',
-  get: ({ get }) => {
-    const locationConfiguration = get(locationConfigurationQuery);
-    return locationConfiguration!.ethnicities!;
-  },
-});
-
-export const referralCloseReasonsData = selector({
-  key: 'COMPATIBILITY__referralCloseReasonsData',
-  get: ({ get }) => {
-    const organizationConfiguration = get(organizationConfigurationQuery);
     return organizationConfiguration?.referralCloseReasons ?? [];
-  },
-});
+  })
+);
 
-export const caseCloseReasonsData = selector({
-  key: 'COMPATIBILITY__caseCloseReasonsData',
-  get: ({ get }) => {
-    const organizationConfiguration = get(organizationConfigurationQuery);
+const caseCloseReasonsAtomFamily = atomFamily((organizationId: string) =>
+  jotaiAtom(async (get) => {
+    const organizationConfiguration = await get(
+      organizationConfigurationAtomFamily(organizationId)
+    );
     return organizationConfiguration?.caseCloseReasons ?? [];
-  },
-});
+  })
+);
 
-export const adultFamilyRelationshipsData = selector({
-  //TODO: Rename to 'query'
-  key: 'COMPATIBILITY__adultFamilyRelationshipsData',
-  get: ({ get }) => {
-    const locationConfiguration = get(locationConfigurationQuery);
-    return locationConfiguration!.adultFamilyRelationships!;
-  },
-});
+const noStringList = jotaiAtom(async (): Promise<string[]> => []);
 
-export const policyData = selector({
-  key: 'policyData',
-  get: async ({ get }) => {
-    const { organizationId, locationId } = get(selectedLocationContextState);
-    const dataResponse = await api.configuration.getEffectiveLocationPolicy(
-      organizationId,
-      locationId
-    );
-    return dataResponse;
-  },
-});
+function useOrganizationConfigurationAtom() {
+  const selectedLocationContext = useSelectedLocationContext();
 
-export const allApprovalAndOnboardingRequirementsData = selector({
-  key: 'allApprovalAndOnboardingRequirementsData',
-  get: ({ get }) => {
-    const policy = get(policyData);
-    const ActionNames =
-      (policy.actionDefinitions &&
-        Object.entries(policy.actionDefinitions).map(
-          ([actionName]) => actionName
-        )) ||
-      [];
-    return ActionNames.filter(
-      (actionName) =>
-        (policy.volunteerPolicy?.volunteerFamilyRoles &&
-          Object.entries(policy.volunteerPolicy.volunteerFamilyRoles).some(
-            ([, rolePolicy]) =>
-              rolePolicy.policyVersions &&
-              Object.entries(rolePolicy.policyVersions).some(
-                ([, rolePolicyVersion]) =>
-                  rolePolicyVersion.requirements &&
-                  rolePolicyVersion.requirements.some(
-                    (requirement) =>
-                      requirement.actionName === actionName &&
-                      requirement.stage !== RequirementStage.Application
-                  )
-              )
-          )) ||
-        (policy.volunteerPolicy?.volunteerRoles &&
-          Object.entries(policy.volunteerPolicy.volunteerRoles).some(
-            ([, rolePolicy]) =>
-              rolePolicy.policyVersions &&
-              Object.entries(rolePolicy.policyVersions).some(
-                ([, rolePolicyVersion]) =>
-                  rolePolicyVersion.requirements &&
-                  rolePolicyVersion.requirements.some(
-                    (requirement) =>
-                      requirement.actionName === actionName &&
-                      requirement.stage !== RequirementStage.Application
-                  )
-              )
-          ))
-    );
-  },
-});
+  return selectedLocationContext
+    ? organizationConfigurationAtomFamily(selectedLocationContext.organizationId)
+    : noOrganizationConfiguration;
+}
 
-export const familyRequirementsData = selector({
-  key: 'familyRequirementsData',
-  get: ({ get }) => {
-    const policy = get(policyData);
-    return (
-      (policy.volunteerPolicy?.volunteerFamilyRoles &&
-        Object.entries(policy.volunteerPolicy.volunteerFamilyRoles)
-          .reduce((previous, [, familyRolePolicy]) => {
-            const requirements =
-              familyRolePolicy.policyVersions?.map(
-                (policyVersion) =>
-                  policyVersion.requirements
-                    ?.filter(
-                      (requirement) =>
-                        requirement.scope ===
-                        VolunteerFamilyRequirementScope.OncePerFamily
-                    )
-                    ?.map((requirement) => requirement.actionName!) || []
-              ) || [];
-            return previous.concat(requirements.flat());
-          }, [] as string[])
-          .reduce((previous, familyApprovalRequirement) => {
-            return previous.filter((x) => x === familyApprovalRequirement)
-              .length > 0
-              ? previous
-              : previous.concat(familyApprovalRequirement);
-          }, [] as string[])
-          .sort((a, b) => (a < b ? -1 : a > b ? 1 : 0))) ||
-      []
-    );
-  },
-});
+function useLocationConfigurationAtom() {
+  const selectedLocationContext = useSelectedLocationContext();
 
-export const adultRequirementsData = selector({
-  key: 'adultRequirementsData',
-  get: ({ get }) => {
-    const policy = get(policyData);
-    const familyAllAdultRequirements =
-      (policy.volunteerPolicy?.volunteerFamilyRoles &&
-        Object.entries(policy.volunteerPolicy.volunteerFamilyRoles).reduce(
-          (previous, [, familyRolePolicy]) => {
-            const requirements =
-              familyRolePolicy.policyVersions?.map(
-                (policyVersion) =>
-                  policyVersion.requirements
-                    ?.filter(
-                      (requirement) =>
-                        requirement.scope ===
-                        VolunteerFamilyRequirementScope.AllAdultsInTheFamily
-                    )
-                    ?.map((requirement) => requirement.actionName!) || []
-              ) || [];
-            return previous.concat(requirements.flat());
-          },
-          [] as string[]
-        )) ||
-      [];
-    const individualRequirements =
-      (policy.volunteerPolicy?.volunteerRoles &&
-        Object.entries(policy.volunteerPolicy.volunteerRoles).reduce(
-          (previous, [, rolePolicy]) => {
-            const requirements =
-              rolePolicy.policyVersions?.map(
-                (policyVersion) =>
-                  policyVersion.requirements?.map(
-                    (requirement) => requirement.actionName!
-                  ) || []
-              ) || [];
-            return previous.concat(requirements.flat());
-          },
-          [] as string[]
-        )) ||
-      [];
-    return familyAllAdultRequirements
-      .concat(individualRequirements)
-      .reduce((previous, individualApprovalRequirement) => {
-        return previous.filter((x) => x === individualApprovalRequirement)
-          .length > 0
-          ? previous
-          : previous.concat(individualApprovalRequirement);
-      }, [] as string[])
-      .sort((a, b) => (a < b ? -1 : a > b ? 1 : 0));
-  },
-});
+  return selectedLocationContext
+    ? locationConfigurationAtomFamily(selectedLocationContext)
+    : noLocationConfiguration;
+}
 
-export const allFunctionsInPolicyQuery = selector({
-  key: 'allFunctionsInPolicyQuery',
-  get: ({ get }) => {
-    const policy = get(policyData);
-    const allFunctions =
-      policy.referralPolicy?.arrangementPolicies?.flatMap(
-        (arrangement) =>
-          arrangement.arrangementFunctions?.map(
-            (arrangementFunction) => arrangementFunction.functionName!
-          ) || []
-      ) || [];
-    const uniqueFunctions = Array.from(new Set(allFunctions));
-    return uniqueFunctions;
-  },
-});
+function useLocationStringListAtom(
+  selectAtom: (locationContext: LocationContext) => Atom<Promise<string[]>>
+) {
+  const selectedLocationContext = useSelectedLocationContext();
 
-export const allFunctionAssignmentRolesInPolicyQuery = selector({
-  key: 'allFunctionAssignmentRolesInPolicyQuery',
-  get: ({ get }) => {
-    const policy = get(policyData);
-    const allFunctionAssignmentRoles = [
-      ...(policy.referralPolicy?.functionAssignmentPolicies ?? []),
-      ...(policy.v1ReferralPolicy?.functionAssignmentPolicies ?? []),
-    ].map((volunteerAssignmentPolicy) => volunteerAssignmentPolicy.assignmentRole);
-    return Array.from(new Set(allFunctionAssignmentRoles)).filter(Boolean);
-  },
-});
+  return selectedLocationContext
+    ? selectAtom(selectedLocationContext)
+    : noStringList;
+}
 
-const featureFlagQuery = selector({
-  key: 'featureFlagQuery',
-  get: async ({ get }) => {
-    const { organizationId, locationId } = get(selectedLocationContextState);
-    const dataResponse = await api.configuration.getLocationFlags(
-      organizationId,
-      locationId
-    );
-    return dataResponse;
-  },
-});
+function useOrganizationStringListAtom(
+  selectAtom: (organizationId: string) => Atom<Promise<string[]>>
+) {
+  const selectedLocationContext = useSelectedLocationContext();
+
+  return selectedLocationContext
+    ? selectAtom(selectedLocationContext.organizationId)
+    : noStringList;
+}
+
+export function useOrganizationConfiguration() {
+  return useJotaiLoadable(useOrganizationConfigurationAtom());
+}
+
+export function useOrganizationConfigurationLoadable(): LoadableState<
+  ExtendedOrganizationConfiguration | null
+> {
+  return useAtomLoadable(useOrganizationConfigurationAtom());
+}
+
+export function useLocationConfiguration() {
+  return useJotaiLoadable(useLocationConfigurationAtom());
+}
+
+export function useLocationConfigurationLoadable(): LoadableState<
+  LocationConfiguration | null
+> {
+  return useAtomLoadable(useLocationConfigurationAtom());
+}
+
+export function useEthnicities() {
+  return useJotaiLoadable(useLocationStringListAtom(ethnicitiesAtomFamily));
+}
+
+export function useAdultFamilyRelationships() {
+  return useJotaiLoadable(
+    useLocationStringListAtom(adultFamilyRelationshipsAtomFamily)
+  );
+}
+
+export function useReferralCloseReasons() {
+  return useJotaiLoadable(
+    useOrganizationStringListAtom(referralCloseReasonsAtomFamily)
+  );
+}
+
+export function useCaseCloseReasons() {
+  return useJotaiLoadable(
+    useOrganizationStringListAtom(caseCloseReasonsAtomFamily)
+  );
+}
+
+const noLocationFeatureFlags = jotaiAtom(
+  async (): Promise<CurrentFeatureFlags | null> => null
+);
+
+const featureFlagAtomFamily = atomFamily(
+  ({ organizationId, locationId }: LocationContext) =>
+    jotaiAtom(async (): Promise<CurrentFeatureFlags | null> => {
+      const dataResponse = await api.configuration.getLocationFlags(
+        organizationId,
+        locationId
+      );
+      return dataResponse;
+    }),
+  isSameLocationScope
+);
 
 export function useFeatureFlags() {
-  return useLoadable(featureFlagQuery);
+  const selectedLocationContext = useSelectedLocationContext();
+
+  return useJotaiLoadable(
+    selectedLocationContext
+      ? featureFlagAtomFamily(selectedLocationContext)
+      : noLocationFeatureFlags
+  );
 }

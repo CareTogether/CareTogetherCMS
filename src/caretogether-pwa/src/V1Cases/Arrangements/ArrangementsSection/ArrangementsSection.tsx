@@ -13,8 +13,7 @@ import { ArrangementCard } from '../ArrangementCard';
 import { ToggleButton, ToggleButtonGroup } from '@mui/material';
 import { CreateArrangementDialog } from '../CreateArrangementDialog';
 import { useRef, useState } from 'react';
-import { useRecoilValue } from 'recoil';
-import { policyData } from '../../../Model/ConfigurationModel';
+import { usePolicy } from '../../../Model/PolicyModel';
 import { getFilteredArrangements } from './getFilteredArrangements';
 import { useScrollToArrangement } from './useScrollToArrangement';
 import { isArrangementPolicyAvailable } from '../arrangementPolicyVersions';
@@ -36,7 +35,7 @@ export function ArrangementsSection({
     'Cancelled',
   ]);
 
-  const policy = useRecoilValue(policyData);
+  const policy = usePolicy();
 
   const theme = useTheme();
   const isDesktop = useMediaQuery(theme.breakpoints.up('sm'));

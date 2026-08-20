@@ -23,12 +23,13 @@ import {
   OwnReferralAssigneeFamiliesPermissionContext as OwnV1CaseAssigneeFamiliesPermissionContext,
   PermissionContext,
 } from '../../GeneratedClient';
-import { useLoadable } from '../../Hooks/useLoadable';
 import {
-  allFunctionsInPolicyQuery,
-  allFunctionAssignmentRolesInPolicyQuery,
-  organizationConfigurationQuery,
+  useOrganizationConfiguration,
 } from '../../Model/ConfigurationModel';
+import {
+  useAllFunctionAssignmentRolesInPolicy,
+  useAllFunctionsInPolicy,
+} from '../../Model/PolicyModel';
 
 interface ContextSelectorProps<T extends PermissionContext> {
   context: T;
@@ -200,9 +201,7 @@ function AssignmentRoleSelector({
   | AssignedVolunteerInV1CasePermissionContext
   | AssignedVolunteerInV1ReferralPermissionContext
 >) {
-  const allFunctionAssignmentRoles = useLoadable(
-    allFunctionAssignmentRolesInPolicyQuery
-  );
+  const allFunctionAssignmentRoles = useAllFunctionAssignmentRolesInPolicy();
   const hasValue =
     typeof context.whenAssignmentRoleIsIn !== 'undefined' &&
     context.whenAssignmentRoleIsIn !== null;
@@ -278,7 +277,7 @@ function OwnFunctionSelector({
   | AssignedFunctionsInV1CasePartneringFamilyPermissionContext
   | AssignedFunctionsInV1CaseCoAssigneeFamiliesPermissionContext
 >) {
-  const allFunctionsInPolicy = useLoadable(allFunctionsInPolicyQuery);
+  const allFunctionsInPolicy = useAllFunctionsInPolicy();
   const hasValue =
     typeof context.whenOwnFunctionIsIn !== 'undefined' &&
     context.whenOwnFunctionIsIn !== null;
@@ -352,7 +351,7 @@ function AssigneeFunctionSelector({
   | AssignedFunctionsInV1CaseCoAssigneeFamiliesPermissionContext
   | OwnV1CaseAssigneeFamiliesPermissionContext
 >) {
-  const allFunctionsInPolicy = useLoadable(allFunctionsInPolicyQuery);
+  const allFunctionsInPolicy = useAllFunctionsInPolicy();
   const hasValue =
     typeof context.whenAssigneeFunctionIsIn !== 'undefined' &&
     context.whenAssigneeFunctionIsIn !== null;
@@ -425,8 +424,7 @@ function OwnCommunityRoleSelector({
 }: ContextSelectorProps<
   CommunityMemberPermissionContext | CommunityCoMemberFamiliesPermissionContext
 >) {
-  const communityRoles =
-    useLoadable(organizationConfigurationQuery)?.communityRoles || null;
+  const communityRoles = useOrganizationConfiguration()?.communityRoles || null;
   const hasValue =
     typeof context.whenOwnCommunityRoleIsIn !== 'undefined' &&
     context.whenOwnCommunityRoleIsIn !== null;

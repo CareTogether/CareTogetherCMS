@@ -19,8 +19,8 @@ import {
   ToggleButton,
   ToggleButtonGroup,
 } from '@mui/material';
-import { volunteerFamiliesData } from '../../Model/VolunteersModel';
-import { allApprovalAndOnboardingRequirementsData } from '../../Model/ConfigurationModel';
+import { useVolunteerFamilies } from '../../Model/VolunteersModel';
+import { useAllApprovalAndOnboardingRequirements } from '../../Model/PolicyModel';
 import React, { useEffect, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import {
@@ -41,7 +41,6 @@ import {
 import { useAllVolunteerFamiliesPermissions } from '../../Model/SessionModel';
 import { Permission } from '../../GeneratedClient';
 import { useScreenTitle } from '../../Shell/ShellScreenTitle';
-import { useLoadable } from '../../Hooks/useLoadable';
 import { ProgressBackdrop } from '../../Shell/ProgressBackdrop';
 import { useAppNavigate } from '../../Hooks/useAppNavigate';
 import { useFeatureFlagEnabled } from 'posthog-js/react';
@@ -57,8 +56,8 @@ function VolunteerProgress(props: { onOpen: () => void }) {
 
   const appNavigate = useAppNavigate();
 
-  // The array object returned by Recoil is read-only. We need to copy it before we can do an in-place sort.
-  const volunteerFamiliesLoadable = useLoadable(volunteerFamiliesData);
+  // The array object returned by state is read-only. We need to copy it before we can do an in-place sort.
+  const volunteerFamiliesLoadable = useVolunteerFamilies();
   const [storedSortMode, setStoredSortMode] =
     useLocalStorage<FamilyNameSortMode>(
       VOLUNTEER_PROGRESS_SORT_STORAGE_KEY,
@@ -74,9 +73,8 @@ function VolunteerProgress(props: { onOpen: () => void }) {
     volunteerFamiliesLoadable || [],
     sortMode
   );
-  const allApprovalAndOnboardingRequirements = useLoadable(
-    allApprovalAndOnboardingRequirementsData
-  );
+  const allApprovalAndOnboardingRequirements =
+    useAllApprovalAndOnboardingRequirements();
 
   const [filterText, setFilterText] = useState('');
   const filteredVolunteerFamilies = filterFamiliesByText(

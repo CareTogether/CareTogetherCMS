@@ -1,15 +1,12 @@
 import { Skeleton } from '@mui/material';
 import { UserLoginInfo } from '../GeneratedClient';
-import { useRecoilValue } from 'recoil';
 import { useEffect, useState } from 'react';
 import { api } from '../Api/Api';
-import { selectedLocationContextState } from '../Model/Data';
+import { useRequiredSelectedLocationContext } from '../Model/Data';
 import { formatRelative } from 'date-fns';
 
 export function UserLoginInfoDisplay({ personId }: { personId: string }) {
-  const { organizationId, locationId } = useRecoilValue(
-    selectedLocationContextState
-  );
+  const { organizationId, locationId } = useRequiredSelectedLocationContext();
 
   const [userLoginInfo, setUserLoginInfo] = useState<UserLoginInfo | undefined>(
     undefined

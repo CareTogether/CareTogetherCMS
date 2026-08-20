@@ -27,12 +27,11 @@ import {
 import { useDirectoryModel } from '../Model/DirectoryModel';
 import { Warning as WarningIcon } from '@mui/icons-material';
 import { ValidateDatePicker } from '../Generic/Forms/ValidateDatePicker';
-import { useRecoilValue } from 'recoil';
-import { ethnicitiesData } from '../Model/ConfigurationModel';
+import { useEthnicities } from '../Model/ConfigurationModel';
 import { useParams } from 'react-router-dom';
 import { useBackdrop } from '../Hooks/useBackdrop';
 import { subYears } from 'date-fns';
-import { visibleFamiliesQuery } from '../Model/Data';
+import { useVisibleFamilies } from '../Model/Data';
 import { familyLastName } from './FamilyUtils';
 
 interface AddChildDrawerProps {
@@ -41,7 +40,7 @@ interface AddChildDrawerProps {
 
 export function AddChildDrawer({ onClose }: AddChildDrawerProps) {
   const { familyId } = useParams<{ familyId: string }>();
-  const visibleFamilies = useRecoilValue(visibleFamiliesQuery);
+  const visibleFamilies = useVisibleFamilies();
   const family = visibleFamilies.find(
     (x) => x.family?.id === familyId
   ) as CombinedFamilyInfo;
@@ -75,7 +74,7 @@ export function AddChildDrawer({ onClose }: AddChildDrawerProps) {
   } = fields;
   const directoryModel = useDirectoryModel();
 
-  const ethnicities = useRecoilValue(ethnicitiesData);
+  const ethnicities = useEthnicities() ?? [];
 
   const [dobError, setDobError] = useState(false);
 

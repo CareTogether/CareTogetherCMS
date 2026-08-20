@@ -1,14 +1,13 @@
 import React, { Suspense } from 'react';
 import { ProgressBackdrop } from '../Shell/ProgressBackdrop';
 import { useScopedTrace } from '../Hooks/useScopedTrace';
-import { accountInfoState } from '../Authentication/Auth';
-import { useLoadable } from '../Hooks/useLoadable';
+import { useAccountInfo } from '../Authentication/Auth';
 
 function AuthenticatedUserWrapper({ children }: React.PropsWithChildren) {
   const trace = useScopedTrace('AuthenticatedUserWrapper');
 
   // This will suspend until a user ID has been set by the `accountInfoState` initialization logic.
-  const userId = useLoadable(accountInfoState)?.userId;
+  const userId = useAccountInfo()?.userId;
   trace(`userId: ${userId}`);
 
   return <>{userId ? children : <></>}</>;

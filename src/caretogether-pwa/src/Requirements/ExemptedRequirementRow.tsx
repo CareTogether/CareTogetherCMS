@@ -16,8 +16,7 @@ import { PersonName } from '../Families/PersonName';
 import { IconRow } from '../Generic/IconRow';
 import { ExemptedRequirementDialog } from './ExemptedRequirementDialog';
 import { RequirementContext } from './RequirementContext';
-import { useRecoilValue } from 'recoil';
-import { policyData } from '../Model/ConfigurationModel';
+import { usePolicy } from '../Model/PolicyModel';
 import { formatUtcDateOnly } from '../Utilities/dateUtils';
 
 type ExemptedRequirementRowProps = {
@@ -59,7 +58,7 @@ export function ExemptedRequirementRow({
   const familyLookup = useFamilyLookup();
   const personLookup = usePersonLookup();
 
-  const policy = useRecoilValue(policyData);
+  const policy = usePolicy();
 
   const [partneringFamilyId, v1CaseId, arrangementId] =
     context.kind === 'Arrangement' ||

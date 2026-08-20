@@ -1,27 +1,16 @@
-import { atom, useRecoilCallback } from 'recoil';
+import { atom, useSetAtom } from 'jotai';
 
-export const showGlobalBackdropData = atom({
-  key: 'showGlobalBackdropData',
-  default: false,
-});
+export const showGlobalBackdropData = atom(false);
 
 export function useBackdrop() {
-  const showBackdrop = useRecoilCallback(({ set }) => {
-    return async () => {
-      set(showGlobalBackdropData, true);
-    };
-  });
-  const hideBackdrop = useRecoilCallback(({ set }) => {
-    return async () => {
-      set(showGlobalBackdropData, false);
-    };
-  });
+  const setShowGlobalBackdrop = useSetAtom(showGlobalBackdropData);
+
   return async (asyncFunction: () => Promise<void>) => {
-    await showBackdrop();
+    setShowGlobalBackdrop(true);
     try {
       await asyncFunction();
     } finally {
-      await hideBackdrop();
+      setShowGlobalBackdrop(false);
     }
   };
 }

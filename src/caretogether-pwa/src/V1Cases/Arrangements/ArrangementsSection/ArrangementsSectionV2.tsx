@@ -1,14 +1,13 @@
 import { AddCircle as AddCircleIcon } from '@mui/icons-material';
 import { Box, Button, Typography } from '@mui/material';
 import { useState } from 'react';
-import { useRecoilValue } from 'recoil';
 import Grid from '../../../Generic/GridLegacyCompat';
 import {
   ArrangementPolicy,
   Permission,
   V1Case,
 } from '../../../GeneratedClient';
-import { policyData } from '../../../Model/ConfigurationModel';
+import { usePolicy } from '../../../Model/PolicyModel';
 import { ArrangementsDataGridV2 } from '../ArrangementsDataGridV2';
 import { ArrangementRowV2 } from '../arrangementViewModel';
 import { CreateArrangementDialog } from '../CreateArrangementDialog';
@@ -35,7 +34,7 @@ export function ArrangementsSection({
     createArrangementDialogParameter,
     setCreateArrangementDialogParameter,
   ] = useState<ArrangementPolicy | null>(null);
-  const policy = useRecoilValue(policyData);
+  const policy = usePolicy();
 
   return (
     <Grid item xs={12} sx={{ mb: 3 }}>

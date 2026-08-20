@@ -18,7 +18,6 @@ import {
 } from '@mui/material';
 import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
-import { useRecoilValue } from 'recoil';
 import {
   FamilyVolunteerAssignment,
   FunctionRequirement,
@@ -28,7 +27,7 @@ import {
   RoleApprovalStatus,
 } from '../../GeneratedClient';
 import { useBackdrop } from '../../Hooks/useBackdrop';
-import { visibleFamiliesQuery } from '../../Model/Data';
+import { useVisibleFamilies } from '../../Model/Data';
 import { usePersonAndFamilyLookup } from '../../Model/DirectoryModel';
 import { useFamilyIdPermissions } from '../../Model/SessionModel';
 import { useV1CasesModel } from '../../Model/V1CasesModel';
@@ -209,7 +208,7 @@ function ArrangementAssignmentDetailDrawerV2({
   const familyId = familyIdMaybe.familyId ?? partneringFamilyId;
   const permissions = useFamilyIdPermissions(partneringFamilyId);
   const canEditAssignments = permissions(Permission.EditAssignments);
-  const visibleFamilies = useRecoilValue(visibleFamiliesQuery);
+  const visibleFamilies = useVisibleFamilies();
   const familyAndPersonLookup = usePersonAndFamilyLookup();
   const v1CasesModel = useV1CasesModel();
   const withBackdrop = useBackdrop();

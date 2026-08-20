@@ -46,7 +46,6 @@ export function CommunityScreen() {
   const isDesktop = useMediaQuery(theme.breakpoints.up('sm'));
   // const isWideScreen = useMediaQuery(theme.breakpoints.up('xl'));
 
-  // const policy = useRecoilValue(policyData);
   const permissions = useCommunityPermissions(communityInfo);
 
   const editDrawer = useDrawer();

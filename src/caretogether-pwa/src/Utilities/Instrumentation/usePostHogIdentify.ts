@@ -1,10 +1,9 @@
 import { useEffect } from 'react';
-import { accountInfoState } from '../../Authentication/Auth';
-import { useLoadable } from '../../Hooks/useLoadable';
+import { useAccountInfo } from '../../Authentication/Auth';
 import posthog from 'posthog-js';
 
 export const usePostHogIdentify = () => {
-  const accountInfo = useLoadable(accountInfoState);
+  const accountInfo = useAccountInfo();
 
   // Passing the properties to the deps array avoids calling the effect twice.
   useEffect(() => {

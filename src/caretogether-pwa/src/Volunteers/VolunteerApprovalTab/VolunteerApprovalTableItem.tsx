@@ -9,8 +9,7 @@ import {
 } from '@mui/material';
 import { CombinedFamilyInfo } from '../../GeneratedClient';
 import React, { useState } from 'react';
-import { useRecoilValue } from 'recoil';
-import { policyData } from '../../Model/ConfigurationModel';
+import { usePolicy } from '../../Model/PolicyModel';
 import { AgeText } from '../../Families/AgeText';
 import { TestFamilyBadge } from '../../Families/TestFamilyBadge';
 import { VolunteerRoleApprovalStatusChip } from '../VolunteerRoleApprovalStatusChip';
@@ -133,7 +132,7 @@ function VolunteerApprovalTableRows(props: VolunteerApprovalTableItemProps) {
     roleFilters,
     updateTestFamilyFlagEnabled,
   } = props;
-  const policy = useRecoilValue(policyData);
+  const policy = usePolicy();
   if (!volunteerFamily.family?.id) {
     return null;
   }

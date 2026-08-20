@@ -1,6 +1,5 @@
 import { CompletedCustomFieldInfo, CustomField } from '../GeneratedClient';
-import { useRecoilValue } from 'recoil';
-import { policyData } from '../Model/ConfigurationModel';
+import { usePolicy } from '../Model/PolicyModel';
 import { CustomFieldEditor } from '../Generic/CustomFieldEditor';
 import { useDirectoryModel } from '../Model/DirectoryModel';
 
@@ -13,7 +12,7 @@ export function FamilyCustomField({
   familyId,
   customField,
 }: FamilyCustomFieldProps) {
-  const policy = useRecoilValue(policyData);
+  const policy = usePolicy();
 
   const savedCustomField =
     customField instanceof CompletedCustomFieldInfo ? customField : null;

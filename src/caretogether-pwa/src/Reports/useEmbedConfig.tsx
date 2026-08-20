@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
-import { useRecoilValue } from 'recoil';
 import { api } from '../Api/Api';
-import { selectedLocationContextState } from '../Model/Data';
+import { useRequiredSelectedLocationContext } from '../Model/Data';
 
 export function useEmbedConfig() {
   const [embedConfig, setEmbedConfig] = useState<{
@@ -13,9 +12,7 @@ export function useEmbedConfig() {
   const [loading, setLoading] = useState<boolean | null>(true);
   const [error, setError] = useState<boolean | null>(null);
 
-  const { organizationId, locationId } = useRecoilValue(
-    selectedLocationContextState
-  );
+  const { organizationId, locationId } = useRequiredSelectedLocationContext();
 
   useEffect(() => {
     api.records

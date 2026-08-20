@@ -13,7 +13,6 @@ import {
   Snackbar,
   Alert,
 } from '@mui/material';
-import { useRecoilValue } from 'recoil';
 import {
   AddCircle as AddCircleIcon,
   CloudUpload as CloudUploadIcon,
@@ -23,8 +22,8 @@ import { useFamilyLookup } from '../Model/DirectoryModel';
 import { familyNameString } from '../Families/FamilyName';
 import { useScreenTitle } from '../Shell/ShellScreenTitle';
 import {
-  visibleReferralsQuery,
-  selectedLocationContextState,
+  useRequiredSelectedLocationContext,
+  useVisibleReferrals,
 } from '../Model/Data';
 import { useV1ReferralsModel } from '../Model/V1ReferralsModel';
 import {
@@ -39,10 +38,9 @@ import { CompletedRequirementRow } from '../Requirements/CompletedRequirementRow
 import { ExemptedRequirementRow } from '../Requirements/ExemptedRequirementRow';
 import { V1ReferralContext } from '../Requirements/RequirementContext';
 import { CreatePartneringFamilyDrawer } from '../V1Cases/CreatePartneringFamilyDrawer';
-import { partneringFamiliesData } from '../Model/V1CasesModel';
-import { useLoadable } from '../Hooks/useLoadable';
+import { usePartneringFamilies } from '../Model/V1CasesModel';
 import { EditReferralDrawer } from '../V1Referrals/EditReferralDrawer';
-import { policyData } from '../Model/ConfigurationModel';
+import { usePolicy } from '../Model/PolicyModel';
 import { OpenNewV1CaseDialog } from '../V1Cases/OpenNewV1CaseDialog';
 import { useAppNavigate } from '../Hooks/useAppNavigate';
 import { CloseV1ReferralDrawer } from './CloseV1ReferralDrawer';
@@ -91,10 +89,10 @@ export function ReferralDetailsPage() {
   useScreenTitle('Referrals');
 
   const { referralId } = useParams<{ referralId: string }>();
-  const referralInfos = useRecoilValue(visibleReferralsQuery);
+  const referralInfos = useVisibleReferrals();
   const familyLookup = useFamilyLookup();
-  const families = useLoadable(partneringFamiliesData) || [];
-  const policy = useRecoilValue(policyData);
+  const families = usePartneringFamilies() || [];
+  const policy = usePolicy();
   const appNavigate = useAppNavigate();
   const functionAssignmentsEnabled = useFeatureFlagEnabled(
     FUNCTION_ASSIGNMENTS_FEATURE_FLAG
@@ -110,9 +108,7 @@ export function ReferralDetailsPage() {
     unassignIndividualVolunteerFromReferral,
   } = useV1ReferralsModel();
 
-  const { organizationId, locationId } = useRecoilValue(
-    selectedLocationContextState
-  );
+  const { organizationId, locationId } = useRequiredSelectedLocationContext();
 
   const [working, setWorking] = useState(false);
   const [openCreateFamily, setOpenCreateFamily] = useState(false);

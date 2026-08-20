@@ -9,7 +9,6 @@ import {
   Drawer,
 } from '@mui/material';
 import { Routes, Route } from 'react-router-dom';
-import { useRecoilValueLoadable } from 'recoil';
 
 import { useScreenTitle } from '../Shell/ShellScreenTitle';
 import { ReferralRow } from './ReferralRow';
@@ -21,7 +20,10 @@ import {
   usePersonAndFamilyLookup,
 } from '../Model/DirectoryModel';
 import { familyNameString } from '../Families/FamilyName';
-import { currentLocationQuery, visibleReferralsQuery } from '../Model/Data';
+import {
+  useCurrentLocationLoadable,
+  useVisibleReferralsLoadableState,
+} from '../Model/Data';
 import { Permission, V1ReferralStatus } from '../GeneratedClient';
 import { getFamilyCounty } from '../Utilities/getFamilyCounty';
 import { ReferralStatusFilter } from './ReferralsFilters';
@@ -33,8 +35,7 @@ import {
   useFeatureFlagsLoadedWithLocalOverride,
 } from '../Utilities/Instrumentation/useFeatureFlagWithLocalOverride';
 import { useFeatureFlagEnabled } from 'posthog-js/react';
-import { policyData } from '../Model/ConfigurationModel';
-import { useLoadable } from '../Hooks/useLoadable';
+import { usePolicyLoadable } from '../Model/PolicyModel';
 import { FUNCTION_ASSIGNMENTS_FEATURE_FLAG } from '../featureFlags';
 import {
   AssignmentFilterSelectionsByRole,
@@ -69,8 +70,8 @@ export function V1Referrals() {
   );
   const appNavigate = useAppNavigate();
   const permissions = useGlobalPermissions();
-  const currentLocationLoadable = useRecoilValueLoadable(currentLocationQuery);
-  const referralsLoadable = useRecoilValueLoadable(visibleReferralsQuery);
+  const currentLocationLoadable = useCurrentLocationLoadable();
+  const referralsLoadable = useVisibleReferralsLoadableState();
 
   const permissionsLoaded = currentLocationLoadable.state === 'hasValue';
   const referralsLoaded = referralsLoadable.state === 'hasValue';
@@ -127,11 +128,11 @@ export function V1Referrals() {
 }
 
 function V1ReferralsContent() {
-  const referralsLoadable = useRecoilValueLoadable(visibleReferralsQuery);
+  const referralsLoadable = useVisibleReferralsLoadableState();
   const familyLookup = useFamilyLookup();
   const personAndFamilyLookup = usePersonAndFamilyLookup();
   const permissions = useGlobalPermissions();
-  const policy = useLoadable(policyData);
+  const policy = usePolicyLoadable();
   const functionAssignmentsEnabled = useFeatureFlagEnabled(
     FUNCTION_ASSIGNMENTS_FEATURE_FLAG
   );

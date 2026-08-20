@@ -1,4 +1,4 @@
-import { selector } from 'recoil';
+import { atom } from 'jotai';
 import {
   ActionRequirement,
   CompleteVolunteerFamilyRequirement,
@@ -23,16 +23,21 @@ import {
   IndividualApprovalRecordsCommand,
   UpdateCustomVolunteerFamilyField,
 } from '../GeneratedClient';
-import { useAtomicRecordsCommandCallback, visibleFamiliesQuery } from './Data';
+import {
+  useAtomicRecordsCommandCallback,
+  visibleFamiliesAtom,
+} from './Data';
 import { commandFactory } from './CommandFactory';
+import { useJotaiLoadable } from '../State/jotai/useJotaiLoadable';
 
-export const volunteerFamiliesData = selector({
-  key: 'volunteerFamiliesData',
-  get: ({ get }) => {
-    const visibleFamilies = get(visibleFamiliesQuery);
-    return visibleFamilies.filter((f) => f.volunteerFamilyInfo);
-  },
+export const volunteerFamiliesData = atom(async (get) => {
+  const visibleFamilies = await get(visibleFamiliesAtom);
+  return visibleFamilies.filter((f) => f.volunteerFamilyInfo);
 });
+
+export function useVolunteerFamilies() {
+  return useJotaiLoadable(volunteerFamiliesData);
+}
 
 function useVolunteerFamilyCommandCallbackWithLocation<T extends unknown[]>(
   callback: (familyId: string, ...args: T) => Promise<VolunteerFamilyCommand>

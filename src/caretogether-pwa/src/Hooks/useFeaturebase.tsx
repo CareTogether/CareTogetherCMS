@@ -1,22 +1,18 @@
 import { useEffect } from 'react';
 import { useMediaQuery, useTheme } from '@mui/material';
-import { atom, useSetRecoilState } from 'recoil';
-import { useLoadable } from './useLoadable';
-import { accountInfoState } from '../Authentication/Auth';
-import { selectedLocationContextState } from '../Model/Data';
+import { atom, useSetAtom } from 'jotai';
+import { useAccountInfo } from '../Authentication/Auth';
+import { useSelectedLocationContext } from '../Model/Data';
 import {
-  organizationConfigurationQuery,
-  locationConfigurationQuery,
+  useLocationConfiguration,
+  useOrganizationConfiguration,
 } from '../Model/ConfigurationModel';
 import { api } from '../Api/Api';
 import { useGlobalPermissions } from '../Model/SessionModel';
 import { Permission } from '../GeneratedClient';
 
-// Recoil atom for changelog unread count
-export const changelogUnreadCountState = atom<number>({
-  key: 'changelogUnreadCountState',
-  default: 0,
-});
+// Jotai atom for changelog unread count
+export const changelogUnreadCountState = atom<number>(0);
 
 // Extend the Window interface to include Featurebase
 declare global {
@@ -32,12 +28,12 @@ export const useFeaturebase = () => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
 
-  // Get user data from Recoil state
-  const accountInfo = useLoadable(accountInfoState);
-  const organizationConfiguration = useLoadable(organizationConfigurationQuery);
-  const locationConfiguration = useLoadable(locationConfigurationQuery);
-  const locationContext = useLoadable(selectedLocationContextState);
-  const setChangelogUnreadCount = useSetRecoilState(changelogUnreadCountState);
+  // Get user data from Jotai state
+  const accountInfo = useAccountInfo();
+  const organizationConfiguration = useOrganizationConfiguration();
+  const locationConfiguration = useLocationConfiguration();
+  const locationContext = useSelectedLocationContext();
+  const setChangelogUnreadCount = useSetAtom(changelogUnreadCountState);
 
   // Check if user has permission to access support screen
   const permissions = useGlobalPermissions();

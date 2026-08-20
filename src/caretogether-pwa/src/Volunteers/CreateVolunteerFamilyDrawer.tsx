@@ -29,10 +29,9 @@ import {
 } from '../GeneratedClient';
 import { useDirectoryModel } from '../Model/DirectoryModel';
 import { Warning as WarningIcon } from '@mui/icons-material';
-import { useRecoilValue } from 'recoil';
 import {
-  adultFamilyRelationshipsData,
-  ethnicitiesData,
+  useAdultFamilyRelationships,
+  useEthnicities,
 } from '../Model/ConfigurationModel';
 import { useBackdrop } from '../Hooks/useBackdrop';
 import { subYears } from 'date-fns';
@@ -84,8 +83,8 @@ export function CreateVolunteerFamilyDrawer({
   } = fields;
   const directoryModel = useDirectoryModel();
 
-  const relationshipTypes = useRecoilValue(adultFamilyRelationshipsData);
-  const ethnicities = useRecoilValue(ethnicitiesData);
+  const relationshipTypes = useAdultFamilyRelationships() ?? [];
+  const ethnicities = useEthnicities() ?? [];
 
   const [dobError, setDobError] = useState(false);
 
