@@ -11,8 +11,7 @@ import {
 import { useDirectoryModel } from '../Model/DirectoryModel';
 import { useInlineEditor } from '../Hooks/useInlineEditor';
 import { PersonEditorProps } from './PersonEditorProps';
-import { useRecoilValue } from 'recoil';
-import { adultFamilyRelationshipsData } from '../Model/ConfigurationModel';
+import { useAdultFamilyRelationships } from '../Model/ConfigurationModel';
 import { FamilyAdultRelationshipInfo } from '../GeneratedClient';
 
 type AdultFamilyRelationshipEditorProps = PersonEditorProps & {
@@ -24,7 +23,7 @@ export function AdultFamilyRelationshipEditor({
   person,
   relationship,
 }: AdultFamilyRelationshipEditorProps) {
-  const relationshipTypes = useRecoilValue(adultFamilyRelationshipsData);
+  const relationshipTypes = useAdultFamilyRelationships() ?? [];
   const directoryModel = useDirectoryModel();
 
   const editor = useInlineEditor(

@@ -1,8 +1,7 @@
 import { Container, Stack, Typography } from '@mui/material';
-import { useRecoilValueLoadable } from 'recoil';
 import {
-  locationConfigurationQuery,
-  organizationConfigurationQuery,
+  useLocationConfigurationLoadable,
+  useOrganizationConfigurationLoadable,
 } from '../Model/ConfigurationModel';
 import { useScreenTitle } from '../Shell/ShellScreenTitle';
 import { useDataLoaded } from '../Model/Data';
@@ -10,12 +9,8 @@ import { ProgressBackdrop } from '../Shell/ProgressBackdrop';
 import { DashboardCalendar } from './DashboardCalendar';
 
 function Dashboard() {
-  const organizationConfiguration = useRecoilValueLoadable(
-    organizationConfigurationQuery
-  );
-  const locationConfiguration = useRecoilValueLoadable(
-    locationConfigurationQuery
-  );
+  const organizationConfiguration = useOrganizationConfigurationLoadable();
+  const locationConfiguration = useLocationConfigurationLoadable();
 
   const dataLoaded = useDataLoaded();
 

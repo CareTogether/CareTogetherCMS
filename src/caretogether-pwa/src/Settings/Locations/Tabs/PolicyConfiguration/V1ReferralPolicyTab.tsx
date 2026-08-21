@@ -1,10 +1,9 @@
 import { Accordion, AccordionDetails, AccordionSummary, Box, Stack, Typography } from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import { useMemo, useState } from 'react';
-import { useRecoilValue } from 'recoil';
 import { CustomField, EffectiveLocationPolicy, FunctionAssignmentPolicy, RequirementDefinition, V1CasePolicy, V1ReferralPolicy } from '../../../../GeneratedClient';
 import { useSidePanel } from '../../../../Hooks/useSidePanel';
-import { visibleFamiliesQuery } from '../../../../Model/Data';
+import { useVisibleFamilies } from '../../../../Model/Data';
 import { CustomFieldSidePanel, FunctionAssignmentPolicySidePanel, RequirementSidePanel } from './sidePanels';
 import { CustomFieldsTable } from './CustomFieldsTable';
 import { FunctionAssignmentPoliciesTable, RequirementsTable } from './tables';
@@ -31,7 +30,7 @@ export function V1ReferralPolicyTab({
   const volunteerFamilyRoles = Object.keys(
     policy.volunteerPolicy?.volunteerFamilyRoles ?? {}
   );
-  const visibleFamilies = useRecoilValue(visibleFamiliesQuery);
+  const visibleFamilies = useVisibleFamilies();
   const personOptions = useMemo(
     () => personOptionsFromFamilies(visibleFamilies),
     [visibleFamilies]

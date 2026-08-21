@@ -31,15 +31,14 @@ import {
 import { useDirectoryModel } from '../Model/DirectoryModel';
 import { Warning as WarningIcon } from '@mui/icons-material';
 import { ValidateDatePicker } from '../Generic/Forms/ValidateDatePicker';
-import { useRecoilValue } from 'recoil';
 import {
-  adultFamilyRelationshipsData,
-  ethnicitiesData,
+  useAdultFamilyRelationships,
+  useEthnicities,
 } from '../Model/ConfigurationModel';
 import { useParams } from 'react-router-dom';
 import { useBackdrop } from '../Hooks/useBackdrop';
 import { subYears } from 'date-fns';
-import { visibleFamiliesQuery } from '../Model/Data';
+import { useVisibleFamilies } from '../Model/Data';
 import { AddressFormFields } from './AddressEditor';
 import { familyLastName } from './FamilyUtils';
 
@@ -53,7 +52,7 @@ function optional(arg: string) {
 
 export function AddAdultDrawer({ onClose }: AddAdultDrawerProps) {
   const { familyId } = useParams<{ familyId: string }>();
-  const visibleFamilies = useRecoilValue(visibleFamiliesQuery);
+  const visibleFamilies = useVisibleFamilies();
   const family = visibleFamilies.find(
     (x) => x.family?.id === familyId
   ) as CombinedFamilyInfo;
@@ -92,8 +91,8 @@ export function AddAdultDrawer({ onClose }: AddAdultDrawerProps) {
   } = fields;
   const directoryModel = useDirectoryModel();
 
-  const relationshipTypes = useRecoilValue(adultFamilyRelationshipsData);
-  const ethnicities = useRecoilValue(ethnicitiesData);
+  const relationshipTypes = useAdultFamilyRelationships() ?? [];
+  const ethnicities = useEthnicities() ?? [];
   const [dobError, setDobError] = useState(false);
 
   const withBackdrop = useBackdrop();

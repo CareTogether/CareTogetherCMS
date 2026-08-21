@@ -30,9 +30,8 @@ import type { AssignmentFilterSelectionsByRole } from '../FunctionAssignments/as
 import { useCustomFieldFilters } from '../Generic/CustomFieldsFilter/useCustomFieldFilters';
 import { useSidePanel } from '../Hooks/useSidePanel';
 import { PartneringFamilyCustomFieldFiltersSidePanel } from './PartneringFamilies/PartneringFamilyCustomFieldFiltersSidePanel';
-import { useLoadable } from '../Hooks/useLoadable';
-import { partneringFamiliesData } from '../Model/V1CasesModel';
-import { policyData } from '../Model/ConfigurationModel';
+import { usePartneringFamilies } from '../Model/V1CasesModel';
+import { usePolicyLoadable } from '../Model/PolicyModel';
 import { wideTablePageSx } from '../Utilities/wideTablePageSx';
 
 const PARTNERING_FAMILIES_SORT_STORAGE_KEY = 'partnering-families-sortMode';
@@ -91,9 +90,9 @@ export function ClientsScreenV2() {
       'lastNameAsc'
     );
   const sortMode = normalizePartneringFamiliesSortMode(storedSortMode);
-  const customFieldFilterItems = useLoadable(partneringFamiliesData) ?? [];
+  const customFieldFilterItems = usePartneringFamilies() ?? [];
   const customFieldDefinitions =
-    useLoadable(policyData)?.referralPolicy?.customFields ?? [];
+    usePolicyLoadable()?.referralPolicy?.customFields ?? [];
   const isBlankCustomFieldValue = useCallback(
     (family: (typeof customFieldFilterItems)[number], fieldName: string) =>
       family.partneringFamilyInfo?.openV1Case?.missingCustomFields?.includes(

@@ -25,13 +25,12 @@ import { Version } from './Version';
 import { useGlobalPermissions } from '../Model/SessionModel';
 import { Permission } from '../GeneratedClient';
 import {
-  selectedLocationContextState,
-  visibleReferralsQuery,
+  useSelectedLocationContext,
+  useVisibleReferralsLoadable,
 } from '../Model/Data';
-import { useLoadable } from '../Hooks/useLoadable';
-import { queueItemsCountQuery } from '../Model/QueueModel';
+import { useQueueItemsCount } from '../Model/QueueModel';
 import Feedback from './Feedback';
-import { useRecoilValue } from 'recoil';
+import { useAtomValue } from 'jotai';
 import { reportSubmenuItemsAtom } from '../Model/UI';
 import { ListItemLink } from './ListItemLink';
 import { useAppNavigate } from '../Hooks/useAppNavigate';
@@ -48,15 +47,15 @@ function SideNavigationMenu({ open }: SideNavigationMenuProps) {
 
   const appNavigate = useAppNavigate();
 
-  const context = useLoadable(selectedLocationContextState);
+  const context = useSelectedLocationContext();
   const locationPrefix = `/org/${context?.organizationId}/${context?.locationId}`;
 
-  const queueItemsCount = useLoadable(queueItemsCountQuery);
+  const queueItemsCount = useQueueItemsCount();
 
-  const reportSubmenuItems = useRecoilValue(reportSubmenuItemsAtom);
+  const reportSubmenuItems = useAtomValue(reportSubmenuItemsAtom);
 
   const referralsEnabled = useFeatureFlagEnabledWithLocalOverride('referrals');
-  const visibleReferrals = useLoadable(visibleReferralsQuery);
+  const visibleReferrals = useVisibleReferralsLoadable();
   const canAccessReferrals =
     permissions(Permission.CreateV1Referral) ||
     permissions(Permission.ViewV1Referral) ||

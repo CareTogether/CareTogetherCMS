@@ -10,12 +10,11 @@ import {
   FormControlLabel,
   Radio,
 } from '@mui/material';
-import { useRecoilValue } from 'recoil';
 import { format } from 'date-fns';
 import { PersonName } from '../../Families/PersonName';
 import { Note, NoteStatus } from '../../GeneratedClient';
 import { UpdateDialog } from '../../Generic/UpdateDialog';
-import { locationConfigurationQuery } from '../../Model/ConfigurationModel';
+import { useLocationConfiguration } from '../../Model/ConfigurationModel';
 import {
   useDirectoryModel,
   useNoteAuthorLookup,
@@ -33,7 +32,7 @@ export function AccessLevelDialog({
   onClose,
 }: EditNoteAccessLevelDialogProps) {
   const directoryModel = useDirectoryModel();
-  const locationConfiguration = useRecoilValue(locationConfigurationQuery);
+  const locationConfiguration = useLocationConfiguration();
   const noteAuthorLookup = useNoteAuthorLookup();
 
   const [accessLevel, setAccessLevel] = useState<string>(
@@ -71,7 +70,7 @@ export function AccessLevelDialog({
           normalized ?? ''
         );
       }
-    } catch (error) {
+    } catch {
       setSaving(false);
     }
 

@@ -2,16 +2,14 @@ import { Stack, TextField, Typography, Button } from '@mui/material';
 import { useForm, Controller, SubmitHandler } from 'react-hook-form';
 import { CTAutocomplete } from '../../../Generic/Forms/CTAutocomplete';
 import { api } from '../../../Api/Api';
-import { useRecoilValue, useSetRecoilState } from 'recoil';
-import { selectedLocationContextState } from '../../../Model/Data';
+import { useSetAtom } from 'jotai';
+import { useRequiredSelectedLocationContext } from '../../../Model/Data';
 import {
   LocationConfiguration,
   PutOrganizationConfigurationPayload,
   PutLocationPayload,
 } from '../../../GeneratedClient';
-import {
-  organizationConfigurationEdited,
-} from '../../../Model/ConfigurationModel';
+import { organizationConfigurationEdited } from '../../../Model/ConfigurationModel';
 import { useBackdrop } from '../../../Hooks/useBackdrop';
 
 export type ConfigurationData = {
@@ -51,8 +49,8 @@ export default function BasicConfiguration({
     defaultValues: data,
   });
 
-  const { organizationId } = useRecoilValue(selectedLocationContextState);
-  const storeEdits = useSetRecoilState(organizationConfigurationEdited);
+  const { organizationId } = useRequiredSelectedLocationContext();
+  const storeEdits = useSetAtom(organizationConfigurationEdited);
   const withBackdrop = useBackdrop();
 
   const onSubmit: SubmitHandler<ConfigurationData> = async (data) => {

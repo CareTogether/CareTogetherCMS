@@ -14,10 +14,9 @@ import {
   TextField,
 } from '@mui/material';
 import { useState } from 'react';
-import { useRecoilValue } from 'recoil';
 import { Person, RoleRemovalReason } from '../GeneratedClient';
 import { useBackdrop } from '../Hooks/useBackdrop';
-import { policyData } from '../Model/ConfigurationModel';
+import { usePolicy } from '../Model/PolicyModel';
 import { useVolunteersModel } from '../Model/VolunteersModel';
 
 type RoleRemovalSectionV2Props = {
@@ -37,7 +36,7 @@ export function RoleRemovalSectionV2({
 }: RoleRemovalSectionV2Props) {
   const volunteers = useVolunteersModel();
   const withBackdrop = useBackdrop();
-  const policy = useRecoilValue(policyData);
+  const policy = usePolicy();
   const [reason, setReason] = useState(RoleRemovalReason.Inactive);
   const [additionalComments, setAdditionalComments] = useState('');
   const [confirmOpen, setConfirmOpen] = useState(false);

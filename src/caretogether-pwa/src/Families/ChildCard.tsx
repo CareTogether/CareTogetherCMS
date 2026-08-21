@@ -12,14 +12,13 @@ import {
   Gender,
   Permission,
 } from '../GeneratedClient';
-import { useRecoilValue } from 'recoil';
 import { AgeText } from './AgeText';
 import { Edit as EditIcon } from '@mui/icons-material';
 import { useDialogHandle } from '../Hooks/useDialogHandle';
 import { EditChildDialog } from './EditChildDialog';
 import { useFamilyPermissions } from '../Model/SessionModel';
 import { useFamilyLookup } from '../Model/DirectoryModel';
-import { policyData } from '../Model/ConfigurationModel';
+import { usePolicy } from '../Model/PolicyModel';
 import { differenceInYears } from 'date-fns';
 import { DateOfBirth } from './DateOfBirth';
 import { WithComma } from '../Utilities/WithComma';
@@ -51,7 +50,7 @@ export function ChildCard({
   const editDialogHandle = useDialogHandle();
 
   const permissions = useFamilyPermissions(family);
-  const policy = useRecoilValue(policyData);
+  const policy = usePolicy();
   const familyMemberCustomFieldsEnabled = useFeatureFlagEnabled(
     FAMILY_MEMBER_CUSTOM_FIELDS_FEATURE_FLAG
   );

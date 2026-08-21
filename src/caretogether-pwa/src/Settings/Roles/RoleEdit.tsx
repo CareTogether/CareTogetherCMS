@@ -37,10 +37,10 @@ import { organizationConfigurationEdited } from '../../Model/ConfigurationModel'
 import { useGlobalPermissions } from '../../Model/SessionModel';
 import { Add as AddIcon } from '@mui/icons-material';
 import { useBackdrop } from '../../Hooks/useBackdrop';
-import { useRecoilValue, useSetRecoilState } from 'recoil';
+import { useSetAtom } from 'jotai';
 import { ContextualPermissionSetRow } from './ContextualPermissionSetRow';
 import { api } from '../../Api/Api';
-import { selectedLocationContextState } from '../../Model/Data';
+import { useRequiredSelectedLocationContext } from '../../Model/Data';
 import { Box } from '@mui/system';
 import { isRoleEditable } from './isRoleEditable';
 import { ContextualPermissionSetRowAutocomplete } from './ContextualPermissionSetRowWithAutocomplete';
@@ -58,9 +58,9 @@ export function RoleEdit({
 }) {
   const permissions = useGlobalPermissions();
 
-  const storeEdits = useSetRecoilState(organizationConfigurationEdited);
+  const storeEdits = useSetAtom(organizationConfigurationEdited);
 
-  const { organizationId } = useRecoilValue(selectedLocationContextState);
+  const { organizationId } = useRequiredSelectedLocationContext();
 
   const [workingRole, setWorkingRole] =
     useState<RoleDefinition>(roleDefinition);

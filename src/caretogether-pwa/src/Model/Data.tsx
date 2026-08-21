@@ -1,12 +1,18 @@
-import {
-  atom,
-  atomFamily,
-  selector,
-  selectorFamily,
-  useRecoilCallback,
-} from 'recoil';
-import { useLoadable } from '../Hooks/useLoadable';
+import { useCallback } from 'react';
+import { atom, useAtomValue, useSetAtom } from 'jotai';
+import { atomFamily } from 'jotai/utils';
 import { api } from '../Api/Api';
+import { accountInfoState } from '../Authentication/Auth';
+import type { LocationScope } from './LocationScope';
+import { isSameLocationScope } from './LocationScope';
+import {
+  useAtomLoadable,
+  useJotaiLoadable,
+} from '../State/jotai/useJotaiLoadable';
+import {
+  createRefreshAtom,
+  createRefreshTokenAtom,
+} from '../State/jotai/refreshAtom';
 import {
   AtomicRecordsCommand,
   CommunityRecordsAggregate,
@@ -15,124 +21,146 @@ import {
   RecordsAggregate,
   ReferralRecordsAggregate,
 } from '../GeneratedClient';
-import { loggingEffect } from '../Utilities/loggingEffect';
-import { accountInfoState } from '../Authentication/Auth';
-import { useRecoilValue, useResetRecoilState } from 'recoil';
 
-export function useRefreshVisibleAggregates() {
-  const context = useRecoilValue(selectedLocationContextState);
-  return useResetRecoilState(visibleAggregatesForScopeData(context));
-}
-// This will be available to query (asynchronously) after the accountInfoState is set (i.e., post-authentication).
-export const userOrganizationAccessQuery = selector({
-  key: 'userOrganizationAccessQuery',
-  get: async ({ get }) => {
-    //HACK: Requiring the user ID state to be set is a workaround for fall-through issues with the AuthenticationWrapper
-    //      and AuthenticatedUserWrapper. Removing this currently would cause runtime errors regarding the MsalProvider
-    //      being updated while a child component is being rendered (e.g., the ShellContextSwitcher).
-    get(accountInfoState);
-    const userResponse = await api.users.getUserOrganizationAccess();
-    return userResponse;
-  },
+const userOrganizationAccessRefreshToken = createRefreshTokenAtom();
+
+// This will be available to query (asynchronously) after the authenticated route tree is rendered.
+const userOrganizationAccessAtom = atom(async (get) => {
+  get(userOrganizationAccessRefreshToken);
+  await get(accountInfoState);
+  const userResponse = await api.users.getUserOrganizationAccess();
+  return userResponse;
 });
 
-export type LocationContext = {
-  organizationId: string;
-  locationId: string;
-};
+const refreshUserOrganizationAccessAtom = createRefreshAtom(
+  userOrganizationAccessRefreshToken
+);
+
+export type LocationContext = LocationScope;
 
 // This will be set by the AppRoutes organization & location selection logic (i.e., the value depends on the URL).
-export const selectedLocationContextState = atom<LocationContext>({
-  key: 'selectedLocationContextState',
-  effects: [loggingEffect],
-});
+export const selectedLocationContextState = atom<LocationContext | null>(null);
 
 // This will be available to query after the selectedLocationContextState is set by AppRoutes.
-export const currentOrganizationQuery = selector({
-  key: 'currentOrganizationQuery',
-  get: ({ get }) => {
-    const userOrganizationAccess = get(userOrganizationAccessQuery);
-    const selectedLocationContext = get(selectedLocationContextState);
+const currentOrganizationAtom = atom(async (get) => {
+  const userOrganizationAccess = await get(userOrganizationAccessAtom);
+  const selectedLocationContext = get(selectedLocationContextState);
 
-    const selectedOrganization = userOrganizationAccess.organizations?.find(
-      (org) =>
-        org.organizationId &&
-        org.organizationId === selectedLocationContext.organizationId
+  if (!selectedLocationContext) {
+    return null;
+  }
+
+  const selectedOrganization = userOrganizationAccess.organizations?.find(
+    (org) =>
+      org.organizationId &&
+      org.organizationId === selectedLocationContext.organizationId
+  );
+
+  if (!selectedOrganization) {
+    const availableOrganizations = userOrganizationAccess?.organizations?.map(
+      (org) => org.organizationId
     );
-
-    if (!selectedOrganization) {
-      const availableOrganizations = userOrganizationAccess?.organizations?.map(
-        (org) => org.organizationId
-      );
-      throw new Error(
-        `The organization selection (ID '${selectedLocationContext.organizationId}' is invalid.\n` +
-          `Available organizations are: ${availableOrganizations?.join(', ')}`
-      );
-    }
-    return selectedOrganization;
-  },
+    throw new Error(
+      `The organization selection (ID '${selectedLocationContext.organizationId}' is invalid.\n` +
+        `Available organizations are: ${availableOrganizations?.join(', ')}`
+    );
+  }
+  return selectedOrganization;
 });
 
 // This will be available to query after the selectedLocationIdState is set by AppRoutes.
-export const currentLocationQuery = selector({
-  key: 'currentLocationQuery',
-  get: ({ get }) => {
-    const currentOrganization = get(currentOrganizationQuery);
-    const selectedLocationContext = get(selectedLocationContextState);
+const currentLocationAtom = atom(async (get) => {
+  const currentOrganization = await get(currentOrganizationAtom);
+  const selectedLocationContext = get(selectedLocationContextState);
 
-    const selectedLocation = currentOrganization?.locations?.find(
-      (loc) =>
-        loc.locationId && loc.locationId === selectedLocationContext.locationId
+  if (!selectedLocationContext) {
+    return null;
+  }
+
+  const selectedLocation = currentOrganization?.locations?.find(
+    (loc) =>
+      loc.locationId && loc.locationId === selectedLocationContext.locationId
+  );
+
+  if (!selectedLocation) {
+    const availableLocations = currentOrganization?.locations?.map(
+      (loc) => loc.locationId
     );
-
-    if (!selectedLocation) {
-      const availableLocations = currentOrganization?.locations?.map(
-        (loc) => loc.locationId
-      );
-      throw new Error(
-        `The location selection (ID '${selectedLocationContext.locationId}' is invalid.\n` +
-          `Available locations are: ${availableLocations?.join(', ')}`
-      );
-    }
-    return selectedLocation;
-  },
+    throw new Error(
+      `The location selection (ID '${selectedLocationContext.locationId}' is invalid.\n` +
+        `Available locations are: ${availableLocations?.join(', ')}`
+    );
+  }
+  return selectedLocation;
 });
 
 // The collection of visible records (aggregates) is scoped to the current organization and location.
 // When the records for the current location are loaded, this will be populated with those records.
 // Subsequently, this will be imperatively managed by the Model codebase as browser-local state.
-// The client can call useResetRecoilState to force a refresh of a particular scope's visible records.
-const visibleAggregatesForScopeData = atomFamily<
-  RecordsAggregate[],
-  LocationContext
->({
-  key: 'visibleAggregatesForScopeData',
-  default: selectorFamily({
-    key: 'visibleAggregatesForScopeData/default',
-    get: (scope) => async () => {
-      const visibleAggregates = await api.records.listVisibleAggregates(
-        scope.organizationId,
-        scope.locationId
-      );
-      return visibleAggregates;
-    },
-  }),
-});
+// The client can write a refresh action to force a refresh of a particular scope's visible records.
+type VisibleAggregatesAction =
+  | { type: 'refresh' }
+  | RecordsAggregate[]
+  | ((current: RecordsAggregate[]) => RecordsAggregate[]);
+
+export const visibleAggregatesForScopeData = atomFamily(
+  (scope: LocationContext) => {
+    const visibleAggregatesBaseAtom = atom<
+      RecordsAggregate[] | Promise<RecordsAggregate[]>
+    >(api.records.listVisibleAggregates(scope.organizationId, scope.locationId));
+
+    return atom(
+      async (get) => await get(visibleAggregatesBaseAtom),
+      async (get, set, action: VisibleAggregatesAction) => {
+        if (
+          typeof action === 'object' &&
+          !Array.isArray(action) &&
+          'type' in action &&
+          action.type === 'refresh'
+        ) {
+          set(
+            visibleAggregatesBaseAtom,
+            api.records.listVisibleAggregates(
+              scope.organizationId,
+              scope.locationId
+            )
+          );
+          return;
+        }
+
+        if (typeof action === 'function') {
+          const current = await get(visibleAggregatesBaseAtom);
+          set(visibleAggregatesBaseAtom, action(current));
+          return;
+        }
+
+        if (Array.isArray(action)) {
+          set(visibleAggregatesBaseAtom, action);
+        }
+      }
+    );
+  },
+  isSameLocationScope
+);
+
+const noVisibleAggregates = atom(async (): Promise<RecordsAggregate[]> => []);
 
 // For convenience, only the currently visible records are exported to the client from this module.
-export const visibleAggregatesState = selector({
-  key: 'visibleAggregatesState',
-  get: ({ get }) => {
+export const visibleAggregatesState = atom(
+  async (get) => {
     const context = get(selectedLocationContextState);
-    const visibleAggregates = visibleAggregatesForScopeData(context);
-    const results = get(visibleAggregates);
-    return results;
+    return await get(
+      context ? visibleAggregatesForScopeData(context) : noVisibleAggregates
+    );
   },
-  set: ({ get, set }, newValue) => {
+  async (get, set, newValue: VisibleAggregatesAction) => {
     const context = get(selectedLocationContextState);
-    set(visibleAggregatesForScopeData(context), newValue);
-  },
-});
+    if (!context) {
+      return;
+    }
+    await set(visibleAggregatesForScopeData(context), newValue);
+  }
+);
 
 type AggregateLike = RecordsAggregate | null;
 
@@ -159,7 +187,6 @@ function mergeVisibleAggregate(
 
 function upsertVisibleAggregates(
   set: (
-    state: typeof visibleAggregatesState,
     valueOrUpdater:
       | RecordsAggregate[]
       | ((current: RecordsAggregate[]) => RecordsAggregate[])
@@ -168,7 +195,7 @@ function upsertVisibleAggregates(
   updatedAggregates: AggregateLike[]
 ) {
   for (const updatedAggregate of updatedAggregates) {
-    set(visibleAggregatesState, (current: RecordsAggregate[]) =>
+    set((current: RecordsAggregate[]) =>
       mergeVisibleAggregate(current, aggregateId, updatedAggregate)
     );
   }
@@ -178,12 +205,12 @@ export function useAtomicRecordsCommandCallback<
   T extends unknown[],
   U extends AtomicRecordsCommand,
 >(callback: (aggregateId: string, ...args: T) => Promise<U>) {
-  return useRecoilCallback(({ snapshot, set }) => {
-    const asyncCallback = async (aggregateId: string, ...args: T) => {
-      const { organizationId, locationId } = await snapshot.getPromise(
-        selectedLocationContextState
-      );
+  const context = useRequiredSelectedLocationContext();
+  const setVisibleAggregates = useSetAtom(visibleAggregatesState);
 
+  return useCallback(
+    async (aggregateId: string, ...args: T) => {
+      const { organizationId, locationId } = context;
       const command = await callback(aggregateId, ...args);
 
       const updatedAggregates = await api.records.submitAtomicRecordsCommand(
@@ -192,10 +219,14 @@ export function useAtomicRecordsCommandCallback<
         command
       );
 
-      upsertVisibleAggregates(set, aggregateId, updatedAggregates);
-    };
-    return asyncCallback;
-  });
+      upsertVisibleAggregates(
+        setVisibleAggregates,
+        aggregateId,
+        updatedAggregates
+      );
+    },
+    [callback, context, setVisibleAggregates]
+  );
 }
 
 export function useCompositeRecordsCommandCallback<T extends unknown[]>(
@@ -204,12 +235,12 @@ export function useCompositeRecordsCommandCallback<T extends unknown[]>(
     ...args: T
   ) => Promise<CompositeRecordsCommand>
 ) {
-  return useRecoilCallback(({ snapshot, set }) => {
-    const asyncCallback = async (aggregateId: string, ...args: T) => {
-      const { organizationId, locationId } = await snapshot.getPromise(
-        selectedLocationContextState
-      );
+  const context = useRequiredSelectedLocationContext();
+  const setVisibleAggregates = useSetAtom(visibleAggregatesState);
 
+  return useCallback(
+    async (aggregateId: string, ...args: T) => {
+      const { organizationId, locationId } = context;
       const command = await callback(aggregateId, ...args);
 
       const updatedAggregates = await api.records.submitCompositeRecordsCommand(
@@ -218,44 +249,101 @@ export function useCompositeRecordsCommandCallback<T extends unknown[]>(
         command
       );
 
-      upsertVisibleAggregates(set, aggregateId, updatedAggregates);
-    };
-    return asyncCallback;
-  });
+      upsertVisibleAggregates(
+        setVisibleAggregates,
+        aggregateId,
+        updatedAggregates
+      );
+    },
+    [callback, context, setVisibleAggregates]
+  );
+}
+
+export function useSelectedLocationContext() {
+  return useAtomValue(selectedLocationContextState);
+}
+
+export function useRequiredSelectedLocationContext() {
+  const selectedLocationContext = useSelectedLocationContext();
+
+  if (selectedLocationContext === null) {
+    throw new Error('Selected location context has not been initialized.');
+  }
+
+  return selectedLocationContext;
+}
+
+export function useSetSelectedLocationContext() {
+  return useSetAtom(selectedLocationContextState);
+}
+
+export function useUserOrganizationAccess() {
+  return useJotaiLoadable(userOrganizationAccessAtom);
+}
+
+export function useRefreshUserOrganizationAccess() {
+  return useSetAtom(refreshUserOrganizationAccessAtom);
+}
+
+export function useCurrentOrganization() {
+  return useJotaiLoadable(currentOrganizationAtom);
+}
+
+export function useCurrentLocation() {
+  return useJotaiLoadable(currentLocationAtom);
+}
+
+export function useCurrentLocationLoadable() {
+  return useAtomLoadable(currentLocationAtom);
 }
 
 // This hook can be used for convenience to determine if the current scope's records have been loaded.
 export function useDataLoaded() {
-  return useLoadable(visibleAggregatesState) != null;
+  return useJotaiLoadable(visibleAggregatesState) != null;
 }
 
-export const visibleFamiliesQuery = selector({
-  key: 'visibleFamiliesQuery',
-  get: ({ get }) => {
-    const visibleAggregates = get(visibleAggregatesState);
-    return visibleAggregates
-      .filter((aggregate) => aggregate instanceof FamilyRecordsAggregate)
-      .map((aggregate) => (aggregate as FamilyRecordsAggregate).family!);
-  },
+export function useVisibleFamilies() {
+  return useAtomValue(visibleFamiliesAtom);
+}
+
+export function useVisibleCommunities() {
+  return useAtomValue(visibleCommunitiesAtom);
+}
+
+export function useVisibleCommunitiesLoadable() {
+  return useJotaiLoadable(visibleCommunitiesAtom);
+}
+
+export function useVisibleReferrals() {
+  return useAtomValue(visibleReferralsAtom);
+}
+
+export function useVisibleReferralsLoadable() {
+  return useJotaiLoadable(visibleReferralsAtom);
+}
+
+export function useVisibleReferralsLoadableState() {
+  return useAtomLoadable(visibleReferralsAtom);
+}
+
+export const visibleFamiliesAtom = atom(async (get) => {
+  const visibleAggregates = await get(visibleAggregatesState);
+  return visibleAggregates
+    .filter((aggregate) => aggregate instanceof FamilyRecordsAggregate)
+    .map((aggregate) => (aggregate as FamilyRecordsAggregate).family!);
 });
 
-export const visibleCommunitiesQuery = selector({
-  key: 'visibleCommunitiesQuery',
-  get: ({ get }) => {
-    const visibleAggregates = get(visibleAggregatesState);
-    return visibleAggregates
-      .filter((aggregate) => aggregate instanceof CommunityRecordsAggregate)
-      .map((aggregate) => (aggregate as CommunityRecordsAggregate).community!);
-  },
+const visibleCommunitiesAtom = atom(async (get) => {
+  const visibleAggregates = await get(visibleAggregatesState);
+  return visibleAggregates
+    .filter((aggregate) => aggregate instanceof CommunityRecordsAggregate)
+    .map((aggregate) => (aggregate as CommunityRecordsAggregate).community!);
 });
 
-export const visibleReferralsQuery = selector({
-  key: 'visibleReferralsQuery',
-  get: ({ get }) => {
-    const visibleAggregates = get(visibleAggregatesState);
+const visibleReferralsAtom = atom(async (get) => {
+  const visibleAggregates = await get(visibleAggregatesState);
 
-    return visibleAggregates
-      .filter((aggregate) => aggregate instanceof ReferralRecordsAggregate)
-      .map((aggregate) => (aggregate as ReferralRecordsAggregate).referral);
-  },
+  return visibleAggregates
+    .filter((aggregate) => aggregate instanceof ReferralRecordsAggregate)
+    .map((aggregate) => (aggregate as ReferralRecordsAggregate).referral);
 });

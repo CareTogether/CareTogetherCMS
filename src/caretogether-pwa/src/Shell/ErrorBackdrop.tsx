@@ -1,14 +1,11 @@
 import { Backdrop } from '@mui/material';
 import { useEffect } from 'react';
-import { atom, useRecoilState } from 'recoil';
+import { atom, useAtom } from 'jotai';
 
-const errorInfoData = atom<Error | null | undefined>({
-  key: 'errorInfoData',
-  default: undefined,
-});
+const errorInfoData = atom<Error | null | undefined>(undefined);
 
 export default function ErrorBackdrop() {
-  const [errorInfo, setErrorInfo] = useRecoilState(errorInfoData);
+  const [errorInfo, setErrorInfo] = useAtom(errorInfoData);
 
   useEffect(() => {
     window.onunhandledrejection = (e: PromiseRejectionEvent) => {

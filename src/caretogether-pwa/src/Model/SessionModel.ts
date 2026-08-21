@@ -1,29 +1,29 @@
-import { selectorFamily } from 'recoil';
+import { atom } from 'jotai';
+import { atomFamily } from 'jotai/utils';
 import {
   CombinedFamilyInfo,
   CommunityInfo,
   Permission,
 } from '../GeneratedClient';
-import { useLoadable } from '../Hooks/useLoadable';
 import { useFamilyLookup } from './DirectoryModel';
 import { api } from '../Api/Api';
-import { currentLocationQuery } from './Data';
+import { useCurrentLocation } from './Data';
 import { ORGANIZATION_ADMINISTRATOR } from '../constants';
 
-export const inviteReviewInfoQuery = selectorFamily({
-  key: 'inviteReviewInfoQuery',
-  get: (redemptionSessionId: string | null) => async () => {
-    if (redemptionSessionId) {
-      const inviteReviewInfo =
-        await api.users.examinePersonInviteRedemptionSession(
-          redemptionSessionId
-        );
-      return inviteReviewInfo;
-    } else {
-      return null;
-    }
-  },
-});
+export const inviteReviewInfoQuery = atomFamily(
+  (redemptionSessionId: string | null) =>
+    atom(async () => {
+      if (redemptionSessionId) {
+        const inviteReviewInfo =
+          await api.users.examinePersonInviteRedemptionSession(
+            redemptionSessionId
+          );
+        return inviteReviewInfo;
+      } else {
+        return null;
+      }
+    })
+);
 
 function usePermissions(applicablePermissions?: Permission[]) {
   //TODO: If we want to expose a "not-yet-loaded" state, update this to return 'null' from
@@ -33,19 +33,19 @@ function usePermissions(applicablePermissions?: Permission[]) {
 }
 
 export function useGlobalPermissions() {
-  const currentLocation = useLoadable(currentLocationQuery);
+  const currentLocation = useCurrentLocation();
   return usePermissions(currentLocation?.globalContextPermissions);
 }
 
 export function useAllPartneringFamiliesPermissions() {
-  const currentLocation = useLoadable(currentLocationQuery);
+  const currentLocation = useCurrentLocation();
   return usePermissions(
     currentLocation?.allPartneringFamiliesContextPermissions
   );
 }
 
 export function useAllVolunteerFamiliesPermissions() {
-  const currentLocation = useLoadable(currentLocationQuery);
+  const currentLocation = useCurrentLocation();
   return usePermissions(
     currentLocation?.allVolunteerFamiliesContextPermissions
   );
@@ -66,6 +66,6 @@ export function useCommunityPermissions(community?: CommunityInfo) {
 }
 
 export function useUserIsOrganizationAdministrator() {
-  const currentLocation = useLoadable(currentLocationQuery);
+  const currentLocation = useCurrentLocation();
   return currentLocation?.roles?.includes(ORGANIZATION_ADMINISTRATOR);
 }

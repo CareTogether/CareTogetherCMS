@@ -1,6 +1,5 @@
 import { CompletedCustomFieldInfo } from '../GeneratedClient';
-import { useRecoilValue } from 'recoil';
-import { policyData } from '../Model/ConfigurationModel';
+import { usePolicy } from '../Model/PolicyModel';
 import { CustomFieldEditor } from '../Generic/CustomFieldEditor';
 import { useVolunteersModel } from '../Model/VolunteersModel';
 
@@ -13,7 +12,7 @@ export function VolunteerFamilyCustomField({
   familyId,
   customField,
 }: VolunteerFamilyCustomFieldProps) {
-  const policy = useRecoilValue(policyData);
+  const policy = usePolicy();
   const volunteersModel = useVolunteersModel();
 
   const volunteerCustomFields = policy.volunteerPolicy?.customFields;

@@ -1,5 +1,4 @@
 import { Fragment, useEffect, useMemo, useState } from 'react';
-import { useRecoilValue } from 'recoil';
 import {
   Autocomplete,
   Box,
@@ -16,7 +15,7 @@ import {
   AssignedIndividualVolunteer,
   FunctionAssignmentPolicy,
 } from '../GeneratedClient';
-import { visibleFamiliesQuery } from '../Model/Data';
+import { useVisibleFamilies } from '../Model/Data';
 import { familyNameString } from '../Families/FamilyName';
 import { personNameString } from '../Families/PersonName';
 import { useBackdrop } from '../Hooks/useBackdrop';
@@ -295,7 +294,7 @@ export function FunctionAssignmentsEditorDrawer({
   onAssign,
   onUnassign,
 }: FunctionAssignmentsEditorDrawerProps) {
-  const families = useRecoilValue(visibleFamiliesQuery);
+  const families = useVisibleFamilies();
   const withBackdrop = useBackdrop();
   const [draftAssignments, setDraftAssignments] = useState<
     Record<string, string | null>
@@ -475,7 +474,7 @@ export function FunctionAssignmentsSection({
   onAssign,
   onUnassign,
 }: FunctionAssignmentsSectionProps) {
-  const families = useRecoilValue(visibleFamiliesQuery);
+  const families = useVisibleFamilies();
   const appNavigate = useAppNavigate();
   const [drawerOpen, setDrawerOpen] = useState(false);
   const roles = useMemo(

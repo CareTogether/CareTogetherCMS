@@ -13,8 +13,7 @@ import { useDirectoryModel } from '../Model/DirectoryModel';
 import { UpdateDialog } from '../Generic/UpdateDialog';
 import { Note } from '../GeneratedClient';
 import { ValidateDatePicker } from '../Generic/Forms/ValidateDatePicker';
-import { useRecoilValue } from 'recoil';
-import { locationConfigurationQuery } from '../Model/ConfigurationModel';
+import { useLocationConfiguration } from '../Model/ConfigurationModel';
 
 interface AddEditNoteDialogProps {
   familyId: string;
@@ -35,7 +34,7 @@ export function AddEditNoteDialog({
   const { contents, backdatedTimestampLocal, accessLevel } = fields;
   const directoryModel = useDirectoryModel();
 
-  const locationConfiguration = useRecoilValue(locationConfigurationQuery);
+  const locationConfiguration = useLocationConfiguration();
 
   const accessLevels = locationConfiguration?.accessLevels || [];
 

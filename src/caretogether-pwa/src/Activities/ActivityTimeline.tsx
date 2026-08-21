@@ -36,63 +36,17 @@ import { FormControl, InputLabel, Select, MenuItem } from '@mui/material';
 import { useMemo, useState } from 'react';
 import { buildGroupedV1ReferralTimelineEntries } from '../V1Referrals/referralTimelineHelpers';
 import { formatTimelineTimestamp } from './timelineTimestampFormatting';
+import {
+  ActivitySorting,
+  composeNoteType,
+  getDateValue,
+  MergedTimelineItem,
+} from './activityTimelineModel';
 
 type ActivityTimelineProps = {
   family: CombinedFamilyInfo;
   referrals: V1Referral[];
   printContentRef: React.RefObject<HTMLDivElement | null>;
-};
-
-type ActivitySorting = 'activity' | 'created' | 'edited' | 'approved';
-
-type ReferralNoteEntry = NonNullable<V1Referral['notes']>[number];
-
-type MergedTimelineItem =
-  | {
-      kind: 'family-activity';
-      timestamp: Date;
-      userId?: string;
-      activity: Activity;
-      note?: Note;
-    }
-  | {
-      kind: 'referral';
-      timestamp: Date;
-      userId?: string;
-      label: string;
-      referralId: string;
-      referralTitle: string;
-      documentName?: string | null;
-      note?: ReferralNoteEntry;
-    }
-  | {
-      kind: 'referral-note';
-      timestamp: Date;
-      userId?: string;
-      label: string;
-      referralId: string;
-      referralTitle: string;
-      referralNote: ReferralNoteEntry;
-    };
-
-const composeNoteType = (activity: Activity): string | null => {
-  if (activity instanceof V1CaseRequirementCompleted) {
-    return 'Case requirement completed';
-  }
-
-  if (activity instanceof ArrangementRequirementCompleted) {
-    return 'Arrangement requirement completed';
-  }
-
-  if (activity instanceof ChildLocationChanged) {
-    return 'Child location changed';
-  }
-
-  if (activity instanceof V1CaseOpened) {
-    return 'Case opened';
-  }
-
-  return null;
 };
 
 function embedNotesInActivities(notes: Note[], activities: Activity[]) {
@@ -187,12 +141,6 @@ export function ActivityTimeline({
   });
 
   const [sortBy, setSortBy] = useState<ActivitySorting>('activity');
-
-  const getDateValue = (value?: string | Date | null): number => {
-    if (!value) return 0;
-    if (value instanceof Date) return value.getTime();
-    return new Date(value).getTime();
-  };
 
   const activitiesWithEmbeddedNotes = embedNotesInActivities(
     family.notes || [],

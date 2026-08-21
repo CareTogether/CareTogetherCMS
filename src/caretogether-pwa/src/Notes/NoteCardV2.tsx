@@ -31,8 +31,7 @@ import { AddEditNoteDialog } from './AddEditNoteDialog';
 import { ApproveNoteDialog } from './ApproveNoteDialog';
 import { DiscardNoteDialog } from './DiscardNoteDialog';
 import { useFamilyIdPermissions } from '../Model/SessionModel';
-import { useLoadable } from '../Hooks/useLoadable';
-import { accountInfoState } from '../Authentication/Auth';
+import { useAccountInfo } from '../Authentication/Auth';
 import { format } from 'date-fns';
 
 type NoteCardProps = {
@@ -60,7 +59,7 @@ export function NoteCardV2({
   const [isSavingPin, setIsSavingPin] = useState(false);
 
   const permissions = useFamilyIdPermissions(familyId);
-  const userId = useLoadable(accountInfoState)?.userId;
+  const userId = useAccountInfo()?.userId;
 
   const isOwnNote = note?.authorUserId === userId;
   const canEditOwnNote =
