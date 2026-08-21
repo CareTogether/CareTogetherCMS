@@ -1,6 +1,5 @@
 import Grid from '../../Generic/GridLegacyCompat';
-import {
-  useState } from 'react';
+import { useState } from 'react';
 import {
   Autocomplete,
   Button,
@@ -19,17 +18,13 @@ import {
   ArrangementPolicy,
   Arrangement,
   ArrangementFunction,
-  RoleApprovalStatus,
-  Person,
-  ValueTupleOfPersonAndFamilyAdultRelationshipInfo,
 } from '../../GeneratedClient';
 import { useParams } from 'react-router-dom';
 import { useBackdrop } from '../../Hooks/useBackdrop';
 import { DialogHandle } from '../../Hooks/useDialogHandle';
 import { useV1CasesModel } from '../../Model/V1CasesModel';
-import { usePersonAndFamilyLookup } from '../../Model/DirectoryModel';
-import { useVisibleFamilies } from '../../Model/Data';
 import { isBackdropClick } from '../../Utilities/handleBackdropClick';
+import { useArrangementFunctionCandidateAssignees } from './useArrangementFunctionCandidateAssignees';
 
 interface AssignArrangementFunctionDialogProps {
   handle: DialogHandle;
@@ -54,157 +49,10 @@ export function AssignArrangementFunctionDialog({
   const familyIdMaybe = useParams<{ familyId: string }>();
   const familyId = familyIdMaybe.familyId as string;
 
-  const visibleFamilies = useVisibleFamilies();
-
-  const familyAndPersonLookup = usePersonAndFamilyLookup();
-
-  const candidateNamedPeopleAssignees = arrangementFunction.eligiblePeople
-    ? arrangementFunction.eligiblePeople
-        .map((personId) => familyAndPersonLookup(personId))
-        .filter(
-          (personResult) =>
-            // Filter out any people who don't exist (they or their families may have been deleted, for example)
-            // rather than crashing the app with an undefined object exception.
-            personResult &&
-            personResult.family &&
-            !arrangement.individualVolunteerAssignments?.find(
-              (iva) =>
-                iva.arrangementFunction === arrangementFunction.functionName &&
-                iva.familyId === personResult.family!.id &&
-                iva.personId === personResult.person?.id
-            )
-        )
-        .map((personResult) => ({
-          family: personResult.family!,
-          person: personResult.person || null,
-        }))
-    : [];
-  const candidateVolunteerIndividualAssignees =
-    arrangementFunction.eligibleIndividualVolunteerRoles
-      ? visibleFamilies.flatMap((f) =>
-          f.volunteerFamilyInfo?.individualVolunteers
-            ? Object.entries(f.volunteerFamilyInfo?.individualVolunteers)
-                .filter(
-                  ([volunteerId]) =>
-                    f.family!.adults!.find((a) => a.item1!.id === volunteerId)!
-                      .item1!.active
-                )
-                .flatMap(([volunteerId, volunteerInfo]) =>
-                  volunteerInfo.approvalStatusByRole
-                    ? Object.entries(
-                        volunteerInfo.approvalStatusByRole
-                      ).flatMap(([roleName, roleApprovalStatus]) =>
-                        arrangementFunction.eligibleIndividualVolunteerRoles!.find(
-                          (x) => x === roleName
-                        ) &&
-                        (roleApprovalStatus.currentStatus ===
-                          RoleApprovalStatus.Approved ||
-                          roleApprovalStatus.currentStatus ===
-                            RoleApprovalStatus.Onboarded) &&
-                        !arrangement.individualVolunteerAssignments?.find(
-                          (iva) =>
-                            iva.arrangementFunction ===
-                              arrangementFunction.functionName &&
-                            iva.familyId === f.family!.id &&
-                            iva.personId === volunteerId
-                        )
-                          ? [
-                              {
-                                family: f.family!,
-                                person:
-                                  f.family!.adults!.find(
-                                    (a) => a.item1!.id === volunteerId
-                                  )!.item1 || null,
-                              },
-                            ]
-                          : []
-                      )
-                    : []
-                )
-            : []
-        )
-      : [];
-  const candidateVolunteerFamilyAssignees =
-    arrangementFunction.eligibleVolunteerFamilyRoles
-      ? visibleFamilies.flatMap((f) =>
-          f.volunteerFamilyInfo?.familyRoleApprovals
-            ? Object.entries(f.volunteerFamilyInfo.familyRoleApprovals).flatMap(
-                ([roleName, roleApprovalStatus]) =>
-                  arrangementFunction.eligibleVolunteerFamilyRoles!.find(
-                    (x) => x === roleName
-                  ) &&
-                  (roleApprovalStatus.currentStatus ===
-                    RoleApprovalStatus.Approved ||
-                    roleApprovalStatus.currentStatus ===
-                      RoleApprovalStatus.Onboarded) &&
-                  !arrangement.familyVolunteerAssignments?.find(
-                    (fva) =>
-                      fva.arrangementFunction ===
-                        arrangementFunction.functionName &&
-                      fva.familyId === f.family!.id
-                  )
-                    ? [{ family: f.family!, person: null as Person | null }]
-                    : []
-              )
-            : []
-        )
-      : [];
-  const allCandidateAssignees = candidateNamedPeopleAssignees
-    .concat(candidateVolunteerFamilyAssignees)
-    .concat(candidateVolunteerIndividualAssignees);
-  const deduplicatedCandidateAssignees = allCandidateAssignees
-    .filter((item, i) => allCandidateAssignees.indexOf(item) === i)
-    .sort((a, b) => {
-      const aPrimaryContact = a.family!.adults!.find(
-        (adult) => a.family.primaryFamilyContactPersonId === adult.item1!.id
-      )?.item1;
-      const bPrimaryContact = b.family!.adults!.find(
-        (adult) => b.family.primaryFamilyContactPersonId === adult.item1!.id
-      )?.item1;
-
-      const aFirst = a.person ? a.person.firstName! : null;
-      const aLast = a.person
-        ? a.person.lastName!
-        : (aPrimaryContact?.lastName ?? '');
-      const bFirst = b.person ? b.person.firstName! : null;
-      const bLast = b.person
-        ? b.person.lastName!
-        : (bPrimaryContact?.lastName ?? '');
-
-      // Sort by last name, then by first name (if applicable)
-      return aLast < bLast
-        ? -1
-        : aLast > bLast
-          ? 1
-          : aFirst == null || bFirst == null
-            ? 0
-            : aFirst < bFirst
-              ? -1
-              : aFirst > bFirst
-                ? 1
-                : 0;
-    });
-  const candidateAssignees = deduplicatedCandidateAssignees.map((candidate) => {
-    if (candidate.person == null) {
-      return {
-        familyId: candidate.family.id!,
-        personId: null as string | null,
-        key: candidate.family.id!,
-        displayName: getFamilyName(
-          candidate.family.adults!.find(
-            (adult) =>
-              candidate.family.primaryFamilyContactPersonId === adult.item1?.id
-          )
-        ),
-      };
-    } else {
-      return {
-        familyId: candidate.family.id!,
-        personId: candidate.person.id! as string | null,
-        key: `${candidate.family.id!}|${candidate.person.id || ''}`,
-        displayName: `${candidate.person.firstName} ${candidate.person.lastName}`,
-      };
-    }
+  const candidateAssignees = useArrangementFunctionCandidateAssignees({
+    arrangement,
+    arrangementFunction,
+    missingPrimaryContactFamilyName: '\u26a0 MISSING PRIMARY CONTACT Family',
   });
 
   const [fields, setFields] = useState({
@@ -216,14 +64,6 @@ export function AssignArrangementFunctionDialog({
   const v1CasesModel = useV1CasesModel();
 
   const withBackdrop = useBackdrop();
-
-  function getFamilyName(
-    person: ValueTupleOfPersonAndFamilyAdultRelationshipInfo | undefined
-  ) {
-    return person
-      ? `${person.item1!.firstName} ${person.item1!.lastName} Family`
-      : `⚠ MISSING PRIMARY CONTACT Family`;
-  }
 
   async function save() {
     await withBackdrop(async () => {
@@ -323,9 +163,7 @@ export function AssignArrangementFunctionDialog({
                       return {
                         label: candidate.displayName,
                         id: candidate.key,
-                        candidateType: candidate.personId
-                          ? 'Individuals'
-                          : 'Families',
+                        candidateType: candidate.candidateType,
                       };
                     })
                     .sort(
