@@ -107,7 +107,25 @@ export const visibleAggregatesForScopeData = atomFamily(
   (scope: LocationContext) => {
     const visibleAggregatesBaseAtom = atom<
       RecordsAggregate[] | Promise<RecordsAggregate[]>
-    >(api.records.listVisibleAggregates(scope.organizationId, scope.locationId));
+    >(
+      api.records.listVisibleAggregates(scope.organizationId, scope.locationId)
+    );
+    let updateQueue: Promise<void> = Promise.resolve();
+
+    function enqueueVisibleAggregatesUpdate(
+      update: () => void | Promise<void>
+    ) {
+      const queuedUpdate = updateQueue.then(update, update);
+
+      // Keep this scope's queue usable after a failed update while still
+      // returning the original rejection to the caller that caused it.
+      updateQueue = queuedUpdate.then(
+        () => undefined,
+        () => undefined
+      );
+
+      return queuedUpdate;
+    }
 
     return atom(
       async (get) => await get(visibleAggregatesBaseAtom),
@@ -118,24 +136,30 @@ export const visibleAggregatesForScopeData = atomFamily(
           'type' in action &&
           action.type === 'refresh'
         ) {
-          set(
-            visibleAggregatesBaseAtom,
-            api.records.listVisibleAggregates(
-              scope.organizationId,
-              scope.locationId
+          await enqueueVisibleAggregatesUpdate(() =>
+            set(
+              visibleAggregatesBaseAtom,
+              api.records.listVisibleAggregates(
+                scope.organizationId,
+                scope.locationId
+              )
             )
           );
           return;
         }
 
         if (typeof action === 'function') {
-          const current = await get(visibleAggregatesBaseAtom);
-          set(visibleAggregatesBaseAtom, action(current));
+          await enqueueVisibleAggregatesUpdate(async () => {
+            const current = await get(visibleAggregatesBaseAtom);
+            set(visibleAggregatesBaseAtom, action(current));
+          });
           return;
         }
 
         if (Array.isArray(action)) {
-          set(visibleAggregatesBaseAtom, action);
+          await enqueueVisibleAggregatesUpdate(() =>
+            set(visibleAggregatesBaseAtom, action)
+          );
         }
       }
     );
@@ -190,15 +214,17 @@ function upsertVisibleAggregates(
     valueOrUpdater:
       | RecordsAggregate[]
       | ((current: RecordsAggregate[]) => RecordsAggregate[])
-  ) => void,
+  ) => Promise<void>,
   aggregateId: string,
   updatedAggregates: AggregateLike[]
 ) {
-  for (const updatedAggregate of updatedAggregates) {
-    set((current: RecordsAggregate[]) =>
-      mergeVisibleAggregate(current, aggregateId, updatedAggregate)
-    );
-  }
+  return set((current: RecordsAggregate[]) =>
+    updatedAggregates.reduce(
+      (next, updatedAggregate) =>
+        mergeVisibleAggregate(next, aggregateId, updatedAggregate),
+      current
+    )
+  );
 }
 
 export function useAtomicRecordsCommandCallback<
@@ -219,7 +245,7 @@ export function useAtomicRecordsCommandCallback<
         command
       );
 
-      upsertVisibleAggregates(
+      await upsertVisibleAggregates(
         setVisibleAggregates,
         aggregateId,
         updatedAggregates
@@ -249,7 +275,7 @@ export function useCompositeRecordsCommandCallback<T extends unknown[]>(
         command
       );
 
-      upsertVisibleAggregates(
+      await upsertVisibleAggregates(
         setVisibleAggregates,
         aggregateId,
         updatedAggregates
