@@ -38,8 +38,10 @@ import { buildGroupedV1ReferralTimelineEntries } from '../V1Referrals/referralTi
 import { formatTimelineTimestamp } from './timelineTimestampFormatting';
 import {
   ActivitySorting,
+  buildInitialFamilyTimelineActivities,
   composeNoteType,
   getDateValue,
+  getTimelineItemKey,
   MergedTimelineItem,
 } from './activityTimelineModel';
 
@@ -82,36 +84,7 @@ export function ActivityTimeline({
   const personLookup = usePersonLookup();
   const noteAuthorLookup = useNoteAuthorLookup();
 
-  const activities = (
-    family.partneringFamilyInfo?.history?.slice() || []
-  ).concat(family.volunteerFamilyInfo?.history?.slice() || []);
-
-  const unmatchedNotesAsActivities =
-    family.notes
-      ?.filter((note) => activities?.every((a) => a.noteId !== note.id))
-      ?.map(
-        (note) =>
-          ({
-            userId: note.authorUserId ?? '',
-            activityTimestampUtc:
-              note.backdatedTimestampUtc ??
-              note.createdTimestampUtc ??
-              note.lastEditTimestampUtc,
-            auditTimestampUtc:
-              note.createdTimestampUtc ?? note.lastEditTimestampUtc,
-            noteId: note.id,
-          }) as Activity
-      ) || [];
-
-  const allActivitiesSorted = activities
-    ?.concat(unmatchedNotesAsActivities)
-    ?.sort((a, b) =>
-      a.activityTimestampUtc! < b.activityTimestampUtc!
-        ? 1
-        : a.activityTimestampUtc! > b.activityTimestampUtc!
-          ? -1
-          : 0
-    );
+  const allActivitiesSorted = buildInitialFamilyTimelineActivities(family);
 
   function arrangementPartneringPerson(arrangementId?: string) {
     const allArrangements = (
@@ -488,7 +461,7 @@ export function ActivityTimeline({
                 Boolean(nextItem.note?.isPinned);
 
           return (
-            <AppTimelineItem key={`${item.kind}:${i}`}>
+            <AppTimelineItem key={getTimelineItemKey(item)}>
               <AppTimelineOppositeContent sx={{ display: 'none' }} />
               <AppTimelineSeparator>
                 <AppTimelineDot
