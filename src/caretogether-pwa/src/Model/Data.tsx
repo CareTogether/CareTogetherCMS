@@ -108,9 +108,25 @@ export const visibleAggregatesForScopeData = atomFamily(
     const visibleAggregatesBaseAtom = atom<
       RecordsAggregate[] | Promise<RecordsAggregate[]>
     >(api.records.listVisibleAggregates(scope.organizationId, scope.locationId));
+    let updateQueue: Promise<void> = Promise.resolve();
+
+    function enqueueVisibleAggregatesUpdate(
+      update: () => void | Promise<void>
+    ) {
+      const queuedUpdate = updateQueue.then(update, update);
+
+      // Keep this scope's queue usable after a failed update while still
+      // returning the original rejection to the caller that caused it.
+      updateQueue = queuedUpdate.then(
+        () => undefined,
+        () => undefined
+      );
+
+      return queuedUpdate;
+    }
 
     return atom(
-      async (get) => await get(visibleAggregatesBaseAtom),
+      (get) => get(visibleAggregatesBaseAtom),
       async (get, set, action: VisibleAggregatesAction) => {
         if (
           typeof action === 'object' &&
@@ -118,24 +134,30 @@ export const visibleAggregatesForScopeData = atomFamily(
           'type' in action &&
           action.type === 'refresh'
         ) {
-          set(
-            visibleAggregatesBaseAtom,
-            api.records.listVisibleAggregates(
-              scope.organizationId,
-              scope.locationId
+          await enqueueVisibleAggregatesUpdate(() =>
+            set(
+              visibleAggregatesBaseAtom,
+              api.records.listVisibleAggregates(
+                scope.organizationId,
+                scope.locationId
+              )
             )
           );
           return;
         }
 
         if (typeof action === 'function') {
-          const current = await get(visibleAggregatesBaseAtom);
-          set(visibleAggregatesBaseAtom, action(current));
+          await enqueueVisibleAggregatesUpdate(async () => {
+            const current = await get(visibleAggregatesBaseAtom);
+            set(visibleAggregatesBaseAtom, action(current));
+          });
           return;
         }
 
         if (Array.isArray(action)) {
-          set(visibleAggregatesBaseAtom, action);
+          await enqueueVisibleAggregatesUpdate(() =>
+            set(visibleAggregatesBaseAtom, action)
+          );
         }
       }
     );
@@ -143,13 +165,13 @@ export const visibleAggregatesForScopeData = atomFamily(
   isSameLocationScope
 );
 
-const noVisibleAggregates = atom(async (): Promise<RecordsAggregate[]> => []);
+const noVisibleAggregates = atom<RecordsAggregate[]>([]);
 
 // For convenience, only the currently visible records are exported to the client from this module.
 export const visibleAggregatesState = atom(
-  async (get) => {
+  (get) => {
     const context = get(selectedLocationContextState);
-    return await get(
+    return get(
       context ? visibleAggregatesForScopeData(context) : noVisibleAggregates
     );
   },
@@ -190,15 +212,17 @@ function upsertVisibleAggregates(
     valueOrUpdater:
       | RecordsAggregate[]
       | ((current: RecordsAggregate[]) => RecordsAggregate[])
-  ) => void,
+  ) => Promise<void>,
   aggregateId: string,
   updatedAggregates: AggregateLike[]
 ) {
-  for (const updatedAggregate of updatedAggregates) {
-    set((current: RecordsAggregate[]) =>
-      mergeVisibleAggregate(current, aggregateId, updatedAggregate)
-    );
-  }
+  return set((current: RecordsAggregate[]) =>
+    updatedAggregates.reduce(
+      (next, updatedAggregate) =>
+        mergeVisibleAggregate(next, aggregateId, updatedAggregate),
+      current
+    )
+  );
 }
 
 export function useAtomicRecordsCommandCallback<
@@ -219,7 +243,7 @@ export function useAtomicRecordsCommandCallback<
         command
       );
 
-      upsertVisibleAggregates(
+      await upsertVisibleAggregates(
         setVisibleAggregates,
         aggregateId,
         updatedAggregates
@@ -249,7 +273,7 @@ export function useCompositeRecordsCommandCallback<T extends unknown[]>(
         command
       );
 
-      upsertVisibleAggregates(
+      await upsertVisibleAggregates(
         setVisibleAggregates,
         aggregateId,
         updatedAggregates
@@ -326,24 +350,43 @@ export function useVisibleReferralsLoadableState() {
   return useAtomLoadable(visibleReferralsAtom);
 }
 
-export const visibleFamiliesAtom = atom(async (get) => {
-  const visibleAggregates = await get(visibleAggregatesState);
-  return visibleAggregates
-    .filter((aggregate) => aggregate instanceof FamilyRecordsAggregate)
-    .map((aggregate) => (aggregate as FamilyRecordsAggregate).family!);
+export function mapLoadedValue<T, U>(
+  value: T | Promise<T>,
+  mapValue: (value: T) => U
+) {
+  return value instanceof Promise ? value.then(mapValue) : mapValue(value);
+}
+
+function mapVisibleAggregates<T>(
+  visibleAggregates: RecordsAggregate[] | Promise<RecordsAggregate[]>,
+  mapAggregates: (visibleAggregates: RecordsAggregate[]) => T
+) {
+  return mapLoadedValue(visibleAggregates, mapAggregates);
+}
+
+export const visibleFamiliesAtom = atom((get) => {
+  const visibleAggregates = get(visibleAggregatesState);
+  return mapVisibleAggregates(visibleAggregates, (aggregates) =>
+    aggregates
+      .filter((aggregate) => aggregate instanceof FamilyRecordsAggregate)
+      .map((aggregate) => (aggregate as FamilyRecordsAggregate).family!)
+  );
 });
 
-const visibleCommunitiesAtom = atom(async (get) => {
-  const visibleAggregates = await get(visibleAggregatesState);
-  return visibleAggregates
-    .filter((aggregate) => aggregate instanceof CommunityRecordsAggregate)
-    .map((aggregate) => (aggregate as CommunityRecordsAggregate).community!);
+const visibleCommunitiesAtom = atom((get) => {
+  const visibleAggregates = get(visibleAggregatesState);
+  return mapVisibleAggregates(visibleAggregates, (aggregates) =>
+    aggregates
+      .filter((aggregate) => aggregate instanceof CommunityRecordsAggregate)
+      .map((aggregate) => (aggregate as CommunityRecordsAggregate).community!)
+  );
 });
 
-const visibleReferralsAtom = atom(async (get) => {
-  const visibleAggregates = await get(visibleAggregatesState);
-
-  return visibleAggregates
-    .filter((aggregate) => aggregate instanceof ReferralRecordsAggregate)
-    .map((aggregate) => (aggregate as ReferralRecordsAggregate).referral);
+const visibleReferralsAtom = atom((get) => {
+  const visibleAggregates = get(visibleAggregatesState);
+  return mapVisibleAggregates(visibleAggregates, (aggregates) =>
+    aggregates
+      .filter((aggregate) => aggregate instanceof ReferralRecordsAggregate)
+      .map((aggregate) => (aggregate as ReferralRecordsAggregate).referral)
+  );
 });

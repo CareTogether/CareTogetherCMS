@@ -129,7 +129,7 @@ export function ManageUserDrawer({
       selectedRoles
     );
 
-    setVisibleAggregates((current) =>
+    await setVisibleAggregates((current) =>
       current.some(
         (currentEntry) =>
           currentEntry.id === updatedAggregate.id &&

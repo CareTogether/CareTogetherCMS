@@ -60,6 +60,7 @@ import {
   UpdateCustomFamilyMemberField,
 } from '../GeneratedClient';
 import {
+  mapLoadedValue,
   useAtomicRecordsCommandCallback,
   useCompositeRecordsCommandCallback,
   visibleAggregatesState,
@@ -82,69 +83,78 @@ const systemPerson = Person.fromJS({
 const isSystemUserId = (id?: string) => id?.toLowerCase() === SYSTEM_USER_ID;
 const noteAuthorLookupErrorsTracked = new Set<string>();
 
-const familyByIdAtom = atom(async (get) => {
-  const visibleFamilies = await get(visibleFamiliesAtom);
+const familyByIdAtom = atom((get) => {
+  const visibleFamilies = get(visibleFamiliesAtom);
 
-  return new Map(
-    visibleFamilies.flatMap((family) =>
-      family.family?.id ? [[family.family.id, family] as const] : []
+  return mapLoadedValue(visibleFamilies, (families) =>
+    new Map(
+      families.flatMap((family) =>
+        family.family?.id ? [[family.family.id, family] as const] : []
+      )
     )
   );
 });
 
-const personAndFamilyByPersonIdAtom = atom(async (get) => {
-  const visibleFamilies = await get(visibleFamiliesAtom);
+const personAndFamilyByPersonIdAtom = atom((get) => {
+  const visibleFamilies = get(visibleFamiliesAtom);
 
-  return new Map(
-    visibleFamilies.flatMap((family) => [
-      ...(family.family?.adults?.flatMap((adult) =>
-        adult.item1?.id
-          ? [
-              [
-                adult.item1.id,
-                { family: family.family, person: adult.item1 },
-              ] as const,
-            ]
-          : []
-      ) ?? []),
-      ...(family.family?.children?.flatMap((child) =>
-        child.id
-          ? [[child.id, { family: family.family, person: child }] as const]
-          : []
-      ) ?? []),
-    ])
+  return mapLoadedValue(visibleFamilies, (families) =>
+    new Map(
+      families.flatMap((family) => [
+        ...(family.family?.adults?.flatMap((adult) =>
+          adult.item1?.id
+            ? [
+                [
+                  adult.item1.id,
+                  { family: family.family, person: adult.item1 },
+                ] as const,
+              ]
+            : []
+        ) ?? []),
+        ...(family.family?.children?.flatMap((child) =>
+          child.id
+            ? [[child.id, { family: family.family, person: child }] as const]
+            : []
+        ) ?? []),
+      ])
+    )
   );
 });
 
-const userPersonByIdAtom = atom(async (get) => {
-  const visibleFamilies = await get(visibleFamiliesAtom);
-  const userPersonById = new Map<string | undefined, Person | undefined>();
+const userPersonByIdAtom = atom((get) => {
+  const visibleFamilies = get(visibleFamiliesAtom);
 
-  visibleFamilies.forEach((family) => {
-    family.users?.forEach((user) => {
-      if (userPersonById.has(user.userId)) return;
+  return mapLoadedValue(visibleFamilies, (families) => {
+    const userPersonById = new Map<string | undefined, Person | undefined>();
 
-      userPersonById.set(
-        user.userId,
-        family.family?.adults?.find(
-          (adult) => adult.item1?.id === user.personId
-        )?.item1
-      );
+    families.forEach((family) => {
+      family.users?.forEach((user) => {
+        if (userPersonById.has(user.userId)) return;
+
+        userPersonById.set(
+          user.userId,
+          family.family?.adults?.find(
+            (adult) => adult.item1?.id === user.personId
+          )?.item1
+        );
+      });
     });
-  });
 
-  return userPersonById;
+    return userPersonById;
+  });
 });
 
-const communityByIdAtom = atom(async (get) => {
-  const visibleAggregates = await get(visibleAggregatesState);
+const communityByIdAtom = atom((get) => {
+  const visibleAggregates = get(visibleAggregatesState);
 
-  return new Map(
-    visibleAggregates.flatMap((aggregate) =>
-      aggregate instanceof CommunityRecordsAggregate &&
-      aggregate.community?.community?.id
-        ? [[aggregate.community.community.id, aggregate.community] as const]
-        : []
+  return mapLoadedValue(visibleAggregates, (aggregates) =>
+    new Map(
+      aggregates.flatMap((aggregate) =>
+        aggregate instanceof CommunityRecordsAggregate &&
+        aggregate.community?.community?.id
+          ? [[aggregate.community.community.id, aggregate.community] as const]
+          : []
+      )
     )
   );
 });
