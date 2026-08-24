@@ -34,13 +34,13 @@ import { NoteCard } from '../Notes/NoteCard';
 import { useAccessLevelDialog } from '../Notes/AccessLevelDialog/useAccessLevelDialog';
 import { FormControl, InputLabel, Select, MenuItem } from '@mui/material';
 import { useMemo, useState } from 'react';
-import { buildGroupedV1ReferralTimelineEntries } from '../V1Referrals/referralTimelineHelpers';
 import { formatTimelineTimestamp } from './timelineTimestampFormatting';
 import {
   ActivitySorting,
   buildInitialFamilyTimelineActivities,
+  buildMergedTimelineModel,
+  buildReferralTimelineItems,
   composeNoteType,
-  getDateValue,
   getTimelineItemKey,
   MergedTimelineItem,
 } from './activityTimelineModel';
@@ -120,118 +120,17 @@ export function ActivityTimeline({
     allActivitiesSorted
   );
 
-  type ActivityWithNote = {
-    activity: Activity;
-    note: Note | undefined;
-  };
-
-  const sortStrategies: Record<
-    ActivitySorting,
-    (a: ActivityWithNote, b: ActivityWithNote) => number
-  > = {
-    created: (a, b) =>
-      getDateValue(
-        b.note?.createdTimestampUtc ?? b.activity.activityTimestampUtc
-      ) -
-      getDateValue(
-        a.note?.createdTimestampUtc ?? a.activity.activityTimestampUtc
-      ),
-    edited: (a, b) =>
-      getDateValue(
-        b.note?.lastEditTimestampUtc ?? b.activity.activityTimestampUtc
-      ) -
-      getDateValue(
-        a.note?.lastEditTimestampUtc ?? a.activity.activityTimestampUtc
-      ),
-    approved: (a, b) =>
-      getDateValue(
-        b.note?.approvedTimestampUtc ?? b.activity.activityTimestampUtc
-      ) -
-      getDateValue(
-        a.note?.approvedTimestampUtc ?? a.activity.activityTimestampUtc
-      ),
-    activity: (a, b) =>
-      getDateValue(b.activity.activityTimestampUtc) -
-      getDateValue(a.activity.activityTimestampUtc),
-  };
-
-  const sortedActivitiesWithNotes = [...activitiesWithEmbeddedNotes].sort(
-    sortStrategies[sortBy]
+  const referralTimelineItems = useMemo<MergedTimelineItem[]>(
+    () => buildReferralTimelineItems(referrals),
+    [referrals]
   );
 
-  const pinnedActivitiesWithNotes = sortedActivitiesWithNotes
-    .filter((item) => item.note?.isPinned)
-    .sort(
-      (a, b) =>
-        getDateValue(b.note?.pinnedAtUtc ?? b.activity.activityTimestampUtc) -
-        getDateValue(a.note?.pinnedAtUtc ?? a.activity.activityTimestampUtc)
+  const { displayActivitiesWithNotes, mergedTimelineItems } =
+    buildMergedTimelineModel(
+      activitiesWithEmbeddedNotes,
+      referralTimelineItems,
+      sortBy
     );
-
-  const unpinnedActivitiesWithNotes = sortedActivitiesWithNotes.filter(
-    (item) => !item.note?.isPinned
-  );
-
-  const displayActivitiesWithNotes = [
-    ...pinnedActivitiesWithNotes,
-    ...unpinnedActivitiesWithNotes,
-  ].filter((item) => Boolean(item.note));
-
-  const pinnedFamilyTimelineItems: MergedTimelineItem[] =
-    pinnedActivitiesWithNotes.map(({ activity, note }) => ({
-      kind: 'family-activity',
-      timestamp: activity.activityTimestampUtc ?? new Date(0),
-      userId: activity.userId,
-      activity,
-      note,
-    }));
-
-  const unpinnedFamilyTimelineItems: MergedTimelineItem[] =
-    unpinnedActivitiesWithNotes.map(({ activity, note }) => ({
-      kind: 'family-activity',
-      timestamp: activity.activityTimestampUtc ?? new Date(0),
-      userId: activity.userId,
-      activity,
-      note,
-    }));
-
-  const referralTimelineItems = useMemo<MergedTimelineItem[]>(() => {
-    return referrals.flatMap((referral) => {
-      return buildGroupedV1ReferralTimelineEntries(referral).map((entry) => {
-        if (entry.kind === 'note') {
-          return {
-            kind: 'referral-note',
-            timestamp: entry.timestamp,
-            userId: entry.userId,
-            label: entry.label,
-            referralId: referral.referralId,
-            referralTitle: referral.title,
-            referralNote: entry.note,
-          };
-        }
-
-        return {
-          kind: 'referral',
-          timestamp: entry.timestamp,
-          userId: entry.userId,
-          label: entry.label,
-          referralId: referral.referralId,
-          referralTitle: referral.title,
-          documentName:
-            entry.kind === 'activity'
-              ? entry.document?.uploadedFileName
-              : undefined,
-          note: entry.kind === 'activity' ? entry.note : undefined,
-        };
-      });
-    });
-  }, [referrals]);
-
-  const mergedTimelineItems = [
-    ...pinnedFamilyTimelineItems,
-    ...[...unpinnedFamilyTimelineItems, ...referralTimelineItems].sort(
-      (a, b) => b.timestamp.getTime() - a.timestamp.getTime()
-    ),
-  ];
 
   function renderVisibility(note?: Note) {
     return (

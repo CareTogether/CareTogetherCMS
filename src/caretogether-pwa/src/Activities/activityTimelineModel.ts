@@ -8,6 +8,7 @@ import {
   ReferralRequirementCompleted as V1CaseRequirementCompleted,
   V1Referral,
 } from '../GeneratedClient';
+import { buildGroupedV1ReferralTimelineEntries } from '../V1Referrals/referralTimelineHelpers';
 
 export type ActivitySorting = 'activity' | 'created' | 'edited' | 'approved';
 
@@ -40,6 +41,16 @@ export type MergedTimelineItem =
       referralTitle: string;
       referralNote: ReferralNoteEntry;
     };
+
+export type ActivityWithNote = {
+  activity: Activity;
+  note: Note | undefined;
+};
+
+export type MergedTimelineModel = {
+  displayActivitiesWithNotes: ActivityWithNote[];
+  mergedTimelineItems: MergedTimelineItem[];
+};
 
 function dateKey(value?: Date | null): string {
   return value?.toISOString() ?? 'none';
@@ -122,6 +133,113 @@ export function buildInitialFamilyTimelineActivities(
         ? -1
         : 0
   );
+}
+
+export function buildReferralTimelineItems(
+  referrals: V1Referral[]
+): MergedTimelineItem[] {
+  return referrals.flatMap((referral) => {
+    return buildGroupedV1ReferralTimelineEntries(referral).map((entry) => {
+      if (entry.kind === 'note') {
+        return {
+          kind: 'referral-note',
+          timestamp: entry.timestamp,
+          userId: entry.userId,
+          label: entry.label,
+          referralId: referral.referralId,
+          referralTitle: referral.title,
+          referralNote: entry.note,
+        };
+      }
+
+      return {
+        kind: 'referral',
+        timestamp: entry.timestamp,
+        userId: entry.userId,
+        label: entry.label,
+        referralId: referral.referralId,
+        referralTitle: referral.title,
+        documentName:
+          entry.kind === 'activity' ? entry.document?.uploadedFileName : undefined,
+        note: entry.kind === 'activity' ? entry.note : undefined,
+      };
+    });
+  });
+}
+
+const activityWithNoteSortStrategies: Record<
+  ActivitySorting,
+  (a: ActivityWithNote, b: ActivityWithNote) => number
+> = {
+  created: (a, b) =>
+    getDateValue(b.note?.createdTimestampUtc ?? b.activity.activityTimestampUtc) -
+    getDateValue(a.note?.createdTimestampUtc ?? a.activity.activityTimestampUtc),
+  edited: (a, b) =>
+    getDateValue(b.note?.lastEditTimestampUtc ?? b.activity.activityTimestampUtc) -
+    getDateValue(a.note?.lastEditTimestampUtc ?? a.activity.activityTimestampUtc),
+  approved: (a, b) =>
+    getDateValue(b.note?.approvedTimestampUtc ?? b.activity.activityTimestampUtc) -
+    getDateValue(a.note?.approvedTimestampUtc ?? a.activity.activityTimestampUtc),
+  activity: (a, b) =>
+    getDateValue(b.activity.activityTimestampUtc) -
+    getDateValue(a.activity.activityTimestampUtc),
+};
+
+export function buildMergedTimelineModel(
+  activitiesWithEmbeddedNotes: ActivityWithNote[],
+  referralTimelineItems: MergedTimelineItem[],
+  sortBy: ActivitySorting
+): MergedTimelineModel {
+  const sortedActivitiesWithNotes = [...activitiesWithEmbeddedNotes].sort(
+    activityWithNoteSortStrategies[sortBy]
+  );
+
+  const pinnedActivitiesWithNotes = sortedActivitiesWithNotes
+    .filter((item) => item.note?.isPinned)
+    .sort(
+      (a, b) =>
+        getDateValue(b.note?.pinnedAtUtc ?? b.activity.activityTimestampUtc) -
+        getDateValue(a.note?.pinnedAtUtc ?? a.activity.activityTimestampUtc)
+    );
+
+  const unpinnedActivitiesWithNotes = sortedActivitiesWithNotes.filter(
+    (item) => !item.note?.isPinned
+  );
+
+  const displayActivitiesWithNotes = [
+    ...pinnedActivitiesWithNotes,
+    ...unpinnedActivitiesWithNotes,
+  ].filter((item) => Boolean(item.note));
+
+  const pinnedFamilyTimelineItems: MergedTimelineItem[] =
+    pinnedActivitiesWithNotes.map(({ activity, note }) => ({
+      kind: 'family-activity',
+      timestamp: activity.activityTimestampUtc ?? new Date(0),
+      userId: activity.userId,
+      activity,
+      note,
+    }));
+
+  const unpinnedFamilyTimelineItems: MergedTimelineItem[] =
+    unpinnedActivitiesWithNotes.map(({ activity, note }) => ({
+      kind: 'family-activity',
+      timestamp: activity.activityTimestampUtc ?? new Date(0),
+      userId: activity.userId,
+      activity,
+      note,
+    }));
+
+  const mergedTimelineItems = [
+    ...pinnedFamilyTimelineItems,
+    ...[...unpinnedFamilyTimelineItems, ...referralTimelineItems].sort(
+      (a, b) => b.timestamp.getTime() - a.timestamp.getTime()
+    ),
+  ];
+
+  return {
+    displayActivitiesWithNotes,
+    mergedTimelineItems,
+  };
 }
 
 export const composeNoteType = (activity: Activity): string | null => {
