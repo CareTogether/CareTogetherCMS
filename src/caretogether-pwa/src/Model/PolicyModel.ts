@@ -33,10 +33,30 @@ const policyAtomFamily = atomFamily(
     jotaiAtom(async (get): Promise<EffectiveLocationPolicy> => {
       get(policyRefreshTokenAtomFamily({ organizationId, locationId }));
 
-      return await api.configuration.getEffectiveLocationPolicy(
-        organizationId,
-        locationId
+      // TEMP E2E DEBUG - remove after investigation
+      console.log(
+        `[policy-debug] start org=${organizationId} location=${locationId}`
       );
+
+      try {
+        const policy = await api.configuration.getEffectiveLocationPolicy(
+          organizationId,
+          locationId
+        );
+        // TEMP E2E DEBUG - remove after investigation
+        console.log(
+          `[policy-debug] success org=${organizationId} location=${locationId}`
+        );
+        return policy;
+      } catch (error) {
+        // TEMP E2E DEBUG - remove after investigation
+        console.log(
+          `[policy-debug] error org=${organizationId} location=${locationId} error=${
+            error instanceof Error ? error.message : String(error)
+          }`
+        );
+        throw error;
+      }
     }),
   isSameLocationScope
 );
