@@ -25,8 +25,7 @@ import {
   DeleteForever as DeleteForeverIcon,
   Edit as EditIcon,
 } from '@mui/icons-material';
-import { useEffect, useMemo, useRef, useState } from 'react';
-import { FamilyDocuments } from './FamilyDocuments';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   useFamilyPermissions,
   useGlobalPermissions,
@@ -49,7 +48,11 @@ import { isBackdropClick } from '../Utilities/handleBackdropClick';
 import { useDialogHandle } from '../Hooks/useDialogHandle';
 import { familyLastName } from './FamilyUtils';
 import { useLoadable } from '../Hooks/useLoadable';
-import { visibleCommunitiesQuery } from '../Model/Data';
+import {
+  selectedLocationContextState,
+  visibleCommunitiesQuery,
+  visibleReferralsQuery,
+} from '../Model/Data';
 import { useAppNavigate } from '../Hooks/useAppNavigate';
 import posthog from 'posthog-js';
 import { AssignmentsSection } from '../Families/AssignmentsSectionV2';
@@ -59,7 +62,6 @@ import { ArrangementsSection } from '../V1Cases/Arrangements/ArrangementsSection
 import { ArrangementRowV2 } from '../V1Cases/Arrangements/arrangementViewModel';
 import { useFeatureFlagEnabled } from 'posthog-js/react';
 import { TestFamilyBadge } from './TestFamilyBadge';
-import { visibleReferralsQuery } from '../Model/Data';
 import { useRecoilValue } from 'recoil';
 import { useV1CasesModel } from '../Model/V1CasesModel';
 import { policyData } from '../Model/ConfigurationModel';
@@ -91,6 +93,8 @@ import {
 } from './FamilyRecentOverviewV2';
 import { FamilyScreenWorkflowCoordinatorV2 } from './FamilyScreenWorkflowCoordinatorV2';
 import { FamilyMemberRowV2 } from './familyMemberViewModel';
+import { FamilyDocumentsSectionV2 } from './FamilyDocumentsSectionV2';
+import { UploadFamilyDocumentsDrawerV2 } from './UploadFamilyDocumentsDrawerV2';
 import { useFamilyApprovalViewModel } from './useFamilyApprovalViewModel';
 import { useFamilyCaseViewModel } from './useFamilyCaseViewModel';
 import { useFamilyOverviewViewModel } from './useFamilyOverviewViewModel';
@@ -157,6 +161,9 @@ export function FamilyScreenV2() {
   );
 
   const referralInfos = useRecoilValue(visibleReferralsQuery);
+  const { organizationId, locationId } = useRecoilValue(
+    selectedLocationContextState
+  );
 
   const familyReferrals = useMemo(() => {
     return (referralInfos ?? [])
@@ -170,6 +177,11 @@ export function FamilyScreenV2() {
   const personLookup = usePersonLookup();
   const noteAuthorLookup = useNoteAuthorLookup();
   const userLookup = useUserLookup();
+  const familyDocumentUploaderLabel = useCallback(
+    (userId?: string) =>
+      userId ? personNameString(userLookup(userId)) : undefined,
+    [userLookup]
+  );
   const family = familyLookup(familyId);
   const policy = useRecoilValue(policyData);
   const currentUserId = useLoadable(accountInfoState)?.userId;
@@ -1104,7 +1116,7 @@ export function FamilyScreenV2() {
         selectedRemovedRole={selectedRemovedRole}
         selectedRoleSummaryCard={selectedRoleSummaryCard}
         selectedV1Case={selectedV1Case}
-        uploadDocumentDialogOpen={uploadDocumentDialogOpen}
+        uploadDocumentDialogOpen={false}
         onAddAdultClose={(_event: object | undefined, reason: string) =>
           !isBackdropClick(reason) ? setAddAdultDialogOpen(false) : {}
         }
@@ -1129,6 +1141,13 @@ export function FamilyScreenV2() {
           setSelectedRemovedRoleId(null);
         }}
         onUploadDocumentClose={() => setUploadDocumentDialogOpen(false)}
+      />
+      <UploadFamilyDocumentsDrawerV2
+        familyId={family.family!.id!}
+        locationId={locationId}
+        open={uploadDocumentDialogOpen}
+        organizationId={organizationId}
+        onClose={() => setUploadDocumentDialogOpen(false)}
       />
       <RoleSummaryCardsSection
         cards={roleSummaryCards}
@@ -1245,12 +1264,15 @@ export function FamilyScreenV2() {
 
               {showDocuments &&
                 permissions(Permission.ViewFamilyDocumentMetadata) && (
-                  <Grid item xs={12} lg={8} xl={5} mb={2}>
-                    <FamilyDocuments
-                      family={family}
-                      referrals={familyReferrals}
-                    />
-                  </Grid>
+                  <FamilyDocumentsSectionV2
+                    family={family}
+                    referrals={familyReferrals}
+                    permissions={permissions}
+                    organizationId={organizationId}
+                    locationId={locationId}
+                    uploaderLabel={familyDocumentUploaderLabel}
+                    hideTitle
+                  />
                 )}
             </Grid>
             <Grid container spacing={0} sx={{ order: 1 }}>

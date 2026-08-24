@@ -161,6 +161,26 @@ function shouldIncludeRoleRelatedRow(originalRoles: string[], roles: string[]) {
   return originalRoles.length === 0 || roles.length > 0;
 }
 
+function rolesByAvailableApplication(
+  applicationsByRole: Record<string, string[] | undefined> | undefined
+) {
+  const rolesByApplication = new Map<string, string[]>();
+
+  Object.entries(applicationsByRole ?? {}).forEach(([roleName, applications]) => {
+    applications?.forEach((application) => {
+      rolesByApplication.set(
+        application,
+        normalizeStrings([
+          ...(rolesByApplication.get(application) ?? []),
+          roleName,
+        ])
+      );
+    });
+  });
+
+  return rolesByApplication;
+}
+
 function isExpired(date?: Date, now = new Date()) {
   return date !== undefined && date <= now;
 }
@@ -421,23 +441,29 @@ function addMissingRows({
 }
 
 function addAvailableApplicationRows({
+  applicationsByRole,
   rowsByKey,
   subject,
   context,
   requirements,
 }: {
+  applicationsByRole?: Record<string, string[] | undefined>;
   rowsByKey: Map<string, ApprovalLedgerRow>;
   subject: ApprovalLedgerSubject;
   context: RequirementContext;
   requirements: string[];
 }) {
+  const rolesByApplication = rolesByAvailableApplication(applicationsByRole);
+
   requirements.forEach((requirementName, index) => {
+    const neededForRoles = rolesByApplication.get(requirementName) ?? [];
+
     addRow(rowsByKey, {
       status: 'availableApplication',
       requirementName,
       appliesTo: [subject],
-      neededForRoles: [],
-      neededForRoleLabels: [],
+      neededForRoles,
+      neededForRoleLabels: neededForRoles,
       linkedDocumentIds: [],
       noteIds: [],
       notes: [],
@@ -460,6 +486,32 @@ function addAvailableApplicationRows({
   });
 }
 
+function availableApplicationsByRole(
+  source: ApprovalLedgerFamilySource | ApprovalLedgerIndividualSource
+): Record<string, string[] | undefined> {
+  if ('approvalStatusByRole' in source) {
+    return Object.fromEntries(
+      Object.entries(source.approvalStatusByRole ?? {}).map(
+        ([roleName, approval]) => [
+          roleName,
+          approval.currentAvailableApplications,
+        ]
+      )
+    );
+  }
+
+  const familySource = source as ApprovalLedgerFamilySource;
+
+  return Object.fromEntries(
+    Object.entries(familySource.familyRoleApprovals ?? {}).map(
+      ([roleName, approval]) => [
+        roleName,
+        approval.currentAvailableFamilyApplications,
+      ]
+    )
+  );
+}
+
 function addSourceRows({
   rowsByKey,
   subject,
@@ -468,7 +520,7 @@ function addSourceRows({
 }: {
   rowsByKey: Map<string, ApprovalLedgerRow>;
   subject: ApprovalLedgerSubject;
-  source: ApprovalRequirementSource;
+  source: ApprovalLedgerFamilySource | ApprovalLedgerIndividualSource;
   appliedRoleNames: Set<string>;
 }) {
   addMissingRows({
@@ -493,6 +545,7 @@ function addSourceRows({
     appliedRoleNames,
   });
   addAvailableApplicationRows({
+    applicationsByRole: availableApplicationsByRole(source),
     rowsByKey,
     subject,
     context: source.context,

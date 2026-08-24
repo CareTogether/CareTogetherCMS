@@ -70,21 +70,31 @@ export function V1Referrals() {
   const appNavigate = useAppNavigate();
   const permissions = useGlobalPermissions();
   const currentLocationLoadable = useRecoilValueLoadable(currentLocationQuery);
+  const referralsLoadable = useRecoilValueLoadable(visibleReferralsQuery);
 
   const permissionsLoaded = currentLocationLoadable.state === 'hasValue';
-  const canViewReferrals = permissions(Permission.ViewV1Referral);
+  const referralsLoaded = referralsLoadable.state === 'hasValue';
+  const canCreateReferrals = permissions(Permission.CreateV1Referral);
+  const canViewGlobalReferrals = permissions(Permission.ViewV1Referral);
+  const canViewContextualReferrals =
+    referralsLoaded && referralsLoadable.contents.length > 0;
+  const canAccessReferrals =
+    canCreateReferrals || canViewGlobalReferrals || canViewContextualReferrals;
 
   useEffect(() => {
     if (
       permissionsLoaded &&
-      (!canViewReferrals || (featureFlagsLoaded && referralsEnabled !== true))
+      referralsLoaded &&
+      (!canAccessReferrals ||
+        (featureFlagsLoaded && referralsEnabled !== true))
     ) {
       appNavigate.dashboard();
     }
   }, [
-    canViewReferrals,
+    canAccessReferrals,
     featureFlagsLoaded,
     permissionsLoaded,
+    referralsLoaded,
     referralsEnabled,
     appNavigate,
   ]);
@@ -93,7 +103,11 @@ export function V1Referrals() {
     throw currentLocationLoadable.contents;
   }
 
-  if (!permissionsLoaded || !featureFlagsLoaded) {
+  if (referralsLoadable.state === 'hasError') {
+    throw referralsLoadable.contents;
+  }
+
+  if (!permissionsLoaded || !referralsLoaded || !featureFlagsLoaded) {
     return (
       <ProgressBackdrop opaque>
         <p>Loading...</p>
@@ -101,7 +115,7 @@ export function V1Referrals() {
     );
   }
 
-  if (!canViewReferrals) {
+  if (!canAccessReferrals) {
     return null;
   }
 

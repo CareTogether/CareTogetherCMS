@@ -450,7 +450,8 @@ namespace CareTogether.Managers.Records
             var canViewReferrals = await authorizationEngine.AuthorizeV1ReferralReadAsync(
                 organizationId,
                 locationId,
-                userContext
+                userContext,
+                referralId
             );
 
             if (!canViewReferrals)
@@ -478,7 +479,7 @@ namespace CareTogether.Managers.Records
                 organizationId,
                 locationId,
                 userContext,
-                new GlobalAuthorizationContext()
+                new V1ReferralAuthorizationContext(referralId)
             );
 
             if (!permissions.Contains(Permission.EditV1Referral))
@@ -861,12 +862,12 @@ namespace CareTogether.Managers.Records
                     userContext,
                     c.Command
                 ),
-                V1ReferralNoteRecordsCommand => userAccessCalculation
+                V1ReferralNoteRecordsCommand c => userAccessCalculation
                     .AuthorizeUserAccessAsync(
                         organizationId,
                         locationId,
                         userContext,
-                        new GlobalAuthorizationContext()
+                        new V1ReferralAuthorizationContext(c.Command.ReferralId)
                     )
                     .ContinueWith(t => t.Result.Contains(Permission.EditV1Referral)),
                 _ => throw new NotImplementedException(
