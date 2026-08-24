@@ -128,7 +128,7 @@ export const visibleAggregatesForScopeData = atomFamily(
     }
 
     return atom(
-      async (get) => await get(visibleAggregatesBaseAtom),
+      (get) => get(visibleAggregatesBaseAtom),
       async (get, set, action: VisibleAggregatesAction) => {
         if (
           typeof action === 'object' &&
@@ -167,13 +167,13 @@ export const visibleAggregatesForScopeData = atomFamily(
   isSameLocationScope
 );
 
-const noVisibleAggregates = atom(async (): Promise<RecordsAggregate[]> => []);
+const noVisibleAggregates = atom<RecordsAggregate[]>([]);
 
 // For convenience, only the currently visible records are exported to the client from this module.
 export const visibleAggregatesState = atom(
-  async (get) => {
+  (get) => {
     const context = get(selectedLocationContextState);
-    return await get(
+    return get(
       context ? visibleAggregatesForScopeData(context) : noVisibleAggregates
     );
   },
@@ -352,24 +352,38 @@ export function useVisibleReferralsLoadableState() {
   return useAtomLoadable(visibleReferralsAtom);
 }
 
-export const visibleFamiliesAtom = atom(async (get) => {
-  const visibleAggregates = await get(visibleAggregatesState);
-  return visibleAggregates
-    .filter((aggregate) => aggregate instanceof FamilyRecordsAggregate)
-    .map((aggregate) => (aggregate as FamilyRecordsAggregate).family!);
+function mapVisibleAggregates<T>(
+  visibleAggregates: RecordsAggregate[] | Promise<RecordsAggregate[]>,
+  mapAggregates: (visibleAggregates: RecordsAggregate[]) => T
+) {
+  return visibleAggregates instanceof Promise
+    ? visibleAggregates.then(mapAggregates)
+    : mapAggregates(visibleAggregates);
+}
+
+export const visibleFamiliesAtom = atom((get) => {
+  const visibleAggregates = get(visibleAggregatesState);
+  return mapVisibleAggregates(visibleAggregates, (aggregates) =>
+    aggregates
+      .filter((aggregate) => aggregate instanceof FamilyRecordsAggregate)
+      .map((aggregate) => (aggregate as FamilyRecordsAggregate).family!)
+  );
 });
 
-const visibleCommunitiesAtom = atom(async (get) => {
-  const visibleAggregates = await get(visibleAggregatesState);
-  return visibleAggregates
-    .filter((aggregate) => aggregate instanceof CommunityRecordsAggregate)
-    .map((aggregate) => (aggregate as CommunityRecordsAggregate).community!);
+const visibleCommunitiesAtom = atom((get) => {
+  const visibleAggregates = get(visibleAggregatesState);
+  return mapVisibleAggregates(visibleAggregates, (aggregates) =>
+    aggregates
+      .filter((aggregate) => aggregate instanceof CommunityRecordsAggregate)
+      .map((aggregate) => (aggregate as CommunityRecordsAggregate).community!)
+  );
 });
 
-const visibleReferralsAtom = atom(async (get) => {
-  const visibleAggregates = await get(visibleAggregatesState);
-
-  return visibleAggregates
-    .filter((aggregate) => aggregate instanceof ReferralRecordsAggregate)
-    .map((aggregate) => (aggregate as ReferralRecordsAggregate).referral);
+const visibleReferralsAtom = atom((get) => {
+  const visibleAggregates = get(visibleAggregatesState);
+  return mapVisibleAggregates(visibleAggregates, (aggregates) =>
+    aggregates
+      .filter((aggregate) => aggregate instanceof ReferralRecordsAggregate)
+      .map((aggregate) => (aggregate as ReferralRecordsAggregate).referral)
+  );
 });
