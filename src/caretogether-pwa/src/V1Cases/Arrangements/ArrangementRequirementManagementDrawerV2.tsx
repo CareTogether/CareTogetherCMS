@@ -21,12 +21,10 @@ import {
   TextField,
   Typography,
 } from '@mui/material';
-import { add, format, formatDuration, formatRelative, isValid } from 'date-fns';
+import { add, format, formatDuration, isValid } from 'date-fns';
 import { useEffect, useMemo, useState } from 'react';
 import {
-  ActionRequirement,
   Arrangement,
-  ArrangementPhase,
   CompletedRequirementInfo,
   DocumentLinkRequirement,
   ExemptedRequirementInfo,
@@ -48,6 +46,15 @@ import { uploadFamilyFileToTenant } from '../../Model/FilesModel';
 import { useV1CasesModel } from '../../Model/V1CasesModel';
 import { formatUtcDateOnly } from '../../Utilities/dateUtils';
 import { RequirementContext } from '../../Requirements/RequirementContext';
+import {
+  familyIdFromRequirementContext,
+  findActionRequirementPolicy,
+  getArrangementRequirementStatusLabel,
+  getAvailableArrangementsForRequirement,
+  isArrangementRequirementContext,
+  parseRequirementValidity,
+  requirementNameFromWorkflowRequirement,
+} from '../../Requirements/requirementWorkflowModel';
 
 export type ArrangementRequirementWorkflowV2 =
   | {
@@ -126,67 +133,12 @@ function formatDocumentUploadError(error: unknown, fileName: string) {
   return 'Upload failed. Please try again.';
 }
 
-function requirementName(workflow: ArrangementRequirementWorkflowV2) {
-  if (workflow.kind === 'missing') {
-    return workflow.requirement.action?.actionName ?? 'Requirement';
-  }
-
-  return workflow.requirement.requirementName;
-}
-
-function familyIdFromContext(context: RequirementContext) {
-  if (
-    context.kind === 'Arrangement' ||
-    context.kind === 'Family Volunteer Assignment' ||
-    context.kind === 'Individual Volunteer Assignment'
-  ) {
-    return context.partneringFamilyId;
-  }
-
-  return '';
-}
-
 function contextLabel(context: RequirementContext) {
   if (context.kind === 'Arrangement') {
     return 'Arrangement';
   }
 
   return context.kind;
-}
-
-function isArrangementRequirementContext(
-  context: RequirementContext
-): context is
-  | Extract<RequirementContext, { kind: 'Arrangement' }>
-  | Extract<RequirementContext, { kind: 'Family Volunteer Assignment' }>
-  | Extract<RequirementContext, { kind: 'Individual Volunteer Assignment' }> {
-  return (
-    context.kind === 'Arrangement' ||
-    context.kind === 'Family Volunteer Assignment' ||
-    context.kind === 'Individual Volunteer Assignment'
-  );
-}
-
-function arrangementStatusLabel(arrangement: Arrangement) {
-  const now = new Date();
-
-  if (arrangement.phase === ArrangementPhase.Cancelled) {
-    return `Cancelled ${formatRelative(arrangement.cancelledAtUtc!, now)}`;
-  }
-
-  if (arrangement.phase === ArrangementPhase.SettingUp) {
-    return 'Setting up';
-  }
-
-  if (arrangement.phase === ArrangementPhase.ReadyToStart) {
-    return 'Ready to start';
-  }
-
-  if (arrangement.phase === ArrangementPhase.Started) {
-    return `Started ${formatRelative(arrangement.startedAtUtc!, now)}`;
-  }
-
-  return `Ended ${formatRelative(arrangement.endedAtUtc!, now)}`;
 }
 
 function ArrangementApplyLabel({
@@ -198,7 +150,7 @@ function ArrangementApplyLabel({
 }) {
   const familyLookup = useFamilyLookup();
   const personLookup = usePersonLookup();
-  const familyId = familyIdFromContext(context);
+  const familyId = familyIdFromRequirementContext(context);
   const person = familyId
     ? personLookup(familyId, arrangement.partneringFamilyPersonId)
     : undefined;
@@ -221,20 +173,8 @@ function ArrangementApplyLabel({
               : ''
           })`
         : ''}{' '}
-      - {arrangementStatusLabel(arrangement)}
+      - {getArrangementRequirementStatusLabel(arrangement)}
     </Typography>
-  );
-}
-
-function findRequirementPolicy(
-  actionDefinitions: Record<string, ActionRequirement>,
-  actionName: string
-) {
-  return (
-    actionDefinitions[actionName] ??
-    Object.values(actionDefinitions).find((definition) =>
-      definition.alternateNames?.includes(actionName)
-    )
   );
 }
 
@@ -267,15 +207,19 @@ export function ArrangementRequirementManagementDrawerV2({
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
 
-  const requirementTitle = workflow ? requirementName(workflow) : '';
+  const requirementTitle = workflow
+    ? requirementNameFromWorkflowRequirement(workflow.requirement)
+    : '';
   const requirementPolicy =
     workflow?.kind === 'missing'
-      ? findRequirementPolicy(
+      ? findActionRequirementPolicy(
           policy.actionDefinitions,
           workflow.requirement.action?.actionName ?? ''
         )
       : undefined;
-  const familyId = workflow ? familyIdFromContext(workflow.context) : '';
+  const familyId = workflow
+    ? (familyIdFromRequirementContext(workflow.context) ?? '')
+    : '';
   const contextFamily = familyId ? familyLookup(familyId) : undefined;
   const openV1Case = contextFamily?.partneringFamilyInfo?.openV1Case;
   const closedV1Cases =
@@ -296,54 +240,14 @@ export function ArrangementRequirementManagementDrawerV2({
     : undefined;
   const availableArrangements = useMemo(
     () =>
-      workflow?.kind === 'missing' &&
-      selectedV1Case &&
-      workflow.requirement instanceof MissingArrangementRequirement
-        ? selectedV1Case.arrangements!.filter((arrangement) =>
-            [
-              ...(arrangement.missingRequirements ?? []),
-              ...(arrangement.missingOptionalRequirements ?? []),
-            ].some((missingRequirementInfo) => {
-              if (workflow.context.kind === 'Family Volunteer Assignment') {
-                return (
-                  missingRequirementInfo.action?.actionName ===
-                    workflow.requirement.action?.actionName &&
-                  missingRequirementInfo.arrangementFunction ===
-                    workflow.context.assignment.arrangementFunction &&
-                  missingRequirementInfo.arrangementFunctionVariant ===
-                    workflow.context.assignment.arrangementFunctionVariant &&
-                  missingRequirementInfo.volunteerFamilyId ===
-                    workflow.context.assignment.familyId
-                );
-              }
-
-              if (workflow.context.kind === 'Individual Volunteer Assignment') {
-                return (
-                  missingRequirementInfo.action?.actionName ===
-                    workflow.requirement.action?.actionName &&
-                  missingRequirementInfo.arrangementFunction ===
-                    workflow.context.assignment.arrangementFunction &&
-                  missingRequirementInfo.arrangementFunctionVariant ===
-                    workflow.context.assignment.arrangementFunctionVariant &&
-                  missingRequirementInfo.volunteerFamilyId ===
-                    workflow.context.assignment.familyId &&
-                  missingRequirementInfo.personId ===
-                    workflow.context.assignment.personId
-                );
-              }
-
-              return (
-                missingRequirementInfo.action?.actionName ===
-                workflow.requirement.action?.actionName
-              );
-            })
-          )
-        : [],
+      getAvailableArrangementsForRequirement(
+        selectedV1Case,
+        workflow?.kind === 'missing' ? workflow.requirement : undefined,
+        workflow?.context
+      ),
     [selectedV1Case, workflow]
   );
-  const validityDuration = requirementPolicy?.validity
-    ? { days: parseInt(requirementPolicy.validity.split('.')[0]) }
-    : null;
+  const validityDuration = parseRequirementValidity(requirementPolicy?.validity);
 
   useEffect(() => {
     if (!open || !workflow) return;

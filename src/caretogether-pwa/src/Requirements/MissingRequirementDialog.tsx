@@ -19,7 +19,6 @@ import { useState } from 'react';
 import {
   ActionRequirement,
   Arrangement,
-  ArrangementPhase,
   DocumentLinkRequirement,
   MissingArrangementRequirement,
   NoteEntryRequirement,
@@ -47,10 +46,17 @@ import { a11yProps, TabPanel } from '../Generic/TabPanel';
 import { personNameString } from '../Families/PersonName';
 import { DialogHandle } from '../Hooks/useDialogHandle';
 import { familyNameString } from '../Families/FamilyName';
-import { add, format, formatDuration, formatRelative, isValid } from 'date-fns';
+import { add, format, formatDuration, isValid } from 'date-fns';
 import { ValidateDatePicker } from '../Generic/Forms/ValidateDatePicker';
 import { useV1ReferralsModel } from '../Model/V1ReferralsModel';
 import { useV1ReferralNotesModel } from '../Model/V1ReferralNotesModel';
+import {
+  familyIdFromRequirementContext,
+  getArrangementRequirementStatusLabel,
+  getAvailableArrangementsForRequirement,
+  parseRequirementValidity,
+  requirementNameFromRequirement,
+} from './requirementWorkflowModel';
 
 type MissingRequirementDialogProps = {
   handle: DialogHandle;
@@ -79,9 +85,7 @@ export function MissingRequirementDialog({
 
   const now = new Date();
 
-  const validityDuration = policy.validity
-    ? { days: parseInt(policy.validity.split('.')[0]) }
-    : null;
+  const validityDuration = parseRequirementValidity(policy.validity);
 
   const [tabValue, setTabValue] = useState(canComplete ? 0 : 1);
   const [documentFile, setDocumentFile] = useState<File | null>(null);
@@ -99,15 +103,7 @@ export function MissingRequirementDialog({
 
   const familyLookup = useFamilyLookup();
 
-  const familyId: string | null =
-    context.kind === 'V1Case' ||
-    context.kind === 'Arrangement' ||
-    context.kind === 'Family Volunteer Assignment' ||
-    context.kind === 'Individual Volunteer Assignment'
-      ? context.partneringFamilyId
-      : context.kind === 'V1Referral'
-        ? (context.partneringFamilyId ?? null)
-        : context.volunteerFamilyId;
+  const familyId = familyIdFromRequirementContext(context);
 
   const contextFamily = familyId ? familyLookup(familyId) : undefined;
 
@@ -145,44 +141,11 @@ export function MissingRequirementDialog({
     ? allV1Cases.find((r) => r.id === v1CaseId)
     : undefined;
 
-  const availableArrangements =
-    selectedV1Case && requirement instanceof MissingArrangementRequirement
-      ? selectedV1Case.arrangements!.filter((arrangement) =>
-          [
-            ...arrangement.missingRequirements!,
-            ...arrangement.missingOptionalRequirements!,
-          ].some((missingRequirementInfo) => {
-            if (context.kind === 'Family Volunteer Assignment')
-              return (
-                missingRequirementInfo.action?.actionName ===
-                  requirement.action?.actionName &&
-                missingRequirementInfo.arrangementFunction ===
-                  context.assignment.arrangementFunction &&
-                missingRequirementInfo.arrangementFunctionVariant ===
-                  context.assignment.arrangementFunctionVariant &&
-                missingRequirementInfo.volunteerFamilyId ===
-                  context.assignment.familyId
-              );
-            else if (context.kind === 'Individual Volunteer Assignment')
-              return (
-                missingRequirementInfo.action?.actionName ===
-                  requirement.action?.actionName &&
-                missingRequirementInfo.arrangementFunction ===
-                  context.assignment.arrangementFunction &&
-                missingRequirementInfo.arrangementFunctionVariant ===
-                  context.assignment.arrangementFunctionVariant &&
-                missingRequirementInfo.volunteerFamilyId ===
-                  context.assignment.familyId &&
-                missingRequirementInfo.personId === context.assignment.personId
-              );
-            else
-              return (
-                missingRequirementInfo.action?.actionName ===
-                requirement.action?.actionName
-              );
-          })
-        )
-      : [];
+  const availableArrangements = getAvailableArrangementsForRequirement(
+    selectedV1Case,
+    requirement,
+    context
+  );
 
   const [applyToArrangements, setApplyToArrangements] = useState(
     context.kind === 'Arrangement'
@@ -222,12 +185,7 @@ export function MissingRequirementDialog({
           applyToArrangements.length > 0 && // logical XOR
         additionalComments !== '';
 
-  const requirementName =
-    requirement instanceof MissingArrangementRequirement
-      ? requirement.action!.actionName!
-      : requirement instanceof RequirementDefinition
-        ? requirement.actionName!
-        : requirement;
+  const requirementName = requirementNameFromRequirement(requirement);
 
   type UploadV1ReferralFile_ReturnsDocumentId = (
     orgId: string,
@@ -590,16 +548,10 @@ export function MissingRequirementDialog({
                             ? ` (${personLookup ? personNameString(personLookup(context.assignment.personId)) : ''})`
                             : '') +
                           ` - ` +
-                          (arrangement.phase === ArrangementPhase.Cancelled
-                            ? `Cancelled ${formatRelative(arrangement.cancelledAtUtc!, now)}`
-                            : arrangement.phase === ArrangementPhase.SettingUp
-                              ? 'Setting up'
-                              : arrangement.phase ===
-                                  ArrangementPhase.ReadyToStart
-                                ? 'Ready to start'
-                                : arrangement.phase === ArrangementPhase.Started
-                                  ? `Started ${formatRelative(arrangement.startedAtUtc!, now)}`
-                                  : `Ended ${formatRelative(arrangement.endedAtUtc!, now)}`)
+                           getArrangementRequirementStatusLabel(
+                             arrangement,
+                             now
+                           )
                         }
                       />
                     ))}
@@ -752,16 +704,10 @@ export function MissingRequirementDialog({
                                 )
                               : ''
                           } - ` +
-                          (arrangement.phase === ArrangementPhase.Cancelled
-                            ? `Cancelled ${formatRelative(arrangement.cancelledAtUtc!, now)}`
-                            : arrangement.phase === ArrangementPhase.SettingUp
-                              ? 'Setting up'
-                              : arrangement.phase ===
-                                  ArrangementPhase.ReadyToStart
-                                ? 'Ready to start'
-                                : arrangement.phase === ArrangementPhase.Started
-                                  ? `Started ${formatRelative(arrangement.startedAtUtc!, now)}`
-                                  : `Ended ${formatRelative(arrangement.endedAtUtc!, now)}`)
+                           getArrangementRequirementStatusLabel(
+                             arrangement,
+                             now
+                           )
                         }
                       />
                     ))}
