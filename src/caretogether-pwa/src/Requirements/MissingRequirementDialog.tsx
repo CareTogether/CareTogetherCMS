@@ -18,11 +18,9 @@ import {
 import { useState } from 'react';
 import {
   ActionRequirement,
-  Arrangement,
   DocumentLinkRequirement,
   MissingArrangementRequirement,
   NoteEntryRequirement,
-  V1Case,
   RequirementDefinition,
 } from '../GeneratedClient';
 import {
@@ -53,10 +51,12 @@ import { useV1ReferralNotesModel } from '../Model/V1ReferralNotesModel';
 import {
   familyIdFromRequirementContext,
   getArrangementRequirementStatusLabel,
-  getAvailableArrangementsForRequirement,
   parseRequirementValidity,
   requirementNameFromRequirement,
 } from './requirementWorkflowModel';
+import { useArrangementRequirementSelection } from './useArrangementRequirementSelection';
+import { useRequirementCompletionForm } from './useRequirementCompletionForm';
+import { useRequirementExemptionForm } from './useRequirementExemptionForm';
 
 type MissingRequirementDialogProps = {
   handle: DialogHandle;
@@ -88,18 +88,8 @@ export function MissingRequirementDialog({
   const validityDuration = parseRequirementValidity(policy.validity);
 
   const [tabValue, setTabValue] = useState(canComplete ? 0 : 1);
-  const [documentFile, setDocumentFile] = useState<File | null>(null);
-  const [documentId, setDocumentId] = useState<string>('');
-  const [completedAtLocal, setCompletedAtLocal] = useState(null as Date | null);
-  const [completedAtError, setCompletedAtError] = useState(false);
-  const [notes, setNotes] = useState('');
   const UPLOAD_NEW = '__uploadnew__';
   const { organizationId, locationId } = useRequiredSelectedLocationContext();
-  const [additionalComments, setAdditionalComments] = useState('');
-  const [exemptionExpiresAtLocal, setExemptionExpiresAtLocal] = useState(
-    null as Date | null
-  );
-  const [exemptAll, setExemptAll] = useState(false);
 
   const familyLookup = useFamilyLookup();
 
@@ -126,64 +116,70 @@ export function MissingRequirementDialog({
         )?.referral
       : undefined;
 
-  const openV1Cases: V1Case[] =
+  const openV1Cases =
     contextFamily?.partneringFamilyInfo?.openV1Case !== undefined
       ? [contextFamily.partneringFamilyInfo.openV1Case]
       : [];
 
-  const closedV1Cases: V1Case[] =
+  const closedV1Cases =
     contextFamily?.partneringFamilyInfo?.closedV1Cases
       ?.slice()
       .sort((r1, r2) => (r1.closedAtUtc! > r2.closedAtUtc! ? -1 : 1)) || [];
 
-  const allV1Cases: V1Case[] = [...openV1Cases, ...closedV1Cases];
+  const allV1Cases = [...openV1Cases, ...closedV1Cases];
   const selectedV1Case = v1CaseId
     ? allV1Cases.find((r) => r.id === v1CaseId)
     : undefined;
 
-  const availableArrangements = getAvailableArrangementsForRequirement(
-    selectedV1Case,
+  const {
+    applyToArrangements,
+    availableArrangements,
+    selectedArrangementIds,
+    toggleApplyToArrangement,
+  } = useArrangementRequirementSelection({
+    context,
     requirement,
-    context
-  );
-
-  const [applyToArrangements, setApplyToArrangements] = useState(
-    context.kind === 'Arrangement'
-      ? availableArrangements.filter(
-          (arrangement) => arrangement.id === context.arrangementId
-        )
-      : []
-  );
-
-  function toggleApplyToArrangement(
-    arrangement: Arrangement,
-    include: boolean
-  ) {
-    if (include) {
-      setApplyToArrangements(applyToArrangements.concat(arrangement));
-    } else {
-      setApplyToArrangements(
-        applyToArrangements.filter((a) => a.id !== arrangement.id)
-      );
-    }
-  }
+    selectedV1Case,
+  });
+  const {
+    canCompleteRequirement,
+    completedAtLocal,
+    documentFile,
+    documentId,
+    notes,
+    setCompletedAtError,
+    setCompletedAtLocal,
+    setDocumentFile,
+    setDocumentId,
+    setNotes,
+  } = useRequirementCompletionForm({
+    canComplete,
+    hasValidArrangementSelection:
+      (availableArrangements.length === 0) !== applyToArrangements.length > 0,
+    policy,
+    uploadNewDocumentId: UPLOAD_NEW,
+  });
+  const {
+    additionalComments,
+    canExemptRequirement,
+    exemptAll,
+    exemptionExpiresAtLocal,
+    setAdditionalComments,
+    setExemptAll,
+    setExemptionExpiresAtLocal,
+  } = useRequirementExemptionForm({
+    canExempt,
+    hasValidArrangementSelection:
+      (availableArrangements.length === 0) !== applyToArrangements.length > 0,
+    validateExpiryDate: false,
+  });
 
   const enableSave = () =>
     tabValue === 0
       ? // mark complete
-        canComplete &&
-        completedAtLocal != null &&
-        !completedAtError &&
-        ((documentId === UPLOAD_NEW && documentFile) ||
-          (documentId !== UPLOAD_NEW && documentId !== '') ||
-          policy.documentLink !== DocumentLinkRequirement.Required) &&
-        (notes !== '' || policy.noteEntry !== NoteEntryRequirement.Required) &&
-        (availableArrangements.length === 0) !== applyToArrangements.length > 0 // logical XOR
+        canCompleteRequirement
       : // grant exemption
-        canExempt &&
-        (availableArrangements.length === 0) !==
-          applyToArrangements.length > 0 && // logical XOR
-        additionalComments !== '';
+        canExemptRequirement;
 
   const requirementName = requirementNameFromRequirement(requirement);
 
@@ -293,7 +289,7 @@ export function MissingRequirementDialog({
         await v1Cases.completeArrangementRequirement(
           fid,
           context.v1CaseId,
-          applyToArrangements.map((arrangement) => arrangement.id!),
+          selectedArrangementIds,
           requirementName,
           policy,
           completedAtLocal!,
@@ -309,7 +305,7 @@ export function MissingRequirementDialog({
         await v1Cases.completeVolunteerFamilyAssignmentRequirement(
           fid,
           context.v1CaseId,
-          applyToArrangements.map((arrangement) => arrangement.id!),
+          selectedArrangementIds,
           context.assignment,
           requirementName,
           policy,
@@ -326,7 +322,7 @@ export function MissingRequirementDialog({
         await v1Cases.completeIndividualVolunteerAssignmentRequirement(
           fid,
           context.v1CaseId,
-          applyToArrangements.map((arrangement) => arrangement.id!),
+          selectedArrangementIds,
           context.assignment,
           requirementName,
           policy,
@@ -396,7 +392,7 @@ export function MissingRequirementDialog({
         await v1Cases.exemptArrangementRequirement(
           fid,
           context.v1CaseId,
-          applyToArrangements.map((arrangement) => arrangement.id!),
+          selectedArrangementIds,
           requirement as MissingArrangementRequirement,
           exemptAll,
           additionalComments,
@@ -410,7 +406,7 @@ export function MissingRequirementDialog({
         await v1Cases.exemptVolunteerFamilyAssignmentRequirement(
           fid,
           context.v1CaseId,
-          applyToArrangements.map((arrangement) => arrangement.id!),
+          selectedArrangementIds,
           context.assignment,
           requirement as MissingArrangementRequirement,
           exemptAll,
@@ -425,7 +421,7 @@ export function MissingRequirementDialog({
         await v1Cases.exemptIndividualVolunteerAssignmentRequirement(
           fid,
           context.v1CaseId,
-          applyToArrangements.map((arrangement) => arrangement.id!),
+          selectedArrangementIds,
           context.assignment,
           requirement as MissingArrangementRequirement,
           exemptAll,

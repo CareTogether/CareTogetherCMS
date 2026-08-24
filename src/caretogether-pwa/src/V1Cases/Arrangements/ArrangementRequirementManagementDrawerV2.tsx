@@ -22,7 +22,7 @@ import {
   Typography,
 } from '@mui/material';
 import { add, format, formatDuration, isValid } from 'date-fns';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   Arrangement,
   CompletedRequirementInfo,
@@ -50,11 +50,13 @@ import {
   familyIdFromRequirementContext,
   findActionRequirementPolicy,
   getArrangementRequirementStatusLabel,
-  getAvailableArrangementsForRequirement,
   isArrangementRequirementContext,
   parseRequirementValidity,
   requirementNameFromWorkflowRequirement,
 } from '../../Requirements/requirementWorkflowModel';
+import { useArrangementRequirementSelection } from '../../Requirements/useArrangementRequirementSelection';
+import { useRequirementCompletionForm } from '../../Requirements/useRequirementCompletionForm';
+import { useRequirementExemptionForm } from '../../Requirements/useRequirementExemptionForm';
 
 export type ArrangementRequirementWorkflowV2 =
   | {
@@ -191,19 +193,6 @@ export function ArrangementRequirementManagementDrawerV2({
   const familyLookup = useFamilyLookup();
 
   const [tabValue, setTabValue] = useState(0);
-  const [documentFile, setDocumentFile] = useState<File | null>(null);
-  const [documentId, setDocumentId] = useState('');
-  const [completedAtLocal, setCompletedAtLocal] = useState<Date | null>(null);
-  const [completedAtError, setCompletedAtError] = useState(false);
-  const [notes, setNotes] = useState('');
-  const [additionalComments, setAdditionalComments] = useState('');
-  const [exemptionExpiresAtLocal, setExemptionExpiresAtLocal] =
-    useState<Date | null>(null);
-  const [exemptionExpiresAtError, setExemptionExpiresAtError] = useState(false);
-  const [exemptAll, setExemptAll] = useState(false);
-  const [applyToArrangements, setApplyToArrangements] = useState<Arrangement[]>(
-    []
-  );
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
 
@@ -238,45 +227,66 @@ export function ArrangementRequirementManagementDrawerV2({
         (v1Case) => v1Case.id === arrangementContext.v1CaseId
       )
     : undefined;
-  const availableArrangements = useMemo(
-    () =>
-      getAvailableArrangementsForRequirement(
-        selectedV1Case,
-        workflow?.kind === 'missing' ? workflow.requirement : undefined,
-        workflow?.context
-      ),
-    [selectedV1Case, workflow]
-  );
+  const {
+    availableArrangements,
+    hasValidArrangementSelection,
+    isArrangementSelected,
+    selectedArrangementIds,
+    toggleApplyToArrangement,
+  } = useArrangementRequirementSelection({
+    context: workflow?.context,
+    defaultSelectionScope: 'arrangement-workflow-contexts',
+    requirement: workflow?.kind === 'missing' ? workflow.requirement : undefined,
+    resetOnWorkflowChange: true,
+    resetSelectionKey: workflow,
+    selectedV1Case,
+    workflowOpen: open && workflow?.kind === 'missing',
+  });
+  const {
+    canCompleteRequirement,
+    completedAtLocal,
+    documentFile,
+    documentId,
+    notes,
+    setCompletedAtError,
+    setCompletedAtLocal,
+    setDocumentFile,
+    setDocumentId,
+    setNotes,
+  } = useRequirementCompletionForm({
+    canComplete: workflow?.kind === 'missing' && !!requirementPolicy,
+    hasValidArrangementSelection,
+    policy: requirementPolicy,
+    resetCompletionKey: workflow,
+    resetOnWorkflowChange: true,
+    uploadNewDocumentId: UPLOAD_NEW,
+    workflowOpen: open && !!workflow,
+  });
+  const {
+    additionalComments,
+    canExemptRequirement,
+    exemptAll,
+    exemptionExpiresAtLocal,
+    setAdditionalComments,
+    setExemptAll,
+    setExemptionExpiresAtError,
+    setExemptionExpiresAtLocal,
+  } = useRequirementExemptionForm({
+    canExempt: workflow?.kind === 'missing' && !!requirementPolicy,
+    hasValidArrangementSelection,
+    resetExemptionKey: workflow,
+    resetOnWorkflowChange: true,
+    workflowOpen: open && !!workflow,
+  });
   const validityDuration = parseRequirementValidity(requirementPolicy?.validity);
 
   useEffect(() => {
     if (!open || !workflow) return;
 
     setTabValue(0);
-    setDocumentFile(null);
-    setDocumentId('');
-    setCompletedAtLocal(null);
-    setCompletedAtError(false);
-    setNotes('');
-    setAdditionalComments('');
-    setExemptionExpiresAtLocal(null);
-    setExemptionExpiresAtError(false);
-    setExemptAll(false);
     setUploadError(null);
     setSaving(false);
   }, [open, workflow]);
-
-  useEffect(() => {
-    if (!open || workflow?.kind !== 'missing') return;
-
-    setApplyToArrangements(
-      arrangementContext
-        ? availableArrangements.filter(
-            (arrangement) => arrangement.id === arrangementContext.arrangementId
-          )
-        : []
-    );
-  }, [arrangementContext, availableArrangements, open, workflow]);
 
   if (!workflow) {
     return (
@@ -290,36 +300,14 @@ export function ArrangementRequirementManagementDrawerV2({
     if (!saving) onClose();
   };
 
-  const requiresArrangementSelection =
-    workflow.kind === 'missing' && availableArrangements.length > 0;
-  const hasValidArrangementSelection =
-    !requiresArrangementSelection || applyToArrangements.length > 0;
   const canSaveMissing =
     workflow.kind === 'missing' &&
     requirementPolicy &&
     hasValidArrangementSelection &&
     (tabValue === 0
-      ? completedAtLocal !== null &&
-        !completedAtError &&
-        ((documentId === UPLOAD_NEW && documentFile) ||
-          (documentId !== UPLOAD_NEW && documentId !== '') ||
-          requirementPolicy.documentLink !==
-            DocumentLinkRequirement.Required) &&
-        (notes !== '' ||
-          requirementPolicy.noteEntry !== NoteEntryRequirement.Required)
-      : additionalComments !== '' && !exemptionExpiresAtError);
+      ? canCompleteRequirement
+      : canExemptRequirement);
   const canSave = workflow.kind === 'missing' ? canSaveMissing : true;
-
-  const toggleApplyToArrangement = (
-    arrangement: Arrangement,
-    include: boolean
-  ) => {
-    setApplyToArrangements((current) =>
-      include
-        ? current.concat(arrangement)
-        : current.filter((item) => item.id !== arrangement.id)
-    );
-  };
 
   const uploadDocument = async () => {
     if (documentId !== UPLOAD_NEW) {
@@ -379,9 +367,7 @@ export function ArrangementRequirementManagementDrawerV2({
 
     const document = await uploadDocument();
     const noteId = await createCompletionNote();
-    const arrangementIds = applyToArrangements.map(
-      (arrangement) => arrangement.id!
-    );
+    const arrangementIds = selectedArrangementIds;
 
     if (workflow.context.kind === 'Arrangement') {
       await v1Cases.completeArrangementRequirement(
@@ -433,9 +419,7 @@ export function ArrangementRequirementManagementDrawerV2({
       );
     }
 
-    const arrangementIds = applyToArrangements.map(
-      (arrangement) => arrangement.id!
-    );
+    const arrangementIds = selectedArrangementIds;
 
     if (workflow.context.kind === 'Arrangement') {
       await v1Cases.exemptArrangementRequirement(
@@ -697,9 +681,7 @@ export function ArrangementRequirementManagementDrawerV2({
                           key={arrangement.id}
                           control={
                             <Checkbox
-                              checked={applyToArrangements.some(
-                                (item) => item.id === arrangement.id
-                              )}
+                              checked={isArrangementSelected(arrangement)}
                               onChange={(_, checked) =>
                                 toggleApplyToArrangement(arrangement, checked)
                               }
@@ -826,9 +808,7 @@ export function ArrangementRequirementManagementDrawerV2({
                           key={arrangement.id}
                           control={
                             <Checkbox
-                              checked={applyToArrangements.some(
-                                (item) => item.id === arrangement.id
-                              )}
+                              checked={isArrangementSelected(arrangement)}
                               onChange={(_, checked) =>
                                 toggleApplyToArrangement(arrangement, checked)
                               }
