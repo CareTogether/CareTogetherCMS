@@ -25,7 +25,6 @@ import {
 } from '@mui/icons-material';
 import {
   useNoteAuthorLookup,
-  usePersonLookup,
   useUserLookup,
 } from '../Model/DirectoryModel';
 import { PersonName } from '../Families/PersonName';
@@ -33,17 +32,13 @@ import { Box, Stack, Typography, Link } from '@mui/material';
 import { NoteCard } from '../Notes/NoteCard';
 import { useAccessLevelDialog } from '../Notes/AccessLevelDialog/useAccessLevelDialog';
 import { FormControl, InputLabel, Select, MenuItem } from '@mui/material';
-import { useMemo, useState } from 'react';
 import { formatTimelineTimestamp } from './timelineTimestampFormatting';
 import {
   ActivitySorting,
-  buildInitialFamilyTimelineActivities,
-  buildMergedTimelineModel,
-  buildReferralTimelineItems,
   composeNoteType,
   getTimelineItemKey,
-  MergedTimelineItem,
 } from './activityTimelineModel';
+import { useActivityTimelineViewModel } from './useActivityTimelineViewModel';
 
 type ActivityTimelineProps = {
   family: CombinedFamilyInfo;
@@ -51,86 +46,26 @@ type ActivityTimelineProps = {
   printContentRef: React.RefObject<HTMLDivElement | null>;
 };
 
-function embedNotesInActivities(notes: Note[], activities: Activity[]) {
-  // We only want to show each note once, on the most recent activity entry that is
-  // linked to that particular note. The following stateful code works by pulling from the
-  // set of all the family's notes, so that each time this component renders, each note will
-  // be "found" at most once. Since activities render in order from most recent to oldest,
-  // the result is that each note is shown only on the most recent matching activity entry.
-  // This is a simplistic fix; at some point it would be better to support actual matching of
-  // related activity entries and showing those as a single "grouped" activity.
-  const unlinkedNotes = notes.slice() || [];
-  function noteLookup(noteId?: string) {
-    const noteIndex = unlinkedNotes.findIndex((n) => n.id === noteId);
-    if (noteIndex === -1) return undefined;
-    const note = unlinkedNotes.splice(noteIndex, 1)[0];
-    return note;
-  }
-
-  return activities.map((activity) => {
-    return {
-      activity,
-      note: noteLookup(activity.noteId),
-    };
-  });
-}
-
 export function ActivityTimeline({
   family,
   referrals,
   printContentRef,
 }: ActivityTimelineProps) {
   const userLookup = useUserLookup();
-  const personLookup = usePersonLookup();
   const noteAuthorLookup = useNoteAuthorLookup();
-
-  const allActivitiesSorted = buildInitialFamilyTimelineActivities(family);
-
-  function arrangementPartneringPerson(arrangementId?: string) {
-    const allArrangements = (
-      family.partneringFamilyInfo?.openV1Case?.arrangements || []
-    ).concat(
-      family.partneringFamilyInfo?.closedV1Cases?.flatMap(
-        (r) => r.arrangements || []
-      ) || []
-    );
-    const arrangement = allArrangements.find((a) => a.id === arrangementId);
-    const partneringPerson = personLookup(
-      family.family!.id!,
-      arrangement?.partneringFamilyPersonId
-    );
-    return partneringPerson;
-  }
-
-  function documentLookup(uploadedDocumentId?: string) {
-    const document = family.uploadedDocuments?.find(
-      (d) => d.uploadedDocumentId === uploadedDocumentId
-    );
-    return document;
-  }
+  const {
+    arrangementPartneringPerson,
+    displayActivitiesWithNotes,
+    documentLookup,
+    mergedTimelineItems,
+    personLookup,
+    setSortBy,
+    sortBy,
+  } = useActivityTimelineViewModel({ family, referrals });
 
   const { noteAccessLevelDialog, open } = useAccessLevelDialog({
     familyId: family.family.id,
   });
-
-  const [sortBy, setSortBy] = useState<ActivitySorting>('activity');
-
-  const activitiesWithEmbeddedNotes = embedNotesInActivities(
-    family.notes || [],
-    allActivitiesSorted
-  );
-
-  const referralTimelineItems = useMemo<MergedTimelineItem[]>(
-    () => buildReferralTimelineItems(referrals),
-    [referrals]
-  );
-
-  const { displayActivitiesWithNotes, mergedTimelineItems } =
-    buildMergedTimelineModel(
-      activitiesWithEmbeddedNotes,
-      referralTimelineItems,
-      sortBy
-    );
 
   function renderVisibility(note?: Note) {
     return (
