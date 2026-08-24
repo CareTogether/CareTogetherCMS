@@ -12,6 +12,7 @@ using CareTogether.Resources.Approvals;
 using CareTogether.Resources.Communities;
 using CareTogether.Resources.Directory;
 using CareTogether.Resources.Notes;
+using CareTogether.Resources.OrganizationApprovals;
 using CareTogether.Resources.Policies;
 using CareTogether.Resources.V1Cases;
 using CareTogether.Resources.V1ReferralNotes;
@@ -35,6 +36,7 @@ namespace CareTogether.Managers.Records
         private readonly IDirectoryResource directoryResource;
         private readonly IAccountsResource accountsResource;
         private readonly IApprovalsResource approvalsResource;
+        private readonly IOrganizationApprovalsResource organizationApprovalsResource;
         private readonly IV1CasesResource v1CasesResource;
         private readonly IV1ReferralsResource v1ReferralsResource;
 
@@ -52,6 +54,7 @@ namespace CareTogether.Managers.Records
             IDirectoryResource directoryResource,
             IAccountsResource accountsResource,
             IApprovalsResource approvalsResource,
+            IOrganizationApprovalsResource organizationApprovalsResource,
             IV1CasesResource v1CasesResource,
             IV1ReferralsResource v1ReferralsResource,
             IV1ReferralNotesResource v1ReferralNotesResource,
@@ -67,6 +70,7 @@ namespace CareTogether.Managers.Records
             this.directoryResource = directoryResource;
             this.accountsResource = accountsResource;
             this.approvalsResource = approvalsResource;
+            this.organizationApprovalsResource = organizationApprovalsResource;
             this.v1CasesResource = v1CasesResource;
             this.v1ReferralsResource = v1ReferralsResource;
             this.v1ReferralNotesResource = v1ReferralNotesResource;
@@ -107,12 +111,25 @@ namespace CareTogether.Managers.Records
                 organizationId,
                 locationId
             );
+            var organizationApprovalsTask = organizationApprovalsResource.ListAsync(
+                organizationId,
+                locationId
+            );
             var referralsTask = v1ReferralsResource.ListReferralsAsync(organizationId, locationId);
 
-            await Task.WhenAll(familiesTask, locationPolicyTask, communitiesTask, referralsTask);
+            await Task.WhenAll(
+                familiesTask,
+                locationPolicyTask,
+                communitiesTask,
+                organizationApprovalsTask,
+                referralsTask
+            );
             var families = await familiesTask;
             var locationPolicy = await locationPolicyTask;
             var communities = await communitiesTask;
+            var organizationApprovals = (await organizationApprovalsTask).ToImmutableDictionary(
+                approval => approval.OrganizationId
+            );
             var referrals = await referralsTask;
             var authorizationSnapshot = await userAccessCalculation.CreateSnapshotAsync(
                 organizationId,
@@ -216,14 +233,21 @@ namespace CareTogether.Managers.Records
                 .Select(async communityAccess =>
                 {
                     //TODO: Rendering actions (e.g., permissions - which can be on a base aggregate type along with ID!)
+                    organizationApprovals.TryGetValue(
+                        communityAccess.community.Id,
+                        out var organizationApproval
+                    );
+                    var communityInfo = await BuildCommunityInfoAsync(
+                        organizationId,
+                        locationId,
+                        communityAccess.community,
+                        organizationApproval
+                    );
                     var renderedCommunity = await authorizationEngine.DiscloseCommunityAsync(
                         userContext,
                         organizationId,
                         locationId,
-                        new CommunityInfo(
-                            communityAccess.community,
-                            ImmutableList<Permission>.Empty
-                        ),
+                        communityInfo,
                         communityAccess.permissions
                     );
                     return new CommunityRecordsAggregate(renderedCommunity);
@@ -235,6 +259,46 @@ namespace CareTogether.Managers.Records
                 .Concat(renderedCommunities)
                 .Concat(renderedReferrals)
                 .ToImmutableList();
+        }
+
+        private async Task<CommunityInfo> BuildCommunityInfoAsync(
+            Guid tenantId,
+            Guid locationId,
+            Community community,
+            OrganizationApprovalEntry? approvalEntry
+        )
+        {
+            if (approvalEntry == null)
+                return new CommunityInfo(community, ImmutableList<Permission>.Empty);
+
+            var calculation = await policyEvaluationEngine.CalculateOrganizationApprovalsAsync(
+                tenantId,
+                locationId,
+                approvalEntry
+            );
+            var roles = calculation.ApprovalStatus.ApprovalStatusByRole;
+            var availableApplications = roles
+                .Values.SelectMany(role => role.CurrentAvailableApplications)
+                .Select(requirement => requirement.ActionName)
+                .Distinct()
+                .ToImmutableList();
+            var missingRequirements = roles
+                .Values.SelectMany(role => role.CurrentMissingRequirements)
+                .Select(requirement => requirement.ActionName)
+                .Distinct()
+                .ToImmutableList();
+
+            return new CommunityInfo(community, ImmutableList<Permission>.Empty)
+            {
+                ApprovalInfo = new OrganizationApprovalInfo(
+                    roles,
+                    calculation.CompletedRequirements,
+                    calculation.ExemptedRequirements,
+                    availableApplications,
+                    missingRequirements,
+                    approvalEntry.RoleRemovals
+                ),
+            };
         }
 
         public async Task<ImmutableList<RecordsAggregate>> ExecuteCompositeRecordsCommand(
@@ -831,6 +895,13 @@ namespace CareTogether.Managers.Records
                         userContext,
                         c.Command
                     ),
+                OrganizationApprovalRecordsCommand c =>
+                    authorizationEngine.AuthorizeOrganizationApprovalCommandAsync(
+                        organizationId,
+                        locationId,
+                        userContext,
+                        c.Command
+                    ),
                 ReferralRecordsCommand c => authorizationEngine.AuthorizeV1CaseCommandAsync(
                     organizationId,
                     locationId,
@@ -916,6 +987,14 @@ namespace CareTogether.Managers.Records
                         user.UserId()
                     );
                     return;
+                case OrganizationApprovalRecordsCommand c:
+                    await organizationApprovalsResource.ExecuteCommandAsync(
+                        organizationId,
+                        locationId,
+                        c.Command,
+                        user.UserId()
+                    );
+                    return;
                 case ReferralRecordsCommand c:
                     await v1CasesResource.ExecuteV1CaseCommandAsync(
                         organizationId,
@@ -994,8 +1073,85 @@ namespace CareTogether.Managers.Records
                     locationId,
                     assignIndividualVolunteer
                 ),
+                OrganizationApprovalRecordsCommand c =>
+                    ValidateOrganizationApprovalCommandAsync(
+                        organizationId,
+                        locationId,
+                        c.Command
+                    ),
                 _ => Task.CompletedTask,
             };
+
+        private async Task ValidateOrganizationApprovalCommandAsync(
+            Guid tenantId,
+            Guid locationId,
+            OrganizationApprovalCommand command
+        )
+        {
+            var communities = await communitiesResource.ListLocationCommunitiesAsync(
+                tenantId,
+                locationId
+            );
+            var organization = communities.SingleOrDefault(item =>
+                item.Id == command.OrganizationId
+            );
+            if (organization == null)
+                throw new InvalidOperationException("Organization not found.");
+
+            var policy = await policiesResource.GetCurrentPolicy(tenantId, locationId);
+            var roleName = command switch
+            {
+                RemoveOrganizationRole remove => remove.RoleName,
+                ResetOrganizationRole reset => reset.RoleName,
+                _ => null,
+            };
+            if (roleName != null)
+            {
+                if (!policy.OrganizationApprovalPolicy.OrganizationRoles.ContainsKey(roleName))
+                    throw new InvalidOperationException(
+                        "The Organization approval role is not configured."
+                    );
+                return;
+            }
+            if (command is ActivateOrganizationApprovals)
+                return;
+
+            var requirementName = command switch
+            {
+                CompleteOrganizationRequirement complete => complete.RequirementName,
+                MarkOrganizationRequirementIncomplete incomplete => incomplete.RequirementName,
+                ExemptOrganizationRequirement exempt => exempt.RequirementName,
+                UnexemptOrganizationRequirement unexempt => unexempt.RequirementName,
+                _ => throw new NotImplementedException(
+                    $"The command type '{command.GetType().FullName}' has not been implemented."
+                ),
+            };
+            if (!policy.ActionDefinitions.TryGetValue(requirementName, out var action))
+                throw new InvalidOperationException(
+                    "The Organization approval requirement is not configured."
+                );
+
+            if (command is not CompleteOrganizationRequirement completion)
+                return;
+            if (action.NoteEntry == NoteEntryRequirement.Required)
+                throw new InvalidOperationException(
+                    "Organization approval requirements cannot require a note."
+                );
+            if (
+                action.DocumentLink == DocumentLinkRequirement.Required
+                && completion.UploadedDocumentId == null
+            )
+                throw new InvalidOperationException("This requirement needs a document.");
+            if (
+                completion.UploadedDocumentId != null
+                && organization.UploadedDocuments.All(document =>
+                    document.UploadedDocumentId != completion.UploadedDocumentId
+                )
+            )
+                throw new InvalidOperationException(
+                    "The selected document does not belong to this Organization."
+                );
+        }
 
         private async Task ValidateIndividualVolunteerAssignmentCommandAsync(
             Guid organizationId,
@@ -1285,17 +1441,30 @@ namespace CareTogether.Managers.Records
                     new ReferralRecordsAggregate(renderedReferral)
                 );
             }
-            if (command is CommunityRecordsCommand c)
+            var communityId = command switch
             {
-                var communityId = c.Command.CommunityId;
-
+                CommunityRecordsCommand c => c.Command.CommunityId,
+                OrganizationApprovalRecordsCommand c => c.Command.OrganizationId,
+                _ => (Guid?)null,
+            };
+            if (communityId != null)
+            {
                 var communities = await communitiesResource.ListLocationCommunitiesAsync(
                     organizationId,
                     locationId
                 );
-                var community = communities.Single(community => community.Id == communityId);
-
-                var communityInfo = new CommunityInfo(community, ImmutableList<Permission>.Empty);
+                var community = communities.Single(community => community.Id == communityId.Value);
+                var approvalEntry = await organizationApprovalsResource.TryGetAsync(
+                    organizationId,
+                    locationId,
+                    community.Id
+                );
+                var communityInfo = await BuildCommunityInfoAsync(
+                    organizationId,
+                    locationId,
+                    community,
+                    approvalEntry
+                );
 
                 var communityResult = await authorizationEngine.DiscloseCommunityAsync(
                     userContext,
@@ -1359,6 +1528,7 @@ namespace CareTogether.Managers.Records
                 PersonRecordsCommand c => [c.FamilyId],
                 FamilyApprovalRecordsCommand c => [c.Command.FamilyId],
                 IndividualApprovalRecordsCommand c => [c.Command.FamilyId],
+                OrganizationApprovalRecordsCommand => Array.Empty<Guid>(),
                 ReferralRecordsCommand c => [c.Command.FamilyId],
                 V1ReferralRecordsCommand c => c.Command switch
                 {

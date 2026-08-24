@@ -5,6 +5,7 @@ import { CasePolicyTab } from './PolicyConfiguration/CasePolicyTab';
 import { CustomFamilyFieldsTab } from './PolicyConfiguration/CustomFamilyFieldsTab';
 import { V1ReferralPolicyTab } from './PolicyConfiguration/V1ReferralPolicyTab';
 import { VolunteerPolicyTab } from './PolicyConfiguration/VolunteerPolicyTab';
+import { OrganizationPolicyTab } from './PolicyConfiguration/OrganizationPolicyTab';
 
 type PolicyConfigurationProps = {
   policy: EffectiveLocationPolicy;
@@ -15,7 +16,8 @@ type PolicyConfigurationProps = {
     | 'customFamilyFields'
     | 'casePolicy'
     | 'v1ReferralPolicy'
-    | 'volunteerPolicy';
+    | 'volunteerPolicy'
+    | 'organizationPolicy';
 };
 
 export function PolicyConfiguration({
@@ -51,6 +53,12 @@ export function PolicyConfiguration({
       )}
       {section === 'volunteerPolicy' && (
         <VolunteerPolicyTab policy={policy} onPolicyChange={onPolicyChange} />
+      )}
+      {section === 'organizationPolicy' && (
+        <OrganizationPolicyTab
+          policy={policy}
+          onPolicyChange={onPolicyChange}
+        />
       )}
     </Stack>
   );

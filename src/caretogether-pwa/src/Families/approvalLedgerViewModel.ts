@@ -18,7 +18,7 @@ export type ApprovalLedgerStatus =
   | 'availableApplication';
 
 export type ApprovalLedgerSubject = {
-  scope: 'family' | 'person';
+  scope: 'family' | 'person' | 'organization';
   id: string;
   label: string;
 };

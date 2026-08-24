@@ -7,7 +7,7 @@ import {
   TextField,
 } from '@mui/material';
 import { SelectChangeEvent } from '@mui/material/Select';
-import { useMemo, useState } from 'react';
+import { ReactNode, useMemo, useState } from 'react';
 import {
   ApprovalLedgerRow,
   ApprovalLedgerStatus,
@@ -18,6 +18,11 @@ import { ApprovalsDataGridV2 } from './ApprovalsDataGridV2';
 
 type ApprovalLedgerSectionProps = {
   rows: ApprovalLedgerRow[];
+  renderDetailsDrawer?: (
+    row: ApprovalLedgerRow | null,
+    open: boolean,
+    onClose: () => void
+  ) => ReactNode;
 };
 
 type StatusFilter = ApprovalLedgerStatus | 'all';
@@ -40,7 +45,10 @@ function sortStrings(a: string, b: string) {
   return a.localeCompare(b);
 }
 
-export function ApprovalLedgerSection({ rows }: ApprovalLedgerSectionProps) {
+export function ApprovalLedgerSection({
+  rows,
+  renderDetailsDrawer,
+}: ApprovalLedgerSectionProps) {
   const [searchText, setSearchText] = useState('');
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
   const [roleFilter, setRoleFilter] = useState('all');
@@ -208,11 +216,19 @@ export function ApprovalLedgerSection({ rows }: ApprovalLedgerSectionProps) {
         rows={visibleRows}
         onRowClick={(row) => openDetailsDrawer(row.id)}
       />
-      <ApprovalDetailsDrawerV2
-        row={selectedRow}
-        open={selectedRow !== null}
-        onClose={closeDetailsDrawer}
-      />
+      {renderDetailsDrawer ? (
+        renderDetailsDrawer(
+          selectedRow,
+          selectedRow !== null,
+          closeDetailsDrawer
+        )
+      ) : (
+        <ApprovalDetailsDrawerV2
+          row={selectedRow}
+          open={selectedRow !== null}
+          onClose={closeDetailsDrawer}
+        />
+      )}
     </Box>
   );
 }

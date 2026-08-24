@@ -49,6 +49,11 @@ export interface IndividualVolunteerContext {
   personId: string;
 }
 
+export interface OrganizationContext {
+  kind: 'Organization';
+  organizationId: string;
+}
+
 export type RequirementContext =
   | V1CaseContext
   | V1ReferralContext
@@ -56,4 +61,5 @@ export type RequirementContext =
   | FamilyVolunteerAssignmentContext
   | IndividualVolunteerAssignmentContext
   | VolunteerFamilyContext
-  | IndividualVolunteerContext;
+  | IndividualVolunteerContext
+  | OrganizationContext;

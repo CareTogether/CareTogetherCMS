@@ -2759,6 +2759,56 @@ namespace CareTogether.TestData
                         null,
                         null
                     ),
+                    ["Referral Partner Application"] = new ActionRequirement(
+                        DocumentLinkRequirement.Required,
+                        NoteEntryRequirement.None,
+                        "Upload the completed referral partner application.",
+                        new Uri("http://example.com/forms/referral-partner-application"),
+                        null,
+                        null,
+                        null,
+                        null
+                    ),
+                    ["Host Organization Application"] = new ActionRequirement(
+                        DocumentLinkRequirement.Required,
+                        NoteEntryRequirement.None,
+                        "Upload the completed host organization application.",
+                        new Uri("http://example.com/forms/host-organization-application"),
+                        null,
+                        null,
+                        null,
+                        null
+                    ),
+                    ["Partnership Agreement"] = new ActionRequirement(
+                        DocumentLinkRequirement.Required,
+                        NoteEntryRequirement.None,
+                        "Upload the signed partnership agreement.",
+                        new Uri("http://example.com/forms/partnership-agreement"),
+                        TimeSpan.FromDays(365),
+                        null,
+                        null,
+                        null
+                    ),
+                    ["Site Safety Review"] = new ActionRequirement(
+                        DocumentLinkRequirement.Allowed,
+                        NoteEntryRequirement.None,
+                        "Complete the site safety review and attach the report if available.",
+                        new Uri("http://example.com/forms/site-safety-review"),
+                        TimeSpan.FromDays(365),
+                        null,
+                        null,
+                        null
+                    ),
+                    ["Organization Orientation"] = new ActionRequirement(
+                        DocumentLinkRequirement.None,
+                        NoteEntryRequirement.None,
+                        "Complete the organization partner orientation.",
+                        new Uri("http://example.com/training/organization-orientation"),
+                        null,
+                        null,
+                        null,
+                        null
+                    ),
                     ["Complex Instructions"] = new ActionRequirement(
                         DocumentLinkRequirement.Allowed,
                         NoteEntryRequirement.Allowed,
@@ -3408,6 +3458,63 @@ namespace CareTogether.TestData
                 )
             )
             {
+                OrganizationApprovalPolicy = new OrganizationApprovalPolicy(
+                    new Dictionary<string, OrganizationRolePolicy>
+                    {
+                        ["Referral Partner"] = new OrganizationRolePolicy(
+                            "Referral Partner",
+                            PolicyVersions:
+                            [
+                                new OrganizationRolePolicyVersion(
+                                    "v1",
+                                    null,
+                                    [
+                                        new OrganizationApprovalRequirement(
+                                            RequirementStage.Application,
+                                            "Referral Partner Application"
+                                        ),
+                                        new OrganizationApprovalRequirement(
+                                            RequirementStage.Approval,
+                                            "Partnership Agreement"
+                                        ),
+                                        new OrganizationApprovalRequirement(
+                                            RequirementStage.Onboarding,
+                                            "Organization Orientation"
+                                        ),
+                                    ]
+                                ),
+                            ]
+                        ),
+                        ["Host Organization"] = new OrganizationRolePolicy(
+                            "Host Organization",
+                            PolicyVersions:
+                            [
+                                new OrganizationRolePolicyVersion(
+                                    "v1",
+                                    null,
+                                    [
+                                        new OrganizationApprovalRequirement(
+                                            RequirementStage.Application,
+                                            "Host Organization Application"
+                                        ),
+                                        new OrganizationApprovalRequirement(
+                                            RequirementStage.Approval,
+                                            "Partnership Agreement"
+                                        ),
+                                        new OrganizationApprovalRequirement(
+                                            RequirementStage.Approval,
+                                            "Site Safety Review"
+                                        ),
+                                        new OrganizationApprovalRequirement(
+                                            RequirementStage.Onboarding,
+                                            "Organization Orientation"
+                                        ),
+                                    ]
+                                ),
+                            ]
+                        ),
+                    }.ToImmutableDictionary()
+                ),
                 CustomFields = new FamilyMemberCustomFieldPolicy(
                     PartneringFamily: new FamilyMemberCustomFields(
                         Adult:

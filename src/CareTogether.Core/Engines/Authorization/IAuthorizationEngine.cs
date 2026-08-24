@@ -8,6 +8,7 @@ using CareTogether.Resources.Approvals;
 using CareTogether.Resources.Communities;
 using CareTogether.Resources.Directory;
 using CareTogether.Resources.Notes;
+using CareTogether.Resources.OrganizationApprovals;
 using CareTogether.Resources.V1Cases;
 using CareTogether.Resources.V1Referrals;
 using JsonPolymorph;
@@ -102,6 +103,13 @@ namespace CareTogether.Engines.Authorization
             Guid locationId,
             SessionUserContext user,
             VolunteerCommand command
+        );
+
+        Task<bool> AuthorizeOrganizationApprovalCommandAsync(
+            Guid tenantId,
+            Guid locationId,
+            SessionUserContext userContext,
+            OrganizationApprovalCommand command
         );
 
         Task<bool> AuthorizeCommunityCommandAsync(

@@ -103,6 +103,8 @@ const groupedPermissionsWithoutOther = {
     Permission.ReadOrganizationDocuments,
     Permission.UploadOrganizationDocuments,
     Permission.DeleteOrganizationDocuments,
+    Permission.ActivateOrganizationApprovals,
+    Permission.EditOrganizationRoleParticipation,
   ],
 };
 

@@ -117,6 +117,9 @@ namespace CareTogether.Resources.Policies
         VolunteerPolicy VolunteerPolicy
     )
     {
+        public OrganizationApprovalPolicy OrganizationApprovalPolicy { get; init; } =
+            OrganizationApprovalPolicy.Empty;
+
         public FamilyMemberCustomFieldPolicy CustomFields { get; init; } =
             FamilyMemberCustomFieldPolicy.Empty;
 
@@ -404,6 +407,27 @@ namespace CareTogether.Resources.Policies
         ImmutableDictionary<string, VolunteerFamilyRolePolicy> VolunteerFamilyRoles,
         ImmutableList<CustomField>? CustomFields = null
     );
+
+    public sealed record OrganizationApprovalPolicy(
+        ImmutableDictionary<string, OrganizationRolePolicy> OrganizationRoles
+    )
+    {
+        public static OrganizationApprovalPolicy Empty { get; } =
+            new(ImmutableDictionary<string, OrganizationRolePolicy>.Empty);
+    }
+
+    public sealed record OrganizationRolePolicy(
+        string OrganizationRoleType,
+        ImmutableList<OrganizationRolePolicyVersion> PolicyVersions
+    );
+
+    public sealed record OrganizationRolePolicyVersion(
+        string Version,
+        DateTime? SupersededAtUtc,
+        ImmutableList<OrganizationApprovalRequirement> Requirements
+    );
+
+    public sealed record OrganizationApprovalRequirement(RequirementStage Stage, string ActionName);
 
     public sealed record VolunteerRolePolicy(
         string VolunteerRoleType,

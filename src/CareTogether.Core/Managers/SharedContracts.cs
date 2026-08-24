@@ -126,5 +126,17 @@ namespace CareTogether.Managers
     public sealed record CommunityInfo(
         Community Community,
         ImmutableList<Permission> UserPermissions
+    )
+    {
+        public OrganizationApprovalInfo? ApprovalInfo { get; init; }
+    }
+
+    public sealed record OrganizationApprovalInfo(
+        ImmutableDictionary<string, OrganizationRoleApprovalStatus> ApprovalStatusByRole,
+        ImmutableList<Resources.CompletedRequirementInfo> CompletedRequirements,
+        ImmutableList<Resources.ExemptedRequirementInfo> ExemptedRequirements,
+        ImmutableList<string> AvailableApplications,
+        ImmutableList<string> MissingRequirements,
+        ImmutableList<RoleRemoval> RoleRemovals
     );
 }

@@ -1,4 +1,12 @@
-import { Autocomplete, Button, FormControlLabel, MenuItem, Switch, TextField, Typography } from '@mui/material';
+import {
+  Autocomplete,
+  Button,
+  FormControlLabel,
+  MenuItem,
+  Switch,
+  TextField,
+  Typography,
+} from '@mui/material';
 import { useState } from 'react';
 import Grid from '../../../../Generic/GridLegacyCompat';
 import {
@@ -16,14 +24,43 @@ import {
   MonitoringRequirement,
   NoteEntryRequirement,
   OneTimeRecurrencePolicy,
+  OrganizationApprovalRequirement,
+  OrganizationRolePolicyVersion,
   RequirementDefinition,
   VolunteerApprovalRequirement,
   VolunteerFamilyApprovalRequirement,
   VolunteerFamilyRolePolicyVersion,
   VolunteerRolePolicyVersion,
 } from '../../../../GeneratedClient';
-import type { ActionDefinitionDraft, ArrangementFunctionDraft, ArrangementPolicyDraft, CustomFieldDraft, FunctionAssignmentPolicyDraft, MonitoringRequirementDraft, PersonOption, RequirementDraft, ValidityUnit, VolunteerRolePolicyVersionDraft } from './types';
-import { actionToDraft, arrangementFunctionToDraft, arrangementPolicyToDraft, customFieldToDraft, enumOptions, functionAssignmentPolicyToDraft, monitoringRequirementToDraft, normalizeStringList, parseValidityAmount, parseVolunteerFamilyRequirements, parseVolunteerRequirements, requirementToDraft, toTimeSpanString, volunteerRolePolicyVersionToDraft } from './policyUtils';
+import type {
+  ActionDefinitionDraft,
+  ArrangementFunctionDraft,
+  ArrangementPolicyDraft,
+  CustomFieldDraft,
+  FunctionAssignmentPolicyDraft,
+  MonitoringRequirementDraft,
+  PersonOption,
+  RequirementDraft,
+  ValidityUnit,
+  VolunteerRolePolicyVersionDraft,
+} from './types';
+import {
+  actionToDraft,
+  arrangementFunctionToDraft,
+  arrangementPolicyToDraft,
+  customFieldToDraft,
+  enumOptions,
+  functionAssignmentPolicyToDraft,
+  monitoringRequirementToDraft,
+  normalizeStringList,
+  parseOrganizationRequirements,
+  parseValidityAmount,
+  parseVolunteerFamilyRequirements,
+  parseVolunteerRequirements,
+  requirementToDraft,
+  toTimeSpanString,
+  volunteerRolePolicyVersionToDraft,
+} from './policyUtils';
 
 export function ActionDefinitionSidePanel({
   actionName,
@@ -56,9 +93,7 @@ export function ActionDefinitionSidePanel({
     !draft.validityEnabled ||
     typeof parseValidityAmount(draft.validityAmount) !== 'undefined';
   const canSave =
-    trimmedName.length > 0 &&
-    !duplicateName &&
-    validityAmountIsValid;
+    trimmedName.length > 0 && !duplicateName && validityAmountIsValid;
 
   function save() {
     if (!canSave) return;
@@ -844,7 +879,9 @@ export function ArrangementFunctionSidePanel({
     >
       <Grid item xs={12}>
         <Typography variant="h6">
-          {arrangementFunction ? 'Edit Arrangement Function' : 'Add Arrangement Function'}
+          {arrangementFunction
+            ? 'Edit Arrangement Function'
+            : 'Add Arrangement Function'}
         </Typography>
       </Grid>
 
@@ -900,7 +937,10 @@ export function ArrangementFunctionSidePanel({
             }))
           }
           renderInput={(params) => (
-            <TextField {...params} label="Eligible Individual Volunteer Roles" />
+            <TextField
+              {...params}
+              label="Eligible Individual Volunteer Roles"
+            />
           )}
         />
       </Grid>
@@ -992,7 +1032,9 @@ export function FunctionAssignmentPolicySidePanel({
     trimmedRole.length > 0 &&
     trimmedRole !== policy?.assignmentRole &&
     existingAssignmentRoles.includes(trimmedRole);
-  const eligibleLocationRoles = normalizeStringList(draft.eligibleLocationRoles);
+  const eligibleLocationRoles = normalizeStringList(
+    draft.eligibleLocationRoles
+  );
   const eligibleIndividualVolunteerRoles = normalizeStringList(
     draft.eligibleIndividualVolunteerRoles
   );
@@ -1009,10 +1051,7 @@ export function FunctionAssignmentPolicySidePanel({
       eligibleVolunteerFamilyRoles.length +
       eligiblePeople.length >
     0;
-  const canSave =
-    trimmedRole.length > 0 &&
-    !duplicateRole &&
-    hasEligibility;
+  const canSave = trimmedRole.length > 0 && !duplicateRole && hasEligibility;
 
   function save() {
     if (!canSave) return;
@@ -1094,7 +1133,10 @@ export function FunctionAssignmentPolicySidePanel({
             }))
           }
           renderInput={(params) => (
-            <TextField {...params} label="Eligible Individual Volunteer Roles" />
+            <TextField
+              {...params}
+              label="Eligible Individual Volunteer Roles"
+            />
           )}
         />
       </Grid>
@@ -1333,23 +1375,31 @@ export function VolunteerRolePolicyVersionSidePanel({
   existingRoleNames,
   existingVersionsForRole,
   family,
+  organization = false,
   actionNames,
   onClose,
   onSave,
 }: {
   title: string;
   roleName?: string;
-  version?: VolunteerRolePolicyVersion | VolunteerFamilyRolePolicyVersion;
+  version?:
+    | VolunteerRolePolicyVersion
+    | VolunteerFamilyRolePolicyVersion
+    | OrganizationRolePolicyVersion;
   existingRoleNames: string[];
   existingVersionsForRole: string[];
   family: boolean;
+  organization?: boolean;
   actionNames: string[];
   onClose: () => void;
   onSave: (
     previousRoleName: string | undefined,
     previousVersion: string | undefined,
     roleName: string,
-    version: VolunteerRolePolicyVersion | VolunteerFamilyRolePolicyVersion
+    version:
+      | VolunteerRolePolicyVersion
+      | VolunteerFamilyRolePolicyVersion
+      | OrganizationRolePolicyVersion
   ) => void;
 }) {
   const [draft, setDraft] = useState<VolunteerRolePolicyVersionDraft>(() =>
@@ -1359,7 +1409,9 @@ export function VolunteerRolePolicyVersionSidePanel({
   const trimmedVersion = draft.version.trim();
   const requirements = family
     ? parseVolunteerFamilyRequirements(draft.requirements)
-    : parseVolunteerRequirements(draft.requirements);
+    : organization
+      ? parseOrganizationRequirements(draft.requirements)
+      : parseVolunteerRequirements(draft.requirements);
   const referencedActions = requirements.map(
     (requirement) => requirement.actionName
   );
@@ -1392,14 +1444,23 @@ export function VolunteerRolePolicyVersionSidePanel({
                 : undefined,
             requirements: requirements as VolunteerFamilyApprovalRequirement[],
           })
-        : new VolunteerRolePolicyVersion({
-            version: trimmedVersion,
-            supersededAtUtc:
-              draft.superseded && draft.supersededAtUtc
-                ? new Date(draft.supersededAtUtc)
-                : undefined,
-            requirements: requirements as VolunteerApprovalRequirement[],
-          })
+        : organization
+          ? new OrganizationRolePolicyVersion({
+              version: trimmedVersion,
+              supersededAtUtc:
+                draft.superseded && draft.supersededAtUtc
+                  ? new Date(draft.supersededAtUtc)
+                  : undefined,
+              requirements: requirements as OrganizationApprovalRequirement[],
+            })
+          : new VolunteerRolePolicyVersion({
+              version: trimmedVersion,
+              supersededAtUtc:
+                draft.superseded && draft.supersededAtUtc
+                  ? new Date(draft.supersededAtUtc)
+                  : undefined,
+              requirements: requirements as VolunteerApprovalRequirement[],
+            })
     );
   }
 
@@ -1422,7 +1483,13 @@ export function VolunteerRolePolicyVersionSidePanel({
         <TextField
           fullWidth
           required
-          label={family ? 'Volunteer Family Role Type' : 'Volunteer Role Type'}
+          label={
+            family
+              ? 'Volunteer Family Role Type'
+              : organization
+                ? 'Organization Role Type'
+                : 'Volunteer Role Type'
+          }
           value={draft.roleName}
           helperText={
             existingRoleNames.includes(trimmedRoleName)
