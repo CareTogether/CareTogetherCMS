@@ -19,11 +19,7 @@ interface AddNewReferralDrawerProps {
 }
 
 export function AddNewReferralDrawer({ onClose }: AddNewReferralDrawerProps) {
-  // TEMP E2E DEBUG - remove after investigation
-  console.log('[referral-debug] AddNewReferralDrawer entered');
   const policy = usePolicy();
-  // TEMP E2E DEBUG - remove after investigation
-  console.log('[referral-debug] AddNewReferralDrawer policy resolved');
   const { createReferral, updateCustomReferralField } = useV1ReferralsModel();
 
   const referralCustomFields: CustomField[] =

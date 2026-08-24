@@ -28,48 +28,7 @@ export async function createReferral(
   page: Page,
   referral: ReferralDraft
 ): Promise<void> {
-  // TEMP E2E DEBUG - remove after investigation
-  page.on('console', (message) => {
-    console.log(`[browser:${message.type()}] ${message.text()}`);
-  });
-  page.on('pageerror', (error) => {
-    console.log(`[pageerror] ${error.message}`);
-  });
-  page.on('requestfailed', (request) => {
-    console.log(
-      `[requestfailed] ${request.method()} ${request.url()} :: ${request.failure()?.errorText}`
-    );
-  });
-  page.on('response', (response) => {
-    if (response.status() >= 400) {
-      console.log(
-        `[http:${response.status()}] ${response.request().method()} ${response.url()}`
-      );
-    }
-  });
-
-  console.log(`[referral-debug] before click url=${page.url()}`);
-  const addButton = page.getByRole('button', { name: /add new referral/i });
-  await expect(addButton).toBeVisible();
-  console.log(
-    `[referral-debug] add button enabled=${await addButton.isEnabled()}`
-  );
-  await addButton.click();
-  console.log(`[referral-debug] click completed url=${page.url()}`);
-  console.log(
-    `[referral-debug] headingCount=${await page.getByRole('heading', { name: /open new referral/i }).count()}`
-  );
-  console.log(
-    `[referral-debug] initializingCount=${await page.getByText(/initializing/i).count()}`
-  );
-  console.log(
-    `[referral-debug] errorCount=${await page.getByText(/something went wrong/i).count()}`
-  );
-  console.log(
-    `[referral-debug] dialogCount=${await page.locator('[role="dialog"], [role="presentation"]').count()}`
-  );
-  console.log(`[referral-debug] after click url=${page.url()}`);
-
+  await page.getByRole('button', { name: /add new referral/i }).click();
   await expect(
     page.getByRole('heading', { name: /open new referral/i })
   ).toBeVisible();

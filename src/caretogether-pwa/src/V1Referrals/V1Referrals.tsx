@@ -6,7 +6,6 @@ import {
   TableCell,
   TableHead,
   TableRow,
-  Drawer,
 } from '@mui/material';
 import { Routes, Route } from 'react-router-dom';
 
@@ -22,7 +21,6 @@ import {
 import { familyNameString } from '../Families/FamilyName';
 import {
   useCurrentLocationLoadable,
-  useSelectedLocationContext,
   useVisibleReferralsLoadableState,
 } from '../Model/Data';
 import { Permission, V1ReferralStatus } from '../GeneratedClient';
@@ -134,7 +132,6 @@ function V1ReferralsContent() {
   const personAndFamilyLookup = usePersonAndFamilyLookup();
   const permissions = useGlobalPermissions();
   const policy = usePolicyLoadable();
-  const selectedLocationContext = useSelectedLocationContext();
   const functionAssignmentsEnabled = useFeatureFlagEnabled(
     FUNCTION_ASSIGNMENTS_FEATURE_FLAG
   );
@@ -146,23 +143,6 @@ function V1ReferralsContent() {
   const [countyFilter, setCountyFilter] = useState<(string | null)[]>([]);
   const [assignmentFilters, setAssignmentFilters] =
     useState<AssignmentFilterSelectionsByRole>({});
-
-  // TEMP E2E DEBUG - remove after investigation
-  console.log('[referral-debug] V1ReferralsContent render');
-  console.log(
-    `[referral-debug] policy loadable state=${policy ? 'hasValue' : 'loading'}`
-  );
-  console.log(
-    `[referral-debug] org=${selectedLocationContext?.organizationId ?? 'null'}`
-  );
-  console.log(
-    `[referral-debug] location=${selectedLocationContext?.locationId ?? 'null'}`
-  );
-
-  useEffect(() => {
-    // TEMP E2E DEBUG - remove after investigation
-    console.log(`[referral-debug] openNewReferral=${openNewReferral}`);
-  }, [openNewReferral]);
 
   const referrals =
     referralsLoadable.state === 'hasValue'
@@ -261,11 +241,7 @@ function V1ReferralsContent() {
                 expandedView={expandedView}
                 setExpandedView={setExpandedView}
                 canAddNewReferral={permissions(Permission.CreateV1Referral)}
-                onAddNewReferral={() => {
-                  // TEMP E2E DEBUG - remove after investigation
-                  console.log('[referral-debug] onAddNewReferral fired');
-                  setOpenNewReferral(true);
-                }}
+                onAddNewReferral={() => setOpenNewReferral(true)}
                 statusFilter={statusFilter}
                 setStatusFilter={setStatusFilter}
                 countyFilter={countyFilter}
@@ -348,14 +324,9 @@ function V1ReferralsContent() {
               </WideTableContainer>
             </Box>
 
-            <Drawer
-              anchor="right"
-              open={openNewReferral}
-              onClose={() => setOpenNewReferral(false)}
-              slotProps={{ paper: { sx: { width: 500, p: 3 } } }}
-            >
+            {openNewReferral && (
               <AddNewReferralDrawer onClose={() => setOpenNewReferral(false)} />
-            </Drawer>
+            )}
           </Box>
         }
       />
