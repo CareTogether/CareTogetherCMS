@@ -4,7 +4,7 @@ import { Box, Button, Paper, Stack, Typography } from '@mui/material';
 import { useRecoilValueLoadable } from 'recoil';
 import { useScreenTitle } from '../Shell/ShellScreenTitle';
 import { AddNewReferralDrawer } from './AddNewReferralDrawer';
-import { currentLocationQuery } from '../Model/Data';
+import { currentLocationQuery, visibleReferralsQuery } from '../Model/Data';
 import { Permission } from '../GeneratedClient';
 import { useAppNavigate } from '../Hooks/useAppNavigate';
 import { ProgressBackdrop } from '../Shell/ProgressBackdrop';
@@ -40,21 +40,31 @@ export function ReferralsScreenV2() {
   const appNavigate = useAppNavigate();
   const permissions = useGlobalPermissions();
   const currentLocationLoadable = useRecoilValueLoadable(currentLocationQuery);
+  const referralsLoadable = useRecoilValueLoadable(visibleReferralsQuery);
 
   const permissionsLoaded = currentLocationLoadable.state === 'hasValue';
-  const canViewReferrals = permissions(Permission.ViewV1Referral);
+  const referralsLoaded = referralsLoadable.state === 'hasValue';
+  const canCreateReferrals = permissions(Permission.CreateV1Referral);
+  const canViewGlobalReferrals = permissions(Permission.ViewV1Referral);
+  const canViewContextualReferrals =
+    referralsLoaded && referralsLoadable.contents.length > 0;
+  const canAccessReferrals =
+    canCreateReferrals || canViewGlobalReferrals || canViewContextualReferrals;
 
   useEffect(() => {
     if (
       permissionsLoaded &&
-      (!canViewReferrals || (featureFlagsLoaded && referralsEnabled !== true))
+      referralsLoaded &&
+      (!canAccessReferrals ||
+        (featureFlagsLoaded && referralsEnabled !== true))
     ) {
       appNavigate.dashboard();
     }
   }, [
-    canViewReferrals,
+    canAccessReferrals,
     featureFlagsLoaded,
     permissionsLoaded,
+    referralsLoaded,
     referralsEnabled,
     appNavigate,
   ]);
@@ -63,7 +73,11 @@ export function ReferralsScreenV2() {
     throw currentLocationLoadable.contents;
   }
 
-  if (!permissionsLoaded || !featureFlagsLoaded) {
+  if (referralsLoadable.state === 'hasError') {
+    throw referralsLoadable.contents;
+  }
+
+  if (!permissionsLoaded || !referralsLoaded || !featureFlagsLoaded) {
     return (
       <ProgressBackdrop opaque>
         <p>Loading...</p>
@@ -71,7 +85,7 @@ export function ReferralsScreenV2() {
     );
   }
 
-  if (!canViewReferrals) {
+  if (!canAccessReferrals) {
     return null;
   }
 
