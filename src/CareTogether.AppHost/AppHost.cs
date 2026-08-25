@@ -32,6 +32,9 @@ web.WithEnvironment("VITE_APP_APPINSIGHTS_CONNECTIONSTRING", "");
 web.WithEnvironment("VITE_APP_PUBLIC_POSTHOG_KEY", "");
 web.WithEnvironment("VITE_APP_PUBLIC_POSTHOG_HOST", "");
 web.WithEnvironment("VITE_APP_FEATUREBASE_APP_ID", "");
-web.WithEnvironment("VITE_APP_LOCAL_FEATURE_FLAGS", "referrals");
+web.WithEnvironment(
+    "VITE_APP_LOCAL_FEATURE_FLAGS",
+    "referrals,family-screen-v2-ea"
+);
 
 builder.Build().Run();
