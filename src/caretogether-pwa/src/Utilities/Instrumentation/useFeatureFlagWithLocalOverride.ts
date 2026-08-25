@@ -11,6 +11,10 @@ function isLocalFeatureFlagEnabled(featureFlag: string) {
   return normalizedLocalFeatureFlags().includes(featureFlag.toLowerCase());
 }
 
+function isPostHogConfigured() {
+  return Boolean(import.meta.env.VITE_APP_PUBLIC_POSTHOG_KEY?.trim());
+}
+
 export function useFeatureFlagEnabledWithLocalOverride(featureFlag: string) {
   const featureFlagEnabled = useFeatureFlagEnabled(featureFlag);
 
@@ -22,7 +26,10 @@ export function useFeatureFlagsLoadedWithLocalOverride(
 ) {
   const posthog = usePostHog();
 
-  if (featureFlags.every(isLocalFeatureFlagEnabled)) {
+  if (
+    !isPostHogConfigured() ||
+    featureFlags.every(isLocalFeatureFlagEnabled)
+  ) {
     return true;
   }
 

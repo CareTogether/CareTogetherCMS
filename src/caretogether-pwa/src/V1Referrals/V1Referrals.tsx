@@ -6,7 +6,6 @@ import {
   TableCell,
   TableHead,
   TableRow,
-  Drawer,
 } from '@mui/material';
 import { Routes, Route } from 'react-router-dom';
 import { useRecoilValueLoadable } from 'recoil';
@@ -324,14 +323,9 @@ function V1ReferralsContent() {
               </WideTableContainer>
             </Box>
 
-            <Drawer
-              anchor="right"
-              open={openNewReferral}
-              onClose={() => setOpenNewReferral(false)}
-              slotProps={{ paper: { sx: { width: 500, p: 3 } } }}
-            >
+            {openNewReferral && (
               <AddNewReferralDrawer onClose={() => setOpenNewReferral(false)} />
-            </Drawer>
+            )}
           </Box>
         }
       />

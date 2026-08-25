@@ -29,12 +29,18 @@ export async function createReferral(
   referral: ReferralDraft
 ): Promise<void> {
   await page.getByRole('button', { name: /add new referral/i }).click();
+  const referralDialog = page.getByRole('dialog');
+
   await expect(
-    page.getByRole('heading', { name: /open new referral/i })
+    referralDialog.getByRole('heading', { name: /open new referral/i })
   ).toBeVisible();
-  await page.getByLabel(/referral title/i).fill(referral.title);
-  await page.getByLabel(/referral comment/i).fill(referral.comment);
-  await page.getByRole('button', { name: /^save$/i }).click();
+  await referralDialog
+    .getByRole('textbox', { name: /^referral title$/i })
+    .fill(referral.title);
+  await referralDialog
+    .getByRole('textbox', { name: /^referral comment$/i })
+    .fill(referral.comment);
+  await referralDialog.getByRole('button', { name: /^save$/i }).click();
 
   await expect(page.getByRole('heading', { name: referral.title })).toBeVisible(
     {
