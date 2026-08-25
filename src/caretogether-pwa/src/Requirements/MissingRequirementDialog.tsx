@@ -36,8 +36,6 @@ import {
   useRequiredSelectedLocationContext,
   useVisibleReferrals,
 } from '../Model/Data';
-import { useV1CasesModel } from '../Model/V1CasesModel';
-import { useVolunteersModel } from '../Model/VolunteersModel';
 import { UpdateDialog } from '../Generic/UpdateDialog';
 import { RequirementContext } from './RequirementContext';
 import { a11yProps, TabPanel } from '../Generic/TabPanel';
@@ -56,6 +54,7 @@ import {
 } from './requirementWorkflowModel';
 import { useArrangementRequirementSelection } from './useArrangementRequirementSelection';
 import { useRequirementCompletionForm } from './useRequirementCompletionForm';
+import { useRequirementCommands } from './useRequirementCommands';
 import { useRequirementExemptionForm } from './useRequirementExemptionForm';
 
 type MissingRequirementDialogProps = {
@@ -78,10 +77,9 @@ export function MissingRequirementDialog({
   canExempt,
 }: MissingRequirementDialogProps) {
   const directory = useDirectoryModel();
-  const v1Cases = useV1CasesModel();
-  const volunteers = useVolunteersModel();
   const referrals = useV1ReferralsModel();
   const referralNotes = useV1ReferralNotesModel();
+  const requirementCommands = useRequirementCommands();
 
   const now = new Date();
 
@@ -256,204 +254,27 @@ export function MissingRequirementDialog({
       }
     }
 
-    switch (context.kind) {
-      case 'V1Case': {
-        const fid = requireFamilyId();
-
-        await v1Cases.completeV1CaseRequirement(
-          fid,
-          context.v1CaseId,
-          requirementName,
-          policy,
-          completedAtLocal!,
-          document === '' ? null : document,
-          noteId
-        );
-        break;
-      }
-
-      case 'V1Referral':
-        await referrals.completeReferralRequirement(
-          context.referralId,
-          requirementName,
-          policy,
-          completedAtLocal!,
-          document === '' ? null : document,
-          noteId
-        );
-        break;
-
-      case 'Arrangement': {
-        const fid = requireFamilyId();
-
-        await v1Cases.completeArrangementRequirement(
-          fid,
-          context.v1CaseId,
-          selectedArrangementIds,
-          requirementName,
-          policy,
-          completedAtLocal!,
-          document === '' ? null : document,
-          noteId
-        );
-        break;
-      }
-
-      case 'Family Volunteer Assignment': {
-        const fid = requireFamilyId();
-
-        await v1Cases.completeVolunteerFamilyAssignmentRequirement(
-          fid,
-          context.v1CaseId,
-          selectedArrangementIds,
-          context.assignment,
-          requirementName,
-          policy,
-          completedAtLocal!,
-          document === '' ? null : document,
-          noteId
-        );
-        break;
-      }
-
-      case 'Individual Volunteer Assignment': {
-        const fid = requireFamilyId();
-
-        await v1Cases.completeIndividualVolunteerAssignmentRequirement(
-          fid,
-          context.v1CaseId,
-          selectedArrangementIds,
-          context.assignment,
-          requirementName,
-          policy,
-          completedAtLocal!,
-          document === '' ? null : document,
-          noteId
-        );
-        break;
-      }
-
-      case 'Volunteer Family': {
-        const fid = requireFamilyId();
-
-        await volunteers.completeFamilyRequirement(
-          fid,
-          requirementName,
-          policy,
-          completedAtLocal!,
-          document === '' ? null : document,
-          noteId
-        );
-        break;
-      }
-
-      case 'Individual Volunteer': {
-        const fid = requireFamilyId();
-
-        await volunteers.completeIndividualRequirement(
-          fid,
-          context.personId,
-          requirementName,
-          policy,
-          completedAtLocal!,
-          document === '' ? null : document,
-          noteId
-        );
-        break;
-      }
-    }
+    await requirementCommands.completeRequirement({
+      completedAtLocal: completedAtLocal!,
+      context,
+      document: document === '' ? null : document,
+      noteId,
+      policy,
+      requirementName,
+      selectedArrangementIds,
+    });
   }
 
   async function exempt() {
-    switch (context.kind) {
-      case 'V1Case': {
-        const fid = requireFamilyId();
-
-        await v1Cases.exemptV1CaseRequirement(
-          fid,
-          context.v1CaseId,
-          requirementName,
-          additionalComments,
-          exemptionExpiresAtLocal
-        );
-        break;
-      }
-      case 'V1Referral':
-        await referrals.exemptReferralRequirement(
-          context.referralId,
-          requirementName,
-          additionalComments,
-          exemptionExpiresAtLocal
-        );
-        break;
-      case 'Arrangement': {
-        const fid = requireFamilyId();
-
-        await v1Cases.exemptArrangementRequirement(
-          fid,
-          context.v1CaseId,
-          selectedArrangementIds,
-          requirement as MissingArrangementRequirement,
-          exemptAll,
-          additionalComments,
-          exemptionExpiresAtLocal
-        );
-        break;
-      }
-      case 'Family Volunteer Assignment': {
-        const fid = requireFamilyId();
-
-        await v1Cases.exemptVolunteerFamilyAssignmentRequirement(
-          fid,
-          context.v1CaseId,
-          selectedArrangementIds,
-          context.assignment,
-          requirement as MissingArrangementRequirement,
-          exemptAll,
-          additionalComments,
-          exemptionExpiresAtLocal
-        );
-        break;
-      }
-      case 'Individual Volunteer Assignment': {
-        const fid = requireFamilyId();
-
-        await v1Cases.exemptIndividualVolunteerAssignmentRequirement(
-          fid,
-          context.v1CaseId,
-          selectedArrangementIds,
-          context.assignment,
-          requirement as MissingArrangementRequirement,
-          exemptAll,
-          additionalComments,
-          exemptionExpiresAtLocal
-        );
-        break;
-      }
-      case 'Volunteer Family': {
-        const fid = requireFamilyId();
-
-        await volunteers.exemptVolunteerFamilyRequirement(
-          fid,
-          requirementName,
-          additionalComments,
-          exemptionExpiresAtLocal
-        );
-        break;
-      }
-      case 'Individual Volunteer': {
-        const fid = requireFamilyId();
-
-        await volunteers.exemptVolunteerRequirement(
-          fid,
-          context.personId,
-          requirementName,
-          additionalComments,
-          exemptionExpiresAtLocal
-        );
-        break;
-      }
-    }
+    await requirementCommands.exemptRequirement({
+      additionalComments,
+      context,
+      exemptAll,
+      exemptionExpiresAtLocal,
+      requirement: requirement as MissingArrangementRequirement,
+      requirementName,
+      selectedArrangementIds,
+    });
   }
 
   async function save() {
