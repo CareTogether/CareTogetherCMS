@@ -9,10 +9,9 @@ import { Permission } from '../GeneratedClient';
 import { useAppNavigate } from '../Hooks/useAppNavigate';
 import { ProgressBackdrop } from '../Shell/ProgressBackdrop';
 import { useGlobalPermissions } from '../Model/SessionModel';
-import {
-  useFeatureFlagEnabledWithLocalOverride,
-  useFeatureFlagsLoadedWithLocalOverride,
-} from '../Utilities/Instrumentation/useFeatureFlagWithLocalOverride';
+import { useFeatureFlagEnabled } from 'posthog-js/react';
+import { REFERRALS_FEATURE_FLAG } from '../featureFlags';
+import { useFeatureFlagsLoaded } from '../Utilities/Instrumentation/useFeatureFlagsLoaded';
 import { wideTablePageSx } from '../Utilities/wideTablePageSx';
 import { useReferralsBrowserViewModel } from './useReferralsBrowserViewModel';
 import { ReferralsDataGridV2 } from './ReferralsDataGridV2';
@@ -26,17 +25,11 @@ import {
   type ReferralsGridFilterLogicOperator,
 } from './referralsGridFilterAdapter';
 
-const REFERRALS_FEATURE_FLAG = 'referrals';
-
 export function ReferralsScreenV2() {
   useScreenTitle('Referrals');
 
-  const referralsEnabled = useFeatureFlagEnabledWithLocalOverride(
-    REFERRALS_FEATURE_FLAG
-  );
-  const featureFlagsLoaded = useFeatureFlagsLoadedWithLocalOverride(
-    REFERRALS_FEATURE_FLAG
-  );
+  const referralsEnabled = useFeatureFlagEnabled(REFERRALS_FEATURE_FLAG);
+  const featureFlagsLoaded = useFeatureFlagsLoaded();
   const appNavigate = useAppNavigate();
   const permissions = useGlobalPermissions();
   const currentLocationLoadable = useRecoilValueLoadable(currentLocationQuery);
@@ -55,8 +48,7 @@ export function ReferralsScreenV2() {
     if (
       permissionsLoaded &&
       referralsLoaded &&
-      (!canAccessReferrals ||
-        (featureFlagsLoaded && referralsEnabled !== true))
+      (!canAccessReferrals || (featureFlagsLoaded && referralsEnabled !== true))
     ) {
       appNavigate.dashboard();
     }

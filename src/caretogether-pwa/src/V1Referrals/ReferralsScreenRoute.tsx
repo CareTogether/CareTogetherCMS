@@ -1,21 +1,17 @@
+import { useFeatureFlagEnabled } from 'posthog-js/react';
 import { Navigate, Route, Routes } from 'react-router-dom';
 import { FAMILY_SCREEN_V2_EARLY_ACCESS_FEATURE_FLAG } from '../featureFlags';
 import { ProgressBackdrop } from '../Shell/ProgressBackdrop';
-import {
-  useFeatureFlagEnabledWithLocalOverride,
-  useFeatureFlagsLoadedWithLocalOverride,
-} from '../Utilities/Instrumentation/useFeatureFlagWithLocalOverride';
+import { useFeatureFlagsLoaded } from '../Utilities/Instrumentation/useFeatureFlagsLoaded';
 import { ReferralDetailsPage } from './ReferralDetailsPage';
 import { ReferralsScreenV2 } from './ReferralsScreenV2';
 import { V1Referrals } from './V1Referrals';
 
 export function ReferralsScreenRoute() {
-  const earlyAccessEnabled = useFeatureFlagEnabledWithLocalOverride(
+  const earlyAccessEnabled = useFeatureFlagEnabled(
     FAMILY_SCREEN_V2_EARLY_ACCESS_FEATURE_FLAG
   );
-  const featureFlagsLoaded = useFeatureFlagsLoadedWithLocalOverride(
-    FAMILY_SCREEN_V2_EARLY_ACCESS_FEATURE_FLAG
-  );
+  const featureFlagsLoaded = useFeatureFlagsLoaded();
 
   if (!featureFlagsLoaded) {
     return (

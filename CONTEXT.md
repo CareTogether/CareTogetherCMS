@@ -43,3 +43,7 @@ _Avoid_: Approval policy
 **Inherited Eligibility**:
 Eligibility for an arrangement function that comes from the case policy's function-level eligibility instead of being specified on that arrangement function.
 _Avoid_: Empty eligibility
+
+## Engineering References
+
+-   [E2E feature flags](docs/e2e-feature-flags.md) explains how Playwright supplies deterministic PostHog flag values without changing normal development behavior.
