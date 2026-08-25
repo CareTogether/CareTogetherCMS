@@ -42,6 +42,7 @@ export function RoleRemovalSectionV2({
   const [additionalComments, setAdditionalComments] = useState('');
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [saving, setSaving] = useState(false);
+  const canRemoveRole = additionalComments !== '';
   const isFamilyRole =
     person === undefined || policy.volunteerPolicy?.volunteerFamilyRoles?.[role];
   const participantName = person
@@ -120,9 +121,10 @@ export function RoleRemovalSectionV2({
       <TextField
         fullWidth
         label="Comments"
+        required
         multiline
         minRows={2}
-        placeholder="Optional details about why this role is being removed"
+        placeholder="Explain why this role is being removed"
         size="small"
         value={additionalComments}
         onChange={(event) => setAdditionalComments(event.target.value)}
@@ -134,7 +136,7 @@ export function RoleRemovalSectionV2({
         <Button
           aria-busy={saving}
           color="error"
-          disabled={saving}
+          disabled={saving || !canRemoveRole}
           onClick={() => setConfirmOpen(true)}
           variant="contained"
         >
@@ -156,7 +158,7 @@ export function RoleRemovalSectionV2({
           <Button
             aria-busy={saving}
             color="error"
-            disabled={saving}
+            disabled={saving || !canRemoveRole}
             onClick={() => void removeRole()}
             variant="contained"
           >

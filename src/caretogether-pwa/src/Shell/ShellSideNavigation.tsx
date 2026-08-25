@@ -24,7 +24,10 @@ import { Copyright } from './Copyright';
 import { Version } from './Version';
 import { useGlobalPermissions } from '../Model/SessionModel';
 import { Permission } from '../GeneratedClient';
-import { selectedLocationContextState } from '../Model/Data';
+import {
+  selectedLocationContextState,
+  visibleReferralsQuery,
+} from '../Model/Data';
 import { useLoadable } from '../Hooks/useLoadable';
 import { queueItemsCountQuery } from '../Model/QueueModel';
 import Feedback from './Feedback';
@@ -53,6 +56,11 @@ function SideNavigationMenu({ open }: SideNavigationMenuProps) {
   const reportSubmenuItems = useRecoilValue(reportSubmenuItemsAtom);
 
   const referralsEnabled = useFeatureFlagEnabledWithLocalOverride('referrals');
+  const visibleReferrals = useLoadable(visibleReferralsQuery);
+  const canAccessReferrals =
+    permissions(Permission.CreateV1Referral) ||
+    permissions(Permission.ViewV1Referral) ||
+    (visibleReferrals?.length ?? 0) > 0;
   const collapsed = !open;
 
   return (
@@ -110,7 +118,7 @@ function SideNavigationMenu({ open }: SideNavigationMenuProps) {
             }
             collapsed={collapsed}
           />
-          {permissions(Permission.ViewV1Referral) && referralsEnabled && (
+          {canAccessReferrals && referralsEnabled && (
             <ListItemLink
               className="ph-unmask"
               to={`${locationPrefix}/referrals`}

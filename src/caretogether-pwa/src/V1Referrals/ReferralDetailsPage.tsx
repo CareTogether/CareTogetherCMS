@@ -63,7 +63,6 @@ import { formatStatusWithDate } from './formatStatusWithDate';
 import {
   useAllPartneringFamiliesPermissions,
   useFamilyPermissions,
-  useGlobalPermissions,
 } from '../Model/SessionModel';
 import { FunctionAssignmentsSection } from '../FunctionAssignments/FunctionAssignmentsSection';
 import { useFeatureFlagEnabled } from 'posthog-js/react';
@@ -97,7 +96,6 @@ export function ReferralDetailsPage() {
   const families = useLoadable(partneringFamiliesData) || [];
   const policy = useRecoilValue(policyData);
   const appNavigate = useAppNavigate();
-  const globalPermissions = useGlobalPermissions();
   const functionAssignmentsEnabled = useFeatureFlagEnabled(
     FUNCTION_ASSIGNMENTS_FEATURE_FLAG
   );
@@ -181,17 +179,17 @@ export function ReferralDetailsPage() {
 
   const isOpen = currentReferral.status === V1ReferralStatus.Open;
   const isClosed = currentReferral.status === V1ReferralStatus.Closed;
-  const canEditReferral = globalPermissions(Permission.EditV1Referral);
-  const canCloseReferral = globalPermissions(Permission.CloseV1Referral);
-  const canReopenReferral = globalPermissions(Permission.ReopenV1Referral);
-  const canViewFunctionAssignments =
-    referralInfo?.userPermissions?.includes(
-      Permission.ViewV1ReferralFunctionAssignments
-    ) ?? false;
-  const canEditFunctionAssignments =
-    referralInfo?.userPermissions?.includes(
-      Permission.EditV1ReferralFunctionAssignments
-    ) ?? false;
+  const referralPermissions = (permission: Permission) =>
+    referralInfo?.userPermissions?.includes(permission) ?? false;
+  const canEditReferral = referralPermissions(Permission.EditV1Referral);
+  const canCloseReferral = referralPermissions(Permission.CloseV1Referral);
+  const canReopenReferral = referralPermissions(Permission.ReopenV1Referral);
+  const canViewFunctionAssignments = referralPermissions(
+    Permission.ViewV1ReferralFunctionAssignments
+  );
+  const canEditFunctionAssignments = referralPermissions(
+    Permission.EditV1ReferralFunctionAssignments
+  );
   const canCreateClientFamily =
     !isClosed &&
     !currentReferral.familyId &&

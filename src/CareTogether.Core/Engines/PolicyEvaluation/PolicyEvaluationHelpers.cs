@@ -9,63 +9,67 @@ namespace CareTogether.Engines.PolicyEvaluation
     {
         internal static RoleApprovalStatus? GetMaxRoleStatus(
             ImmutableList<IndividualRoleVersionApprovalStatus> versions
-        ) =>
-            versions
+        )
+        {
+            var statuses = versions
                 .Select(r => r.CurrentStatus)
                 .Where(s => s != null)
                 .OfType<RoleApprovalStatus>()
-                .DefaultIfEmpty()
-                .Max();
+                .ToImmutableList();
+
+            return statuses.Count == 0 ? null : statuses.Max();
+        }
 
         internal static RoleApprovalStatus? GetMaxRoleStatus(
             ImmutableList<FamilyRoleVersionApprovalStatus> versions
-        ) =>
-            versions
+        )
+        {
+            var statuses = versions
                 .Select(r => r.CurrentStatus)
                 .Where(s => s != null)
                 .OfType<RoleApprovalStatus>()
-                .DefaultIfEmpty()
-                .Max();
+                .ToImmutableList();
 
-        internal static bool ShouldShowApplicationPrompt(RoleApprovalStatus? effectiveStatus) =>
-            effectiveStatus is null or RoleApprovalStatus.Expired;
-
-        internal static ImmutableList<IndividualRoleVersionApprovalStatus> SelectPromptableVersions(
-            ImmutableList<IndividualRoleVersionApprovalStatus> versions
-        ) => versions.Where(IsActive).ToImmutableList();
+            return statuses.Count == 0 ? null : statuses.Max();
+        }
 
         internal static ImmutableList<IndividualRoleVersionApprovalStatus> SelectPromptableVersions(
             ImmutableList<IndividualRoleVersionApprovalStatus> versions,
             RoleApprovalStatus? effectiveStatus
         )
         {
-            var activeVersions = SelectPromptableVersions(versions);
-            if (effectiveStatus == RoleApprovalStatus.Expired)
-                return activeVersions;
+            // A valid onboarding carries across policy versions until it expires.
+            if (effectiveStatus == RoleApprovalStatus.Onboarded)
+                return ImmutableList<IndividualRoleVersionApprovalStatus>.Empty;
 
-            var activeStatus = GetMaxRoleStatus(activeVersions);
-            return activeStatus == effectiveStatus
+            // Superseded versions contribute to effective status but never prompt. Among active
+            // versions, only workflows tied for the most advanced current status can prompt.
+            var activeVersions = versions.Where(IsActive).ToImmutableList();
+            var maxActiveStatus = GetMaxRoleStatus(activeVersions);
+            return maxActiveStatus == null
                 ? activeVersions
-                : ImmutableList<IndividualRoleVersionApprovalStatus>.Empty;
+                : activeVersions
+                    .Where(version => version.CurrentStatus == maxActiveStatus)
+                    .ToImmutableList();
         }
-
-        internal static ImmutableList<FamilyRoleVersionApprovalStatus> SelectPromptableVersions(
-            ImmutableList<FamilyRoleVersionApprovalStatus> versions
-        ) => versions.Where(IsActive).ToImmutableList();
 
         internal static ImmutableList<FamilyRoleVersionApprovalStatus> SelectPromptableVersions(
             ImmutableList<FamilyRoleVersionApprovalStatus> versions,
             RoleApprovalStatus? effectiveStatus
         )
         {
-            var activeVersions = SelectPromptableVersions(versions);
-            if (effectiveStatus == RoleApprovalStatus.Expired)
-                return activeVersions;
+            // A valid onboarding carries across policy versions until it expires.
+            if (effectiveStatus == RoleApprovalStatus.Onboarded)
+                return ImmutableList<FamilyRoleVersionApprovalStatus>.Empty;
 
-            var activeStatus = GetMaxRoleStatus(activeVersions);
-            return activeStatus == effectiveStatus
+            // Keep this overload aligned with the individual-role selection above.
+            var activeVersions = versions.Where(IsActive).ToImmutableList();
+            var maxActiveStatus = GetMaxRoleStatus(activeVersions);
+            return maxActiveStatus == null
                 ? activeVersions
-                : ImmutableList<FamilyRoleVersionApprovalStatus>.Empty;
+                : activeVersions
+                    .Where(version => version.CurrentStatus == maxActiveStatus)
+                    .ToImmutableList();
         }
 
         private static bool IsActive(IndividualRoleVersionApprovalStatus version) =>

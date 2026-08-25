@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Add as AddIcon } from '@mui/icons-material';
-import { Box, Button, Drawer, Paper, Stack, Typography } from '@mui/material';
+import { Box, Button, Paper, Stack, Typography } from '@mui/material';
 import { useRecoilValueLoadable } from 'recoil';
 import { useScreenTitle } from '../Shell/ShellScreenTitle';
 import { AddNewReferralDrawer } from './AddNewReferralDrawer';
@@ -209,14 +209,9 @@ function ReferralsScreenV2Content() {
         </Paper>
       </Stack>
 
-      <Drawer
-        anchor="right"
-        open={openNewReferral}
-        onClose={() => setOpenNewReferral(false)}
-        slotProps={{ paper: { sx: { width: 500, p: 3 } } }}
-      >
+      {openNewReferral && (
         <AddNewReferralDrawer onClose={() => setOpenNewReferral(false)} />
-      </Drawer>
+      )}
     </Box>
   );
 }
