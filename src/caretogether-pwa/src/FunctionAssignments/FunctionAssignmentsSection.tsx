@@ -1,4 +1,4 @@
-import { Fragment, useEffect, useMemo, useState } from 'react';
+import { Fragment, useEffect, useState } from 'react';
 import {
   Autocomplete,
   Box,
@@ -9,33 +9,17 @@ import {
   Typography,
 } from '@mui/material';
 import {
-  CombinedFamilyInfo,
-  Person,
-  RoleApprovalStatus,
   AssignedIndividualVolunteer,
   FunctionAssignmentPolicy,
 } from '../GeneratedClient';
-import { useVisibleFamilies } from '../Model/Data';
-import { familyNameString } from '../Families/FamilyName';
 import { personNameString } from '../Families/PersonName';
 import { useBackdrop } from '../Hooks/useBackdrop';
 import { useAppNavigate } from '../Hooks/useAppNavigate';
-
-type FunctionAssignmentCandidate = {
-  personId: string;
-  familyId?: string;
-  familyName: string;
-  label: string;
-  candidateType: FunctionAssignmentCandidateType;
-};
-
-type PersonDirectoryEntry = {
-  person: Person;
-  familyId: string;
-  familyName: string;
-};
-
-type FunctionAssignmentCandidateType = 'Individuals' | 'Families';
+import {
+  buildDraftAssignments,
+  functionAssignmentChanges,
+} from './functionAssignmentModel';
+import { useFunctionAssignmentsViewModel } from './useFunctionAssignmentsViewModel';
 
 type FunctionAssignmentsSectionProps = {
   title?: string;
@@ -55,237 +39,6 @@ type FunctionAssignmentsEditorDrawerProps = {
   onUnassign: (personId: string, assignmentRole: string) => Promise<void>;
 };
 
-function isApprovedOrOnboarded(status?: RoleApprovalStatus) {
-  return (
-    status === RoleApprovalStatus.Approved ||
-    status === RoleApprovalStatus.Onboarded
-  );
-}
-
-function containsAny(values: string[] | undefined, expected: string[]) {
-  return expected.some((value) => values?.includes(value));
-}
-
-function candidateTypeForPolicy(
-  candidate: FunctionAssignmentCandidate,
-  family: CombinedFamilyInfo,
-  policy: FunctionAssignmentPolicy
-): FunctionAssignmentCandidateType | null {
-  const eligibility = policy.eligibility;
-  const volunteerInfo =
-    family.volunteerFamilyInfo?.individualVolunteers?.[candidate.personId];
-  const userInfo = family.users?.find(
-    (user) => user.personId === candidate.personId
-  );
-
-  if (eligibility?.eligiblePeople?.includes(candidate.personId)) {
-    return 'Individuals';
-  }
-
-  if (
-    containsAny(
-      userInfo?.locationRoles,
-      eligibility?.eligibleLocationRoles ?? []
-    )
-  ) {
-    return 'Individuals';
-  }
-
-  if (
-    eligibility?.eligibleIndividualVolunteerRoles?.some((role) =>
-      isApprovedOrOnboarded(
-        volunteerInfo?.approvalStatusByRole?.[role]?.currentStatus
-      )
-    )
-  ) {
-    return 'Individuals';
-  }
-
-  if (
-    eligibility?.eligibleVolunteerFamilyRoles?.some((role) =>
-      isApprovedOrOnboarded(
-        family.volunteerFamilyInfo?.familyRoleApprovals?.[role]?.currentStatus
-      )
-    )
-  ) {
-    return 'Individuals';
-  }
-
-  return null;
-}
-
-function candidateTypeSortValue(
-  candidateType: FunctionAssignmentCandidateType
-) {
-  return ['Individuals', 'Families'].indexOf(candidateType);
-}
-
-function sortCandidates(
-  candidates: FunctionAssignmentCandidate[]
-): FunctionAssignmentCandidate[] {
-  return candidates.sort(
-    (a, b) =>
-      candidateTypeSortValue(a.candidateType) -
-        candidateTypeSortValue(b.candidateType) ||
-      a.label.localeCompare(b.label)
-  );
-}
-
-function sortCandidatesForAutocomplete(
-  candidates: FunctionAssignmentCandidate[]
-): FunctionAssignmentCandidate[] {
-  return [...candidates].sort(
-    (a, b) =>
-      candidateTypeSortValue(a.candidateType) -
-        candidateTypeSortValue(b.candidateType) ||
-      a.label.localeCompare(b.label)
-  );
-}
-
-function functionAssignmentCandidate(
-  person: Person,
-  family: CombinedFamilyInfo,
-  familyId: string,
-  policy: FunctionAssignmentPolicy
-): FunctionAssignmentCandidate | null {
-  const baseCandidate = {
-    personId: person.id!,
-    familyId,
-    familyName: familyNameString(family),
-    label: personNameString(person),
-    candidateType: 'Individuals' as FunctionAssignmentCandidateType,
-  };
-  const candidateType = candidateTypeForPolicy(baseCandidate, family, policy);
-  if (candidateType == null) return null;
-
-  return {
-    ...baseCandidate,
-    candidateType,
-  };
-}
-
-function uniqueValues(values: string[]) {
-  return Array.from(new Set(values.filter(Boolean)));
-}
-
-function buildCandidatesByRole(
-  families: CombinedFamilyInfo[],
-  policies: FunctionAssignmentPolicy[]
-) {
-  const candidatesByRole = new Map<string, FunctionAssignmentCandidate[]>();
-
-  for (const policy of policies) {
-    const candidatesByPersonId = new Map<string, FunctionAssignmentCandidate>();
-
-    for (const family of families) {
-      for (const adult of family.family?.adults ?? []) {
-        const person = adult.item1;
-        const familyId = family.family?.id;
-        if (!person?.id || !person.active || !familyId) continue;
-
-        const candidate = functionAssignmentCandidate(
-          person,
-          family,
-          familyId,
-          policy
-        );
-        if (candidate == null) continue;
-
-        candidatesByPersonId.set(candidate.personId, candidate);
-      }
-    }
-
-    candidatesByRole.set(
-      policy.assignmentRole,
-      sortCandidates(Array.from(candidatesByPersonId.values()))
-    );
-  }
-
-  return candidatesByRole;
-}
-
-function buildPeopleById(families: CombinedFamilyInfo[]) {
-  const peopleById = new Map<string, PersonDirectoryEntry>();
-
-  for (const family of families) {
-    const familyId = family.family?.id;
-    if (!familyId) continue;
-
-    const familyName = familyNameString(family);
-    for (const adult of family.family?.adults ?? []) {
-      const person = adult.item1;
-      if (person?.id) {
-        peopleById.set(person.id, {
-          person,
-          familyId,
-          familyName,
-        });
-      }
-    }
-  }
-
-  return peopleById;
-}
-
-function sortAssignmentsByPersonName(
-  assignments: AssignedIndividualVolunteer[],
-  peopleById: Map<string, PersonDirectoryEntry>
-) {
-  return [...assignments].sort((a, b) =>
-    personNameString(peopleById.get(a.personId)?.person).localeCompare(
-      personNameString(peopleById.get(b.personId)?.person)
-    )
-  );
-}
-
-function buildDraftAssignments(
-  assignments: AssignedIndividualVolunteer[],
-  roles: string[],
-  peopleById: Map<string, PersonDirectoryEntry>
-) {
-  return Object.fromEntries(
-    roles.map((role) => [
-      role,
-      sortAssignmentsByPersonName(
-        assignments.filter((assignment) => assignment.assignmentRole === role),
-        peopleById
-      )[0]?.personId ?? null,
-    ])
-  );
-}
-
-function assignmentCandidateForPerson(
-  personId: string,
-  peopleById: Map<string, PersonDirectoryEntry>
-): FunctionAssignmentCandidate {
-  const personEntry = peopleById.get(personId);
-
-  return {
-    personId,
-    familyId: personEntry?.familyId,
-    familyName: personEntry?.familyName ?? '',
-    label: personNameString(personEntry?.person),
-    candidateType: 'Individuals',
-  };
-}
-
-function functionAssignmentRoles(
-  assignments: AssignedIndividualVolunteer[],
-  policies: FunctionAssignmentPolicy[]
-) {
-  const policyRoles = uniqueValues(
-    policies.map((policy) => policy.assignmentRole).filter(Boolean)
-  );
-  const configuredRoles = new Set(policyRoles);
-  const unconfiguredAssignedRoles = uniqueValues(
-    assignments
-      .map((assignment) => assignment.assignmentRole)
-      .filter((role) => role && !configuredRoles.has(role))
-  ).sort((a, b) => a.localeCompare(b));
-
-  return policyRoles.concat(unconfiguredAssignedRoles);
-}
-
 export function FunctionAssignmentsEditorDrawer({
   open,
   assignments,
@@ -294,22 +47,17 @@ export function FunctionAssignmentsEditorDrawer({
   onAssign,
   onUnassign,
 }: FunctionAssignmentsEditorDrawerProps) {
-  const families = useVisibleFamilies();
   const withBackdrop = useBackdrop();
   const [draftAssignments, setDraftAssignments] = useState<
     Record<string, string | null>
   >({});
   const [isSaving, setIsSaving] = useState(false);
 
-  const roles = useMemo(
-    () => functionAssignmentRoles(assignments, policies),
-    [assignments, policies]
-  );
-  const candidatesByRole = useMemo(
-    () => buildCandidatesByRole(families, policies),
-    [families, policies]
-  );
-  const peopleById = useMemo(() => buildPeopleById(families), [families]);
+  const { getOptionsForRole, peopleById, roles } =
+    useFunctionAssignmentsViewModel({
+      assignments,
+      policies,
+    });
 
   useEffect(() => {
     if (!open) {
@@ -326,45 +74,19 @@ export function FunctionAssignmentsEditorDrawer({
     onClose();
   }
 
-  function getOptionsForRole(assignmentRole: string) {
-    const options = candidatesByRole.get(assignmentRole) ?? [];
-    const selectedPersonId = draftAssignments[assignmentRole];
-    if (
-      !selectedPersonId ||
-      options.some((option) => option.personId === selectedPersonId)
-    ) {
-      return sortCandidatesForAutocomplete(options);
-    }
-
-    return sortCandidatesForAutocomplete(
-      options.concat(assignmentCandidateForPerson(selectedPersonId, peopleById))
-    );
-  }
-
   async function saveAssignments() {
     setIsSaving(true);
     try {
       await withBackdrop(async () => {
-        for (const assignmentRole of roles) {
-          const selectedPersonId = draftAssignments[assignmentRole] ?? null;
-          const currentAssignments = assignments.filter(
-            (assignment) => assignment.assignmentRole === assignmentRole
-          );
-
-          for (const assignment of currentAssignments) {
-            if (assignment.personId === selectedPersonId) continue;
-
-            await onUnassign(assignment.personId, assignmentRole);
-          }
-
-          const isAlreadyAssigned =
-            selectedPersonId !== null &&
-            currentAssignments.some(
-              (assignment) => assignment.personId === selectedPersonId
-            );
-
-          if (selectedPersonId !== null && !isAlreadyAssigned) {
-            await onAssign(selectedPersonId, assignmentRole);
+        for (const change of functionAssignmentChanges(
+          assignments,
+          roles,
+          draftAssignments
+        )) {
+          if (change.kind === 'unassign') {
+            await onUnassign(change.personId, change.assignmentRole);
+          } else {
+            await onAssign(change.personId, change.assignmentRole);
           }
         }
       });
@@ -393,8 +115,8 @@ export function FunctionAssignmentsEditorDrawer({
         <Typography variant="h6">Edit Function Assignments</Typography>
 
         {roles.map((assignmentRole) => {
-          const options = getOptionsForRole(assignmentRole);
           const selectedPersonId = draftAssignments[assignmentRole] ?? null;
+          const options = getOptionsForRole(assignmentRole, selectedPersonId);
           const selectedCandidate =
             options.find((option) => option.personId === selectedPersonId) ??
             null;
@@ -474,14 +196,13 @@ export function FunctionAssignmentsSection({
   onAssign,
   onUnassign,
 }: FunctionAssignmentsSectionProps) {
-  const families = useVisibleFamilies();
   const appNavigate = useAppNavigate();
   const [drawerOpen, setDrawerOpen] = useState(false);
-  const roles = useMemo(
-    () => functionAssignmentRoles(assignments, policies),
-    [assignments, policies]
-  );
-  const peopleById = useMemo(() => buildPeopleById(families), [families]);
+  const { assignedVolunteerRows, peopleById, roles } =
+    useFunctionAssignmentsViewModel({
+      assignments,
+      policies,
+    });
 
   function openDrawer() {
     setDrawerOpen(true);
@@ -512,14 +233,7 @@ export function FunctionAssignmentsSection({
         </Typography>
       ) : (
         <Stack spacing={0.5}>
-          {roles.map((assignmentRole) => {
-            const assignedVolunteers = sortAssignmentsByPersonName(
-              assignments.filter(
-                (assignment) => assignment.assignmentRole === assignmentRole
-              ),
-              peopleById
-            );
-
+          {assignedVolunteerRows.map(({ assignedVolunteers, assignmentRole }) => {
             return (
               <Typography key={assignmentRole}>
                 <strong>{assignmentRole}:</strong>{' '}
