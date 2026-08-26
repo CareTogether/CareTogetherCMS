@@ -100,6 +100,27 @@
           "temporary": false
         }
       ]
+    },
+    {
+      "id": "e3aaef77-0e97-47a6-b788-a67c237c781e",
+      "username": "test2@bynalogic.com",
+      "email": "test2@bynalogic.com",
+      "firstName": "Test2",
+      "lastName": "User",
+      "enabled": true,
+      "emailVerified": true,
+      "attributes": {
+        "caretogether_user_id": [
+          "e3aaef77-0e97-47a6-b788-a67c237c781e"
+        ]
+      },
+      "credentials": [
+        {
+          "type": "password",
+          "value": "P@ssw0rd",
+          "temporary": false
+        }
+      ]
     }
   ]
 }
