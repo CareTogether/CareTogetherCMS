@@ -1,4 +1,4 @@
-import { Fragment, useEffect, useState } from 'react';
+import { Fragment, useState } from 'react';
 import {
   Autocomplete,
   Box,
@@ -15,10 +15,8 @@ import {
 import { personNameString } from '../Families/PersonName';
 import { useBackdrop } from '../Hooks/useBackdrop';
 import { useAppNavigate } from '../Hooks/useAppNavigate';
-import {
-  buildDraftAssignments,
-  functionAssignmentChanges,
-} from './functionAssignmentModel';
+import { useFunctionAssignmentCommands } from './useFunctionAssignmentCommands';
+import { useFunctionAssignmentsEditorViewModel } from './useFunctionAssignmentsEditorViewModel';
 import { useFunctionAssignmentsViewModel } from './useFunctionAssignmentsViewModel';
 
 type FunctionAssignmentsSectionProps = {
@@ -48,25 +46,17 @@ export function FunctionAssignmentsEditorDrawer({
   onUnassign,
 }: FunctionAssignmentsEditorDrawerProps) {
   const withBackdrop = useBackdrop();
-  const [draftAssignments, setDraftAssignments] = useState<
-    Record<string, string | null>
-  >({});
   const [isSaving, setIsSaving] = useState(false);
-
-  const { getOptionsForRole, peopleById, roles } =
-    useFunctionAssignmentsViewModel({
+  const { applyFunctionAssignmentChanges } = useFunctionAssignmentCommands({
+    onAssign,
+    onUnassign,
+  });
+  const { assignmentChanges, canSave, editorRows, updateAssignment } =
+    useFunctionAssignmentsEditorViewModel({
+      open,
       assignments,
       policies,
     });
-
-  useEffect(() => {
-    if (!open) {
-      setDraftAssignments({});
-      return;
-    }
-
-    setDraftAssignments(buildDraftAssignments(assignments, roles, peopleById));
-  }, [assignments, open, peopleById, roles]);
 
   function closeDrawer() {
     if (isSaving) return;
@@ -78,17 +68,7 @@ export function FunctionAssignmentsEditorDrawer({
     setIsSaving(true);
     try {
       await withBackdrop(async () => {
-        for (const change of functionAssignmentChanges(
-          assignments,
-          roles,
-          draftAssignments
-        )) {
-          if (change.kind === 'unassign') {
-            await onUnassign(change.personId, change.assignmentRole);
-          } else {
-            await onAssign(change.personId, change.assignmentRole);
-          }
-        }
+        await applyFunctionAssignmentChanges(assignmentChanges);
       });
       onClose();
     } finally {
@@ -114,13 +94,7 @@ export function FunctionAssignmentsEditorDrawer({
       <Stack spacing={2}>
         <Typography variant="h6">Edit Function Assignments</Typography>
 
-        {roles.map((assignmentRole) => {
-          const selectedPersonId = draftAssignments[assignmentRole] ?? null;
-          const options = getOptionsForRole(assignmentRole, selectedPersonId);
-          const selectedCandidate =
-            options.find((option) => option.personId === selectedPersonId) ??
-            null;
-
+        {editorRows.map(({ assignmentRole, options, selectedCandidate }) => {
           return (
             <Box key={assignmentRole}>
               <Typography variant="subtitle1" sx={{ fontWeight: 600, mb: 1 }}>
@@ -139,10 +113,7 @@ export function FunctionAssignmentsEditorDrawer({
                 disabled={isSaving}
                 noOptionsText="No eligible people available"
                 onChange={(_, candidate) => {
-                  setDraftAssignments((current) => ({
-                    ...current,
-                    [assignmentRole]: candidate?.personId ?? null,
-                  }));
+                  updateAssignment(assignmentRole, candidate);
                 }}
                 renderInput={(params) => (
                   <TextField
@@ -175,7 +146,7 @@ export function FunctionAssignmentsEditorDrawer({
           </Button>
           <Button
             variant="contained"
-            disabled={isSaving}
+            disabled={isSaving || !canSave}
             onClick={() => {
               void saveAssignments();
             }}
