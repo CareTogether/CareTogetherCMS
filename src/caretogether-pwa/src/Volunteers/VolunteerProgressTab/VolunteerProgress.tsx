@@ -48,6 +48,7 @@ import { useFeatureFlagEnabled } from 'posthog-js/react';
 import { forceCheck } from '../../Utilities/reactLazyLoadInterop';
 import { VolunteerProgressTableItem } from './VolunteerProgressTableItem';
 import { stickyHeaderTableSx } from '../../Utilities/stickyHeaderTableSx';
+import { UPDATE_TEST_FAMILY_FEATURE_FLAG } from '../../featureFlags';
 
 const VOLUNTEER_PROGRESS_SORT_STORAGE_KEY = 'volunteer-progress-sortMode';
 
@@ -101,7 +102,7 @@ function VolunteerProgress(props: { onOpen: () => void }) {
   const location = useLocation();
 
   const updateTestFamilyFlagEnabled = useFeatureFlagEnabled(
-    'updateTestFamilyFlag'
+    UPDATE_TEST_FAMILY_FEATURE_FLAG
   );
 
   const [expandedView, setExpandedView] = useLocalStorage(

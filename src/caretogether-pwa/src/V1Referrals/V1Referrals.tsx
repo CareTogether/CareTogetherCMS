@@ -27,14 +27,14 @@ import { ReferralStatusFilter } from './ReferralsFilters';
 import { useAppNavigate } from '../Hooks/useAppNavigate';
 import { ProgressBackdrop } from '../Shell/ProgressBackdrop';
 import { useGlobalPermissions } from '../Model/SessionModel';
-import {
-  useFeatureFlagEnabledWithLocalOverride,
-  useFeatureFlagsLoadedWithLocalOverride,
-} from '../Utilities/Instrumentation/useFeatureFlagWithLocalOverride';
 import { useFeatureFlagEnabled } from 'posthog-js/react';
 import { policyData } from '../Model/ConfigurationModel';
 import { useLoadable } from '../Hooks/useLoadable';
-import { FUNCTION_ASSIGNMENTS_FEATURE_FLAG } from '../featureFlags';
+import {
+  FUNCTION_ASSIGNMENTS_FEATURE_FLAG,
+  REFERRALS_FEATURE_FLAG,
+} from '../featureFlags';
+import { useFeatureFlagsLoaded } from '../Utilities/Instrumentation/useFeatureFlagsLoaded';
 import {
   AssignmentFilterSelectionsByRole,
   assignmentNamesForRole,
@@ -44,8 +44,6 @@ import {
 import { containedStickyHeaderTableSx } from '../Utilities/stickyHeaderTableSx';
 import { WideTableContainer } from '../Utilities/WideTableContainer';
 import { wideTablePageSx } from '../Utilities/wideTablePageSx';
-
-const REFERRALS_FEATURE_FLAG = 'referrals';
 
 function statusToUi(status: V1ReferralStatus): 'OPEN' | 'ACCEPTED' | 'CLOSED' {
   switch (status) {
@@ -61,11 +59,8 @@ function statusToUi(status: V1ReferralStatus): 'OPEN' | 'ACCEPTED' | 'CLOSED' {
 export function V1Referrals() {
   useScreenTitle('Referrals');
 
-  const referralsEnabled =
-    useFeatureFlagEnabledWithLocalOverride(REFERRALS_FEATURE_FLAG);
-  const featureFlagsLoaded = useFeatureFlagsLoadedWithLocalOverride(
-    REFERRALS_FEATURE_FLAG
-  );
+  const referralsEnabled = useFeatureFlagEnabled(REFERRALS_FEATURE_FLAG);
+  const featureFlagsLoaded = useFeatureFlagsLoaded();
   const appNavigate = useAppNavigate();
   const permissions = useGlobalPermissions();
   const currentLocationLoadable = useRecoilValueLoadable(currentLocationQuery);
@@ -84,8 +79,7 @@ export function V1Referrals() {
     if (
       permissionsLoaded &&
       referralsLoaded &&
-      (!canAccessReferrals ||
-        (featureFlagsLoaded && referralsEnabled !== true))
+      (!canAccessReferrals || (featureFlagsLoaded && referralsEnabled !== true))
     ) {
       appNavigate.dashboard();
     }

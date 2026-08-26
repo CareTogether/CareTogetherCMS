@@ -99,9 +99,12 @@ import { useRecoilValue } from 'recoil';
 import { FamilyCompleteOtherController } from '../Requirements/FamilyCompleteOtherController';
 import { useV1CasesModel } from '../Model/V1CasesModel';
 import { formatStatusWithDate } from '../V1Referrals/formatStatusWithDate';
-import { useFeatureFlagEnabledWithLocalOverride } from '../Utilities/Instrumentation/useFeatureFlagWithLocalOverride';
 import { policyData } from '../Model/ConfigurationModel';
-import { FUNCTION_ASSIGNMENTS_FEATURE_FLAG } from '../featureFlags';
+import {
+  FUNCTION_ASSIGNMENTS_FEATURE_FLAG,
+  REFERRALS_FEATURE_FLAG,
+  UPDATE_TEST_FAMILY_FEATURE_FLAG,
+} from '../featureFlags';
 import { FunctionAssignmentsEditorDrawer } from '../FunctionAssignments/FunctionAssignmentsSection';
 import {
   assignmentNamesForRole,
@@ -399,9 +402,9 @@ export function FamilyScreen() {
   const isWideScreen = useMediaQuery(theme.breakpoints.up('xl'));
 
   const updateTestFamilyFlagEnabled = useFeatureFlagEnabled(
-    'updateTestFamilyFlag'
+    UPDATE_TEST_FAMILY_FEATURE_FLAG
   );
-  const referralsEnabled = useFeatureFlagEnabledWithLocalOverride('referrals');
+  const referralsEnabled = useFeatureFlagEnabled(REFERRALS_FEATURE_FLAG);
   const functionAssignmentsEnabled = useFeatureFlagEnabled(
     FUNCTION_ASSIGNMENTS_FEATURE_FLAG
   );
@@ -624,9 +627,7 @@ export function FamilyScreen() {
           ></AddAdultDialog>
         )}
         {addChildDialogOpen && (
-          <AddChildDialog
-            onClose={() => setAddChildDialogOpen(false)}
-          />
+          <AddChildDialog onClose={() => setAddChildDialogOpen(false)} />
         )}
         {addNoteDialogOpen && (
           <AddEditNoteDrawer

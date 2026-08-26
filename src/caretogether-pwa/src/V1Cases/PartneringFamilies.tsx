@@ -46,7 +46,6 @@ import { useAppNavigate } from '../Hooks/useAppNavigate';
 import { useCustomFieldFilters } from '../Generic/CustomFieldsFilter/useCustomFieldFilters';
 import { matchesCustomFieldFilters } from '../Generic/CustomFieldsFilter/matchesCustomFieldFilters';
 import { useFeatureFlagEnabled } from 'posthog-js/react';
-import { useFeatureFlagEnabledWithLocalOverride } from '../Utilities/Instrumentation/useFeatureFlagWithLocalOverride';
 import { forceCheck } from '../Utilities/reactLazyLoadInterop';
 import { PartneringFamilyTableItem } from './PartneringFamilies/PartneringFamilyTableItem';
 import { arrangementStatusSummary } from './PartneringFamilies/arrangementStatusSummary';
@@ -68,7 +67,11 @@ import {
 } from './PartneringFamilies/sortPartneringFamilies';
 import { useSidePanel } from '../Hooks/useSidePanel';
 import { PartneringFamilyCustomFieldFiltersSidePanel } from './PartneringFamilies/PartneringFamilyCustomFieldFiltersSidePanel';
-import { FUNCTION_ASSIGNMENTS_FEATURE_FLAG } from '../featureFlags';
+import {
+  FUNCTION_ASSIGNMENTS_FEATURE_FLAG,
+  REFERRALS_FEATURE_FLAG,
+  UPDATE_TEST_FAMILY_FEATURE_FLAG,
+} from '../featureFlags';
 import {
   AssignmentFilterSelectionsByRole,
   assignmentRolesForColumns,
@@ -336,7 +339,7 @@ function PartneringFamilies() {
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
 
   const updateTestFamilyFlagEnabled = useFeatureFlagEnabled(
-    'updateTestFamilyFlag'
+    UPDATE_TEST_FAMILY_FEATURE_FLAG
   );
 
   const canCreateFamily =
@@ -350,7 +353,7 @@ function PartneringFamilies() {
   const tableMinWidth = Math.max(700, tableColumnCount * 160);
   const hasFeaturebaseChat = globalPermissions(Permission.AccessSupportScreen);
 
-  const referralsEnabled = useFeatureFlagEnabledWithLocalOverride('referrals');
+  const referralsEnabled = useFeatureFlagEnabled(REFERRALS_FEATURE_FLAG);
   const showAddFamilyButton = !referralsEnabled && canCreateFamily;
 
   useScreenTitle('Clients');

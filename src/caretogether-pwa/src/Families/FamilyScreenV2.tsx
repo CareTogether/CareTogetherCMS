@@ -65,7 +65,11 @@ import { TestFamilyBadge } from './TestFamilyBadge';
 import { useRecoilValue } from 'recoil';
 import { useV1CasesModel } from '../Model/V1CasesModel';
 import { policyData } from '../Model/ConfigurationModel';
-import { FAMILY_MEMBER_PRINT_INFORMATION_FEATURE_FLAG } from '../featureFlags';
+import {
+  FAMILY_MEMBER_PRINT_INFORMATION_FEATURE_FLAG,
+  REFERRALS_FEATURE_FLAG,
+  UPDATE_TEST_FAMILY_FEATURE_FLAG,
+} from '../featureFlags';
 import { personNameString } from './PersonName';
 import { useGlobalSnackBar } from '../Hooks/useGlobalSnackBar';
 import { ApprovalLedgerSection } from './ApprovalLedgerSection';
@@ -433,9 +437,9 @@ export function FamilyScreenV2() {
   const isDesktop = useMediaQuery(theme.breakpoints.up('sm'));
 
   const updateTestFamilyFlagEnabled = useFeatureFlagEnabled(
-    'updateTestFamilyFlag'
+    UPDATE_TEST_FAMILY_FEATURE_FLAG
   );
-  const referralsEnabled = useFeatureFlagEnabled('referrals');
+  const referralsEnabled = useFeatureFlagEnabled(REFERRALS_FEATURE_FLAG);
   const familyMemberPrintInformationEnabled =
     useFeatureFlagEnabled(FAMILY_MEMBER_PRINT_INFORMATION_FEATURE_FLAG) ===
     true;

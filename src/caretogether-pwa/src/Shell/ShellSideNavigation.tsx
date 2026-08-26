@@ -36,7 +36,8 @@ import { reportSubmenuItemsAtom } from '../Model/UI';
 import { ListItemLink } from './ListItemLink';
 import { useAppNavigate } from '../Hooks/useAppNavigate';
 import WhatsNew from './WhatsNew';
-import { useFeatureFlagEnabledWithLocalOverride } from '../Utilities/Instrumentation/useFeatureFlagWithLocalOverride';
+import { useFeatureFlagEnabled } from 'posthog-js/react';
+import { REFERRALS_FEATURE_FLAG } from '../featureFlags';
 import { SHELL_DRAWER_TOP_OFFSET } from './shellLayoutConstants';
 
 interface SideNavigationMenuProps {
@@ -55,7 +56,7 @@ function SideNavigationMenu({ open }: SideNavigationMenuProps) {
 
   const reportSubmenuItems = useRecoilValue(reportSubmenuItemsAtom);
 
-  const referralsEnabled = useFeatureFlagEnabledWithLocalOverride('referrals');
+  const referralsEnabled = useFeatureFlagEnabled(REFERRALS_FEATURE_FLAG);
   const visibleReferrals = useLoadable(visibleReferralsQuery);
   const canAccessReferrals =
     permissions(Permission.CreateV1Referral) ||
@@ -263,10 +264,7 @@ export function ShellSideNavigation({ open, width }: ShellSideNavigationProps) {
             borderTop: `1px solid ${theme.palette.divider}`,
           }}
         >
-          <Stack
-            className="ph-unmask"
-            sx={{ alignItems: 'center', py: 2 }}
-          >
+          <Stack className="ph-unmask" sx={{ alignItems: 'center', py: 2 }}>
             <Box sx={{ mb: 2 }}>
               <Feedback />
             </Box>
