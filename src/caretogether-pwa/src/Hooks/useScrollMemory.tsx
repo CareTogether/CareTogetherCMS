@@ -1,7 +1,7 @@
 import { useLayoutEffect, useMemo } from 'react';
 import { useLocation } from 'react-router-dom';
 import { atom, useAtom } from 'jotai';
-import { atomFamily } from 'jotai/utils';
+import { atomFamily } from 'jotai-family';
 
 type ScrollPosition = {
   x: number;

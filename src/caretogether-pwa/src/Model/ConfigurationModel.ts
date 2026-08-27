@@ -1,5 +1,5 @@
 import { atom as jotaiAtom, type Atom } from 'jotai';
-import { atomFamily } from 'jotai/utils';
+import { atomFamily } from 'jotai-family';
 import {
   CurrentFeatureFlags,
   LocationConfiguration,

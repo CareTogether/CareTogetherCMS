@@ -1,6 +1,6 @@
 import { useCallback } from 'react';
 import { atom, useAtomValue, useSetAtom } from 'jotai';
-import { atomFamily } from 'jotai/utils';
+import { atomFamily } from 'jotai-family';
 import { api } from '../Api/Api';
 import { accountInfoState } from '../Authentication/Auth';
 import type { LocationScope } from './LocationScope';

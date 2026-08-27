@@ -6,7 +6,7 @@ import {
   useSetAtom,
   type Atom,
 } from 'jotai';
-import { atomFamily } from 'jotai/utils';
+import { atomFamily } from 'jotai-family';
 import {
   buildRoleFilters,
   roleFiltersState,

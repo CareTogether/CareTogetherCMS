@@ -28,6 +28,7 @@
     "dexie": "^3.2.7",
     "dexie-react-hooks": "^1.1.7",
     "jotai": "^2.20.2",
+    "jotai-family": "^1.1.0",
     "posthog-js": "^1.390.2",
     "powerbi-client-react": "^2.0.0",
     "react": "19.2.6",
