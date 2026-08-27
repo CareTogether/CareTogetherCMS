@@ -90,6 +90,7 @@ import {
   AssignmentFilterValue,
   matchesAssignmentFilters,
 } from './assignmentFilters';
+import { UPDATE_TEST_FAMILY_FEATURE_FLAG } from '../../featureFlags';
 
 const VOLUNTEER_APPROVAL_SORT_STORAGE_KEY = 'volunteer-approval-sortMode';
 
@@ -559,7 +560,7 @@ function VolunteerApproval(props: { onOpen: () => void }) {
   const location = useLocation();
 
   const updateTestFamilyFlagEnabled = useFeatureFlagEnabled(
-    'updateTestFamilyFlag'
+    UPDATE_TEST_FAMILY_FEATURE_FLAG
   );
 
   const [expandedView, setExpandedView] = useLocalStorage(

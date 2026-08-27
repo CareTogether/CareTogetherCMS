@@ -15,7 +15,13 @@ import RequestBackdrop from './Shell/RequestBackdrop';
 import { ProgressBackdrop } from './Shell/ProgressBackdrop';
 
 import { PostHogProvider } from 'posthog-js/react';
+import type { PostHogConfig } from 'posthog-js';
 import { postHogOptions } from './Utilities/Instrumentation/postHogOptions';
+import {
+  FEATURE_FLAG_KEYS,
+  type FeatureFlagKey,
+  type FeatureFlagOverrides,
+} from './featureFlags';
 
 const root = ReactDOM.createRoot(
   document.getElementById('root') as HTMLElement
@@ -45,7 +51,51 @@ const app = (
   </ThemeProvider>
 );
 
-const postHogApiKey = import.meta.env.VITE_APP_PUBLIC_POSTHOG_KEY;
+function getE2EFeatureFlags(): Record<FeatureFlagKey, boolean> | undefined {
+  if (!import.meta.env.DEV) {
+    return undefined;
+  }
+
+  const overrides = window.__CARETOGETHER_E2E_FEATURE_FLAGS__;
+  if (!overrides) {
+    return undefined;
+  }
+
+  return Object.fromEntries(
+    FEATURE_FLAG_KEYS.map((featureFlag) => [
+      featureFlag,
+      overrides[featureFlag] ?? false,
+    ])
+  ) as Record<FeatureFlagKey, boolean>;
+}
+
+function getEffectivePostHogOptions(
+  e2eFeatureFlags: FeatureFlagOverrides | undefined
+): Partial<PostHogConfig> {
+  const commonOptions = {
+    api_host: import.meta.env.VITE_APP_PUBLIC_POSTHOG_HOST,
+    ...postHogOptions,
+  };
+
+  if (!e2eFeatureFlags) {
+    return commonOptions;
+  }
+
+  return {
+    ...commonOptions,
+    bootstrap: {
+      distinctID: 'playwright',
+      featureFlags: e2eFeatureFlags,
+    },
+    advanced_disable_flags: true,
+    opt_out_capturing_by_default: true,
+  };
+}
+
+const e2eFeatureFlags = getE2EFeatureFlags();
+const postHogApiKey =
+  import.meta.env.VITE_APP_PUBLIC_POSTHOG_KEY ||
+  (e2eFeatureFlags ? 'phc_playwright' : undefined);
 
 root.render(
   <React.StrictMode>
@@ -53,10 +103,7 @@ root.render(
       {postHogApiKey ? (
         <PostHogProvider
           apiKey={postHogApiKey}
-          options={{
-            api_host: import.meta.env.VITE_APP_PUBLIC_POSTHOG_HOST,
-            ...postHogOptions,
-          }}
+          options={getEffectivePostHogOptions(e2eFeatureFlags)}
         >
           {app}
         </PostHogProvider>

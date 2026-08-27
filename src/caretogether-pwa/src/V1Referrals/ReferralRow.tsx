@@ -1,18 +1,6 @@
 import { TableRow, TableCell, Box } from '@mui/material';
 import { useAppNavigate } from '../Hooks/useAppNavigate';
-
-export interface ReferralRowModel {
-  id: string;
-  title: string;
-  status: 'OPEN' | 'ACCEPTED' | 'CLOSED';
-  openedAtUtc?: Date;
-  acceptedAtUtc?: Date;
-  closedAtUtc?: Date;
-  clientFamilyName: string | null;
-  county: string | null;
-  comments?: string;
-  assignmentNamesByRole: Record<string, string>;
-}
+import type { ReferralRowModel } from './referralBrowserTypes';
 
 interface ReferralRowProps {
   referral: ReferralRowModel;

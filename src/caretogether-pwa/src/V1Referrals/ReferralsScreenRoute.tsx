@@ -1,18 +1,13 @@
 import { useFeatureFlagEnabled } from 'posthog-js/react';
-import { Navigate, Route, Routes, useParams } from 'react-router-dom';
+import { Navigate, Route, Routes } from 'react-router-dom';
 import { FAMILY_SCREEN_V2_EARLY_ACCESS_FEATURE_FLAG } from '../featureFlags';
 import { ProgressBackdrop } from '../Shell/ProgressBackdrop';
-import { V1Cases } from './V1Cases';
-import { ClientsScreenV2 } from './ClientsScreenV2';
 import { useFeatureFlagsLoaded } from '../Utilities/Instrumentation/useFeatureFlagsLoaded';
+import { ReferralDetailsPage } from './ReferralDetailsPage';
+import { ReferralsScreenV2 } from './ReferralsScreenV2';
+import { V1Referrals } from './V1Referrals';
 
-function ClientFamilyRedirect() {
-  const { familyId } = useParams<{ familyId: string }>();
-
-  return <Navigate to={`/families/${familyId}`} />;
-}
-
-export function ClientsScreenRoute() {
+export function ReferralsScreenRoute() {
   const earlyAccessEnabled = useFeatureFlagEnabled(
     FAMILY_SCREEN_V2_EARLY_ACCESS_FEATURE_FLAG
   );
@@ -26,16 +21,16 @@ export function ClientsScreenRoute() {
     );
   }
 
-  const showClientsScreenV2 = earlyAccessEnabled === true;
+  const showReferralsScreenV2 = earlyAccessEnabled === true;
 
-  if (!showClientsScreenV2) {
-    return <V1Cases />;
+  if (!showReferralsScreenV2) {
+    return <V1Referrals />;
   }
 
   return (
     <Routes>
-      <Route path="" element={<ClientsScreenV2 />} />
-      <Route path="family/:familyId" element={<ClientFamilyRedirect />} />
+      <Route path="" element={<ReferralsScreenV2 />} />
+      <Route path=":referralId" element={<ReferralDetailsPage />} />
       <Route path="*" element={<Navigate to=".." replace />} />
     </Routes>
   );
