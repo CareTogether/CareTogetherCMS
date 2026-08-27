@@ -45,7 +45,7 @@ export function AssignmentsSection({
       buildVolunteerAssignmentRowsV2({
         assignments,
         childFamilyIdForAssignment: (assignment) =>
-          partneringFamilies?.find(
+          partneringFamilies.find(
             (fam) =>
               fam.partneringFamilyInfo &&
               allArrangements(fam.partneringFamilyInfo).some(

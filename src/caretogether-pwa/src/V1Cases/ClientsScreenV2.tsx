@@ -90,7 +90,7 @@ export function ClientsScreenV2() {
       'lastNameAsc'
     );
   const sortMode = normalizePartneringFamiliesSortMode(storedSortMode);
-  const customFieldFilterItems = usePartneringFamilies() ?? [];
+  const customFieldFilterItems = usePartneringFamilies();
   const customFieldDefinitions =
     usePolicyLoadable()?.referralPolicy?.customFields ?? [];
   const isBlankCustomFieldValue = useCallback(

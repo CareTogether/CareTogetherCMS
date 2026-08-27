@@ -100,11 +100,7 @@ function PartneringFamilies() {
     closeSidePanel: closeCustomFieldFiltersSidePanel,
   } = useSidePanel();
 
-  const partneringFamiliesLoadable = usePartneringFamilies();
-  const partneringFamilies = React.useMemo(
-    () => partneringFamiliesLoadable || [],
-    [partneringFamiliesLoadable]
-  );
+  const partneringFamilies = usePartneringFamilies();
   const visibleReferralsLoadable = useVisibleReferralsLoadable();
   const visibleReferrals = React.useMemo(
     () =>
@@ -356,7 +352,7 @@ function PartneringFamilies() {
 
   useScreenTitle('Clients');
 
-  return !partneringFamiliesLoadable || !arrangementTypes ? (
+  return !arrangementTypes ? (
     <ProgressBackdrop>
       <p>Loading families...</p>
     </ProgressBackdrop>

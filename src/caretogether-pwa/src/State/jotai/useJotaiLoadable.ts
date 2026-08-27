@@ -1,43 +1,44 @@
-import type { Atom } from 'jotai';
-import { useAtomValue } from 'jotai';
-import { loadable } from 'jotai/utils';
+import { atom, type Atom, useAtomValue } from 'jotai';
+import { unwrap } from 'jotai/utils';
+import { useMemo } from 'react';
 
 export type LoadableState<T> = {
   state: 'loading' | 'hasValue' | 'hasError';
   contents: T;
 };
 
+const PENDING = Symbol('pending');
+const pendingValue = () => PENDING;
+
 // Provides the app's async atom convention:
 // loading values are represented as null, while errors are thrown to the nearest boundary.
 export function useJotaiLoadable<T>(targetAtom: Atom<T>): Awaited<T> | null {
-  const loadableValue = useAtomValue(loadable(targetAtom));
+  const value = useAtomValue(unwrap(targetAtom, pendingValue));
 
-  if (loadableValue.state === 'loading') {
-    return null;
-  }
-
-  if (loadableValue.state === 'hasError') {
-    throw loadableValue.error;
-  }
-
-  return loadableValue.data as Awaited<T>;
+  return value === PENDING ? null : (value as Awaited<T>);
 }
 
 export function useAtomLoadable<T>(
   targetAtom: Atom<T>
 ): LoadableState<Awaited<T>> {
-  const loadableValue = useAtomValue(loadable(targetAtom));
+  const loadableAtom = useMemo(() => {
+    const unwrappedAtom = unwrap(targetAtom, pendingValue);
 
-  if (loadableValue.state === 'loading') {
-    return { state: 'loading', contents: null as Awaited<T> };
-  }
+    return atom((get): LoadableState<Awaited<T>> => {
+      try {
+        const value = get(unwrappedAtom);
 
-  if (loadableValue.state === 'hasError') {
-    return {
-      state: 'hasError',
-      contents: loadableValue.error as Awaited<T>,
-    };
-  }
+        return value === PENDING
+          ? { state: 'loading', contents: null as Awaited<T> }
+          : { state: 'hasValue', contents: value as Awaited<T> };
+      } catch (error) {
+        return {
+          state: 'hasError',
+          contents: error as Awaited<T>,
+        };
+      }
+    });
+  }, [targetAtom]);
 
-  return { state: 'hasValue', contents: loadableValue.data as Awaited<T> };
+  return useAtomValue(loadableAtom);
 }

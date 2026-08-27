@@ -71,7 +71,7 @@ export function AssignmentCard({ assignment }: AssignmentCardProps) {
   const nextPlanIsPastDue =
     nextPlannedLocation && nextPlannedLocation.timestampUtc! < new Date();
 
-  const childFamily = partneringFamilies?.find(
+  const childFamily = partneringFamilies.find(
     (fam) =>
       fam.partneringFamilyInfo &&
       allArrangements(fam.partneringFamilyInfo).some(

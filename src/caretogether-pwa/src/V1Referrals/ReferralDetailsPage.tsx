@@ -91,7 +91,7 @@ export function ReferralDetailsPage() {
   const { referralId } = useParams<{ referralId: string }>();
   const referralInfos = useVisibleReferrals();
   const familyLookup = useFamilyLookup();
-  const families = usePartneringFamilies() || [];
+  const families = usePartneringFamilies();
   const policy = usePolicy();
   const appNavigate = useAppNavigate();
   const functionAssignmentsEnabled = useFeatureFlagEnabled(

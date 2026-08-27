@@ -234,11 +234,7 @@ export function useClientsBrowserViewModel({
   selectedCustomFieldValuesByField = {},
   sortMode = 'lastNameAsc',
 }: UseClientsBrowserViewModelParameters = {}) {
-  const partneringFamiliesLoadable = usePartneringFamilies();
-  const partneringFamilies = useMemo(
-    () => partneringFamiliesLoadable ?? [],
-    [partneringFamiliesLoadable]
-  );
+  const partneringFamilies = usePartneringFamilies();
   const visibleReferralsLoadable = useVisibleReferralsLoadable();
   const visibleReferrals = useMemo(
     () =>
@@ -248,10 +244,7 @@ export function useClientsBrowserViewModel({
   );
   const policy = usePolicyLoadable();
   const personAndFamilyLookup = usePersonAndFamilyLookup();
-  const isLoading =
-    partneringFamiliesLoadable === null ||
-    visibleReferralsLoadable === null ||
-    policy === null;
+  const isLoading = visibleReferralsLoadable === null || policy === null;
   const normalizedFilterText = useMemo(() => simplify(filterText), [filterText]);
 
   const openReferralByFamily = useMemo(
