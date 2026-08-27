@@ -2361,10 +2361,21 @@ namespace CareTogether.Api.OData
                     return arrangement
                         .IndividualVolunteerAssignments.Select(fva =>
                         {
+                            var volunteerFamily = TryFindFamilyInLocation(
+                                families,
+                                fva.FamilyId,
+                                organization.Id,
+                                family.Location.Id
+                            );
+                            if (volunteerFamily == null)
+                            {
+                                return null;
+                            }
+
                             var person = TryFindPersonInFamily(
                                 people,
                                 fva.PersonId,
-                                family
+                                volunteerFamily
                             );
                             if (person == null)
                             {
