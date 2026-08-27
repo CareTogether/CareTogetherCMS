@@ -37,7 +37,6 @@ import {
   useScreenTitle,
 } from '../Shell/ShellScreenTitle';
 import {
-  useCommunityLookup,
   useFamilyLookup,
   useNoteAuthorLookup,
   usePersonLookup,
@@ -49,7 +48,7 @@ import { useDialogHandle } from '../Hooks/useDialogHandle';
 import { familyLastName } from './FamilyUtils';
 import {
   useRequiredSelectedLocationContext,
-  useVisibleCommunitiesLoadable,
+  useVisibleCommunities,
   useVisibleReferrals,
 } from '../Model/Data';
 import { useAppNavigate } from '../Hooks/useAppNavigate';
@@ -129,22 +128,21 @@ export function FamilyScreenV2() {
   const arrangementIdFromNavigation =
     arrangementIdFromQuery ?? arrangementIdFromState;
 
-  const communitiesLoadable = useVisibleCommunitiesLoadable();
-  const allCommunities = useMemo(
-    () =>
-      (communitiesLoadable || [])
-        .map((x) => x.community!)
-        .sort((a, b) => (a.name! < b.name! ? -1 : a.name! > b.name! ? 1 : 0)),
-    [communitiesLoadable]
-  );
-  const communityLookup = useCommunityLookup();
+  const visibleCommunities = useVisibleCommunities();
   const allCommunityInfo = useMemo(
-    () => allCommunities.map((c) => communityLookup(c.id)!),
-    [allCommunities, communityLookup]
+    () =>
+      [...visibleCommunities].sort((a, b) =>
+        a.community!.name! < b.community!.name!
+          ? -1
+          : a.community!.name! > b.community!.name!
+            ? 1
+            : 0
+      ),
+    [visibleCommunities]
   );
   const familyCommunityInfo = useMemo(
     () =>
-      allCommunityInfo?.filter((c) =>
+      allCommunityInfo.filter((c) =>
         c.community?.memberFamilies?.includes(familyId)
       ),
     [allCommunityInfo, familyId]

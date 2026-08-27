@@ -70,7 +70,6 @@ import {
   useScreenTitle,
 } from '../Shell/ShellScreenTitle';
 import {
-  useCommunityLookup,
   useFamilyLookup,
   usePersonAndFamilyLookup,
   useDirectoryModel,
@@ -83,10 +82,7 @@ import { VolunteerFamilyCustomField } from '../Volunteers/VolunteerFamilyCustomF
 import { DeleteFamilyDialog } from './DeleteFamilyDialog';
 import { useDialogHandle } from '../Hooks/useDialogHandle';
 import { familyLastName } from './FamilyUtils';
-import {
-  useVisibleCommunitiesLoadable,
-  useVisibleReferrals,
-} from '../Model/Data';
+import { useVisibleCommunities, useVisibleReferrals } from '../Model/Data';
 import { useAppNavigate } from '../Hooks/useAppNavigate';
 import posthog from 'posthog-js';
 import { AssignmentsSection } from '../Families/AssignmentsSection';
@@ -146,13 +142,15 @@ export function FamilyScreen() {
   // TODO: When we go to optimize the layout, we should consider updating the generated client
   // to include the ids of the communities each family is a member of in the CombinedFamilyInfo
   // data model so that we don't need to start by first looking up ALL communities
-  const communitiesLoadable = useVisibleCommunitiesLoadable();
-  const allCommunities = (communitiesLoadable || [])
-    .map((x) => x.community!)
-    .sort((a, b) => (a.name! < b.name! ? -1 : a.name! > b.name! ? 1 : 0));
-  const communityLookup = useCommunityLookup();
-  const allCommunityInfo = allCommunities.map((c) => communityLookup(c.id)!);
-  const familyCommunityInfo = allCommunityInfo?.filter((c) =>
+  const visibleCommunities = useVisibleCommunities();
+  const allCommunityInfo = [...visibleCommunities].sort((a, b) =>
+    a.community!.name! < b.community!.name!
+      ? -1
+      : a.community!.name! > b.community!.name!
+        ? 1
+        : 0
+  );
+  const familyCommunityInfo = allCommunityInfo.filter((c) =>
     c.community?.memberFamilies?.includes(familyId)
   );
 

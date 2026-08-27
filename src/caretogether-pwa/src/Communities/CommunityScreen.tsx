@@ -10,7 +10,6 @@ import {
 } from '@mui/material';
 import { useParams } from 'react-router-dom';
 import { Permission } from '../GeneratedClient';
-import { useCommunityLookup } from '../Model/DirectoryModel';
 import { useCommunityPermissions } from '../Model/SessionModel';
 import { ProgressBackdrop } from '../Shell/ProgressBackdrop';
 import { useScreenTitle } from '../Shell/ShellScreenTitle';
@@ -28,16 +27,16 @@ import { AddRoleAssignmentForm } from './AddRoleAssignmentForm';
 import { CommunityMemberFamilies } from './CommunityMemberFamilies';
 import { CommunityRoleAssignments } from './CommunityRoleAssignments';
 import { useDrawer } from '../Generic/ShellDrawer';
-import { useDataLoaded } from '../Model/Data';
+import { useVisibleCommunitiesLoadable } from '../Model/Data';
 
 export function CommunityScreen() {
   const communityIdMaybe = useParams<{ communityId: string }>();
   const communityId = communityIdMaybe.communityId as string;
 
-  const dataLoaded = useDataLoaded();
-
-  const communityLookup = useCommunityLookup();
-  const communityInfo = communityLookup(communityId)!;
+  const visibleCommunities = useVisibleCommunitiesLoadable();
+  const communityInfo = visibleCommunities?.find(
+    ({ community }) => community?.id === communityId
+  );
   const community = communityInfo?.community;
 
   useScreenTitle(community?.name || '...');
@@ -54,7 +53,7 @@ export function CommunityScreen() {
   const addRoleAssignmentDrawer = useDrawer();
   // const deleteCommunityDrawer = useDrawer();
 
-  return !dataLoaded || !community ? (
+  return visibleCommunities === null || !community ? (
     <ProgressBackdrop>
       <p>Loading community...</p>
     </ProgressBackdrop>

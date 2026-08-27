@@ -60,7 +60,6 @@ import {
 import {
   useAtomicRecordsCommandCallback,
   useCompositeRecordsCommandCallback,
-  useVisibleCommunities,
   useVisibleFamilies,
 } from './Data';
 import { commandFactory } from './CommandFactory';
@@ -226,17 +225,6 @@ export function useFamilyLookup() {
     (familyId?: string) => (familyId ? familyById.get(familyId) : undefined),
     [familyById]
   );
-}
-
-export function useCommunityLookup() {
-  const visibleCommunities = useVisibleCommunities();
-
-  return (communityId?: string) => {
-    const community = visibleCommunities.find(
-      (community) => community.community?.id === communityId
-    );
-    return community;
-  };
 }
 
 function useFamilyCommandCallback<T extends unknown[]>(

@@ -15,13 +15,11 @@ import { Add as AddIcon } from '@mui/icons-material';
 import { useState } from 'react';
 import { useGlobalPermissions } from '../Model/SessionModel';
 import { AddEditCommunity } from './AddEditCommunity';
-import { useDataLoaded, useVisibleCommunitiesLoadable } from '../Model/Data';
+import { useVisibleCommunitiesLoadable } from '../Model/Data';
 import { useAppNavigate } from '../Hooks/useAppNavigate';
 
 export function CommunitiesList() {
   useScreenTitle('Communities');
-
-  const dataLoaded = useDataLoaded();
 
   // The array object returned by state is read-only. We need to copy it before we can do an in-place sort.
   const communitiesLoadable = useVisibleCommunitiesLoadable();
@@ -37,7 +35,7 @@ export function CommunitiesList() {
   const [addDrawerOpen, setAddDrawerOpen] = useState(false);
   const permissions = useGlobalPermissions();
 
-  return !dataLoaded ? (
+  return communitiesLoadable === null ? (
     <ProgressBackdrop>
       <p>Loading communities...</p>
     </ProgressBackdrop>
