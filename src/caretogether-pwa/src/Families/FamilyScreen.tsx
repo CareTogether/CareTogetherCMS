@@ -83,7 +83,10 @@ import { VolunteerFamilyCustomField } from '../Volunteers/VolunteerFamilyCustomF
 import { DeleteFamilyDialog } from './DeleteFamilyDialog';
 import { useDialogHandle } from '../Hooks/useDialogHandle';
 import { familyLastName } from './FamilyUtils';
-import { useVisibleCommunitiesLoadable } from '../Model/Data';
+import {
+  useVisibleCommunitiesLoadable,
+  useVisibleReferrals,
+} from '../Model/Data';
 import { useAppNavigate } from '../Hooks/useAppNavigate';
 import posthog from 'posthog-js';
 import { AssignmentsSection } from '../Families/AssignmentsSection';
@@ -93,10 +96,6 @@ import { useSyncV1CaseIdInURL } from '../Hooks/useSyncV1CaseIdInURL';
 import { ArrangementsSection } from '../V1Cases/Arrangements/ArrangementsSection/ArrangementsSection';
 import { useFeatureFlagEnabled } from 'posthog-js/react';
 import { TestFamilyBadge } from './TestFamilyBadge';
-import {
-  useVisibleReferrals,
-  useVisibleReferralsLoadable,
-} from '../Model/Data';
 import { FamilyCompleteOtherController } from '../Requirements/FamilyCompleteOtherController';
 import { useV1CasesModel } from '../Model/V1CasesModel';
 import { formatStatusWithDate } from '../V1Referrals/formatStatusWithDate';
@@ -160,7 +159,7 @@ export function FamilyScreen() {
   const referralInfos = useVisibleReferrals();
 
   const familyReferrals = useMemo(() => {
-    return (referralInfos ?? [])
+    return referralInfos
       .map((referralInfo) => referralInfo.referral)
       .filter((r) => r.familyId === familyId);
   }, [referralInfos, familyId]);
@@ -224,13 +223,10 @@ export function FamilyScreen() {
   }, [openV1Cases, closedV1Cases]);
   const [closeCaseDrawerOpen, setCloseCaseDrawerOpen] = useState(false);
   const v1CasesModel = useV1CasesModel();
-  const referralInfosLoadable = useVisibleReferralsLoadable();
   const openReferralId =
-    referralInfosLoadable
-      ?.map((referralInfo) => referralInfo.referral)
-      .find(
-        (r) => r.familyId === familyId && r.status === V1ReferralStatus.Open
-      )?.referralId ?? undefined;
+    familyReferrals.find(
+      (referral) => referral.status === V1ReferralStatus.Open
+    )?.referralId ?? undefined;
   const [openNewV1CaseDialogOpen, setOpenNewV1CaseDialogOpen] = useState(false);
   const [uploadDocumentDialogOpen, setUploadDocumentDialogOpen] =
     useState(false);
