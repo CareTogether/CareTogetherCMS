@@ -13,7 +13,7 @@ import {
   usePersonAndFamilyLookup,
 } from '../Model/DirectoryModel';
 import { usePartneringFamilies } from '../Model/V1CasesModel';
-import { usePolicyLoadable } from '../Model/PolicyModel';
+import { usePolicy } from '../Model/PolicyModel';
 import { useVisibleReferralsLoadable } from '../Model/Data';
 import { matchesCustomFieldFilters } from '../Generic/CustomFieldsFilter/matchesCustomFieldFilters';
 import { CustomFieldFilterSelectionsByField } from '../Generic/CustomFieldsFilter/types';
@@ -242,9 +242,9 @@ export function useClientsBrowserViewModel({
       [],
     [visibleReferralsLoadable]
   );
-  const policy = usePolicyLoadable();
+  const policy = usePolicy();
   const personAndFamilyLookup = usePersonAndFamilyLookup();
-  const isLoading = visibleReferralsLoadable === null || policy === null;
+  const isLoading = visibleReferralsLoadable === null;
   const normalizedFilterText = useMemo(() => simplify(filterText), [filterText]);
 
   const openReferralByFamily = useMemo(
@@ -252,12 +252,12 @@ export function useClientsBrowserViewModel({
     [visibleReferrals]
   );
   const referralCustomFields = useMemo(
-    () => policy?.referralPolicy?.customFields ?? [],
-    [policy?.referralPolicy?.customFields]
+    () => policy.referralPolicy?.customFields ?? [],
+    [policy.referralPolicy?.customFields]
   );
   const clientFamilyCustomFields = useMemo(
-    () => policy?.customFamilyFields ?? [],
-    [policy?.customFamilyFields]
+    () => policy.customFamilyFields ?? [],
+    [policy.customFamilyFields]
   );
   const assignmentFilterAssignments = useMemo(
     () =>
@@ -271,14 +271,14 @@ export function useClientsBrowserViewModel({
   const assignmentFilterOptions = useMemo(
     () =>
       assignmentRolesForColumns(
-        policy?.referralPolicy?.functionAssignmentPolicies?.map(
+        policy.referralPolicy?.functionAssignmentPolicies?.map(
           (assignmentPolicy) => assignmentPolicy.assignmentRole
         ) ?? [],
         assignmentFilterAssignments
       ),
     [
       assignmentFilterAssignments,
-      policy?.referralPolicy?.functionAssignmentPolicies,
+      policy.referralPolicy?.functionAssignmentPolicies,
     ]
   );
   const arrangementRowsByFamily = useMemo(() => {

@@ -10,7 +10,7 @@ import {
 import { useState, useEffect, useMemo } from 'react';
 import { useBackdrop } from '../../Hooks/useBackdrop';
 import { useOrganizationConfiguration } from '../../Model/ConfigurationModel';
-import { usePolicyLoadable, useRefreshPolicy } from '../../Model/PolicyModel';
+import { usePolicy, useRefreshPolicy } from '../../Model/PolicyModel';
 import { ProgressBackdrop } from '../../Shell/ProgressBackdrop';
 import { useScreenTitle } from '../../Shell/ShellScreenTitle';
 import {
@@ -72,18 +72,16 @@ export function LocationEdit() {
       setIsSidebarCollapsed(false);
     }
   }, [isMobile]);
-  const policy = usePolicyLoadable();
+  const policy = usePolicy();
   const posthog = usePostHog();
   const showPolicySelfService = useFeatureFlagEnabled(
     SELF_SERVICE_POLICY_FEATURE_FLAG
   );
   const featureFlagsLoaded = posthog.featureFlags.hasLoadedFlags;
-  const [policyDraft, setPolicyDraft] =
-    useState<EffectiveLocationPolicy | null>(null);
+  const [policyDraft, setPolicyDraft] = useState(policy);
   const [policySaveErrors, setPolicySaveErrors] = useState<string[]>([]);
 
   useEffect(() => {
-    if (!policy) return;
     setPolicyDraft(policy);
   }, [policy]);
 
@@ -338,7 +336,6 @@ export function LocationEdit() {
           )}
 
           {showPolicySelfService === true &&
-            policyDraft &&
             activeTab === 'actionDefinitions' && (
               <Box key="actionDefinitions">
                 <PolicyConfiguration
@@ -351,7 +348,6 @@ export function LocationEdit() {
             )}
 
           {showPolicySelfService === true &&
-            policyDraft &&
             activeTab === 'customFamilyFields' && (
               <Box key="customFamilyFields">
                 <PolicyConfiguration
@@ -364,7 +360,6 @@ export function LocationEdit() {
             )}
 
           {showPolicySelfService === true &&
-            policyDraft &&
             activeTab === 'casePolicy' && (
               <Box key="casePolicy">
                 <PolicyConfiguration
@@ -377,7 +372,6 @@ export function LocationEdit() {
             )}
 
           {showPolicySelfService === true &&
-            policyDraft &&
             activeTab === 'v1ReferralPolicy' && (
               <Box key="v1ReferralPolicy">
                 <PolicyConfiguration
@@ -390,7 +384,6 @@ export function LocationEdit() {
             )}
 
           {showPolicySelfService === true &&
-            policyDraft &&
             activeTab === 'volunteerPolicy' && (
               <Box key="volunteerPolicy">
                 <PolicyConfiguration

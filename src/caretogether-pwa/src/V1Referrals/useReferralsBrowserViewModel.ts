@@ -13,7 +13,7 @@ import {
   useFamilyLookup,
   usePersonAndFamilyLookup,
 } from '../Model/DirectoryModel';
-import { usePolicyLoadable } from '../Model/PolicyModel';
+import { usePolicy } from '../Model/PolicyModel';
 import { useVisibleReferralsLoadable } from '../Model/Data';
 import { useGlobalPermissions } from '../Model/SessionModel';
 import { FUNCTION_ASSIGNMENTS_FEATURE_FLAG } from '../featureFlags';
@@ -221,7 +221,7 @@ export function useReferralsBrowserViewModel({
   const familyLookup = useFamilyLookup();
   const personAndFamilyLookup = usePersonAndFamilyLookup();
   const permissions = useGlobalPermissions();
-  const policy = usePolicyLoadable();
+  const policy = usePolicy();
   const functionAssignmentsEnabled = useFeatureFlagEnabled(
     FUNCTION_ASSIGNMENTS_FEATURE_FLAG
   );
@@ -245,7 +245,7 @@ export function useReferralsBrowserViewModel({
     () =>
       canViewFunctionAssignments
         ? assignmentRolesForColumns(
-            policy?.v1ReferralPolicy?.functionAssignmentPolicies?.map(
+            policy.v1ReferralPolicy?.functionAssignmentPolicies?.map(
               (assignmentPolicy) => assignmentPolicy.assignmentRole
             ) ?? [],
             assignmentFilterAssignments
@@ -254,7 +254,7 @@ export function useReferralsBrowserViewModel({
     [
       assignmentFilterAssignments,
       canViewFunctionAssignments,
-      policy?.v1ReferralPolicy?.functionAssignmentPolicies,
+      policy.v1ReferralPolicy?.functionAssignmentPolicies,
     ]
   );
   const rows = useMemo(
@@ -332,7 +332,7 @@ export function useReferralsBrowserViewModel({
     canViewFunctionAssignments,
     familiesForCountyFilter,
     filteredRows,
-    isLoading: referralsLoadable === null || policy === null,
+    isLoading: referralsLoadable === null,
     referrals,
     tableColumnCount,
     tableMinWidth: Math.max(700, tableColumnCount * 160),

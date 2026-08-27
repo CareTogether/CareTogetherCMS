@@ -31,7 +31,7 @@ import { ArrangementPhase, Permission } from '../GeneratedClient';
 import { CreatePartneringFamilyDrawer } from './CreatePartneringFamilyDrawer';
 import { useScrollMemory } from '../Hooks/useScrollMemory';
 import { useLocalStorage } from '../Hooks/useLocalStorage';
-import { usePolicyLoadable } from '../Model/PolicyModel';
+import { usePolicy } from '../Model/PolicyModel';
 import { SearchBar } from '../Shell/SearchBar';
 import { filterFamiliesByText } from '../Families/FamilyUtils';
 import { usePersonAndFamilyLookup } from '../Model/DirectoryModel';
@@ -114,16 +114,16 @@ function PartneringFamilies() {
     [visibleReferrals]
   );
 
-  const loadablePolicy = usePolicyLoadable();
-  const arrangementTypes = loadablePolicy?.referralPolicy?.arrangementPolicies?.map(
+  const policy = usePolicy();
+  const arrangementTypes = policy.referralPolicy?.arrangementPolicies?.map(
     (a) => {
       return a.arrangementType!;
     }
   );
 
   const referralCustomFields = React.useMemo(() => {
-    return loadablePolicy?.referralPolicy?.customFields || [];
-  }, [loadablePolicy]);
+    return policy.referralPolicy?.customFields || [];
+  }, [policy.referralPolicy?.customFields]);
   const customFieldCount = referralCustomFields.length;
 
   const [filterText, setFilterText] = useState('');
@@ -175,7 +175,7 @@ function PartneringFamilies() {
     permissions(Permission.ViewV1CaseFunctionAssignments);
   const assignmentRoles = canViewFunctionAssignments
     ? assignmentRolesForColumns(
-        loadablePolicy?.referralPolicy?.functionAssignmentPolicies?.map(
+        policy.referralPolicy?.functionAssignmentPolicies?.map(
           (assignmentPolicy) => assignmentPolicy.assignmentRole
         ) ?? [],
         partneringFamilies.flatMap(

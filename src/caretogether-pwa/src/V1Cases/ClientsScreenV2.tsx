@@ -31,7 +31,7 @@ import { useCustomFieldFilters } from '../Generic/CustomFieldsFilter/useCustomFi
 import { useSidePanel } from '../Hooks/useSidePanel';
 import { PartneringFamilyCustomFieldFiltersSidePanel } from './PartneringFamilies/PartneringFamilyCustomFieldFiltersSidePanel';
 import { usePartneringFamilies } from '../Model/V1CasesModel';
-import { usePolicyLoadable } from '../Model/PolicyModel';
+import { usePolicy } from '../Model/PolicyModel';
 import { wideTablePageSx } from '../Utilities/wideTablePageSx';
 
 const PARTNERING_FAMILIES_SORT_STORAGE_KEY = 'partnering-families-sortMode';
@@ -91,8 +91,8 @@ export function ClientsScreenV2() {
     );
   const sortMode = normalizePartneringFamiliesSortMode(storedSortMode);
   const customFieldFilterItems = usePartneringFamilies();
-  const customFieldDefinitions =
-    usePolicyLoadable()?.referralPolicy?.customFields ?? [];
+  const policy = usePolicy();
+  const customFieldDefinitions = policy.referralPolicy?.customFields ?? [];
   const isBlankCustomFieldValue = useCallback(
     (family: (typeof customFieldFilterItems)[number], fieldName: string) =>
       family.partneringFamilyInfo?.openV1Case?.missingCustomFields?.includes(

@@ -30,7 +30,7 @@ import { useAppNavigate } from '../Hooks/useAppNavigate';
 import { ProgressBackdrop } from '../Shell/ProgressBackdrop';
 import { useGlobalPermissions } from '../Model/SessionModel';
 import { useFeatureFlagEnabled } from 'posthog-js/react';
-import { usePolicyLoadable } from '../Model/PolicyModel';
+import { usePolicy } from '../Model/PolicyModel';
 import {
   FUNCTION_ASSIGNMENTS_FEATURE_FLAG,
   REFERRALS_FEATURE_FLAG,
@@ -125,7 +125,7 @@ function V1ReferralsContent() {
   const familyLookup = useFamilyLookup();
   const personAndFamilyLookup = usePersonAndFamilyLookup();
   const permissions = useGlobalPermissions();
-  const policy = usePolicyLoadable();
+  const policy = usePolicy();
   const functionAssignmentsEnabled = useFeatureFlagEnabled(
     FUNCTION_ASSIGNMENTS_FEATURE_FLAG
   );
@@ -147,7 +147,7 @@ function V1ReferralsContent() {
     permissions(Permission.ViewV1ReferralFunctionAssignments);
   const assignmentRoles = canViewFunctionAssignments
     ? assignmentRolesForColumns(
-        policy?.v1ReferralPolicy?.functionAssignmentPolicies?.map(
+        policy.v1ReferralPolicy?.functionAssignmentPolicies?.map(
           (assignmentPolicy) => assignmentPolicy.assignmentRole
         ) ?? [],
         referrals.flatMap(

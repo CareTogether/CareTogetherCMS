@@ -41,10 +41,6 @@ const policyAtomFamily = atomFamily(
   isSameLocationScope
 );
 
-const noPolicy = jotaiAtom(async (): Promise<EffectiveLocationPolicy | null> =>
-  null
-);
-
 const allApprovalAndOnboardingRequirementsAtomFamily = atomFamily(
   (locationContext: LocationContext) =>
     jotaiAtom(async (get) => {
@@ -126,14 +122,6 @@ const allFunctionAssignmentRolesInPolicyAtomFamily = atomFamily(
 
 const noStringList = jotaiAtom(async (): Promise<string[]> => []);
 
-function usePolicyLoadableAtom() {
-  const selectedLocationContext = useSelectedLocationContext();
-
-  return selectedLocationContext
-    ? policyAtomFamily(selectedLocationContext)
-    : noPolicy;
-}
-
 function usePolicyStringListAtom(
   atomSelector: (locationContext: LocationContext) => Atom<Promise<string[]>>
 ) {
@@ -147,10 +135,6 @@ function usePolicyStringListAtom(
 export function usePolicy() {
   const selectedLocationContext = useRequiredSelectedLocationContext();
   return useAtomValue(policyAtomFamily(selectedLocationContext));
-}
-
-export function usePolicyLoadable() {
-  return useJotaiLoadable(usePolicyLoadableAtom());
 }
 
 export function useRefreshPolicy() {
