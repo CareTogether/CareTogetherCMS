@@ -1,7 +1,5 @@
 import Grid from '../../Generic/GridLegacyCompat';
 import {
-  useState } from 'react';
-import {
   Button,
   Dialog,
   DialogActions,
@@ -26,11 +24,9 @@ import {
 import {
   CombinedFamilyInfo,
   Arrangement,
-  Person,
   ChildLocationPlan,
   ChildInvolvement,
   ChildLocationHistoryEntry,
-  ArrangementPhase,
 } from '../../GeneratedClient';
 import {
   AppTimeline,
@@ -48,18 +44,15 @@ import {
   PersonPinCircle as PersonPinCircleIcon,
 } from '@mui/icons-material';
 import { useBackdrop } from '../../Hooks/useBackdrop';
-import {
-  useDirectoryModel,
-  useFamilyLookup,
-  usePersonLookup,
-} from '../../Model/DirectoryModel';
-import { useV1CasesModel } from '../../Model/V1CasesModel';
+import { usePersonLookup } from '../../Model/DirectoryModel';
 import { PersonName } from '../../Families/PersonName';
-import { usePolicy } from '../../Model/PolicyModel';
 import { format } from 'date-fns';
 import { a11yProps, TabPanel } from '../../Generic/TabPanel';
 import { isBackdropClick } from '../../Utilities/handleBackdropClick';
 import { ValidateDatePicker } from '../../Generic/Forms/ValidateDatePicker';
+import { useChildLocationTimelineViewModel } from './useChildLocationTimelineViewModel';
+import { useTrackChildLocationCommands } from './useTrackChildLocationCommands';
+import { useTrackChildLocationViewModel } from './useTrackChildLocationViewModel';
 
 interface ChildLocationTimelineProps {
   partneringFamily: CombinedFamilyInfo;
@@ -76,68 +69,27 @@ export function ChildLocationTimeline({
   presentation = 'dialog',
 }: ChildLocationTimelineProps) {
   const personLookup = usePersonLookup();
-  const v1CasesModel = useV1CasesModel();
   const withBackdrop = useBackdrop();
+  const { timelineItems } = useChildLocationTimelineViewModel({ arrangement });
+  const childLocationCommands = useTrackChildLocationCommands({
+    arrangementId: arrangement.id!,
+    partneringFamilyId: partneringFamily.family?.id as string,
+    v1CaseId,
+  });
 
   async function deleteChildLocationEntry(
     historyEntry: ChildLocationHistoryEntry
   ) {
     await withBackdrop(async () => {
-      await v1CasesModel.deleteChildLocationEntry(
-        partneringFamily.family?.id as string,
-        v1CaseId,
-        arrangement.id!,
-        historyEntry.childLocationFamilyId!,
-        historyEntry.childLocationReceivingAdultId!,
-        historyEntry.timestampUtc!,
-        null
-      );
+      await childLocationCommands.deleteChildLocationEntry(historyEntry);
     });
   }
 
   async function deleteChildLocationPlan(planEntry: ChildLocationHistoryEntry) {
     await withBackdrop(async () => {
-      await v1CasesModel.deleteChildLocationPlan(
-        partneringFamily.family?.id as string,
-        v1CaseId,
-        arrangement.id!,
-        planEntry.childLocationFamilyId!,
-        planEntry.childLocationReceivingAdultId!,
-        planEntry.timestampUtc!
-      );
+      await childLocationCommands.deleteChildLocationPlan(planEntry);
     });
   }
-
-  // Planned entries will have null noteId values; actual history entries will have non-null noteId values.
-  const allEntries = (arrangement.childLocationHistory || [])
-    .concat(arrangement.childLocationPlan || [])
-    .sort((a, b) =>
-      a.timestampUtc! < b.timestampUtc!
-        ? 1
-        : a.timestampUtc! > b.timestampUtc!
-          ? -1
-          : 0
-    );
-
-  // If there are no entries, or only planned entries, the current location entry will be undefined.
-  const currentLocationEntryIndex = allEntries.findIndex(
-    (entry) => entry.noteId
-  );
-  const currentLocationEntry =
-    currentLocationEntryIndex !== -1
-      ? allEntries[currentLocationEntryIndex]
-      : undefined;
-  const nextPlannedChange = allEntries
-    .slice(0, currentLocationEntryIndex)
-    .reverse()
-    .find(
-      (entry) =>
-        !entry.noteId &&
-        entry.childLocationFamilyId !==
-          currentLocationEntry?.childLocationFamilyId
-    );
-
-  const now = new Date();
 
   const drawerPresentation = presentation === 'drawer';
 
@@ -146,99 +98,111 @@ export function ChildLocationTimeline({
       position="right"
       sx={drawerPresentation ? { m: 0, p: 0 } : undefined}
     >
-      {allEntries.map((entry, i) => (
-        <AppTimelineItem
-          key={i}
-          sx={drawerPresentation ? { minHeight: 72 } : undefined}
-        >
-          <AppTimelineOppositeContent
-            sx={
-              drawerPresentation
-                ? { flex: 0.42, pr: 1.25, py: 1, textAlign: 'right' }
-                : undefined
-            }
+      {timelineItems.map(
+        (
+          {
+            entry,
+            isCurrentLocation,
+            isHistoryEntry,
+            isNextPlannedChangePastDue,
+            isPast,
+            planDescription,
+          },
+          i
+        ) => (
+          <AppTimelineItem
+            key={i}
+            sx={drawerPresentation ? { minHeight: 72 } : undefined}
           >
-            <Typography
-              component="span"
-              variant={drawerPresentation ? 'caption' : 'body2'}
-              sx={{
-                fontWeight: entry === currentLocationEntry ? 'bold' : 'normal',
-              }}
+            <AppTimelineOppositeContent
+              sx={
+                drawerPresentation
+                  ? { flex: 0.42, pr: 1.25, py: 1, textAlign: 'right' }
+                  : undefined
+              }
             >
-              {format(entry.timestampUtc!, 'M/d/yy h:mm a')}
-            </Typography>
-            {!entry.noteId && (
+              <Typography
+                component="span"
+                variant={drawerPresentation ? 'caption' : 'body2'}
+                sx={{
+                  fontWeight: isCurrentLocation ? 'bold' : 'normal',
+                }}
+              >
+                {format(entry.timestampUtc!, 'M/d/yy h:mm a')}
+              </Typography>
+              {!isHistoryEntry && (
+                <IconButton
+                  onClick={() => recordChildLocationPlan(entry)}
+                  size="small"
+                  color="primary"
+                >
+                  <InputIcon />
+                </IconButton>
+              )}
               <IconButton
-                onClick={() => recordChildLocationPlan(entry)}
+                onClick={() =>
+                  isHistoryEntry
+                    ? deleteChildLocationEntry(entry)
+                    : deleteChildLocationPlan(entry)
+                }
                 size="small"
                 color="primary"
               >
-                <InputIcon />
+                <DeleteIcon />
               </IconButton>
-            )}
-            <IconButton
-              onClick={() =>
-                entry.noteId
-                  ? deleteChildLocationEntry(entry)
-                  : deleteChildLocationPlan(entry)
-              }
-              size="small"
-              color="primary"
-            >
-              <DeleteIcon />
-            </IconButton>
-          </AppTimelineOppositeContent>
-          <AppTimelineSeparator>
-            <AppTimelineDot
-              color={
-                entry === currentLocationEntry
-                  ? 'primary'
-                  : entry.noteId
-                    ? 'info'
-                    : entry === nextPlannedChange && entry.timestampUtc! < now
-                      ? 'error'
-                      : 'grey'
-              }
-              variant={entry.timestampUtc! < now ? 'filled' : 'outlined'}
-            >
-              {entry.noteId ? (
-                <PersonPinCircleIcon />
-              ) : (
-                <EventIcon fontSize="small" />
-              )}
-            </AppTimelineDot>
-            <AppTimelineConnector sx={{ opacity: entry.noteId ? 1.0 : 0.5 }} />
-          </AppTimelineSeparator>
-          <AppTimelineContent sx={drawerPresentation ? { py: 1 } : undefined}>
-            <Typography
-              component="div"
-              variant={drawerPresentation ? 'body2' : 'body1'}
-              sx={{
-                fontWeight: entry === currentLocationEntry ? 'bold' : 'normal',
-              }}
-            >
-              <PersonName
-                person={personLookup(
-                  entry.childLocationFamilyId,
-                  entry.childLocationReceivingAdultId
+            </AppTimelineOppositeContent>
+            <AppTimelineSeparator>
+              <AppTimelineDot
+                color={
+                  isCurrentLocation
+                    ? 'primary'
+                    : isHistoryEntry
+                      ? 'info'
+                      : isNextPlannedChangePastDue
+                        ? 'error'
+                        : 'grey'
+                }
+                variant={isPast ? 'filled' : 'outlined'}
+              >
+                {isHistoryEntry ? (
+                  <PersonPinCircleIcon />
+                ) : (
+                  <EventIcon fontSize="small" />
                 )}
+              </AppTimelineDot>
+              <AppTimelineConnector
+                sx={{ opacity: isHistoryEntry ? 1.0 : 0.5 }}
               />
-            </Typography>
-            <Typography
-              color="text.secondary"
-              component="div"
-              variant="caption"
-              sx={{ fontStyle: 'italic' }}
+            </AppTimelineSeparator>
+            <AppTimelineContent
+              sx={drawerPresentation ? { py: 1 } : undefined}
             >
-              {entry.plan === ChildLocationPlan.DaytimeChildCare
-                ? 'daytime child care'
-                : entry.plan === ChildLocationPlan.OvernightHousing
-                  ? 'overnight housing'
-                  : 'with parent'}
-            </Typography>
-          </AppTimelineContent>
-        </AppTimelineItem>
-      ))}
+              <Typography
+                component="div"
+                variant={drawerPresentation ? 'body2' : 'body1'}
+                sx={{
+                  fontWeight: isCurrentLocation ? 'bold' : 'normal',
+                }}
+              >
+                <PersonName
+                  person={personLookup(
+                    entry.childLocationFamilyId,
+                    entry.childLocationReceivingAdultId
+                  )}
+                />
+              </Typography>
+              <Typography
+                color="text.secondary"
+                component="div"
+                variant="caption"
+                sx={{ fontStyle: 'italic' }}
+              >
+                {planDescription}
+              </Typography>
+            </AppTimelineContent>
+          </AppTimelineItem>
+        )
+      )}
     </AppTimeline>
   );
 }
@@ -260,143 +224,39 @@ export function TrackChildLocationDialog({
   initialMode,
   initialPlannedEntry,
 }: TrackChildLocationDialogProps) {
-  const policy = usePolicy();
-  const arrangementPolicy = policy.referralPolicy!.arrangementPolicies!.find(
-    (x) => x.arrangementType === arrangement.arrangementType
-  );
-
-  const familyLookup = useFamilyLookup();
-  const personLookup = usePersonLookup();
-
-  const child = personLookup(
-    partneringFamily.family!.id,
-    arrangement.partneringFamilyPersonId
-  );
-
-  const arrangementHasNotStartedYet =
-    arrangement.phase === ArrangementPhase.SettingUp ||
-    arrangement.phase === ArrangementPhase.ReadyToStart ||
-    arrangement.phase === ArrangementPhase.Cancelled;
-
-  const initialTabValue =
-    initialPlannedEntry || initialMode === 'record'
-      ? 0
-      : initialMode === 'plan' || arrangementHasNotStartedYet
-        ? 1
-        : 0;
-  const [tabValue, setTabValue] = useState(initialTabValue);
-  const [selectedAssigneeKey, setSelectedAssigneeKey] = useState(
-    initialPlannedEntry
-      ? `${initialPlannedEntry.childLocationFamilyId!}|${initialPlannedEntry.childLocationReceivingAdultId!}`
-      : ''
-  );
-  const [changeAtLocal, setChangeAtLocal] = useState(
-    initialPlannedEntry?.timestampUtc ?? (null as Date | null)
-  );
-  const [plan, setPlan] = useState<ChildLocationPlan | null>(
-    initialPlannedEntry?.plan ?? null
-  );
-  const [notes, setNotes] = useState('');
-
-  function recordChildLocationPlan(entry: ChildLocationHistoryEntry) {
-    setTabValue(0);
-    setSelectedAssigneeKey(
-      `${entry.childLocationFamilyId!}|${entry.childLocationReceivingAdultId!}`
-    );
-    setChangeAtLocal(entry.timestampUtc!);
-    setPlan(entry.plan!);
-  }
-
-  function candidateItem(candidate: { familyId: string; adult: Person }) {
-    return {
-      familyId: candidate.familyId,
-      personId: candidate.adult.id!,
-      key: `${candidate.familyId}|${candidate.adult.id!}`,
-      displayName: `${candidate.adult.firstName} ${candidate.adult.lastName}`,
-    };
-  }
-
-  const candidatePartneringFamilyAssignees = (
-    partneringFamily.family?.adults?.map((adultInfo) => ({
-      familyId: partneringFamily.family!.id!,
-      adult: adultInfo.item1!,
-    })) || []
-  ).map(candidateItem);
-  const candidateFamilyAssignees =
-    arrangement.familyVolunteerAssignments?.flatMap(
-      (familyAssignment) =>
-        familyLookup(familyAssignment.familyId)?.family?.adults?.map(
-          (adultInfo) => ({
-            familyId: familyAssignment.familyId!,
-            adult: adultInfo.item1!,
-          })
-        ) || []
-    ) || [];
-  const candidateIndividualAssignees =
-    arrangement.individualVolunteerAssignments?.map((individualAssignment) => ({
-      familyId: individualAssignment.familyId!,
-      adult: personLookup(
-        individualAssignment.familyId,
-        individualAssignment.personId
-      )!,
-    })) || [];
-  const allCandidateVolunteerAssignees = candidateFamilyAssignees
-    .concat(candidateIndividualAssignees)
-    .map(candidateItem);
-  const deduplicatedCandidateVolunteerAssignees =
-    allCandidateVolunteerAssignees.filter(
-      (candidateItem, i) =>
-        allCandidateVolunteerAssignees.filter(
-          (x, j) => x.key === candidateItem.key && j < i
-        ).length === 0
-    );
-
-  function updateAssignee(assigneeKey: string) {
-    setSelectedAssigneeKey(assigneeKey);
-    const assigneeIsFromPartneringFamily =
-      candidatePartneringFamilyAssignees.some((ca) => ca.key === assigneeKey);
-    if (assigneeIsFromPartneringFamily) {
-      setPlan(ChildLocationPlan.WithParent);
-    } else {
-      if (plan === ChildLocationPlan.WithParent) {
-        setPlan(
-          arrangementPolicy?.childInvolvement ===
-            ChildInvolvement.DaytimeChildCareOnly
-            ? ChildLocationPlan.DaytimeChildCare
-            : null
-        );
-      } else if (
-        arrangementPolicy?.childInvolvement ===
-        ChildInvolvement.DaytimeChildCareOnly
-      ) {
-        setPlan(ChildLocationPlan.DaytimeChildCare);
-      }
-    }
-  }
-  const assigneeIsFromPartneringFamily =
-    candidatePartneringFamilyAssignees.some(
-      (ca) => ca.key === selectedAssigneeKey
-    );
-
-  const v1CasesModel = useV1CasesModel();
-  const directoryModel = useDirectoryModel();
+  const {
+    arrangementHasNotStartedYet,
+    arrangementPolicy,
+    assigneeIsFromPartneringFamily,
+    canSave,
+    candidatePartneringFamilyAssignees,
+    changeAtLocal,
+    child,
+    deduplicatedCandidateVolunteerAssignees,
+    notes,
+    plan,
+    recordChildLocationPlan,
+    selectedAssignee,
+    selectedAssigneeKey,
+    setChangeAtLocal,
+    setNotes,
+    setPlan,
+    setTabValue,
+    tabValue,
+    updateAssignee,
+  } = useTrackChildLocationViewModel({
+    arrangement,
+    initialMode,
+    initialPlannedEntry,
+    partneringFamily,
+  });
 
   const withBackdrop = useBackdrop();
-
-  function canSave() {
-    if (tabValue === 0) {
-      return (
-        selectedAssigneeKey !== '' &&
-        plan != null &&
-        notes !== '' &&
-        changeAtLocal != null
-      );
-    } else {
-      return (
-        selectedAssigneeKey !== '' && plan != null && changeAtLocal != null
-      );
-    }
-  }
+  const childLocationCommands = useTrackChildLocationCommands({
+    arrangementId: arrangement.id!,
+    partneringFamilyId: partneringFamily.family?.id as string,
+    v1CaseId,
+  });
 
   async function onSave() {
     if (tabValue === 0) {
@@ -417,30 +277,13 @@ export function TrackChildLocationDialog({
       } else if (changeAtLocal == null) {
         alert('No date was entered. Please try again.');
       } else {
-        const assigneeInfo = candidatePartneringFamilyAssignees
-          .concat(deduplicatedCandidateVolunteerAssignees)
-          .find((ca) => ca.key === selectedAssigneeKey);
-        let noteId: string | undefined = undefined;
-        if (notes !== '') {
-          noteId = crypto.randomUUID();
-          await directoryModel.createDraftNote(
-            partneringFamily.family?.id as string,
-            noteId,
-            notes,
-            changeAtLocal
-          );
-        }
-        await v1CasesModel.trackChildLocation(
-          partneringFamily.family?.id as string,
-          v1CaseId,
-          arrangement.id!,
-          assigneeInfo!.familyId,
-          assigneeInfo!.personId,
+        await childLocationCommands.trackChildLocation({
+          assigneeFamilyId: selectedAssignee!.familyId,
+          assigneePersonId: selectedAssignee!.personId,
           changeAtLocal,
+          notes,
           plan,
-          noteId || null
-        );
-        //TODO: Error handling (start with a basic error dialog w/ request to share a screenshot, and App Insights logging)
+        });
         onClose();
       }
     });
@@ -455,19 +298,12 @@ export function TrackChildLocationDialog({
       } else if (changeAtLocal == null) {
         alert('No date was entered. Please try again.');
       } else {
-        const assigneeInfo = candidatePartneringFamilyAssignees
-          .concat(deduplicatedCandidateVolunteerAssignees)
-          .find((ca) => ca.key === selectedAssigneeKey);
-        await v1CasesModel.planChildLocation(
-          partneringFamily.family?.id as string,
-          v1CaseId,
-          arrangement.id!,
-          assigneeInfo!.familyId,
-          assigneeInfo!.personId,
+        await childLocationCommands.planChildLocationChange({
+          assigneeFamilyId: selectedAssignee!.familyId,
+          assigneePersonId: selectedAssignee!.personId,
           changeAtLocal,
-          plan
-        );
-        //TODO: Error handling (start with a basic error dialog w/ request to share a screenshot, and App Insights logging)
+          plan,
+        });
         onClose();
       }
     });
@@ -736,7 +572,7 @@ export function TrackChildLocationDialog({
         </Button>
         <Button
           onClick={onSave}
-          disabled={!canSave()}
+          disabled={!canSave}
           variant="contained"
           color="primary"
         >
