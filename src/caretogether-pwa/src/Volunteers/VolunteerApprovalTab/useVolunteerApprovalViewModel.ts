@@ -185,10 +185,10 @@ export function useVolunteerApprovalViewModel({
   const policy = usePolicy();
   const [roleFilters, setRoleFilters] = useRoleFilters();
   const [statusFilters, setStatusFilters] = useStatusFilters();
-  const volunteerFamiliesLoadable = useVolunteerFamilies();
+  const volunteerFamiliesData = useVolunteerFamilies();
   const volunteerFamilies = useMemo(
-    () => sortFamiliesByName(volunteerFamiliesLoadable || [], sortMode),
-    [sortMode, volunteerFamiliesLoadable]
+    () => sortFamiliesByName(volunteerFamiliesData, sortMode),
+    [sortMode, volunteerFamiliesData]
   );
   const customFields = useMemo(() => volunteerCustomFields(policy), [policy]);
   const customFieldNames = useMemo(
@@ -259,6 +259,5 @@ export function useVolunteerApprovalViewModel({
     setRoleFilters,
     setStatusFilters,
     statusFilters,
-    volunteerFamiliesLoadable,
   };
 }

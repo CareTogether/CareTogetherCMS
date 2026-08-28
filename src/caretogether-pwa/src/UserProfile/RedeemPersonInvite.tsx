@@ -1,6 +1,4 @@
 import { Button } from '@mui/material';
-import { useAtomValue } from 'jotai';
-import { loadable } from 'jotai/utils';
 import { useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useBackdrop } from '../Hooks/useBackdrop';
@@ -9,6 +7,7 @@ import { ProgressBackdrop } from '../Shell/ProgressBackdrop';
 import { useScreenTitle } from '../Shell/ShellScreenTitle';
 import { api } from '../Api/Api';
 import { useRefreshUserOrganizationAccess } from '../Model/Data';
+import { useAtomLoadable } from '../State/jotai/useJotaiLoadable';
 
 function RedeemPersonInvite() {
   const [searchParams] = useSearchParams();
@@ -17,8 +16,8 @@ function RedeemPersonInvite() {
   // Attempt to retrieve the invite review info for the redemption session.
   // If it can be retrieved, then render the invite review to allow the user the
   // option to confirm accepting the invite.
-  const inviteReviewInfo = useAtomValue(
-    loadable(inviteReviewInfoQuery(redemptionSessionId))
+  const inviteReviewInfo = useAtomLoadable(
+    inviteReviewInfoQuery(redemptionSessionId)
   );
 
   const withBackdrop = useBackdrop();
@@ -26,7 +25,7 @@ function RedeemPersonInvite() {
 
   const refreshUserOrganizationAccess = useRefreshUserOrganizationAccess();
   async function redeem() {
-    if (inviteReviewInfo.state === 'hasData') {
+    if (inviteReviewInfo.state === 'hasValue') {
       await withBackdrop(async () => {
         const result = await api.users.completePersonInviteRedemptionSession(
           redemptionSessionId ?? undefined
@@ -35,7 +34,7 @@ function RedeemPersonInvite() {
         console.log(result);
         refreshUserOrganizationAccess();
         navigate(
-          `/org/${inviteReviewInfo.data!.organizationId}/${inviteReviewInfo.data!.locationId}/`
+          `/org/${inviteReviewInfo.contents!.organizationId}/${inviteReviewInfo.contents!.locationId}/`
         );
       });
     }
@@ -46,7 +45,8 @@ function RedeemPersonInvite() {
   useEffect(() => {
     if (
       inviteReviewInfo.state === 'hasError' ||
-      (inviteReviewInfo.state === 'hasData' && inviteReviewInfo.data == null)
+      (inviteReviewInfo.state === 'hasValue' &&
+        inviteReviewInfo.contents == null)
     ) {
       // If the invite review info is available but the contents are null, then the invite
       // has already been redeemed.
@@ -66,7 +66,8 @@ function RedeemPersonInvite() {
     <ProgressBackdrop>
       <p>Loading invitation...</p>
     </ProgressBackdrop>
-  ) : inviteReviewInfo.state === 'hasError' || inviteReviewInfo.data == null ? (
+  ) : inviteReviewInfo.state === 'hasError' ||
+    inviteReviewInfo.contents == null ? (
     <p>
       An error occurred while trying to retrieve the invitation information.
       Please try clicking the invite link you were provided again. If the
@@ -78,18 +79,19 @@ function RedeemPersonInvite() {
       <p>
         The link you clicked is an invitation to link your CareTogether account
         to
-        <strong> {inviteReviewInfo.data.organizationName}</strong> at the
-        <strong> {inviteReviewInfo.data.locationName}</strong> location.
+        <strong> {inviteReviewInfo.contents.organizationName}</strong> at the
+        <strong> {inviteReviewInfo.contents.locationName}</strong> location.
       </p>
       <p>
         You are being invited as
-        <strong> {inviteReviewInfo.data.firstName}</strong>
-        <strong> {inviteReviewInfo.data.lastName}</strong>.
+        <strong> {inviteReviewInfo.contents.firstName}</strong>
+        <strong> {inviteReviewInfo.contents.lastName}</strong>.
       </p>
       <p>Your assigned permissions:</p>
-      {inviteReviewInfo.data.roles && inviteReviewInfo.data.roles.length > 0 ? (
+      {inviteReviewInfo.contents.roles &&
+      inviteReviewInfo.contents.roles.length > 0 ? (
         <ul>
-          {inviteReviewInfo.data.roles?.map((role) => (
+          {inviteReviewInfo.contents.roles?.map((role) => (
             <li key={role}>{role}</li>
           ))}
         </ul>

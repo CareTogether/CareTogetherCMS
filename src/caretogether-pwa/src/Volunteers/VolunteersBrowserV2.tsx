@@ -22,6 +22,7 @@ import {
   gridFilterModelFromVolunteerFilters,
   volunteerFiltersFromGridFilterModel,
 } from './volunteersGridFilterAdapter';
+import { UPDATE_TEST_FAMILY_FEATURE_FLAG } from '../featureFlags';
 
 function selectedFilterValues(filters: filterOption[]) {
   return filters
@@ -43,7 +44,7 @@ export function VolunteersBrowserV2() {
   const appNavigate = useAppNavigate();
   const permissions = useAllVolunteerFamiliesPermissions();
   const updateTestFamilyFlagEnabled = useFeatureFlagEnabled(
-    'updateTestFamilyFlag'
+    UPDATE_TEST_FAMILY_FEATURE_FLAG
   );
   const { setAndShowGlobalSnackBar } = useGlobalSnackBar();
   const { locationId } = useRequiredSelectedLocationContext();
@@ -62,7 +63,6 @@ export function VolunteersBrowserV2() {
     customFieldFilters,
     customFields,
     getCustomFieldFilterOptionsForField,
-    loading,
     requirementFilter,
     requirementFilterOptions,
     roleFilters,
@@ -261,7 +261,6 @@ export function VolunteersBrowserV2() {
         <VolunteersDataGridV2
           customFields={customFields}
           filterModel={filterModel}
-          loading={loading}
           onFilterModelChange={handleFilterModelChange}
           onRowClick={(row) => appNavigate.family(row.id)}
           onRowSelectionModelChange={handleRowSelectionModelChange}

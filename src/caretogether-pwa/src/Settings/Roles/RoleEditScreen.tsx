@@ -1,7 +1,6 @@
 import { Typography } from '@mui/material';
 import { useOrganizationConfiguration } from '../../Model/ConfigurationModel';
 import { ProgressBackdrop } from '../../Shell/ProgressBackdrop';
-import { useDataLoaded } from '../../Model/Data';
 import { useParams } from 'react-router-dom';
 import { RoleEdit } from './RoleEdit';
 import { useScreenTitle } from '../../Shell/ShellScreenTitle';
@@ -11,9 +10,8 @@ export function RoleEditScreen() {
 
   const { roleName } = useParams<{ roleName: string }>();
   const configuration = useOrganizationConfiguration();
-  const dataLoaded = useDataLoaded();
 
-  if (!dataLoaded || !configuration) {
+  if (!configuration) {
     return <ProgressBackdrop>Loading role...</ProgressBackdrop>;
   }
 

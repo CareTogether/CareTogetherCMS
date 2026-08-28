@@ -41,12 +41,12 @@ import {
 import { useAllVolunteerFamiliesPermissions } from '../../Model/SessionModel';
 import { Permission } from '../../GeneratedClient';
 import { useScreenTitle } from '../../Shell/ShellScreenTitle';
-import { ProgressBackdrop } from '../../Shell/ProgressBackdrop';
 import { useAppNavigate } from '../../Hooks/useAppNavigate';
 import { useFeatureFlagEnabled } from 'posthog-js/react';
 import { forceCheck } from '../../Utilities/reactLazyLoadInterop';
 import { VolunteerProgressTableItem } from './VolunteerProgressTableItem';
 import { stickyHeaderTableSx } from '../../Utilities/stickyHeaderTableSx';
+import { UPDATE_TEST_FAMILY_FEATURE_FLAG } from '../../featureFlags';
 
 const VOLUNTEER_PROGRESS_SORT_STORAGE_KEY = 'volunteer-progress-sortMode';
 
@@ -57,7 +57,7 @@ function VolunteerProgress(props: { onOpen: () => void }) {
   const appNavigate = useAppNavigate();
 
   // The array object returned by state is read-only. We need to copy it before we can do an in-place sort.
-  const volunteerFamiliesLoadable = useVolunteerFamilies();
+  const volunteerFamiliesData = useVolunteerFamilies();
   const [storedSortMode, setStoredSortMode] =
     useLocalStorage<FamilyNameSortMode>(
       VOLUNTEER_PROGRESS_SORT_STORAGE_KEY,
@@ -70,7 +70,7 @@ function VolunteerProgress(props: { onOpen: () => void }) {
   }
 
   const volunteerFamilies = sortFamiliesByName(
-    volunteerFamiliesLoadable || [],
+    volunteerFamiliesData,
     sortMode
   );
   const allApprovalAndOnboardingRequirements =
@@ -99,7 +99,7 @@ function VolunteerProgress(props: { onOpen: () => void }) {
   const location = useLocation();
 
   const updateTestFamilyFlagEnabled = useFeatureFlagEnabled(
-    'updateTestFamilyFlag'
+    UPDATE_TEST_FAMILY_FEATURE_FLAG
   );
 
   const [expandedView, setExpandedView] = useLocalStorage(
@@ -119,11 +119,7 @@ function VolunteerProgress(props: { onOpen: () => void }) {
 
   useScreenTitle('Volunteers');
 
-  return !volunteerFamiliesLoadable || !allApprovalAndOnboardingRequirements ? (
-    <ProgressBackdrop>
-      <p>Loading families...</p>
-    </ProgressBackdrop>
-  ) : (
+  return (
     <Grid container>
       <Grid item xs={12}>
         <Stack direction="row-reverse" sx={{ marginTop: 1 }}>

@@ -23,11 +23,11 @@ import { Link, useLocation } from 'react-router-dom';
 import { ShellContextSwitcher } from './ShellContextSwitcher';
 import { useSelectedLocationContext } from '../Model/Data';
 import { ListItemLink } from './ListItemLink';
-import { useFeatureFlags } from '../Model/ConfigurationModel';
-import { useGlobalPermissions } from '../Model/SessionModel';
+import { useFeatureFlagsLoadable } from '../Model/ConfigurationModel';
+import { useGlobalPermissionsLoadable } from '../Model/SessionModel';
 import { Permission } from '../GeneratedClient';
 import { Stack } from '@mui/system';
-import { useQueueItemsCount } from '../Model/QueueModel';
+import { useQueueItemsCountLoadable } from '../Model/QueueModel';
 
 export function ShellBottomNavigation() {
   const theme = useTheme();
@@ -50,10 +50,10 @@ export function ShellBottomNavigation() {
   );
   const [drawerOpen, setDrawerOpen] = useState(false);
 
-  const flags = useFeatureFlags();
-  const permissions = useGlobalPermissions();
+  const flags = useFeatureFlagsLoadable();
+  const permissions = useGlobalPermissionsLoadable();
 
-  const queueItemsCount = useQueueItemsCount();
+  const queueItemsCount = useQueueItemsCountLoadable();
 
   return (
     <Paper

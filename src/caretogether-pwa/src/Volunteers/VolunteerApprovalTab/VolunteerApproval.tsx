@@ -44,7 +44,6 @@ import {
 import { BulkSmsSideSheet } from '../BulkSmsSideSheet';
 import { useWindowSize } from '../../Hooks/useWindowSize';
 import { useScreenTitle } from '../../Shell/ShellScreenTitle';
-import { ProgressBackdrop } from '../../Shell/ProgressBackdrop';
 import { useRequiredSelectedLocationContext } from '../../Model/Data';
 import { useAppNavigate } from '../../Hooks/useAppNavigate';
 import { useGlobalSnackBar } from '../../Hooks/useGlobalSnackBar';
@@ -70,6 +69,7 @@ import {
   AssignmentFilterValue,
 } from './assignmentFilters';
 import { useVolunteerApprovalViewModel } from './useVolunteerApprovalViewModel';
+import { UPDATE_TEST_FAMILY_FEATURE_FLAG } from '../../featureFlags';
 
 const VOLUNTEER_APPROVAL_SORT_STORAGE_KEY = 'volunteer-approval-sortMode';
 
@@ -121,7 +121,6 @@ function VolunteerApproval(props: { onOpen: () => void }) {
     setRoleFilters,
     setStatusFilters,
     statusFilters,
-    volunteerFamiliesLoadable,
   } = useVolunteerApprovalViewModel({
     assignmentFilters,
     filterText,
@@ -163,7 +162,6 @@ function VolunteerApproval(props: { onOpen: () => void }) {
       [arrangementType]: selectedValues,
     }));
   }
-
   useEffect(() => {
     setAssignmentFilters((currentFilters) => {
       const validFilters = Object.fromEntries(
@@ -203,7 +201,7 @@ function VolunteerApproval(props: { onOpen: () => void }) {
   const location = useLocation();
 
   const updateTestFamilyFlagEnabled = useFeatureFlagEnabled(
-    'updateTestFamilyFlag'
+    UPDATE_TEST_FAMILY_FEATURE_FLAG
   );
 
   const [expandedView, setExpandedView] = useLocalStorage(
@@ -247,11 +245,7 @@ function VolunteerApproval(props: { onOpen: () => void }) {
 
   useScreenTitle('Volunteers');
 
-  return !volunteerFamiliesLoadable ? (
-    <ProgressBackdrop>
-      <p>Loading families...</p>
-    </ProgressBackdrop>
-  ) : (
+  return (
     <>
       <Box
         sx={{

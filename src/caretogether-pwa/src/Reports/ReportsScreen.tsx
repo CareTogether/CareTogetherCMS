@@ -1,7 +1,6 @@
 import { useScreenTitle } from '../Shell/ShellScreenTitle';
 import { models, Report } from 'powerbi-client';
 import { PowerBIEmbed } from 'powerbi-client-react';
-import { useDataLoaded } from '../Model/Data';
 import styles from './styles.module.css';
 import { Typography } from '@mui/material';
 import { useGlobalPermissions } from '../Model/SessionModel';
@@ -16,15 +15,13 @@ export function ReportsScreen() {
 
   const { embedConfig, loading, error } = useEmbedConfig();
 
-  const dataLoaded = useDataLoaded();
-
   const navigate = useNavigate();
 
   const permissions = useGlobalPermissions();
 
   const updateSideNavigation = useUpdateSideNavigation();
 
-  if (!dataLoaded || loading) {
+  if (loading) {
     return <ProgressBackdrop>Loading reports...</ProgressBackdrop>;
   }
 

@@ -50,6 +50,7 @@ import {
   DESKTOP_BOTTOM_SAFE_AREA,
   MOBILE_BOTTOM_SAFE_AREA,
 } from '../../Shell/shellLayoutConstants';
+import { PERMISSIONS_AUTOCOMPLETE_FEATURE_FLAG } from '../../featureFlags';
 
 export function RoleEdit({
   roleDefinition,
@@ -138,7 +139,7 @@ export function RoleEdit({
   }
 
   const shouldUseAutocomplete = useFeatureFlagEnabled(
-    'permissionsAutocomplete'
+    PERMISSIONS_AUTOCOMPLETE_FEATURE_FLAG
   );
 
   return (

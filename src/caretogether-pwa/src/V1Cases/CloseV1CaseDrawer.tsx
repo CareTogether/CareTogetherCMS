@@ -14,7 +14,7 @@ export function CloseV1CaseDrawer({
   onClose,
 }: CloseV1CaseDrawerProps) {
   const v1CasesModel = useV1CasesModel();
-  const caseCloseReasons = useCaseCloseReasons() ?? [];
+  const caseCloseReasons = useCaseCloseReasons();
 
   async function closeCase(reason: string, closedAtLocal: Date) {
     await v1CasesModel.closeV1Case(

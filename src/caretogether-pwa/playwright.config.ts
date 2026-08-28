@@ -2,6 +2,7 @@ import { defineConfig, devices } from '@playwright/test';
 import { AUTH_FILE } from './playwright_test/support/constants';
 
 const BASE_URL = process.env.PLAYWRIGHT_BASE_URL ?? 'http://localhost:3000';
+const BROWSER_EXECUTABLE_PATH = process.env.PLAYWRIGHT_BROWSER_EXECUTABLE_PATH;
 
 export default defineConfig({
   testDir: './playwright_test',
@@ -15,6 +16,9 @@ export default defineConfig({
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',
     video: 'retain-on-failure',
+    launchOptions: BROWSER_EXECUTABLE_PATH
+      ? { executablePath: BROWSER_EXECUTABLE_PATH }
+      : undefined,
   },
   projects: [
     {

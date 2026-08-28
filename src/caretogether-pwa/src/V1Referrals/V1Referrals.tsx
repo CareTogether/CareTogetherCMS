@@ -19,23 +19,20 @@ import {
   usePersonAndFamilyLookup,
 } from '../Model/DirectoryModel';
 import { familyNameString } from '../Families/FamilyName';
-import {
-  useCurrentLocationLoadable,
-  useVisibleReferralsLoadableState,
-} from '../Model/Data';
+import { useVisibleReferrals } from '../Model/Data';
 import { Permission, V1ReferralStatus } from '../GeneratedClient';
 import { getFamilyCounty } from '../Utilities/getFamilyCounty';
 import { ReferralStatusFilter } from './ReferralsFilters';
 import { useAppNavigate } from '../Hooks/useAppNavigate';
 import { ProgressBackdrop } from '../Shell/ProgressBackdrop';
 import { useGlobalPermissions } from '../Model/SessionModel';
-import {
-  useFeatureFlagEnabledWithLocalOverride,
-  useFeatureFlagsLoadedWithLocalOverride,
-} from '../Utilities/Instrumentation/useFeatureFlagWithLocalOverride';
 import { useFeatureFlagEnabled } from 'posthog-js/react';
-import { usePolicyLoadable } from '../Model/PolicyModel';
-import { FUNCTION_ASSIGNMENTS_FEATURE_FLAG } from '../featureFlags';
+import { usePolicy } from '../Model/PolicyModel';
+import {
+  FUNCTION_ASSIGNMENTS_FEATURE_FLAG,
+  REFERRALS_FEATURE_FLAG,
+} from '../featureFlags';
+import { useFeatureFlagsLoaded } from '../Utilities/Instrumentation/useFeatureFlagsLoaded';
 import {
   AssignmentFilterSelectionsByRole,
   assignmentNamesForRole,
@@ -45,8 +42,6 @@ import {
 import { containedStickyHeaderTableSx } from '../Utilities/stickyHeaderTableSx';
 import { WideTableContainer } from '../Utilities/WideTableContainer';
 import { wideTablePageSx } from '../Utilities/wideTablePageSx';
-
-const REFERRALS_FEATURE_FLAG = 'referrals';
 
 function statusToUi(status: V1ReferralStatus): 'OPEN' | 'ACCEPTED' | 'CLOSED' {
   switch (status) {
@@ -62,52 +57,33 @@ function statusToUi(status: V1ReferralStatus): 'OPEN' | 'ACCEPTED' | 'CLOSED' {
 export function V1Referrals() {
   useScreenTitle('Referrals');
 
-  const referralsEnabled =
-    useFeatureFlagEnabledWithLocalOverride(REFERRALS_FEATURE_FLAG);
-  const featureFlagsLoaded = useFeatureFlagsLoadedWithLocalOverride(
-    REFERRALS_FEATURE_FLAG
-  );
+  const referralsEnabled = useFeatureFlagEnabled(REFERRALS_FEATURE_FLAG);
+  const featureFlagsLoaded = useFeatureFlagsLoaded();
   const appNavigate = useAppNavigate();
   const permissions = useGlobalPermissions();
-  const currentLocationLoadable = useCurrentLocationLoadable();
-  const referralsLoadable = useVisibleReferralsLoadableState();
+  const referralRecords = useVisibleReferrals();
 
-  const permissionsLoaded = currentLocationLoadable.state === 'hasValue';
-  const referralsLoaded = referralsLoadable.state === 'hasValue';
   const canCreateReferrals = permissions(Permission.CreateV1Referral);
   const canViewGlobalReferrals = permissions(Permission.ViewV1Referral);
-  const canViewContextualReferrals =
-    referralsLoaded && referralsLoadable.contents.length > 0;
+  const canViewContextualReferrals = referralRecords.length > 0;
   const canAccessReferrals =
     canCreateReferrals || canViewGlobalReferrals || canViewContextualReferrals;
 
   useEffect(() => {
     if (
-      permissionsLoaded &&
-      referralsLoaded &&
-      (!canAccessReferrals ||
-        (featureFlagsLoaded && referralsEnabled !== true))
+      !canAccessReferrals ||
+      (featureFlagsLoaded && referralsEnabled !== true)
     ) {
       appNavigate.dashboard();
     }
   }, [
     canAccessReferrals,
     featureFlagsLoaded,
-    permissionsLoaded,
-    referralsLoaded,
     referralsEnabled,
     appNavigate,
   ]);
 
-  if (currentLocationLoadable.state === 'hasError') {
-    throw currentLocationLoadable.contents;
-  }
-
-  if (referralsLoadable.state === 'hasError') {
-    throw referralsLoadable.contents;
-  }
-
-  if (!permissionsLoaded || !referralsLoaded || !featureFlagsLoaded) {
+  if (!featureFlagsLoaded) {
     return (
       <ProgressBackdrop opaque>
         <p>Loading...</p>
@@ -127,11 +103,11 @@ export function V1Referrals() {
 }
 
 function V1ReferralsContent() {
-  const referralsLoadable = useVisibleReferralsLoadableState();
+  const referralRecords = useVisibleReferrals();
   const familyLookup = useFamilyLookup();
   const personAndFamilyLookup = usePersonAndFamilyLookup();
   const permissions = useGlobalPermissions();
-  const policy = usePolicyLoadable();
+  const policy = usePolicy();
   const functionAssignmentsEnabled = useFeatureFlagEnabled(
     FUNCTION_ASSIGNMENTS_FEATURE_FLAG
   );
@@ -144,16 +120,15 @@ function V1ReferralsContent() {
   const [assignmentFilters, setAssignmentFilters] =
     useState<AssignmentFilterSelectionsByRole>({});
 
-  const referrals =
-    referralsLoadable.state === 'hasValue'
-      ? referralsLoadable.contents.map((referralInfo) => referralInfo.referral)
-      : [];
+  const referrals = referralRecords.map(
+    (referralInfo) => referralInfo.referral
+  );
   const canViewFunctionAssignments =
     functionAssignmentsEnabled === true &&
     permissions(Permission.ViewV1ReferralFunctionAssignments);
   const assignmentRoles = canViewFunctionAssignments
     ? assignmentRolesForColumns(
-        policy?.v1ReferralPolicy?.functionAssignmentPolicies?.map(
+        policy.v1ReferralPolicy?.functionAssignmentPolicies?.map(
           (assignmentPolicy) => assignmentPolicy.assignmentRole
         ) ?? [],
         referrals.flatMap(

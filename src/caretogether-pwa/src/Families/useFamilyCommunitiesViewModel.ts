@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 import { CommunityInfo, Permission } from '../GeneratedClient';
 import { useCommunityLookup } from '../Model/DirectoryModel';
-import { useVisibleCommunitiesLoadable } from '../Model/Data';
+import { useVisibleCommunities } from '../Model/Data';
 
 export type FamilyCommunitiesViewModel = {
   addCommunityCandidateCommunities: CommunityInfo[];
@@ -12,16 +12,16 @@ export type FamilyCommunitiesViewModel = {
 export function useFamilyCommunitiesViewModel(
   familyId: string
 ): FamilyCommunitiesViewModel {
-  const communitiesLoadable = useVisibleCommunitiesLoadable();
+  const communities = useVisibleCommunities();
   const communityLookup = useCommunityLookup();
   const allCommunities = useMemo(
     () =>
-      (communitiesLoadable || [])
+      communities
         .map((communityInfo) => communityInfo.community!)
         .sort((first, second) =>
           first.name! < second.name! ? -1 : first.name! > second.name! ? 1 : 0
         ),
-    [communitiesLoadable]
+    [communities]
   );
   const allCommunityInfo = useMemo(
     () => allCommunities.map((community) => communityLookup(community.id)!),

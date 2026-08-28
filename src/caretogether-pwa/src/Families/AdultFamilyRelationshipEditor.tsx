@@ -23,7 +23,7 @@ export function AdultFamilyRelationshipEditor({
   person,
   relationship,
 }: AdultFamilyRelationshipEditorProps) {
-  const relationshipTypes = useAdultFamilyRelationships() ?? [];
+  const relationshipTypes = useAdultFamilyRelationships();
   const directoryModel = useDirectoryModel();
 
   const editor = useInlineEditor(

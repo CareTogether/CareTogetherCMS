@@ -1,4 +1,4 @@
-import { atom } from 'jotai';
+import { atom, useAtomValue } from 'jotai';
 import {
   V1CaseCommand,
   ArrangementsCommand,
@@ -62,7 +62,6 @@ import { mapLoadedValue, visibleFamiliesAtom } from './Data';
 import { convertUtcDateToLocalDate } from '../Utilities/dateUtils';
 import { commandFactory } from './CommandFactory';
 import { useAtomicRecordsCommandCallback } from '../Model/Data';
-import { useJotaiLoadable } from '../State/jotai/useJotaiLoadable';
 
 export const partneringFamiliesData = atom((get) => {
   const visibleFamilies = get(visibleFamiliesAtom);
@@ -72,7 +71,7 @@ export const partneringFamiliesData = atom((get) => {
 });
 
 export function usePartneringFamilies() {
-  return useJotaiLoadable(partneringFamiliesData);
+  return useAtomValue(partneringFamiliesData);
 }
 
 function useV1CaseCommandCallbackWithLocation<T extends unknown[]>(

@@ -74,7 +74,7 @@ export function AddChildDrawer({ onClose }: AddChildDrawerProps) {
   } = fields;
   const directoryModel = useDirectoryModel();
 
-  const ethnicities = useEthnicities() ?? [];
+  const ethnicities = useEthnicities();
 
   const [dobError, setDobError] = useState(false);
 

@@ -1,7 +1,21 @@
 import { PostHogConfig } from 'posthog-js';
 import { getAppVersion } from '../appVersion';
 
+const localFeatureFlagOnlyOptions: Partial<PostHogConfig> = import.meta.env.DEV
+  ? {
+      autocapture: false,
+      capture_pageleave: false,
+      capture_pageview: false,
+      disable_product_tours: true,
+      disable_session_recording: true,
+      disable_surveys: true,
+      disable_surveys_automatic_display: true,
+      disable_web_experiments: true,
+    }
+  : {};
+
 export const postHogOptions: Partial<PostHogConfig> = {
+  ...localFeatureFlagOnlyOptions,
   session_recording: {
     // `maskTextFn` only applies to selected elements, so make sure to set to "*" if you want this to work globally.
     maskTextSelector: '*',

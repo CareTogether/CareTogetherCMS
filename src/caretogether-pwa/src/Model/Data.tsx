@@ -1,14 +1,11 @@
 import { useCallback } from 'react';
 import { atom, useAtomValue, useSetAtom } from 'jotai';
-import { atomFamily } from 'jotai/utils';
+import { atomFamily } from 'jotai-family';
 import { api } from '../Api/Api';
 import { accountInfoState } from '../Authentication/Auth';
 import type { LocationScope } from './LocationScope';
 import { isSameLocationScope } from './LocationScope';
-import {
-  useAtomLoadable,
-  useJotaiLoadable,
-} from '../State/jotai/useJotaiLoadable';
+import { useJotaiLoadable } from '../State/jotai/useJotaiLoadable';
 import {
   createRefreshAtom,
   createRefreshTokenAtom,
@@ -107,7 +104,9 @@ export const visibleAggregatesForScopeData = atomFamily(
   (scope: LocationContext) => {
     const visibleAggregatesBaseAtom = atom<
       RecordsAggregate[] | Promise<RecordsAggregate[]>
-    >(api.records.listVisibleAggregates(scope.organizationId, scope.locationId));
+    >(
+      api.records.listVisibleAggregates(scope.organizationId, scope.locationId)
+    );
     let updateQueue: Promise<void> = Promise.resolve();
 
     function enqueueVisibleAggregatesUpdate(
@@ -301,7 +300,7 @@ export function useSetSelectedLocationContext() {
   return useSetAtom(selectedLocationContextState);
 }
 
-export function useUserOrganizationAccess() {
+export function useUserOrganizationAccessLoadable() {
   return useJotaiLoadable(userOrganizationAccessAtom);
 }
 
@@ -309,21 +308,16 @@ export function useRefreshUserOrganizationAccess() {
   return useSetAtom(refreshUserOrganizationAccessAtom);
 }
 
-export function useCurrentOrganization() {
+export function useCurrentOrganizationLoadable() {
   return useJotaiLoadable(currentOrganizationAtom);
 }
 
 export function useCurrentLocation() {
-  return useJotaiLoadable(currentLocationAtom);
+  return useAtomValue(currentLocationAtom);
 }
 
 export function useCurrentLocationLoadable() {
-  return useAtomLoadable(currentLocationAtom);
-}
-
-// This hook can be used for convenience to determine if the current scope's records have been loaded.
-export function useDataLoaded() {
-  return useJotaiLoadable(visibleAggregatesState) != null;
+  return useJotaiLoadable(currentLocationAtom);
 }
 
 export function useVisibleFamilies() {
@@ -334,20 +328,12 @@ export function useVisibleCommunities() {
   return useAtomValue(visibleCommunitiesAtom);
 }
 
-export function useVisibleCommunitiesLoadable() {
-  return useJotaiLoadable(visibleCommunitiesAtom);
-}
-
 export function useVisibleReferrals() {
   return useAtomValue(visibleReferralsAtom);
 }
 
 export function useVisibleReferralsLoadable() {
   return useJotaiLoadable(visibleReferralsAtom);
-}
-
-export function useVisibleReferralsLoadableState() {
-  return useAtomLoadable(visibleReferralsAtom);
 }
 
 export function mapLoadedValue<T, U>(
@@ -363,7 +349,6 @@ function mapVisibleAggregates<T>(
 ) {
   return mapLoadedValue(visibleAggregates, mapAggregates);
 }
-
 export const visibleFamiliesAtom = atom((get) => {
   const visibleAggregates = get(visibleAggregatesState);
   return mapVisibleAggregates(visibleAggregates, (aggregates) =>

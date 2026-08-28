@@ -11,7 +11,7 @@ import {
   LocationContext,
   useSelectedLocationContext,
   useSetSelectedLocationContext,
-  useUserOrganizationAccess,
+  useUserOrganizationAccessLoadable,
 } from './Model/Data';
 import ShellRootLayout from './Shell/ShellRootLayout';
 import { ProgressBackdrop } from './Shell/ProgressBackdrop';
@@ -31,7 +31,7 @@ import { Dashboard } from './Dashboard/Dashboard';
 import { InboxScreen } from './Inbox/InboxScreen';
 import { FamilyScreenRoute } from './Families/FamilyScreenRoute';
 import { ClientsScreenRoute } from './V1Cases/ClientsScreenRoute';
-import { V1Referrals } from './V1Referrals/V1Referrals';
+import { ReferralsScreenRoute } from './V1Referrals/ReferralsScreenRoute';
 import { VolunteersScreenRoute } from './Volunteers/VolunteersScreenRoute';
 import { Communities } from './Communities/Communities';
 import { Reports } from './Reports/Reports';
@@ -45,7 +45,7 @@ function RouteMigrator() {
   const location = useLocation();
   const navigate = useNavigate();
 
-  const userOrganizationAccess = useUserOrganizationAccess();
+  const userOrganizationAccess = useUserOrganizationAccessLoadable();
   trace(
     `userOrganizationAccess contents: ${JSON.stringify(
       userOrganizationAccess?.organizations?.map((org) => ({
@@ -189,7 +189,7 @@ function AuthorizedLocationContextWrapper({
           />
           <Route path="clients/*" element={<ClientsScreenRoute />} />
           <Route path="cases/*" element={<CasesToClientsRedirect />} />
-          <Route path="referrals/*" element={<V1Referrals />} />
+          <Route path="referrals/*" element={<ReferralsScreenRoute />} />
           <Route path="volunteers/*" element={<VolunteersScreenRoute />} />
           <Route path="communities/*" element={<Communities />} />
           <Route path="reports/*" element={<Reports />} />
@@ -211,7 +211,7 @@ function LocationContextWrapper() {
     organizationId: string;
     locationId: string;
   }>();
-  const userOrganizationAccess = useUserOrganizationAccess();
+  const userOrganizationAccess = useUserOrganizationAccessLoadable();
 
   const requestedLocationContext = useMemo(
     () =>

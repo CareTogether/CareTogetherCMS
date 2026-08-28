@@ -7,13 +7,7 @@ import {
   ListItemText,
   Typography,
 } from '@mui/material';
-import {
-  useLocationConfigurationLoadable,
-  useOrganizationConfigurationLoadable,
-} from '../Model/ConfigurationModel';
 import { useScreenTitle } from '../Shell/ShellScreenTitle';
-import { useDataLoaded } from '../Model/Data';
-import { ProgressBackdrop } from '../Shell/ProgressBackdrop';
 import { PersonName } from '../Families/PersonName';
 import { FamilyName } from '../Families/FamilyName';
 import { EmojiPeople } from '@mui/icons-material';
@@ -134,20 +128,9 @@ function MessageList() {
 }
 
 export function InboxScreen() {
-  const organizationConfiguration = useOrganizationConfigurationLoadable();
-  const locationConfiguration = useLocationConfigurationLoadable();
-
-  const dataLoaded = useDataLoaded();
-
   useScreenTitle('Inbox');
 
-  return !dataLoaded ||
-    (locationConfiguration.state !== 'hasValue' &&
-      organizationConfiguration.state !== 'hasValue') ? (
-    <ProgressBackdrop>
-      <p>Loading messages...</p>
-    </ProgressBackdrop>
-  ) : (
+  return (
     <Container maxWidth={false} sx={{ paddingLeft: '12px' }}>
       <MessageList />
     </Container>

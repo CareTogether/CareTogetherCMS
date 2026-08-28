@@ -6,7 +6,7 @@ import { PersonEditorProps } from './PersonEditorProps';
 import { useEthnicities } from '../Model/ConfigurationModel';
 
 export function EthnicityEditor({ familyId, person }: PersonEditorProps) {
-  const ethnicities = useEthnicities() ?? [];
+  const ethnicities = useEthnicities();
   const directoryModel = useDirectoryModel();
 
   const editor = useInlineEditor(

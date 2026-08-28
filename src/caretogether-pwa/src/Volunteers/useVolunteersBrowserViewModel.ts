@@ -67,7 +67,6 @@ type VolunteersBrowserViewModel = {
   getCustomFieldFilterOptionsForField: (
     field: CustomField
   ) => CustomFieldFilterOption[];
-  loading: boolean;
   requirementFilter: RequirementFilterValue | undefined;
   requirementFilterOptions: string[];
   roleFilters: filterOption[];
@@ -266,12 +265,6 @@ function customFieldIsBlank(value: unknown) {
   return value === undefined || value === null;
 }
 
-function sourceVolunteerFamilies(
-  volunteerFamilies: CombinedFamilyInfo[] | null | undefined
-) {
-  return volunteerFamilies ?? [];
-}
-
 function applySearchStage(
   volunteerFamilies: CombinedFamilyInfo[],
   searchValue: string
@@ -366,8 +359,7 @@ export function useVolunteersBrowserViewModel(): VolunteersBrowserViewModel {
   const [searchValue, setSearchValue] = useState('');
   const [requirementFilter, setRequirementFilter] =
     useState<RequirementFilterValue | undefined>();
-  const loading = volunteerFamilies == null;
-  const sourceFamilies = sourceVolunteerFamilies(volunteerFamilies);
+  const sourceFamilies = volunteerFamilies;
   const arrangementTypes = useMemo(
     () =>
       Array.from(
@@ -505,11 +497,10 @@ export function useVolunteersBrowserViewModel(): VolunteersBrowserViewModel {
     customFieldCount,
     customFieldFilters,
     customFields,
-    empty: !loading && rows.length === 0,
+    empty: rows.length === 0,
     getCustomFieldFilterOptionsForField,
-    loading,
     requirementFilter,
-    requirementFilterOptions: requirementNames ?? [],
+    requirementFilterOptions: requirementNames,
     roleFilters,
     rows,
     searchValue,

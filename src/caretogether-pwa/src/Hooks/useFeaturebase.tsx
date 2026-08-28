@@ -4,11 +4,11 @@ import { atom, useSetAtom } from 'jotai';
 import { useAccountInfo } from '../Authentication/Auth';
 import { useSelectedLocationContext } from '../Model/Data';
 import {
-  useLocationConfiguration,
-  useOrganizationConfiguration,
+  useLocationConfigurationLoadable,
+  useOrganizationConfigurationLoadable,
 } from '../Model/ConfigurationModel';
 import { api } from '../Api/Api';
-import { useGlobalPermissions } from '../Model/SessionModel';
+import { useGlobalPermissionsLoadable } from '../Model/SessionModel';
 import { Permission } from '../GeneratedClient';
 
 // Jotai atom for changelog unread count
@@ -38,15 +38,15 @@ export const useFeaturebase = () => {
 
   // Get user data from Jotai state
   const accountInfo = useAccountInfo();
-  const organizationConfiguration = useOrganizationConfiguration();
-  const locationConfiguration = useLocationConfiguration();
+  const organizationConfiguration = useOrganizationConfigurationLoadable();
+  const locationConfiguration = useLocationConfigurationLoadable();
   const locationContext = useSelectedLocationContext();
   const setChangelogUnreadCount = useSetAtom(changelogUnreadCountState);
   const [featurebaseIdentity, setFeaturebaseIdentity] =
     useState<FeaturebaseIdentity>();
 
   // Check if user has permission to access support screen
-  const permissions = useGlobalPermissions();
+  const permissions = useGlobalPermissionsLoadable();
   const hasAccessToSupport = permissions(Permission.AccessSupportScreen);
 
   useEffect(() => {

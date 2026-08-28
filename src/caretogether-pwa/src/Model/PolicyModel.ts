@@ -6,7 +6,7 @@ import {
   useSetAtom,
   type Atom,
 } from 'jotai';
-import { atomFamily } from 'jotai/utils';
+import { atomFamily } from 'jotai-family';
 import {
   buildRoleFilters,
   roleFiltersState,
@@ -39,10 +39,6 @@ const policyAtomFamily = atomFamily(
       );
     }),
   isSameLocationScope
-);
-
-const noPolicy = jotaiAtom(async (): Promise<EffectiveLocationPolicy | null> =>
-  null
 );
 
 const allApprovalAndOnboardingRequirementsAtomFamily = atomFamily(
@@ -126,14 +122,6 @@ const allFunctionAssignmentRolesInPolicyAtomFamily = atomFamily(
 
 const noStringList = jotaiAtom(async (): Promise<string[]> => []);
 
-function usePolicyLoadableAtom() {
-  const selectedLocationContext = useSelectedLocationContext();
-
-  return selectedLocationContext
-    ? policyAtomFamily(selectedLocationContext)
-    : noPolicy;
-}
-
 function usePolicyStringListAtom(
   atomSelector: (locationContext: LocationContext) => Atom<Promise<string[]>>
 ) {
@@ -149,10 +137,6 @@ export function usePolicy() {
   return useAtomValue(policyAtomFamily(selectedLocationContext));
 }
 
-export function usePolicyLoadable() {
-  return useJotaiLoadable(usePolicyLoadableAtom());
-}
-
 export function useRefreshPolicy() {
   const selectedLocationContext = useRequiredSelectedLocationContext();
   const refreshPolicy = useSetAtom(
@@ -163,18 +147,18 @@ export function useRefreshPolicy() {
 }
 
 export function useAllApprovalAndOnboardingRequirements() {
-  return useJotaiLoadable(
+  return useAtomValue(
     usePolicyStringListAtom(allApprovalAndOnboardingRequirementsAtomFamily)
   );
 }
 
-export function useAllFunctionsInPolicy() {
+export function useAllFunctionsInPolicyLoadable() {
   return useJotaiLoadable(
     usePolicyStringListAtom(allFunctionsInPolicyAtomFamily)
   );
 }
 
-export function useAllFunctionAssignmentRolesInPolicy() {
+export function useAllFunctionAssignmentRolesInPolicyLoadable() {
   return useJotaiLoadable(
     usePolicyStringListAtom(allFunctionAssignmentRolesInPolicyAtomFamily)
   );

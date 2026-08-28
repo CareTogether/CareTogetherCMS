@@ -232,7 +232,7 @@ export function DashboardCalendar() {
   const eventGroups = useMemo(
     () =>
       buildDashboardCalendarEventGroups(
-        partneringFamilies || undefined,
+        partneringFamilies,
         familyLookup,
         visibleDateRange
       ),

@@ -1,5 +1,5 @@
 import { atom } from 'jotai';
-import { atomFamily } from 'jotai/utils';
+import { atomFamily } from 'jotai-family';
 import {
   CombinedFamilyInfo,
   CommunityInfo,
@@ -7,7 +7,7 @@ import {
 } from '../GeneratedClient';
 import { useFamilyLookup } from './DirectoryModel';
 import { api } from '../Api/Api';
-import { useCurrentLocation } from './Data';
+import { useCurrentLocation, useCurrentLocationLoadable } from './Data';
 import { ORGANIZATION_ADMINISTRATOR } from '../constants';
 
 export const inviteReviewInfoQuery = atomFamily(
@@ -34,6 +34,11 @@ function usePermissions(applicablePermissions?: Permission[]) {
 
 export function useGlobalPermissions() {
   const currentLocation = useCurrentLocation();
+  return usePermissions(currentLocation?.globalContextPermissions);
+}
+
+export function useGlobalPermissionsLoadable() {
+  const currentLocation = useCurrentLocationLoadable();
   return usePermissions(currentLocation?.globalContextPermissions);
 }
 
