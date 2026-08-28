@@ -158,13 +158,15 @@ function ReferralsScreenV2Content() {
           </Typography>
         </Box>
 
-        {permissions(Permission.CreateV1Referral) && (
-          <Box
-            sx={{
-              display: 'flex',
-              justifyContent: 'flex-end',
-            }}
-          >
+        <Box
+          sx={{
+            display: 'flex',
+            flexWrap: 'wrap',
+            gap: 1,
+            justifyContent: 'flex-end',
+          }}
+        >
+          {permissions(Permission.CreateV1Referral) && (
             <Button
               size="small"
               variant="contained"
@@ -178,8 +180,8 @@ function ReferralsScreenV2Content() {
             >
               Add new referral
             </Button>
-          </Box>
-        )}
+          )}
+        </Box>
 
         <Paper
           variant="outlined"

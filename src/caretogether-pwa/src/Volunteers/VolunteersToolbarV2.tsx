@@ -2,6 +2,8 @@ import {
   Add as AddIcon,
   Email as EmailIcon,
   FilterList as FilterListIcon,
+  PushPin as PushPinIcon,
+  PushPinOutlined as PushPinOutlinedIcon,
   Search as SearchIcon,
   Sms as SmsIcon,
 } from '@mui/icons-material';
@@ -23,6 +25,7 @@ type VolunteersToolbarV2Props = {
   canCreateVolunteerFamily: boolean;
   canUseBulkEmail: boolean;
   canUseBulkSms: boolean;
+  hasSavedFilters?: boolean;
   searchValue: string;
   selectedVolunteerCount: number;
   smsMode: boolean;
@@ -31,7 +34,9 @@ type VolunteersToolbarV2Props = {
   onCopyEmailAddresses: () => void;
   onCreateVolunteerFamily: () => void;
   onCustomFieldFiltersClick: () => void;
+  onSaveFilters?: () => void;
   onToggleBulkSms: () => void;
+  onUnpinFilters?: () => void;
 };
 
 export function VolunteersToolbarV2({
@@ -42,6 +47,7 @@ export function VolunteersToolbarV2({
   canUseBulkEmail,
   canUseBulkSms,
   customFieldCount,
+  hasSavedFilters = false,
   searchValue,
   selectedVolunteerCount,
   smsMode,
@@ -50,7 +56,9 @@ export function VolunteersToolbarV2({
   onCopyEmailAddresses,
   onCreateVolunteerFamily,
   onCustomFieldFiltersClick,
+  onSaveFilters,
   onToggleBulkSms,
+  onUnpinFilters,
 }: VolunteersToolbarV2Props) {
   const bulkActionsDisabled = selectedVolunteerCount === 0;
   const bulkActionsTooltip = bulkActionsDisabled
@@ -114,6 +122,18 @@ export function VolunteersToolbarV2({
           },
         }}
       />
+      <Button
+        className="ph-unmask"
+        disabled={hasSavedFilters ? !onUnpinFilters : !onSaveFilters}
+        onClick={hasSavedFilters ? onUnpinFilters : onSaveFilters}
+        startIcon={
+          hasSavedFilters ? <PushPinIcon /> : <PushPinOutlinedIcon />
+        }
+        sx={{ justifyContent: 'flex-start', minHeight: 40 }}
+        variant="outlined"
+      >
+        {hasSavedFilters ? 'Unpin filters' : 'Pin filters'}
+      </Button>
       <Stack direction="row" spacing={0.5} sx={{ alignItems: 'center' }}>
         <Typography
           color="text.secondary"

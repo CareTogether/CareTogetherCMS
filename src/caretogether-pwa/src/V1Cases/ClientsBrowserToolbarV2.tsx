@@ -1,5 +1,7 @@
 import {
   FilterList as FilterListIcon,
+  PushPin as PushPinIcon,
+  PushPinOutlined as PushPinOutlinedIcon,
   Search as SearchIcon,
   Sort as SortIcon,
 } from '@mui/icons-material';
@@ -32,15 +34,18 @@ type ClientsBrowserToolbarV2Props = {
   customFieldCount?: number;
   countyOptions: string[];
   countyValue: (string | null)[];
+  hasSavedFilters?: boolean;
   onAssignmentFilterChange?: (
     assignmentRole: string,
     selectedValues: (string | null)[]
   ) => void;
   onCountyChange?: (value: (string | null)[]) => void;
   onMoreFiltersClick?: () => void;
+  onSaveFilters?: () => void;
   onSearchChange?: (value: string) => void;
   onSortChange?: (value: PartneringFamiliesSortMode) => void;
   onStatusChange?: (value: ArrangementsFilter) => void;
+  onUnpinFilters?: () => void;
   searchValue: string;
   sortValue: PartneringFamiliesSortMode;
   statusValue: ArrangementsFilter;
@@ -55,12 +60,15 @@ export function ClientsBrowserToolbarV2({
   customFieldCount = 0,
   countyOptions,
   countyValue,
+  hasSavedFilters = false,
   onAssignmentFilterChange,
   onCountyChange,
   onMoreFiltersClick,
+  onSaveFilters,
   onSearchChange,
   onSortChange,
   onStatusChange,
+  onUnpinFilters,
   searchValue,
   sortValue,
   statusValue,
@@ -192,6 +200,18 @@ export function ClientsBrowserToolbarV2({
           More Filters ({activeCustomFieldFilterCount}/{customFieldCount})
         </Button>
       )}
+      <Button
+        className="ph-unmask"
+        disabled={hasSavedFilters ? !onUnpinFilters : !onSaveFilters}
+        onClick={hasSavedFilters ? onUnpinFilters : onSaveFilters}
+        startIcon={
+          hasSavedFilters ? <PushPinIcon /> : <PushPinOutlinedIcon />
+        }
+        sx={{ justifyContent: 'flex-start', minHeight: 40 }}
+        variant="outlined"
+      >
+        {hasSavedFilters ? 'Unpin filters' : 'Pin filters'}
+      </Button>
     </Stack>
   );
 }

@@ -1,9 +1,10 @@
 import { Box, Stack, Typography } from '@mui/material';
 import type { GridFilterModel, GridRowSelectionModel } from '@mui/x-data-grid';
-import { useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useFeatureFlagEnabled } from 'posthog-js/react';
 import { useRecoilValue } from 'recoil';
 import { EmailAddress, Permission } from '../GeneratedClient';
+import { accountInfoState } from '../Authentication/Auth';
 import { useAppNavigate } from '../Hooks/useAppNavigate';
 import { useGlobalSnackBar } from '../Hooks/useGlobalSnackBar';
 import { useLoadable } from '../Hooks/useLoadable';
@@ -25,11 +26,38 @@ import {
   volunteerFiltersFromGridFilterModel,
 } from './volunteersGridFilterAdapter';
 import { UPDATE_TEST_FAMILY_FEATURE_FLAG } from '../featureFlags';
+import {
+  completeRequirementFilterValue,
+  missingRequirementFilterValue,
+} from './VolunteerApprovalTab/volunteerMissingRequirementsPresentation';
+import {
+  defaultVolunteersBrowserFilterState,
+  sanitizeVolunteersBrowserFilterPreferences,
+  useVolunteersBrowserFilterPreferences,
+} from './useVolunteersBrowserFilterPreferences';
 
 function selectedFilterValues(filters: filterOption[]) {
   return filters
     .filter((filter) => filter.selected && filter.value !== undefined)
     .map((filter) => filter.value!);
+}
+
+function filterValues(filters: filterOption[]) {
+  return filters
+    .filter((filter) => filter.value !== undefined)
+    .map((filter) => filter.value!);
+}
+
+function isSameJsonValue<T>(left: T, right: T) {
+  return JSON.stringify(left) === JSON.stringify(right);
+}
+
+function filterByValidStrings(
+  selectedValues: string[],
+  validValues: string[]
+) {
+  const validValueSet = new Set(validValues);
+  return selectedValues.filter((value) => validValueSet.has(value));
 }
 
 function hasIncompleteFilter(filterModel: GridFilterModel) {
@@ -49,7 +77,10 @@ export function VolunteersBrowserV2() {
     UPDATE_TEST_FAMILY_FEATURE_FLAG
   );
   const { setAndShowGlobalSnackBar } = useGlobalSnackBar();
-  const { locationId } = useRecoilValue(selectedLocationContextState);
+  const accountInfo = useLoadable(accountInfoState);
+  const { organizationId, locationId } = useRecoilValue(
+    selectedLocationContextState
+  );
   const organizationConfiguration = useLoadable(organizationConfigurationQuery);
   const [createVolunteerFamilyDrawerOpen, setCreateVolunteerFamilyDrawerOpen] =
     useState(false);
@@ -71,7 +102,9 @@ export function VolunteersBrowserV2() {
     roleFilters,
     rows,
     searchValue,
+    setAssignmentFilters,
     setAssignmentFilter,
+    setCustomFieldFilters,
     setCustomFieldFilter,
     setRequirementFilter,
     setRoleFilterValues,
@@ -80,6 +113,20 @@ export function VolunteersBrowserV2() {
     statusFilters,
     visibleVolunteerFamilies,
   } = useVolunteersBrowserViewModel();
+  const {
+    canPersistFilters,
+    clearSavedFilters,
+    defaultFilters,
+    hasSavedFilters,
+    preferencesLoaded: filterPreferencesLoaded,
+    savedFilters,
+    saveFilters,
+    storageKey: filterPreferenceStorageKey,
+  } = useVolunteersBrowserFilterPreferences({
+    userId: accountInfo?.userId,
+    organizationId,
+    locationId,
+  });
   const {
     SidePanel: AssignmentFiltersSidePanel,
     openSidePanel: openAssignmentFiltersSidePanel,
@@ -131,6 +178,192 @@ export function VolunteersBrowserV2() {
   const [pendingFilterModel, setPendingFilterModel] =
     useState<GridFilterModel | null>(null);
   const filterModel = pendingFilterModel ?? appliedFilterModel;
+  const customFieldFilterValueOptionsByField = useMemo(
+    () =>
+      Object.fromEntries(
+        customFields.map((field) => [
+          field.name,
+          getCustomFieldFilterOptionsForField(field).map(
+            (option) => option.value
+          ),
+        ])
+      ),
+    [customFields, getCustomFieldFilterOptionsForField]
+  );
+  const requirementFilterValueOptions = useMemo(
+    () => [
+      missingRequirementFilterValue,
+      completeRequirementFilterValue,
+      ...requirementFilterOptions,
+    ],
+    [requirementFilterOptions]
+  );
+  const roleFilterValueOptions = useMemo(
+    () => filterValues(roleFilters),
+    [roleFilters]
+  );
+  const statusFilterValueOptions = useMemo(
+    () => filterValues(statusFilters),
+    [statusFilters]
+  );
+  const handleSaveFilters = useCallback(() => {
+    saveFilters(
+      sanitizeVolunteersBrowserFilterPreferences(
+        {
+          version: 1,
+          assignmentFilters,
+          customFieldFilters,
+          requirementFilter,
+          roleFilterValues: selectedFilterValues(roleFilters),
+          statusFilterValues: selectedFilterValues(statusFilters),
+        },
+        {
+          arrangementTypes,
+          customFields,
+          customFieldValueOptionsByField:
+            customFieldFilterValueOptionsByField,
+          requirementFilterOptions: requirementFilterValueOptions,
+          roleFilterValues: roleFilterValueOptions,
+          statusFilterValues: statusFilterValueOptions,
+        }
+      )
+    );
+  }, [
+    arrangementTypes,
+    assignmentFilters,
+    customFieldFilterValueOptionsByField,
+    customFieldFilters,
+    customFields,
+    requirementFilter,
+    requirementFilterValueOptions,
+    roleFilterValueOptions,
+    roleFilters,
+    saveFilters,
+    statusFilterValueOptions,
+    statusFilters,
+  ]);
+  const handleUnpinFilters = useCallback(() => {
+    clearSavedFilters();
+    setAssignmentFilters(defaultFilters.assignmentFilters);
+    setCustomFieldFilters(defaultFilters.customFieldFilters);
+    setRequirementFilter(defaultFilters.requirementFilter);
+    setRoleFilterValues(defaultFilters.roleFilterValues);
+    setStatusFilterValues(defaultFilters.statusFilterValues);
+  }, [
+    clearSavedFilters,
+    defaultFilters,
+    setAssignmentFilters,
+    setCustomFieldFilters,
+    setRequirementFilter,
+    setRoleFilterValues,
+    setStatusFilterValues,
+  ]);
+  const restoredFilterPreferenceStorageKey = useRef<string | null>(null);
+
+  useEffect(() => {
+    if (
+      !filterPreferenceStorageKey ||
+      !filterPreferencesLoaded ||
+      restoredFilterPreferenceStorageKey.current === filterPreferenceStorageKey
+    ) {
+      return;
+    }
+
+    const restoredFilters =
+      savedFilters ?? defaultVolunteersBrowserFilterState();
+
+    restoredFilterPreferenceStorageKey.current = filterPreferenceStorageKey;
+    setAssignmentFilters(restoredFilters.assignmentFilters);
+    setCustomFieldFilters(restoredFilters.customFieldFilters);
+    setRequirementFilter(restoredFilters.requirementFilter);
+    setRoleFilterValues(restoredFilters.roleFilterValues);
+    setStatusFilterValues(restoredFilters.statusFilterValues);
+  }, [
+    filterPreferencesLoaded,
+    filterPreferenceStorageKey,
+    savedFilters,
+    setAssignmentFilters,
+    setCustomFieldFilters,
+    setRequirementFilter,
+    setRoleFilterValues,
+    setStatusFilterValues,
+  ]);
+
+  useEffect(() => {
+    if (loading) return;
+
+    setAssignmentFilters((current) => {
+      const next = sanitizeVolunteersBrowserFilterPreferences(
+        {
+          ...defaultFilters,
+          assignmentFilters: current,
+        },
+        { arrangementTypes }
+      ).assignmentFilters;
+
+      return isSameJsonValue(current, next) ? current : next;
+    });
+    setCustomFieldFilters((current) => {
+      const next = sanitizeVolunteersBrowserFilterPreferences(
+        {
+          ...defaultFilters,
+          customFieldFilters: current,
+        },
+        {
+          customFields,
+          customFieldValueOptionsByField:
+            customFieldFilterValueOptionsByField,
+        }
+      ).customFieldFilters;
+
+      return isSameJsonValue(current, next) ? current : next;
+    });
+    setRequirementFilter((current) => {
+      const next = sanitizeVolunteersBrowserFilterPreferences(
+        {
+          ...defaultFilters,
+          ...(current ? { requirementFilter: current } : {}),
+        },
+        { requirementFilterOptions: requirementFilterValueOptions }
+      ).requirementFilter;
+
+      return current === next ? current : next;
+    });
+    const currentRoleFilterValues = selectedFilterValues(roleFilters);
+    const nextRoleFilterValues = filterByValidStrings(
+      currentRoleFilterValues,
+      roleFilterValueOptions
+    );
+    const currentStatusFilterValues = selectedFilterValues(statusFilters);
+    const nextStatusFilterValues = filterByValidStrings(
+      currentStatusFilterValues,
+      statusFilterValueOptions
+    );
+
+    if (!isSameJsonValue(currentRoleFilterValues, nextRoleFilterValues)) {
+      setRoleFilterValues(nextRoleFilterValues);
+    }
+
+    if (!isSameJsonValue(currentStatusFilterValues, nextStatusFilterValues)) {
+      setStatusFilterValues(nextStatusFilterValues);
+    }
+  }, [
+    arrangementTypes,
+    customFields,
+    customFieldFilterValueOptionsByField,
+    defaultFilters,
+    loading,
+    requirementFilterValueOptions,
+    roleFilterValueOptions,
+    roleFilters,
+    setAssignmentFilters,
+    setCustomFieldFilters,
+    setRequirementFilter,
+    setRoleFilterValues,
+    setStatusFilterValues,
+    statusFilterValueOptions,
+    statusFilters,
+  ]);
 
   function selectedFamilyContactEmails() {
     return selectedVolunteerFamilies
@@ -241,7 +474,10 @@ export function VolunteersBrowserV2() {
         onCopyEmailAddresses={copyEmailAddresses}
         onCreateVolunteerFamily={() => setCreateVolunteerFamilyDrawerOpen(true)}
         onCustomFieldFiltersClick={openCustomFieldFiltersSidePanel}
+        hasSavedFilters={hasSavedFilters}
+        onSaveFilters={canPersistFilters ? handleSaveFilters : undefined}
         onToggleBulkSms={() => setSmsMode(!smsMode)}
+        onUnpinFilters={handleUnpinFilters}
       />
       <AssignmentFiltersSidePanel>
         <VolunteerAssignmentFiltersSidePanel

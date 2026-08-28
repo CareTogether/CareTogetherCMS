@@ -1,4 +1,11 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import {
+  type Dispatch,
+  type SetStateAction,
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+} from 'react';
 import { useRecoilState, useRecoilValue } from 'recoil';
 import {
   CombinedFamilyInfo,
@@ -75,15 +82,23 @@ type VolunteersBrowserViewModel = {
   roleFilters: filterOption[];
   rows: VolunteerBrowserRowV2[];
   searchValue: string;
+  setAssignmentFilters: Dispatch<
+    SetStateAction<AssignmentFilterSelectionsByArrangementType>
+  >;
   setAssignmentFilter: (
     arrangementType: string,
     selectedValues: AssignmentFilterValue[]
   ) => void;
+  setCustomFieldFilters: Dispatch<
+    SetStateAction<CustomFieldFilterSelectionsByField>
+  >;
   setCustomFieldFilter: (
     fieldName: string,
     selectedValues: CustomFieldFilterValue[]
   ) => void;
-  setRequirementFilter: (value: RequirementFilterValue | undefined) => void;
+  setRequirementFilter: Dispatch<
+    SetStateAction<RequirementFilterValue | undefined>
+  >;
   setRoleFilterValues: (values: string[]) => void;
   setSearchValue: (value: string) => void;
   setStatusFilterValues: (values: string[]) => void;
@@ -410,6 +425,7 @@ export function useVolunteersBrowserViewModel(): VolunteersBrowserViewModel {
   );
   const {
     selectedValuesByField: customFieldFilters,
+    setSelectedValuesByField: setCustomFieldFilters,
     setSelectedValuesForField: setCustomFieldFilter,
     getOptionsForField: getCustomFieldFilterOptionsForField,
   } = useCustomFieldFilters({
@@ -438,23 +454,29 @@ export function useVolunteersBrowserViewModel(): VolunteersBrowserViewModel {
     });
   }, [arrangementTypes]);
 
-  function setAssignmentFilter(
+  const setAssignmentFilter = useCallback((
     arrangementType: string,
     selectedValues: AssignmentFilterValue[]
-  ) {
+  ) => {
     setAssignmentFilters((previous) => ({
       ...previous,
       [arrangementType]: selectedValues,
     }));
-  }
+  }, []);
 
-  function setRoleFilterValues(values: string[]) {
-    setRoleFilters(withSelectedFilterValues(roleFilters, values));
-  }
+  const setRoleFilterValues = useCallback(
+    (values: string[]) => {
+      setRoleFilters((current) => withSelectedFilterValues(current, values));
+    },
+    [setRoleFilters]
+  );
 
-  function setStatusFilterValues(values: string[]) {
-    setStatusFilters(withSelectedFilterValues(statusFilters, values));
-  }
+  const setStatusFilterValues = useCallback(
+    (values: string[]) => {
+      setStatusFilters((current) => withSelectedFilterValues(current, values));
+    },
+    [setStatusFilters]
+  );
 
   const visibleVolunteerFamilies = useMemo(() => {
     const searchedFamilies = applySearchStage(sourceFamilies, searchValue);
@@ -515,7 +537,9 @@ export function useVolunteersBrowserViewModel(): VolunteersBrowserViewModel {
     roleFilters,
     rows,
     searchValue,
+    setAssignmentFilters,
     setAssignmentFilter,
+    setCustomFieldFilters,
     setCustomFieldFilter,
     setRequirementFilter,
     setRoleFilterValues,
