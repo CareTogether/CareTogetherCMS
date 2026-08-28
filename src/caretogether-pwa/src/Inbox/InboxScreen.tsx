@@ -7,20 +7,12 @@ import {
   ListItemText,
   Typography,
 } from '@mui/material';
-import { useRecoilValueLoadable } from 'recoil';
-import {
-  locationConfigurationQuery,
-  organizationConfigurationQuery,
-} from '../Model/ConfigurationModel';
 import { useScreenTitle } from '../Shell/ShellScreenTitle';
-import { useDataLoaded } from '../Model/Data';
-import { ProgressBackdrop } from '../Shell/ProgressBackdrop';
-import { useLoadable } from '../Hooks/useLoadable';
 import { PersonName } from '../Families/PersonName';
 import { FamilyName } from '../Families/FamilyName';
 import { EmojiPeople } from '@mui/icons-material';
 import { AppNavigate, useAppNavigate } from '../Hooks/useAppNavigate';
-import { QueueItem, queueItemsQuery } from '../Model/QueueModel';
+import { QueueItem, useQueueItems } from '../Model/QueueModel';
 import { ReactElement } from 'react';
 
 interface InboxMessageProps {
@@ -118,7 +110,7 @@ function InboxMessage({
 
 function MessageList() {
   const appNavigate = useAppNavigate();
-  const queueItems = useLoadable(queueItemsQuery);
+  const queueItems = useQueueItems();
 
   const messages = (queueItems ?? []).map((item) =>
     getMessageProps(item, appNavigate)
@@ -136,24 +128,9 @@ function MessageList() {
 }
 
 export function InboxScreen() {
-  const organizationConfiguration = useRecoilValueLoadable(
-    organizationConfigurationQuery
-  );
-  const locationConfiguration = useRecoilValueLoadable(
-    locationConfigurationQuery
-  );
-
-  const dataLoaded = useDataLoaded();
-
   useScreenTitle('Inbox');
 
-  return !dataLoaded ||
-    (locationConfiguration.state !== 'hasValue' &&
-      organizationConfiguration.state !== 'hasValue') ? (
-    <ProgressBackdrop>
-      <p>Loading messages...</p>
-    </ProgressBackdrop>
-  ) : (
+  return (
     <Container maxWidth={false} sx={{ paddingLeft: '12px' }}>
       <MessageList />
     </Container>

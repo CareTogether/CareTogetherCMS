@@ -8,16 +8,12 @@ import {
   Button,
 } from '@mui/material';
 import { useState, useEffect, useMemo } from 'react';
-import { useLoadable } from '../../Hooks/useLoadable';
 import { useBackdrop } from '../../Hooks/useBackdrop';
-import {
-  organizationConfigurationQuery,
-  policyData,
-} from '../../Model/ConfigurationModel';
+import { useOrganizationConfiguration } from '../../Model/ConfigurationModel';
+import { usePolicy, useRefreshPolicy } from '../../Model/PolicyModel';
 import { ProgressBackdrop } from '../../Shell/ProgressBackdrop';
 import { useScreenTitle } from '../../Shell/ShellScreenTitle';
-import { useRecoilRefresher_UNSTABLE, useRecoilValue } from 'recoil';
-import { selectedLocationContextState, useDataLoaded } from '../../Model/Data';
+import { useRequiredSelectedLocationContext } from '../../Model/Data';
 import { useParams } from 'react-router-dom';
 import { Box } from '@mui/system';
 import BasicConfiguration from './Tabs/BasicConfiguration';
@@ -51,8 +47,8 @@ export function LocationEdit() {
     editingLocationId: string;
   }>();
 
-  const configuration = useLoadable(organizationConfigurationQuery);
-  const { organizationId } = useRecoilValue(selectedLocationContextState);
+  const configuration = useOrganizationConfiguration();
+  const { organizationId } = useRequiredSelectedLocationContext();
   const targetLocationId = editingLocationId ?? locationId;
 
   const location = configuration?.locations?.find(
@@ -73,18 +69,16 @@ export function LocationEdit() {
       setIsSidebarCollapsed(false);
     }
   }, [isMobile]);
-  const policy = useLoadable(policyData);
+  const policy = usePolicy();
   const posthog = usePostHog();
   const showPolicySelfService = useFeatureFlagEnabled(
     SELF_SERVICE_POLICY_FEATURE_FLAG
   );
   const featureFlagsLoaded = posthog.featureFlags.hasLoadedFlags;
-  const [policyDraft, setPolicyDraft] =
-    useState<EffectiveLocationPolicy | null>(null);
+  const [policyDraft, setPolicyDraft] = useState(policy);
   const [policySaveErrors, setPolicySaveErrors] = useState<string[]>([]);
 
   useEffect(() => {
-    if (!policy) return;
     setPolicyDraft(policy);
   }, [policy]);
 
@@ -163,14 +157,12 @@ export function LocationEdit() {
     setActiveTab(urlTab as LocationTabId);
   }, [urlTab, availableTabs, featureFlagsLoaded, setSearchParams]);
 
-  const dataLoaded = useDataLoaded();
-
   const permissions = useGlobalPermissions();
   const canAccessSettings = permissions(Permission.AccessSettingsScreen);
 
   const appNavigate = useAppNavigate();
   const withBackdrop = useBackdrop();
-  const refreshPolicy = useRecoilRefresher_UNSTABLE(policyData);
+  const refreshPolicy = useRefreshPolicy();
 
   const policyTabIds = [
     'actionDefinitions',
@@ -199,7 +191,7 @@ export function LocationEdit() {
     });
   }
 
-  if (!dataLoaded || !featureFlagsLoaded) {
+  if (!featureFlagsLoaded) {
     return (
       <ProgressBackdrop>
         <p className="ph-unmask">Loading location configuration...</p>
@@ -339,7 +331,6 @@ export function LocationEdit() {
           )}
 
           {showPolicySelfService === true &&
-            policyDraft &&
             activeTab === 'actionDefinitions' && (
               <Box key="actionDefinitions">
                 <PolicyConfiguration
@@ -352,7 +343,6 @@ export function LocationEdit() {
             )}
 
           {showPolicySelfService === true &&
-            policyDraft &&
             activeTab === 'customFamilyFields' && (
               <Box key="customFamilyFields">
                 <PolicyConfiguration
@@ -365,7 +355,6 @@ export function LocationEdit() {
             )}
 
           {showPolicySelfService === true &&
-            policyDraft &&
             activeTab === 'casePolicy' && (
               <Box key="casePolicy">
                 <PolicyConfiguration
@@ -378,7 +367,6 @@ export function LocationEdit() {
             )}
 
           {showPolicySelfService === true &&
-            policyDraft &&
             activeTab === 'v1ReferralPolicy' && (
               <Box key="v1ReferralPolicy">
                 <PolicyConfiguration
@@ -391,7 +379,6 @@ export function LocationEdit() {
             )}
 
           {showPolicySelfService === true &&
-            policyDraft &&
             activeTab === 'volunteerPolicy' && (
               <Box key="volunteerPolicy">
                 <PolicyConfiguration

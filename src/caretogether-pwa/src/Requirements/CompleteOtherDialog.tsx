@@ -9,8 +9,7 @@ import {
   TextField,
 } from '@mui/material';
 import { useState, useMemo } from 'react';
-import { useRecoilValue } from 'recoil';
-import { policyData } from '../Model/ConfigurationModel';
+import { usePolicy } from '../Model/PolicyModel';
 
 type CompleteOtherDialogProps = {
   open: boolean;
@@ -23,7 +22,7 @@ export function CompleteOtherDialog({
   onClose,
   onSelectAction,
 }: CompleteOtherDialogProps) {
-  const policy = useRecoilValue(policyData);
+  const policy = usePolicy();
 
   const [selectedRequirement, setSelectedRequirement] = useState<string | null>(
     null

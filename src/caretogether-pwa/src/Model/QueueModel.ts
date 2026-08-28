@@ -1,4 +1,4 @@
-import { selector } from 'recoil';
+import { atom, useAtomValue } from 'jotai';
 import {
   CombinedFamilyInfo,
   ExactAge,
@@ -6,13 +6,14 @@ import {
   RoleApprovalStatus,
   V1Case,
 } from '../GeneratedClient';
-import { visibleFamiliesQuery } from './Data';
+import { visibleFamiliesAtom } from './Data';
 import { differenceInYears } from 'date-fns';
 import {
   Arrangement,
   ChildLocationPlan,
   ArrangementPhase,
 } from '../GeneratedClient';
+import { useJotaiLoadable } from '../State/jotai/useJotaiLoadable';
 
 export type QueueItem = ChildOver18 | MissingPrimaryContact | ChildNotReturned;
 
@@ -35,11 +36,9 @@ export interface ChildNotReturned {
   arrangementId: string;
 }
 
-const childrenOver18Query = selector<ChildOver18[]>({
-  key: 'childrenOver18Query',
-  get: ({ get }) => {
+const childrenOver18Atom = atom(async (get): Promise<ChildOver18[]> => {
     // Only show these alerts for volunteer families with active family roles.
-    const visibleFamilies = get(visibleFamiliesQuery);
+    const visibleFamilies = await get(visibleFamiliesAtom);
     return visibleFamilies
       ?.filter((family) => family.volunteerFamilyInfo)
       .flatMap((family) => {
@@ -60,13 +59,11 @@ const childrenOver18Query = selector<ChildOver18[]>({
           )
           .map((child) => ({ type: 'ChildOver18', family, child }));
       });
-  },
 });
 
-const missingPrimaryContactsQuery = selector<MissingPrimaryContact[]>({
-  key: 'missingPrimaryContactsQuery',
-  get: ({ get }) => {
-    const visibleFamilies = get(visibleFamiliesQuery);
+const missingPrimaryContactsAtom = atom(
+  async (get): Promise<MissingPrimaryContact[]> => {
+    const visibleFamilies = await get(visibleFamiliesAtom);
     return (
       visibleFamilies
         ?.filter(
@@ -78,13 +75,11 @@ const missingPrimaryContactsQuery = selector<MissingPrimaryContact[]>({
         )
         .map((family) => ({ type: 'MissingPrimaryContact', family })) || []
     );
-  },
-});
+  }
+);
 
-const childNotReturnedQuery = selector<ChildNotReturned[]>({
-  key: 'childNotReturnedQuery',
-  get: ({ get }) => {
-    const visibleFamilies = get(visibleFamiliesQuery);
+const childNotReturnedAtom = atom(async (get): Promise<ChildNotReturned[]> => {
+    const visibleFamilies = await get(visibleFamiliesAtom);
 
     const allArrangements: {
       arrangement: Arrangement;
@@ -143,23 +138,24 @@ const childNotReturnedQuery = selector<ChildNotReturned[]>({
           arrangementId: arrangement.id ?? '',
         };
       });
-  },
 });
 
-export const queueItemsQuery = selector<QueueItem[]>({
-  key: 'queueItemsQuery',
-  get: ({ get }) => {
-    const childrenOver18 = get(childrenOver18Query);
-    const missingPrimaryContacts = get(missingPrimaryContactsQuery);
-    const childNotReturned = get(childNotReturnedQuery);
+const queueItemsAtom = atom(async (get): Promise<QueueItem[]> => {
+    const childrenOver18 = await get(childrenOver18Atom);
+    const missingPrimaryContacts = await get(missingPrimaryContactsAtom);
+    const childNotReturned = await get(childNotReturnedAtom);
     return [...childrenOver18, ...missingPrimaryContacts, ...childNotReturned];
-  },
 });
 
-export const queueItemsCountQuery = selector({
-  key: 'queueItemsCountQuery',
-  get: ({ get }) => {
-    const queueItems = get(queueItemsQuery);
+const queueItemsCountAtom = atom(async (get) => {
+    const queueItems = await get(queueItemsAtom);
     return queueItems.length;
-  },
 });
+
+export function useQueueItems() {
+  return useAtomValue(queueItemsAtom);
+}
+
+export function useQueueItemsCountLoadable() {
+  return useJotaiLoadable(queueItemsCountAtom);
+}

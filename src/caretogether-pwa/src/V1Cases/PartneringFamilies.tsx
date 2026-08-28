@@ -19,7 +19,7 @@ import {
   useMediaQuery,
   useTheme,
 } from '@mui/material';
-import { partneringFamiliesData } from '../Model/V1CasesModel';
+import { usePartneringFamilies } from '../Model/V1CasesModel';
 import React, { useState } from 'react';
 import {
   Add as AddIcon,
@@ -31,7 +31,7 @@ import { ArrangementPhase, Permission } from '../GeneratedClient';
 import { CreatePartneringFamilyDrawer } from './CreatePartneringFamilyDrawer';
 import { useScrollMemory } from '../Hooks/useScrollMemory';
 import { useLocalStorage } from '../Hooks/useLocalStorage';
-import { policyData } from '../Model/ConfigurationModel';
+import { usePolicy } from '../Model/PolicyModel';
 import { SearchBar } from '../Shell/SearchBar';
 import { filterFamiliesByText } from '../Families/FamilyUtils';
 import { usePersonAndFamilyLookup } from '../Model/DirectoryModel';
@@ -40,7 +40,6 @@ import {
   useGlobalPermissions,
 } from '../Model/SessionModel';
 import { useScreenTitle } from '../Shell/ShellScreenTitle';
-import { useLoadable } from '../Hooks/useLoadable';
 import { ProgressBackdrop } from '../Shell/ProgressBackdrop';
 import { useAppNavigate } from '../Hooks/useAppNavigate';
 import { useCustomFieldFilters } from '../Generic/CustomFieldsFilter/useCustomFieldFilters';
@@ -58,7 +57,7 @@ import { WideTableContainer } from '../Utilities/WideTableContainer';
 import { wideTablePageSx } from '../Utilities/wideTablePageSx';
 import { getFamilyCounty } from '../Utilities/getFamilyCounty';
 import { CountyFilter } from '../Generic/CountyFilter';
-import { visibleReferralsQuery } from '../Model/Data';
+import { useVisibleReferrals } from '../Model/Data';
 import {
   normalizePartneringFamiliesSortMode,
   openReferralByFamilyId,
@@ -101,35 +100,27 @@ function PartneringFamilies() {
     closeSidePanel: closeCustomFieldFiltersSidePanel,
   } = useSidePanel();
 
-  const partneringFamiliesLoadable = useLoadable(partneringFamiliesData);
-  const partneringFamilies = React.useMemo(
-    () => partneringFamiliesLoadable || [],
-    [partneringFamiliesLoadable]
-  );
-  const visibleReferralsLoadable = useLoadable(visibleReferralsQuery);
+  const partneringFamilies = usePartneringFamilies();
+  const visibleReferralRecords = useVisibleReferrals();
   const visibleReferrals = React.useMemo(
-    () =>
-      (visibleReferralsLoadable || []).map(
-        (referralInfo) => referralInfo.referral
-      ),
-    [visibleReferralsLoadable]
+    () => visibleReferralRecords.map((referralInfo) => referralInfo.referral),
+    [visibleReferralRecords]
   );
   const openReferralByFamily = React.useMemo(
     () => openReferralByFamilyId(visibleReferrals),
     [visibleReferrals]
   );
 
-  const arrangementTypes = useLoadable(
-    policyData
-  )?.referralPolicy?.arrangementPolicies?.map((a) => {
-    return a.arrangementType!;
-  });
-
-  const loadablePolicy = useLoadable(policyData);
+  const policy = usePolicy();
+  const arrangementTypes = policy.referralPolicy?.arrangementPolicies?.map(
+    (a) => {
+      return a.arrangementType!;
+    }
+  );
 
   const referralCustomFields = React.useMemo(() => {
-    return loadablePolicy?.referralPolicy?.customFields || [];
-  }, [loadablePolicy]);
+    return policy.referralPolicy?.customFields || [];
+  }, [policy.referralPolicy?.customFields]);
   const customFieldCount = referralCustomFields.length;
 
   const [filterText, setFilterText] = useState('');
@@ -181,7 +172,7 @@ function PartneringFamilies() {
     permissions(Permission.ViewV1CaseFunctionAssignments);
   const assignmentRoles = canViewFunctionAssignments
     ? assignmentRolesForColumns(
-        loadablePolicy?.referralPolicy?.functionAssignmentPolicies?.map(
+        policy.referralPolicy?.functionAssignmentPolicies?.map(
           (assignmentPolicy) => assignmentPolicy.assignmentRole
         ) ?? [],
         partneringFamilies.flatMap(
@@ -358,7 +349,7 @@ function PartneringFamilies() {
 
   useScreenTitle('Clients');
 
-  return !partneringFamiliesLoadable || !arrangementTypes ? (
+  return !arrangementTypes ? (
     <ProgressBackdrop>
       <p>Loading families...</p>
     </ProgressBackdrop>

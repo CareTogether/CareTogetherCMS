@@ -7,8 +7,7 @@ import {
 import { useV1CasesModel } from '../../Model/V1CasesModel';
 import { useFamilyPermissions } from '../../Model/SessionModel';
 import { useInlineEditor } from '../../Hooks/useInlineEditor';
-import { useRecoilValue } from 'recoil';
-import { locationConfigurationQuery } from '../../Model/ConfigurationModel';
+import { useLocationConfiguration } from '../../Model/ConfigurationModel';
 
 type ArrangementReasonProps = {
   partneringFamily: CombinedFamilyInfo;
@@ -28,9 +27,7 @@ export function ArrangementReason({
   const v1CasesModel = useV1CasesModel();
   const permissions = useFamilyPermissions(partneringFamily);
 
-  const arrangementReasons = useRecoilValue(
-    locationConfigurationQuery
-  )?.arrangementReasons;
+  const arrangementReasons = useLocationConfiguration()?.arrangementReasons;
 
   const editor = useInlineEditor(async (value) => {
     await v1CasesModel.editArrangementReason(

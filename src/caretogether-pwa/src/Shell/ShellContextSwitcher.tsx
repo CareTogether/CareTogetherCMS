@@ -8,14 +8,13 @@ import {
   useTheme,
 } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
-import { useLoadable } from '../Hooks/useLoadable';
 import {
-  locationConfigurationQuery,
-  organizationConfigurationQuery,
+  useLocationConfigurationLoadable,
+  useOrganizationConfigurationLoadable,
 } from '../Model/ConfigurationModel';
 import {
-  currentOrganizationQuery,
-  selectedLocationContextState,
+  useCurrentOrganizationLoadable,
+  useSelectedLocationContext,
 } from '../Model/Data';
 
 interface ShellContextSwitcherProps {
@@ -25,10 +24,10 @@ interface ShellContextSwitcherProps {
 export function ShellContextSwitcher({
   contained = false,
 }: ShellContextSwitcherProps) {
-  const organizationConfiguration = useLoadable(organizationConfigurationQuery);
-  const locationConfiguration = useLoadable(locationConfigurationQuery);
-  const selectedLocationContext = useLoadable(selectedLocationContextState);
-  const currentOrganization = useLoadable(currentOrganizationQuery);
+  const organizationConfiguration = useOrganizationConfigurationLoadable();
+  const locationConfiguration = useLocationConfigurationLoadable();
+  const selectedLocationContext = useSelectedLocationContext();
+  const currentOrganization = useCurrentOrganizationLoadable();
 
   const navigate = useNavigate();
 

@@ -37,7 +37,6 @@ import {
   useScreenTitle,
 } from '../Shell/ShellScreenTitle';
 import {
-  useCommunityLookup,
   useFamilyLookup,
   useNoteAuthorLookup,
   usePersonLookup,
@@ -47,11 +46,10 @@ import {
 import { isBackdropClick } from '../Utilities/handleBackdropClick';
 import { useDialogHandle } from '../Hooks/useDialogHandle';
 import { familyLastName } from './FamilyUtils';
-import { useLoadable } from '../Hooks/useLoadable';
 import {
-  selectedLocationContextState,
-  visibleCommunitiesQuery,
-  visibleReferralsQuery,
+  useRequiredSelectedLocationContext,
+  useVisibleCommunities,
+  useVisibleReferrals,
 } from '../Model/Data';
 import { useAppNavigate } from '../Hooks/useAppNavigate';
 import posthog from 'posthog-js';
@@ -62,9 +60,8 @@ import { ArrangementsSection } from '../V1Cases/Arrangements/ArrangementsSection
 import { ArrangementRowV2 } from '../V1Cases/Arrangements/arrangementViewModel';
 import { useFeatureFlagEnabled } from 'posthog-js/react';
 import { TestFamilyBadge } from './TestFamilyBadge';
-import { useRecoilValue } from 'recoil';
 import { useV1CasesModel } from '../Model/V1CasesModel';
-import { policyData } from '../Model/ConfigurationModel';
+import { usePolicy } from '../Model/PolicyModel';
 import {
   FAMILY_MEMBER_PRINT_INFORMATION_FEATURE_FLAG,
   REFERRALS_FEATURE_FLAG,
@@ -74,7 +71,7 @@ import { personNameString } from './PersonName';
 import { useGlobalSnackBar } from '../Hooks/useGlobalSnackBar';
 import { ApprovalLedgerSection } from './ApprovalLedgerSection';
 import { RoleSummaryCardsSection } from './RoleSummaryCardsSection';
-import { accountInfoState } from '../Authentication/Auth';
+import { useAccountInfo } from '../Authentication/Auth';
 import { useLocation } from 'react-router-dom';
 import {
   personFullName,
@@ -131,22 +128,21 @@ export function FamilyScreenV2() {
   const arrangementIdFromNavigation =
     arrangementIdFromQuery ?? arrangementIdFromState;
 
-  const communitiesLoadable = useLoadable(visibleCommunitiesQuery);
-  const allCommunities = useMemo(
-    () =>
-      (communitiesLoadable || [])
-        .map((x) => x.community!)
-        .sort((a, b) => (a.name! < b.name! ? -1 : a.name! > b.name! ? 1 : 0)),
-    [communitiesLoadable]
-  );
-  const communityLookup = useCommunityLookup();
+  const visibleCommunities = useVisibleCommunities();
   const allCommunityInfo = useMemo(
-    () => allCommunities.map((c) => communityLookup(c.id)!),
-    [allCommunities, communityLookup]
+    () =>
+      [...visibleCommunities].sort((a, b) =>
+        a.community!.name! < b.community!.name!
+          ? -1
+          : a.community!.name! > b.community!.name!
+            ? 1
+            : 0
+      ),
+    [visibleCommunities]
   );
   const familyCommunityInfo = useMemo(
     () =>
-      allCommunityInfo?.filter((c) =>
+      allCommunityInfo.filter((c) =>
         c.community?.memberFamilies?.includes(familyId)
       ),
     [allCommunityInfo, familyId]
@@ -164,10 +160,8 @@ export function FamilyScreenV2() {
     [allCommunityInfo, familyId]
   );
 
-  const referralInfos = useRecoilValue(visibleReferralsQuery);
-  const { organizationId, locationId } = useRecoilValue(
-    selectedLocationContextState
-  );
+  const referralInfos = useVisibleReferrals();
+  const { organizationId, locationId } = useRequiredSelectedLocationContext();
 
   const familyReferrals = useMemo(() => {
     return (referralInfos ?? [])
@@ -187,8 +181,8 @@ export function FamilyScreenV2() {
     [userLookup]
   );
   const family = familyLookup(familyId);
-  const policy = useRecoilValue(policyData);
-  const currentUserId = useLoadable(accountInfoState)?.userId;
+  const policy = usePolicy();
+  const currentUserId = useAccountInfo()?.userId;
 
   const directoryModel = useDirectoryModel();
 

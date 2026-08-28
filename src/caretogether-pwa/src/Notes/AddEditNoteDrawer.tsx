@@ -16,8 +16,7 @@ import { Note } from '../GeneratedClient';
 import { ValidateDatePicker } from '../Generic/Forms/ValidateDatePicker';
 import { useBackdrop } from '../Hooks/useBackdrop';
 import { useDirectoryModel } from '../Model/DirectoryModel';
-import { locationConfigurationQuery } from '../Model/ConfigurationModel';
-import { useRecoilValue } from 'recoil';
+import { useLocationConfiguration } from '../Model/ConfigurationModel';
 
 interface AddEditNoteDrawerProps {
   familyId: string;
@@ -37,7 +36,7 @@ export function AddEditNoteDrawer({
   });
   const { contents, backdatedTimestampLocal, accessLevel } = fields;
   const directoryModel = useDirectoryModel();
-  const locationConfiguration = useRecoilValue(locationConfigurationQuery);
+  const locationConfiguration = useLocationConfiguration();
   const accessLevels = locationConfiguration?.accessLevels || [];
   const withBackdrop = useBackdrop();
 

@@ -1,6 +1,5 @@
-import { useRecoilValue } from 'recoil';
 import { CloseReasonDrawer } from '../Generic/CloseReasonDrawer';
-import { caseCloseReasonsData } from '../Model/ConfigurationModel';
+import { useCaseCloseReasons } from '../Model/ConfigurationModel';
 import { useV1CasesModel } from '../Model/V1CasesModel';
 
 interface CloseV1CaseDrawerProps {
@@ -15,7 +14,7 @@ export function CloseV1CaseDrawer({
   onClose,
 }: CloseV1CaseDrawerProps) {
   const v1CasesModel = useV1CasesModel();
-  const caseCloseReasons = useRecoilValue(caseCloseReasonsData);
+  const caseCloseReasons = useCaseCloseReasons();
 
   async function closeCase(reason: string, closedAtLocal: Date) {
     await v1CasesModel.closeV1Case(

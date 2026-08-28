@@ -11,19 +11,18 @@ import {
   Select,
 } from '@mui/material';
 import { useState } from 'react';
-import { useRecoilValue } from 'recoil';
 import {
   CombinedFamilyInfo,
   SendSmsToFamilyPrimaryContactsRequest,
   SmsResult,
   ValueTupleOfGuidAndSmsMessageResult,
 } from '../GeneratedClient';
-import { organizationConfigurationQuery } from '../Model/ConfigurationModel';
+import { useOrganizationConfiguration } from '../Model/ConfigurationModel';
 import { useFamilyLookup } from '../Model/DirectoryModel';
 import { useBackdrop } from '../Hooks/useBackdrop';
 import { FamilyName } from '../Families/FamilyName';
 import { api } from '../Api/Api';
-import { selectedLocationContextState } from '../Model/Data';
+import { useRequiredSelectedLocationContext } from '../Model/Data';
 
 type BulkSmsSideSheetProps = {
   selectedFamilies: CombinedFamilyInfo[];
@@ -38,12 +37,8 @@ export function BulkSmsSideSheet({
   selectedFamilies,
   onClose,
 }: BulkSmsSideSheetProps) {
-  const { organizationId, locationId } = useRecoilValue(
-    selectedLocationContextState
-  );
-  const organizationConfiguration = useRecoilValue(
-    organizationConfigurationQuery
-  );
+  const { organizationId, locationId } = useRequiredSelectedLocationContext();
+  const organizationConfiguration = useOrganizationConfiguration();
 
   const familiesSelectedForSms = selectedFamilies.map((family) => {
     const primaryAdult = family.family!.adults!.find(

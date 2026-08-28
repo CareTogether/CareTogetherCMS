@@ -6,8 +6,7 @@ import {
   usePersonAndFamilyLookup,
 } from '../Model/DirectoryModel';
 import { useMemo } from 'react';
-import { useLoadable } from '../Hooks/useLoadable';
-import { partneringFamiliesData } from '../Model/V1CasesModel';
+import { usePartneringFamilies } from '../Model/V1CasesModel';
 import { useAppNavigate } from '../Hooks/useAppNavigate';
 import { VolunteerAssignmentsDataGridV2 } from './VolunteerAssignmentsDataGridV2';
 import {
@@ -28,7 +27,7 @@ export function AssignmentsSection({
 }: AssignmentsSectionProps) {
   const personAndFamilyLookup = usePersonAndFamilyLookup();
   const familyLookup = useFamilyLookup();
-  const partneringFamilies = useLoadable(partneringFamiliesData);
+  const partneringFamilies = usePartneringFamilies();
   const navigate = useAppNavigate();
 
   const assignments = useMemo(
@@ -46,7 +45,7 @@ export function AssignmentsSection({
       buildVolunteerAssignmentRowsV2({
         assignments,
         childFamilyIdForAssignment: (assignment) =>
-          partneringFamilies?.find(
+          partneringFamilies.find(
             (fam) =>
               fam.partneringFamilyInfo &&
               allArrangements(fam.partneringFamilyInfo).some(

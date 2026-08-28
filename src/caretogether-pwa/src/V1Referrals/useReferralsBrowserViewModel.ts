@@ -1,5 +1,4 @@
 import { useMemo } from 'react';
-import { useRecoilValueLoadable } from 'recoil';
 import { useFeatureFlagEnabled } from 'posthog-js/react';
 import {
   assignmentNamesForRole,
@@ -10,13 +9,12 @@ import type {
   CombinedFamilyInfo,
   V1Referral,
 } from '../GeneratedClient';
-import { useLoadable } from '../Hooks/useLoadable';
 import {
   useFamilyLookup,
   usePersonAndFamilyLookup,
 } from '../Model/DirectoryModel';
-import { policyData } from '../Model/ConfigurationModel';
-import { visibleReferralsQuery } from '../Model/Data';
+import { usePolicy } from '../Model/PolicyModel';
+import { useVisibleReferrals } from '../Model/Data';
 import { useGlobalPermissions } from '../Model/SessionModel';
 import { FUNCTION_ASSIGNMENTS_FEATURE_FLAG } from '../featureFlags';
 import { familyNameString } from '../Families/FamilyName';
@@ -219,23 +217,18 @@ export function useReferralsBrowserViewModel({
   filterText,
   statusFilter,
 }: UseReferralsBrowserViewModelParameters) {
-  const referralsLoadable = useRecoilValueLoadable(visibleReferralsQuery);
+  const referralRecords = useVisibleReferrals();
   const familyLookup = useFamilyLookup();
   const personAndFamilyLookup = usePersonAndFamilyLookup();
   const permissions = useGlobalPermissions();
-  const policy = useLoadable(policyData);
+  const policy = usePolicy();
   const functionAssignmentsEnabled = useFeatureFlagEnabled(
     FUNCTION_ASSIGNMENTS_FEATURE_FLAG
   );
 
   const referrals = useMemo(
-    () =>
-      referralsLoadable.state === 'hasValue'
-        ? referralsLoadable.contents.map(
-            (referralInfo) => referralInfo.referral
-          )
-        : [],
-    [referralsLoadable]
+    () => referralRecords.map((referralInfo) => referralInfo.referral),
+    [referralRecords]
   );
   const canViewFunctionAssignments =
     functionAssignmentsEnabled === true &&
@@ -251,7 +244,7 @@ export function useReferralsBrowserViewModel({
     () =>
       canViewFunctionAssignments
         ? assignmentRolesForColumns(
-            policy?.v1ReferralPolicy?.functionAssignmentPolicies?.map(
+            policy.v1ReferralPolicy?.functionAssignmentPolicies?.map(
               (assignmentPolicy) => assignmentPolicy.assignmentRole
             ) ?? [],
             assignmentFilterAssignments
@@ -260,7 +253,7 @@ export function useReferralsBrowserViewModel({
     [
       assignmentFilterAssignments,
       canViewFunctionAssignments,
-      policy?.v1ReferralPolicy?.functionAssignmentPolicies,
+      policy.v1ReferralPolicy?.functionAssignmentPolicies,
     ]
   );
   const rows = useMemo(
@@ -338,7 +331,6 @@ export function useReferralsBrowserViewModel({
     canViewFunctionAssignments,
     familiesForCountyFilter,
     filteredRows,
-    isLoading: referralsLoadable.state === 'loading' || policy === null,
     referrals,
     tableColumnCount,
     tableMinWidth: Math.max(700, tableColumnCount * 160),

@@ -1,16 +1,13 @@
 import { Button } from '@mui/material';
 import { useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import {
-  useRecoilRefresher_UNSTABLE,
-  useRecoilValueLoadable,
-} from 'recoil';
 import { useBackdrop } from '../Hooks/useBackdrop';
 import { inviteReviewInfoQuery } from '../Model/SessionModel';
 import { ProgressBackdrop } from '../Shell/ProgressBackdrop';
 import { useScreenTitle } from '../Shell/ShellScreenTitle';
 import { api } from '../Api/Api';
-import { userOrganizationAccessQuery } from '../Model/Data';
+import { useRefreshUserOrganizationAccess } from '../Model/Data';
+import { useAtomLoadable } from '../State/jotai/useJotaiLoadable';
 
 function RedeemPersonInvite() {
   const [searchParams] = useSearchParams();
@@ -19,16 +16,14 @@ function RedeemPersonInvite() {
   // Attempt to retrieve the invite review info for the redemption session.
   // If it can be retrieved, then render the invite review to allow the user the
   // option to confirm accepting the invite.
-  const inviteReviewInfo = useRecoilValueLoadable(
+  const inviteReviewInfo = useAtomLoadable(
     inviteReviewInfoQuery(redemptionSessionId)
   );
 
   const withBackdrop = useBackdrop();
   const navigate = useNavigate();
 
-  const refreshUserOrganizationAccess = useRecoilRefresher_UNSTABLE(
-    userOrganizationAccessQuery
-  );
+  const refreshUserOrganizationAccess = useRefreshUserOrganizationAccess();
   async function redeem() {
     if (inviteReviewInfo.state === 'hasValue') {
       await withBackdrop(async () => {

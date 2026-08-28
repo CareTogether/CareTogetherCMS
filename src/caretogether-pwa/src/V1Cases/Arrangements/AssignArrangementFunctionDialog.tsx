@@ -23,13 +23,12 @@ import {
   Person,
   ValueTupleOfPersonAndFamilyAdultRelationshipInfo,
 } from '../../GeneratedClient';
-import { useRecoilValue } from 'recoil';
 import { useParams } from 'react-router-dom';
 import { useBackdrop } from '../../Hooks/useBackdrop';
 import { DialogHandle } from '../../Hooks/useDialogHandle';
 import { useV1CasesModel } from '../../Model/V1CasesModel';
 import { usePersonAndFamilyLookup } from '../../Model/DirectoryModel';
-import { visibleFamiliesQuery } from '../../Model/Data';
+import { useVisibleFamilies } from '../../Model/Data';
 import { isBackdropClick } from '../../Utilities/handleBackdropClick';
 
 interface AssignArrangementFunctionDialogProps {
@@ -55,7 +54,7 @@ export function AssignArrangementFunctionDialog({
   const familyIdMaybe = useParams<{ familyId: string }>();
   const familyId = familyIdMaybe.familyId as string;
 
-  const visibleFamilies = useRecoilValue(visibleFamiliesQuery);
+  const visibleFamilies = useVisibleFamilies();
 
   const familyAndPersonLookup = usePersonAndFamilyLookup();
 

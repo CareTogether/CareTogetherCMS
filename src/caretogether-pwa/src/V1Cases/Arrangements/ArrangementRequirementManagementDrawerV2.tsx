@@ -23,7 +23,6 @@ import {
 } from '@mui/material';
 import { add, format, formatDuration, formatRelative, isValid } from 'date-fns';
 import { useEffect, useMemo, useState } from 'react';
-import { useRecoilValue } from 'recoil';
 import {
   ActionRequirement,
   Arrangement,
@@ -38,8 +37,8 @@ import { familyNameString } from '../../Families/FamilyName';
 import { personNameString } from '../../Families/PersonName';
 import { ValidateDatePicker } from '../../Generic/Forms/ValidateDatePicker';
 import { useBackdrop } from '../../Hooks/useBackdrop';
-import { policyData } from '../../Model/ConfigurationModel';
-import { selectedLocationContextState } from '../../Model/Data';
+import { usePolicy } from '../../Model/PolicyModel';
+import { useRequiredSelectedLocationContext } from '../../Model/Data';
 import {
   useDirectoryModel,
   useFamilyLookup,
@@ -247,10 +246,8 @@ export function ArrangementRequirementManagementDrawerV2({
   const directory = useDirectoryModel();
   const v1Cases = useV1CasesModel();
   const withBackdrop = useBackdrop();
-  const policy = useRecoilValue(policyData);
-  const { organizationId, locationId } = useRecoilValue(
-    selectedLocationContextState
-  );
+  const policy = usePolicy();
+  const { organizationId, locationId } = useRequiredSelectedLocationContext();
   const familyLookup = useFamilyLookup();
 
   const [tabValue, setTabValue] = useState(0);

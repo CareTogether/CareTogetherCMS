@@ -12,8 +12,7 @@ import {
 import { Person, RoleRemovalReason } from '../GeneratedClient';
 import { useVolunteersModel } from '../Model/VolunteersModel';
 import { UpdateDialog } from '../Generic/UpdateDialog';
-import { useRecoilValue } from 'recoil';
-import { policyData } from '../Model/ConfigurationModel';
+import { usePolicy } from '../Model/PolicyModel';
 import { ValidateDatePicker } from '../Generic/Forms/ValidateDatePicker';
 
 interface RemoveIndividualRoleDialogProps {
@@ -41,7 +40,7 @@ export function RemoveIndividualRoleDialog({
 
   const [dateError, setDateError] = useState(false);
 
-  const policy = useRecoilValue(policyData);
+  const policy = usePolicy();
   const isFamilyRole =
     policy.volunteerPolicy?.volunteerFamilyRoles?.[role] != null;
 

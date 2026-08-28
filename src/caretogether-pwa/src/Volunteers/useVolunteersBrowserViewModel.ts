@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { useRecoilState, useRecoilValue } from 'recoil';
 import {
   CombinedFamilyInfo,
   CustomField,
@@ -15,20 +14,19 @@ import {
   CustomFieldFilterValue,
 } from '../Generic/CustomFieldsFilter/types';
 import { useCustomFieldFilters } from '../Generic/CustomFieldsFilter/useCustomFieldFilters';
-import { useLoadable } from '../Hooks/useLoadable';
 import {
-  allApprovalAndOnboardingRequirementsData,
-  policyData,
-} from '../Model/ConfigurationModel';
-import { volunteerFamiliesData } from '../Model/VolunteersModel';
+  useAllApprovalAndOnboardingRequirements,
+  usePolicy,
+  useRoleFilters,
+  useStatusFilters,
+} from '../Model/PolicyModel';
+import { useVolunteerFamilies } from '../Model/VolunteersModel';
 import {
   AssignmentFilterSelectionsByArrangementType,
   AssignmentFilterValue,
   matchesAssignmentFilters,
 } from './VolunteerApprovalTab/assignmentFilters';
 import { filterOption } from './VolunteerApprovalTab/filterOption';
-import { roleFiltersState } from './VolunteerApprovalTab/roleFiltersState';
-import { statusFiltersState } from './VolunteerApprovalTab/statusFiltersState';
 import {
   buildVolunteerApprovalRolesPresentation,
   VolunteerApprovalRolesPresentation,
@@ -69,7 +67,6 @@ type VolunteersBrowserViewModel = {
   getCustomFieldFilterOptionsForField: (
     field: CustomField
   ) => CustomFieldFilterOption[];
-  loading: boolean;
   requirementFilter: RequirementFilterValue | undefined;
   requirementFilterOptions: string[];
   roleFilters: filterOption[];
@@ -268,12 +265,6 @@ function customFieldIsBlank(value: unknown) {
   return value === undefined || value === null;
 }
 
-function sourceVolunteerFamilies(
-  volunteerFamilies: CombinedFamilyInfo[] | null | undefined
-) {
-  return volunteerFamilies ?? [];
-}
-
 function applySearchStage(
   volunteerFamilies: CombinedFamilyInfo[],
   searchValue: string
@@ -358,18 +349,17 @@ function withSelectedFilterValues(
 }
 
 export function useVolunteersBrowserViewModel(): VolunteersBrowserViewModel {
-  const volunteerFamilies = useLoadable(volunteerFamiliesData);
-  const requirementNames = useLoadable(allApprovalAndOnboardingRequirementsData);
-  const policy = useRecoilValue(policyData);
-  const [roleFilters, setRoleFilters] = useRecoilState(roleFiltersState);
-  const [statusFilters, setStatusFilters] = useRecoilState(statusFiltersState);
+  const volunteerFamilies = useVolunteerFamilies();
+  const requirementNames = useAllApprovalAndOnboardingRequirements();
+  const policy = usePolicy();
+  const [roleFilters, setRoleFilters] = useRoleFilters();
+  const [statusFilters, setStatusFilters] = useStatusFilters();
   const [assignmentFilters, setAssignmentFilters] =
     useState<AssignmentFilterSelectionsByArrangementType>({});
   const [searchValue, setSearchValue] = useState('');
   const [requirementFilter, setRequirementFilter] =
     useState<RequirementFilterValue | undefined>();
-  const loading = volunteerFamilies == null;
-  const sourceFamilies = sourceVolunteerFamilies(volunteerFamilies);
+  const sourceFamilies = volunteerFamilies;
   const arrangementTypes = useMemo(
     () =>
       Array.from(
@@ -507,11 +497,10 @@ export function useVolunteersBrowserViewModel(): VolunteersBrowserViewModel {
     customFieldCount,
     customFieldFilters,
     customFields,
-    empty: !loading && rows.length === 0,
+    empty: rows.length === 0,
     getCustomFieldFilterOptionsForField,
-    loading,
     requirementFilter,
-    requirementFilterOptions: requirementNames ?? [],
+    requirementFilterOptions: requirementNames,
     roleFilters,
     rows,
     searchValue,

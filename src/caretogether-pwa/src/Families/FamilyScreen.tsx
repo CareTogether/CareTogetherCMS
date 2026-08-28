@@ -70,7 +70,6 @@ import {
   useScreenTitle,
 } from '../Shell/ShellScreenTitle';
 import {
-  useCommunityLookup,
   useFamilyLookup,
   usePersonAndFamilyLookup,
   useDirectoryModel,
@@ -83,8 +82,7 @@ import { VolunteerFamilyCustomField } from '../Volunteers/VolunteerFamilyCustomF
 import { DeleteFamilyDialog } from './DeleteFamilyDialog';
 import { useDialogHandle } from '../Hooks/useDialogHandle';
 import { familyLastName } from './FamilyUtils';
-import { useLoadable } from '../Hooks/useLoadable';
-import { visibleCommunitiesQuery } from '../Model/Data';
+import { useVisibleCommunities, useVisibleReferrals } from '../Model/Data';
 import { useAppNavigate } from '../Hooks/useAppNavigate';
 import posthog from 'posthog-js';
 import { AssignmentsSection } from '../Families/AssignmentsSection';
@@ -94,12 +92,10 @@ import { useSyncV1CaseIdInURL } from '../Hooks/useSyncV1CaseIdInURL';
 import { ArrangementsSection } from '../V1Cases/Arrangements/ArrangementsSection/ArrangementsSection';
 import { useFeatureFlagEnabled } from 'posthog-js/react';
 import { TestFamilyBadge } from './TestFamilyBadge';
-import { visibleReferralsQuery } from '../Model/Data';
-import { useRecoilValue } from 'recoil';
 import { FamilyCompleteOtherController } from '../Requirements/FamilyCompleteOtherController';
 import { useV1CasesModel } from '../Model/V1CasesModel';
 import { formatStatusWithDate } from '../V1Referrals/formatStatusWithDate';
-import { policyData } from '../Model/ConfigurationModel';
+import { usePolicy } from '../Model/PolicyModel';
 import {
   FUNCTION_ASSIGNMENTS_FEATURE_FLAG,
   REFERRALS_FEATURE_FLAG,
@@ -146,20 +142,22 @@ export function FamilyScreen() {
   // TODO: When we go to optimize the layout, we should consider updating the generated client
   // to include the ids of the communities each family is a member of in the CombinedFamilyInfo
   // data model so that we don't need to start by first looking up ALL communities
-  const communitiesLoadable = useLoadable(visibleCommunitiesQuery);
-  const allCommunities = (communitiesLoadable || [])
-    .map((x) => x.community!)
-    .sort((a, b) => (a.name! < b.name! ? -1 : a.name! > b.name! ? 1 : 0));
-  const communityLookup = useCommunityLookup();
-  const allCommunityInfo = allCommunities.map((c) => communityLookup(c.id)!);
-  const familyCommunityInfo = allCommunityInfo?.filter((c) =>
+  const visibleCommunities = useVisibleCommunities();
+  const allCommunityInfo = [...visibleCommunities].sort((a, b) =>
+    a.community!.name! < b.community!.name!
+      ? -1
+      : a.community!.name! > b.community!.name!
+        ? 1
+        : 0
+  );
+  const familyCommunityInfo = allCommunityInfo.filter((c) =>
     c.community?.memberFamilies?.includes(familyId)
   );
 
-  const referralInfos = useRecoilValue(visibleReferralsQuery);
+  const referralInfos = useVisibleReferrals();
 
   const familyReferrals = useMemo(() => {
-    return (referralInfos ?? [])
+    return referralInfos
       .map((referralInfo) => referralInfo.referral)
       .filter((r) => r.familyId === familyId);
   }, [referralInfos, familyId]);
@@ -186,7 +184,7 @@ export function FamilyScreen() {
   const familyLookup = useFamilyLookup();
   const personAndFamilyLookup = usePersonAndFamilyLookup();
   const family = familyLookup(familyId);
-  const policy = useRecoilValue(policyData);
+  const policy = usePolicy();
 
   const directoryModel = useDirectoryModel();
 
@@ -223,13 +221,10 @@ export function FamilyScreen() {
   }, [openV1Cases, closedV1Cases]);
   const [closeCaseDrawerOpen, setCloseCaseDrawerOpen] = useState(false);
   const v1CasesModel = useV1CasesModel();
-  const referralInfosLoadable = useLoadable(visibleReferralsQuery);
   const openReferralId =
-    referralInfosLoadable
-      ?.map((referralInfo) => referralInfo.referral)
-      .find(
-        (r) => r.familyId === familyId && r.status === V1ReferralStatus.Open
-      )?.referralId ?? undefined;
+    familyReferrals.find(
+      (referral) => referral.status === V1ReferralStatus.Open
+    )?.referralId ?? undefined;
   const [openNewV1CaseDialogOpen, setOpenNewV1CaseDialogOpen] = useState(false);
   const [uploadDocumentDialogOpen, setUploadDocumentDialogOpen] =
     useState(false);

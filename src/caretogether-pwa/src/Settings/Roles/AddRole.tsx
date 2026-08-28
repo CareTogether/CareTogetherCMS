@@ -11,23 +11,23 @@ import { RoleDefinition } from '../../GeneratedClient';
 import { useState } from 'react';
 import { useBackdrop } from '../../Hooks/useBackdrop';
 import { api } from '../../Api/Api';
-import { useRecoilValue, useSetRecoilState } from 'recoil';
-import { selectedLocationContextState } from '../../Model/Data';
+import { useSetAtom } from 'jotai';
+import { useRequiredSelectedLocationContext } from '../../Model/Data';
 import { organizationConfigurationEdited } from '../../Model/ConfigurationModel';
 
 interface DrawerProps {
   onClose: () => void;
 }
 
-interface AddEditRoleDrawerProps extends DrawerProps {}
+type AddEditRoleDrawerProps = DrawerProps;
 
 export function AddRole({ onClose }: AddEditRoleDrawerProps) {
   const [roleName, setRoleName] = useState('');
   const [isProtected, setIsProtected] = useState(false);
 
-  const { organizationId } = useRecoilValue(selectedLocationContextState);
+  const { organizationId } = useRequiredSelectedLocationContext();
 
-  const storeEdits = useSetRecoilState(organizationConfigurationEdited);
+  const storeEdits = useSetAtom(organizationConfigurationEdited);
 
   const withBackdrop = useBackdrop();
 

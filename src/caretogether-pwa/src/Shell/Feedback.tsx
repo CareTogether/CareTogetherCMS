@@ -13,10 +13,10 @@ import {
 } from '@mui/material';
 import Button from '@mui/material/Button';
 import { Permission } from '../GeneratedClient';
-import { useGlobalPermissions } from '../Model/SessionModel';
+import { useGlobalPermissionsLoadable } from '../Model/SessionModel';
 
 export default function Feedback() {
-  const permissions = useGlobalPermissions();
+  const permissions = useGlobalPermissionsLoadable();
   const hasAccessToSupport = permissions(Permission.AccessSupportScreen);
 
   const [anchorEl, setAnchorEl] = React.useState<HTMLElement | null>(null);

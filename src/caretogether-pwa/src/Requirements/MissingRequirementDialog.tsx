@@ -16,7 +16,6 @@ import {
   TextField,
 } from '@mui/material';
 import { useState } from 'react';
-import { useRecoilValue } from 'recoil';
 import {
   ActionRequirement,
   Arrangement,
@@ -36,7 +35,10 @@ import {
   uploadFamilyFileToTenant,
   uploadV1ReferralFileToTenant,
 } from '../Model/FilesModel';
-import { visibleReferralsQuery } from '../Model/Data';
+import {
+  useRequiredSelectedLocationContext,
+  useVisibleReferrals,
+} from '../Model/Data';
 import { useV1CasesModel } from '../Model/V1CasesModel';
 import { useVolunteersModel } from '../Model/VolunteersModel';
 import { UpdateDialog } from '../Generic/UpdateDialog';
@@ -46,7 +48,6 @@ import { personNameString } from '../Families/PersonName';
 import { DialogHandle } from '../Hooks/useDialogHandle';
 import { familyNameString } from '../Families/FamilyName';
 import { add, format, formatDuration, formatRelative, isValid } from 'date-fns';
-import { selectedLocationContextState } from '../Model/Data';
 import { ValidateDatePicker } from '../Generic/Forms/ValidateDatePicker';
 import { useV1ReferralsModel } from '../Model/V1ReferralsModel';
 import { useV1ReferralNotesModel } from '../Model/V1ReferralNotesModel';
@@ -89,9 +90,7 @@ export function MissingRequirementDialog({
   const [completedAtError, setCompletedAtError] = useState(false);
   const [notes, setNotes] = useState('');
   const UPLOAD_NEW = '__uploadnew__';
-  const { organizationId, locationId } = useRecoilValue(
-    selectedLocationContextState
-  );
+  const { organizationId, locationId } = useRequiredSelectedLocationContext();
   const [additionalComments, setAdditionalComments] = useState('');
   const [exemptionExpiresAtLocal, setExemptionExpiresAtLocal] = useState(
     null as Date | null
@@ -122,7 +121,7 @@ export function MissingRequirementDialog({
     return familyId;
   }
 
-  const referralInfos = useRecoilValue(visibleReferralsQuery);
+  const referralInfos = useVisibleReferrals();
   const currentReferral =
     context.kind === 'V1Referral'
       ? referralInfos.find(

@@ -1,4 +1,3 @@
-import { useRecoilValue } from 'recoil';
 import { useCallback, useMemo } from 'react';
 import {
   AddAdultToFamilyCommand,
@@ -61,8 +60,7 @@ import {
 import {
   useAtomicRecordsCommandCallback,
   useCompositeRecordsCommandCallback,
-  visibleCommunitiesQuery,
-  visibleFamiliesQuery,
+  useVisibleFamilies,
 } from './Data';
 import { commandFactory } from './CommandFactory';
 import { SYSTEM_USER_ID } from '../constants';
@@ -98,7 +96,7 @@ function trackNoteAuthorLookupError(note: Note, reason: string) {
 }
 
 export function usePersonLookup() {
-  const visibleFamilies = useRecoilValue(visibleFamiliesQuery);
+  const visibleFamilies = useVisibleFamilies();
   const familyById = useMemo(
     () =>
       new Map(
@@ -122,7 +120,7 @@ export function usePersonLookup() {
 }
 
 export function usePersonAndFamilyLookup() {
-  const visibleFamilies = useRecoilValue(visibleFamiliesQuery);
+  const visibleFamilies = useVisibleFamilies();
   const personAndFamilyByPersonId = useMemo(
     () =>
       new Map(
@@ -153,7 +151,7 @@ export function usePersonAndFamilyLookup() {
 }
 
 export function useUserLookup() {
-  const visibleFamilies = useRecoilValue(visibleFamiliesQuery);
+  const visibleFamilies = useVisibleFamilies();
 
   return (userId?: string) => {
     if (isSystemUserId(userId)) {
@@ -212,7 +210,7 @@ export function useNoteAuthorLookup() {
 }
 
 export function useFamilyLookup() {
-  const visibleFamilies = useRecoilValue(visibleFamiliesQuery);
+  const visibleFamilies = useVisibleFamilies();
   const familyById = useMemo(
     () =>
       new Map(
@@ -227,17 +225,6 @@ export function useFamilyLookup() {
     (familyId?: string) => (familyId ? familyById.get(familyId) : undefined),
     [familyById]
   );
-}
-
-export function useCommunityLookup() {
-  const visibleCommunities = useRecoilValue(visibleCommunitiesQuery);
-
-  return (communityId?: string) => {
-    const community = visibleCommunities.find(
-      (community) => community.community?.id === communityId
-    );
-    return community;
-  };
 }
 
 function useFamilyCommandCallback<T extends unknown[]>(

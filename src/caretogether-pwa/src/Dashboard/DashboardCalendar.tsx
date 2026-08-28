@@ -19,8 +19,7 @@ import {
 import { InfoOutlined as InfoOutlinedIcon } from '@mui/icons-material';
 import { EventCalendar } from '@mui/x-scheduler/event-calendar';
 import type { EventCalendarPreferences } from '@mui/x-scheduler/models';
-import { partneringFamiliesData } from '../Model/V1CasesModel';
-import { useLoadable } from '../Hooks/useLoadable';
+import { usePartneringFamilies } from '../Model/V1CasesModel';
 import { useFamilyLookup } from '../Model/DirectoryModel';
 import { useAppNavigate } from '../Hooks/useAppNavigate';
 import {
@@ -216,7 +215,7 @@ function getDashboardCalendarEventTypeFilterKey(
 
 export function DashboardCalendar() {
   const familyLookup = useFamilyLookup();
-  const partneringFamilies = useLoadable(partneringFamiliesData);
+  const partneringFamilies = usePartneringFamilies();
   const appNavigate = useAppNavigate();
   const [view, setView] = useState<CalendarView>(getSavedInitialView);
   const [visibleDate, setVisibleDate] = useState(() => startOfDay(new Date()));
@@ -233,7 +232,7 @@ export function DashboardCalendar() {
   const eventGroups = useMemo(
     () =>
       buildDashboardCalendarEventGroups(
-        partneringFamilies || undefined,
+        partneringFamilies,
         familyLookup,
         visibleDateRange
       ),

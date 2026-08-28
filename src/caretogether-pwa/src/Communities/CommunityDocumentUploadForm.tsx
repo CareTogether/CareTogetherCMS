@@ -5,8 +5,7 @@ import { useCommunityCommand } from '../Model/DirectoryModel';
 import { uploadCommunityFileToTenant } from '../Model/FilesModel';
 import { useState } from 'react';
 import { useBackdrop } from '../Hooks/useBackdrop';
-import { useRecoilValue } from 'recoil';
-import { selectedLocationContextState } from '../Model/Data';
+import { useRequiredSelectedLocationContext } from '../Model/Data';
 
 interface DrawerProps {
   onClose: () => void;
@@ -19,9 +18,7 @@ export function CommunityDocumentUpload({
   onClose,
 }: CommunityDocumentUploadProps) {
   const [documentFiles, setDocumentFiles] = useState<FileList | null>(null);
-  const { organizationId, locationId } = useRecoilValue(
-    selectedLocationContextState
-  );
+  const { organizationId, locationId } = useRequiredSelectedLocationContext();
 
   const withBackdrop = useBackdrop();
 

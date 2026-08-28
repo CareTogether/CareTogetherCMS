@@ -1,6 +1,6 @@
 import Grid from '@mui/material/Grid';
 import { Button, TextField } from '@mui/material';
-import { useRecoilValue, useSetRecoilState } from 'recoil';
+import { useSetAtom } from 'jotai';
 import { api } from '../../../../Api/Api';
 import {
   AccessLevel,
@@ -10,9 +10,9 @@ import {
 import { useBackdrop } from '../../../../Hooks/useBackdrop';
 import {
   organizationConfigurationEdited,
-  organizationConfigurationQuery,
+  useOrganizationConfiguration,
 } from '../../../../Model/ConfigurationModel';
-import { selectedLocationContextState } from '../../../../Model/Data';
+import { useRequiredSelectedLocationContext } from '../../../../Model/Data';
 import { CTAutocomplete } from '../../../../Generic/Forms/CTAutocomplete';
 import { Controller, SubmitHandler, useForm } from 'react-hook-form';
 import { camelCaseToSpaces } from '../../../../Utilities/stringUtils';
@@ -49,10 +49,10 @@ export function AddAccessLevel({
     },
   });
 
-  const organization = useRecoilValue(organizationConfigurationQuery);
-  const { organizationId } = useRecoilValue(selectedLocationContextState);
+  const organization = useOrganizationConfiguration();
+  const { organizationId } = useRequiredSelectedLocationContext();
 
-  const storeEdits = useSetRecoilState(organizationConfigurationEdited);
+  const storeEdits = useSetAtom(organizationConfigurationEdited);
 
   const withBackdrop = useBackdrop();
 

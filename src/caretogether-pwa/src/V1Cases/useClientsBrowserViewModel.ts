@@ -12,10 +12,9 @@ import { personNameString } from '../Families/PersonName';
 import {
   usePersonAndFamilyLookup,
 } from '../Model/DirectoryModel';
-import { useLoadable } from '../Hooks/useLoadable';
-import { partneringFamiliesData } from '../Model/V1CasesModel';
-import { policyData } from '../Model/ConfigurationModel';
-import { visibleReferralsQuery } from '../Model/Data';
+import { usePartneringFamilies } from '../Model/V1CasesModel';
+import { usePolicy } from '../Model/PolicyModel';
+import { useVisibleReferrals } from '../Model/Data';
 import { matchesCustomFieldFilters } from '../Generic/CustomFieldsFilter/matchesCustomFieldFilters';
 import { CustomFieldFilterSelectionsByField } from '../Generic/CustomFieldsFilter/types';
 import { getFamilyCounty } from '../Utilities/getFamilyCounty';
@@ -235,24 +234,14 @@ export function useClientsBrowserViewModel({
   selectedCustomFieldValuesByField = {},
   sortMode = 'lastNameAsc',
 }: UseClientsBrowserViewModelParameters = {}) {
-  const partneringFamiliesLoadable = useLoadable(partneringFamiliesData);
-  const partneringFamilies = useMemo(
-    () => partneringFamiliesLoadable ?? [],
-    [partneringFamiliesLoadable]
-  );
-  const visibleReferralsLoadable = useLoadable(visibleReferralsQuery);
+  const partneringFamilies = usePartneringFamilies();
+  const visibleReferralRecords = useVisibleReferrals();
   const visibleReferrals = useMemo(
-    () =>
-      visibleReferralsLoadable?.map((referralInfo) => referralInfo.referral) ??
-      [],
-    [visibleReferralsLoadable]
+    () => visibleReferralRecords.map((referralInfo) => referralInfo.referral),
+    [visibleReferralRecords]
   );
-  const policy = useLoadable(policyData);
+  const policy = usePolicy();
   const personAndFamilyLookup = usePersonAndFamilyLookup();
-  const isLoading =
-    partneringFamiliesLoadable === null ||
-    visibleReferralsLoadable === null ||
-    policy === null;
   const normalizedFilterText = useMemo(() => simplify(filterText), [filterText]);
 
   const openReferralByFamily = useMemo(
@@ -260,12 +249,12 @@ export function useClientsBrowserViewModel({
     [visibleReferrals]
   );
   const referralCustomFields = useMemo(
-    () => policy?.referralPolicy?.customFields ?? [],
-    [policy?.referralPolicy?.customFields]
+    () => policy.referralPolicy?.customFields ?? [],
+    [policy.referralPolicy?.customFields]
   );
   const clientFamilyCustomFields = useMemo(
-    () => policy?.customFamilyFields ?? [],
-    [policy?.customFamilyFields]
+    () => policy.customFamilyFields ?? [],
+    [policy.customFamilyFields]
   );
   const assignmentFilterAssignments = useMemo(
     () =>
@@ -279,14 +268,14 @@ export function useClientsBrowserViewModel({
   const assignmentFilterOptions = useMemo(
     () =>
       assignmentRolesForColumns(
-        policy?.referralPolicy?.functionAssignmentPolicies?.map(
+        policy.referralPolicy?.functionAssignmentPolicies?.map(
           (assignmentPolicy) => assignmentPolicy.assignmentRole
         ) ?? [],
         assignmentFilterAssignments
       ),
     [
       assignmentFilterAssignments,
-      policy?.referralPolicy?.functionAssignmentPolicies,
+      policy.referralPolicy?.functionAssignmentPolicies,
     ]
   );
   const arrangementRowsByFamily = useMemo(() => {
@@ -482,7 +471,6 @@ export function useClientsBrowserViewModel({
     rows,
     arrangementRowsByFamily,
     counties,
-    isLoading,
     totalFamilies: partneringFamilies.length,
     activeFamilies,
     intakeFamilies,

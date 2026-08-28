@@ -1,6 +1,5 @@
-import { useRecoilValue } from 'recoil';
 import { Permission, RequirementDefinition } from '../GeneratedClient';
-import { policyData } from '../Model/ConfigurationModel';
+import { usePolicy } from '../Model/PolicyModel';
 import {
   useFamilyIdPermissions,
   useGlobalPermissions,
@@ -26,7 +25,7 @@ export function MissingRequirementRow({
   isAvailableApplication,
   v1CaseId,
 }: MissingRequirementRowProps) {
-  const policy = useRecoilValue(policyData);
+  const policy = usePolicy();
   const familyIdForPermissions =
     context.kind === 'V1Case' ||
     context.kind === 'Arrangement' ||
