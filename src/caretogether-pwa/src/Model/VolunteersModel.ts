@@ -24,14 +24,17 @@ import {
   UpdateCustomVolunteerFamilyField,
 } from '../GeneratedClient';
 import {
+  mapLoadedValue,
   useAtomicRecordsCommandCallback,
   visibleFamiliesAtom,
 } from './Data';
 import { commandFactory } from './CommandFactory';
 
-export const volunteerFamiliesData = atom(async (get) => {
-  const visibleFamilies = await get(visibleFamiliesAtom);
-  return visibleFamilies.filter((f) => f.volunteerFamilyInfo);
+export const volunteerFamiliesData = atom((get) => {
+  const visibleFamilies = get(visibleFamiliesAtom);
+  return mapLoadedValue(visibleFamilies, (families) =>
+    families.filter((f) => f.volunteerFamilyInfo)
+  );
 });
 
 export function useVolunteerFamilies() {

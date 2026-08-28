@@ -21,12 +21,10 @@ import {
   TextField,
   Typography,
 } from '@mui/material';
-import { add, format, formatDuration, formatRelative, isValid } from 'date-fns';
-import { useEffect, useMemo, useState } from 'react';
+import { add, format, formatDuration, isValid } from 'date-fns';
+import { useEffect, useState } from 'react';
 import {
-  ActionRequirement,
   Arrangement,
-  ArrangementPhase,
   CompletedRequirementInfo,
   DocumentLinkRequirement,
   ExemptedRequirementInfo,
@@ -45,9 +43,20 @@ import {
   usePersonLookup,
 } from '../../Model/DirectoryModel';
 import { uploadFamilyFileToTenant } from '../../Model/FilesModel';
-import { useV1CasesModel } from '../../Model/V1CasesModel';
 import { formatUtcDateOnly } from '../../Utilities/dateUtils';
 import { RequirementContext } from '../../Requirements/RequirementContext';
+import {
+  familyIdFromRequirementContext,
+  findActionRequirementPolicy,
+  getArrangementRequirementStatusLabel,
+  isArrangementRequirementContext,
+  parseRequirementValidity,
+  requirementNameFromWorkflowRequirement,
+} from '../../Requirements/requirementWorkflowModel';
+import { useArrangementRequirementSelection } from '../../Requirements/useArrangementRequirementSelection';
+import { useRequirementCompletionForm } from '../../Requirements/useRequirementCompletionForm';
+import { useRequirementCommands } from '../../Requirements/useRequirementCommands';
+import { useRequirementExemptionForm } from '../../Requirements/useRequirementExemptionForm';
 
 export type ArrangementRequirementWorkflowV2 =
   | {
@@ -126,67 +135,12 @@ function formatDocumentUploadError(error: unknown, fileName: string) {
   return 'Upload failed. Please try again.';
 }
 
-function requirementName(workflow: ArrangementRequirementWorkflowV2) {
-  if (workflow.kind === 'missing') {
-    return workflow.requirement.action?.actionName ?? 'Requirement';
-  }
-
-  return workflow.requirement.requirementName;
-}
-
-function familyIdFromContext(context: RequirementContext) {
-  if (
-    context.kind === 'Arrangement' ||
-    context.kind === 'Family Volunteer Assignment' ||
-    context.kind === 'Individual Volunteer Assignment'
-  ) {
-    return context.partneringFamilyId;
-  }
-
-  return '';
-}
-
 function contextLabel(context: RequirementContext) {
   if (context.kind === 'Arrangement') {
     return 'Arrangement';
   }
 
   return context.kind;
-}
-
-function isArrangementRequirementContext(
-  context: RequirementContext
-): context is
-  | Extract<RequirementContext, { kind: 'Arrangement' }>
-  | Extract<RequirementContext, { kind: 'Family Volunteer Assignment' }>
-  | Extract<RequirementContext, { kind: 'Individual Volunteer Assignment' }> {
-  return (
-    context.kind === 'Arrangement' ||
-    context.kind === 'Family Volunteer Assignment' ||
-    context.kind === 'Individual Volunteer Assignment'
-  );
-}
-
-function arrangementStatusLabel(arrangement: Arrangement) {
-  const now = new Date();
-
-  if (arrangement.phase === ArrangementPhase.Cancelled) {
-    return `Cancelled ${formatRelative(arrangement.cancelledAtUtc!, now)}`;
-  }
-
-  if (arrangement.phase === ArrangementPhase.SettingUp) {
-    return 'Setting up';
-  }
-
-  if (arrangement.phase === ArrangementPhase.ReadyToStart) {
-    return 'Ready to start';
-  }
-
-  if (arrangement.phase === ArrangementPhase.Started) {
-    return `Started ${formatRelative(arrangement.startedAtUtc!, now)}`;
-  }
-
-  return `Ended ${formatRelative(arrangement.endedAtUtc!, now)}`;
 }
 
 function ArrangementApplyLabel({
@@ -198,7 +152,7 @@ function ArrangementApplyLabel({
 }) {
   const familyLookup = useFamilyLookup();
   const personLookup = usePersonLookup();
-  const familyId = familyIdFromContext(context);
+  const familyId = familyIdFromRequirementContext(context);
   const person = familyId
     ? personLookup(familyId, arrangement.partneringFamilyPersonId)
     : undefined;
@@ -221,20 +175,8 @@ function ArrangementApplyLabel({
               : ''
           })`
         : ''}{' '}
-      - {arrangementStatusLabel(arrangement)}
+      - {getArrangementRequirementStatusLabel(arrangement)}
     </Typography>
-  );
-}
-
-function findRequirementPolicy(
-  actionDefinitions: Record<string, ActionRequirement>,
-  actionName: string
-) {
-  return (
-    actionDefinitions[actionName] ??
-    Object.values(actionDefinitions).find((definition) =>
-      definition.alternateNames?.includes(actionName)
-    )
   );
 }
 
@@ -244,38 +186,29 @@ export function ArrangementRequirementManagementDrawerV2({
   workflow,
 }: ArrangementRequirementManagementDrawerV2Props) {
   const directory = useDirectoryModel();
-  const v1Cases = useV1CasesModel();
   const withBackdrop = useBackdrop();
+  const requirementCommands = useRequirementCommands();
   const policy = usePolicy();
   const { organizationId, locationId } = useRequiredSelectedLocationContext();
   const familyLookup = useFamilyLookup();
 
   const [tabValue, setTabValue] = useState(0);
-  const [documentFile, setDocumentFile] = useState<File | null>(null);
-  const [documentId, setDocumentId] = useState('');
-  const [completedAtLocal, setCompletedAtLocal] = useState<Date | null>(null);
-  const [completedAtError, setCompletedAtError] = useState(false);
-  const [notes, setNotes] = useState('');
-  const [additionalComments, setAdditionalComments] = useState('');
-  const [exemptionExpiresAtLocal, setExemptionExpiresAtLocal] =
-    useState<Date | null>(null);
-  const [exemptionExpiresAtError, setExemptionExpiresAtError] = useState(false);
-  const [exemptAll, setExemptAll] = useState(false);
-  const [applyToArrangements, setApplyToArrangements] = useState<Arrangement[]>(
-    []
-  );
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
 
-  const requirementTitle = workflow ? requirementName(workflow) : '';
+  const requirementTitle = workflow
+    ? requirementNameFromWorkflowRequirement(workflow.requirement)
+    : '';
   const requirementPolicy =
     workflow?.kind === 'missing'
-      ? findRequirementPolicy(
+      ? findActionRequirementPolicy(
           policy.actionDefinitions,
           workflow.requirement.action?.actionName ?? ''
         )
       : undefined;
-  const familyId = workflow ? familyIdFromContext(workflow.context) : '';
+  const familyId = workflow
+    ? (familyIdFromRequirementContext(workflow.context) ?? '')
+    : '';
   const contextFamily = familyId ? familyLookup(familyId) : undefined;
   const openV1Case = contextFamily?.partneringFamilyInfo?.openV1Case;
   const closedV1Cases =
@@ -294,85 +227,66 @@ export function ArrangementRequirementManagementDrawerV2({
         (v1Case) => v1Case.id === arrangementContext.v1CaseId
       )
     : undefined;
-  const availableArrangements = useMemo(
-    () =>
-      workflow?.kind === 'missing' &&
-      selectedV1Case &&
-      workflow.requirement instanceof MissingArrangementRequirement
-        ? selectedV1Case.arrangements!.filter((arrangement) =>
-            [
-              ...(arrangement.missingRequirements ?? []),
-              ...(arrangement.missingOptionalRequirements ?? []),
-            ].some((missingRequirementInfo) => {
-              if (workflow.context.kind === 'Family Volunteer Assignment') {
-                return (
-                  missingRequirementInfo.action?.actionName ===
-                    workflow.requirement.action?.actionName &&
-                  missingRequirementInfo.arrangementFunction ===
-                    workflow.context.assignment.arrangementFunction &&
-                  missingRequirementInfo.arrangementFunctionVariant ===
-                    workflow.context.assignment.arrangementFunctionVariant &&
-                  missingRequirementInfo.volunteerFamilyId ===
-                    workflow.context.assignment.familyId
-                );
-              }
-
-              if (workflow.context.kind === 'Individual Volunteer Assignment') {
-                return (
-                  missingRequirementInfo.action?.actionName ===
-                    workflow.requirement.action?.actionName &&
-                  missingRequirementInfo.arrangementFunction ===
-                    workflow.context.assignment.arrangementFunction &&
-                  missingRequirementInfo.arrangementFunctionVariant ===
-                    workflow.context.assignment.arrangementFunctionVariant &&
-                  missingRequirementInfo.volunteerFamilyId ===
-                    workflow.context.assignment.familyId &&
-                  missingRequirementInfo.personId ===
-                    workflow.context.assignment.personId
-                );
-              }
-
-              return (
-                missingRequirementInfo.action?.actionName ===
-                workflow.requirement.action?.actionName
-              );
-            })
-          )
-        : [],
-    [selectedV1Case, workflow]
-  );
-  const validityDuration = requirementPolicy?.validity
-    ? { days: parseInt(requirementPolicy.validity.split('.')[0]) }
-    : null;
+  const {
+    availableArrangements,
+    hasValidArrangementSelection,
+    isArrangementSelected,
+    selectedArrangementIds,
+    toggleApplyToArrangement,
+  } = useArrangementRequirementSelection({
+    context: workflow?.context,
+    defaultSelectionScope: 'arrangement-workflow-contexts',
+    requirement: workflow?.kind === 'missing' ? workflow.requirement : undefined,
+    resetOnWorkflowChange: true,
+    resetSelectionKey: workflow,
+    selectedV1Case,
+    workflowOpen: open && workflow?.kind === 'missing',
+  });
+  const {
+    canCompleteRequirement,
+    completedAtLocal,
+    documentFile,
+    documentId,
+    notes,
+    setCompletedAtError,
+    setCompletedAtLocal,
+    setDocumentFile,
+    setDocumentId,
+    setNotes,
+  } = useRequirementCompletionForm({
+    canComplete: workflow?.kind === 'missing' && !!requirementPolicy,
+    hasValidArrangementSelection,
+    policy: requirementPolicy,
+    resetCompletionKey: workflow,
+    resetOnWorkflowChange: true,
+    uploadNewDocumentId: UPLOAD_NEW,
+    workflowOpen: open && !!workflow,
+  });
+  const {
+    additionalComments,
+    canExemptRequirement,
+    exemptAll,
+    exemptionExpiresAtLocal,
+    setAdditionalComments,
+    setExemptAll,
+    setExemptionExpiresAtError,
+    setExemptionExpiresAtLocal,
+  } = useRequirementExemptionForm({
+    canExempt: workflow?.kind === 'missing' && !!requirementPolicy,
+    hasValidArrangementSelection,
+    resetExemptionKey: workflow,
+    resetOnWorkflowChange: true,
+    workflowOpen: open && !!workflow,
+  });
+  const validityDuration = parseRequirementValidity(requirementPolicy?.validity);
 
   useEffect(() => {
     if (!open || !workflow) return;
 
     setTabValue(0);
-    setDocumentFile(null);
-    setDocumentId('');
-    setCompletedAtLocal(null);
-    setCompletedAtError(false);
-    setNotes('');
-    setAdditionalComments('');
-    setExemptionExpiresAtLocal(null);
-    setExemptionExpiresAtError(false);
-    setExemptAll(false);
     setUploadError(null);
     setSaving(false);
   }, [open, workflow]);
-
-  useEffect(() => {
-    if (!open || workflow?.kind !== 'missing') return;
-
-    setApplyToArrangements(
-      arrangementContext
-        ? availableArrangements.filter(
-            (arrangement) => arrangement.id === arrangementContext.arrangementId
-          )
-        : []
-    );
-  }, [arrangementContext, availableArrangements, open, workflow]);
 
   if (!workflow) {
     return (
@@ -386,36 +300,14 @@ export function ArrangementRequirementManagementDrawerV2({
     if (!saving) onClose();
   };
 
-  const requiresArrangementSelection =
-    workflow.kind === 'missing' && availableArrangements.length > 0;
-  const hasValidArrangementSelection =
-    !requiresArrangementSelection || applyToArrangements.length > 0;
   const canSaveMissing =
     workflow.kind === 'missing' &&
     requirementPolicy &&
     hasValidArrangementSelection &&
     (tabValue === 0
-      ? completedAtLocal !== null &&
-        !completedAtError &&
-        ((documentId === UPLOAD_NEW && documentFile) ||
-          (documentId !== UPLOAD_NEW && documentId !== '') ||
-          requirementPolicy.documentLink !==
-            DocumentLinkRequirement.Required) &&
-        (notes !== '' ||
-          requirementPolicy.noteEntry !== NoteEntryRequirement.Required)
-      : additionalComments !== '' && !exemptionExpiresAtError);
+      ? canCompleteRequirement
+      : canExemptRequirement);
   const canSave = workflow.kind === 'missing' ? canSaveMissing : true;
-
-  const toggleApplyToArrangement = (
-    arrangement: Arrangement,
-    include: boolean
-  ) => {
-    setApplyToArrangements((current) =>
-      include
-        ? current.concat(arrangement)
-        : current.filter((item) => item.id !== arrangement.id)
-    );
-  };
 
   const uploadDocument = async () => {
     if (documentId !== UPLOAD_NEW) {
@@ -467,185 +359,51 @@ export function ArrangementRequirementManagementDrawerV2({
 
   const completeMissingRequirement = async () => {
     if (!requirementPolicy || workflow.kind !== 'missing') return;
-    if (!isArrangementRequirementContext(workflow.context)) {
-      throw new Error(
-        `Invalid requirement context '${workflow.context.kind}'.`
-      );
-    }
 
     const document = await uploadDocument();
     const noteId = await createCompletionNote();
-    const arrangementIds = applyToArrangements.map(
-      (arrangement) => arrangement.id!
-    );
 
-    if (workflow.context.kind === 'Arrangement') {
-      await v1Cases.completeArrangementRequirement(
-        familyId,
-        workflow.context.v1CaseId,
-        arrangementIds,
-        requirementTitle,
-        requirementPolicy,
-        completedAtLocal!,
-        document,
-        noteId
-      );
-      return;
-    }
-
-    if (workflow.context.kind === 'Family Volunteer Assignment') {
-      await v1Cases.completeVolunteerFamilyAssignmentRequirement(
-        familyId,
-        workflow.context.v1CaseId,
-        arrangementIds,
-        workflow.context.assignment,
-        requirementTitle,
-        requirementPolicy,
-        completedAtLocal!,
-        document,
-        noteId
-      );
-      return;
-    }
-
-    await v1Cases.completeIndividualVolunteerAssignmentRequirement(
-      familyId,
-      workflow.context.v1CaseId,
-      arrangementIds,
-      workflow.context.assignment,
-      requirementTitle,
-      requirementPolicy,
-      completedAtLocal!,
+    await requirementCommands.completeRequirement({
+      completedAtLocal: completedAtLocal!,
+      context: workflow.context,
       document,
-      noteId
-    );
+      noteId,
+      policy: requirementPolicy,
+      requirementName: requirementTitle,
+      selectedArrangementIds,
+    });
   };
 
   const exemptMissingRequirement = async () => {
     if (workflow.kind !== 'missing') return;
-    if (!isArrangementRequirementContext(workflow.context)) {
-      throw new Error(
-        `Invalid requirement context '${workflow.context.kind}'.`
-      );
-    }
 
-    const arrangementIds = applyToArrangements.map(
-      (arrangement) => arrangement.id!
-    );
-
-    if (workflow.context.kind === 'Arrangement') {
-      await v1Cases.exemptArrangementRequirement(
-        familyId,
-        workflow.context.v1CaseId,
-        arrangementIds,
-        workflow.requirement,
-        exemptAll,
-        additionalComments,
-        exemptionExpiresAtLocal
-      );
-      return;
-    }
-
-    if (workflow.context.kind === 'Family Volunteer Assignment') {
-      await v1Cases.exemptVolunteerFamilyAssignmentRequirement(
-        familyId,
-        workflow.context.v1CaseId,
-        arrangementIds,
-        workflow.context.assignment,
-        workflow.requirement,
-        exemptAll,
-        additionalComments,
-        exemptionExpiresAtLocal
-      );
-      return;
-    }
-
-    await v1Cases.exemptIndividualVolunteerAssignmentRequirement(
-      familyId,
-      workflow.context.v1CaseId,
-      arrangementIds,
-      workflow.context.assignment,
-      workflow.requirement,
-      exemptAll,
+    await requirementCommands.exemptRequirement({
       additionalComments,
-      exemptionExpiresAtLocal
-    );
+      context: workflow.context,
+      exemptAll,
+      exemptionExpiresAtLocal,
+      requirement: workflow.requirement,
+      requirementName: requirementTitle,
+      selectedArrangementIds,
+    });
   };
 
   const markRequirementIncomplete = async () => {
     if (workflow.kind !== 'completed') return;
-    if (!isArrangementRequirementContext(workflow.context)) {
-      throw new Error(
-        `Invalid requirement context '${workflow.context.kind}'.`
-      );
-    }
 
-    if (workflow.context.kind === 'Arrangement') {
-      await v1Cases.markArrangementRequirementIncomplete(
-        familyId,
-        workflow.context.v1CaseId,
-        workflow.context.arrangementId,
-        workflow.requirement
-      );
-      return;
-    }
-
-    if (workflow.context.kind === 'Family Volunteer Assignment') {
-      await v1Cases.markVolunteerFamilyAssignmentRequirementIncomplete(
-        familyId,
-        workflow.context.v1CaseId,
-        workflow.context.arrangementId,
-        workflow.context.assignment,
-        workflow.requirement
-      );
-      return;
-    }
-
-    await v1Cases.markIndividualVolunteerAssignmentRequirementIncomplete(
-      familyId,
-      workflow.context.v1CaseId,
-      workflow.context.arrangementId,
-      workflow.context.assignment,
-      workflow.requirement
-    );
+    await requirementCommands.markRequirementIncomplete({
+      completedRequirement: workflow.requirement,
+      context: workflow.context,
+    });
   };
 
   const removeRequirementExemption = async () => {
     if (workflow.kind !== 'exempted') return;
-    if (!isArrangementRequirementContext(workflow.context)) {
-      throw new Error(
-        `Invalid requirement context '${workflow.context.kind}'.`
-      );
-    }
 
-    if (workflow.context.kind === 'Arrangement') {
-      await v1Cases.unexemptArrangementRequirement(
-        familyId,
-        workflow.context.v1CaseId,
-        workflow.context.arrangementId,
-        workflow.requirement
-      );
-      return;
-    }
-
-    if (workflow.context.kind === 'Family Volunteer Assignment') {
-      await v1Cases.unexemptVolunteerFamilyAssignmentRequirement(
-        familyId,
-        workflow.context.v1CaseId,
-        workflow.context.arrangementId,
-        workflow.context.assignment,
-        workflow.requirement
-      );
-      return;
-    }
-
-    await v1Cases.unexemptIndividualVolunteerAssignmentRequirement(
-      familyId,
-      workflow.context.v1CaseId,
-      workflow.context.arrangementId,
-      workflow.context.assignment,
-      workflow.requirement
-    );
+    await requirementCommands.removeRequirementExemption({
+      context: workflow.context,
+      exemptedRequirement: workflow.requirement,
+    });
   };
 
   const save = async () => {
@@ -793,9 +551,7 @@ export function ArrangementRequirementManagementDrawerV2({
                           key={arrangement.id}
                           control={
                             <Checkbox
-                              checked={applyToArrangements.some(
-                                (item) => item.id === arrangement.id
-                              )}
+                              checked={isArrangementSelected(arrangement)}
                               onChange={(_, checked) =>
                                 toggleApplyToArrangement(arrangement, checked)
                               }
@@ -922,9 +678,7 @@ export function ArrangementRequirementManagementDrawerV2({
                           key={arrangement.id}
                           control={
                             <Checkbox
-                              checked={applyToArrangements.some(
-                                (item) => item.id === arrangement.id
-                              )}
+                              checked={isArrangementSelected(arrangement)}
                               onChange={(_, checked) =>
                                 toggleApplyToArrangement(arrangement, checked)
                               }

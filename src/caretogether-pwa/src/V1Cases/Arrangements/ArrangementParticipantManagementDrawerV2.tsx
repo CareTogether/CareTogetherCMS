@@ -22,13 +22,9 @@ import {
   FamilyVolunteerAssignment,
   FunctionRequirement,
   IndividualVolunteerAssignment,
-  Person,
   Permission,
-  RoleApprovalStatus,
 } from '../../GeneratedClient';
 import { useBackdrop } from '../../Hooks/useBackdrop';
-import { useVisibleFamilies } from '../../Model/Data';
-import { usePersonAndFamilyLookup } from '../../Model/DirectoryModel';
 import { useFamilyIdPermissions } from '../../Model/SessionModel';
 import { useV1CasesModel } from '../../Model/V1CasesModel';
 import type {
@@ -40,8 +36,11 @@ import {
   assignmentActionLabel,
   assignmentMetadataChips,
   assignmentSummary,
-  getFamilyName,
 } from './arrangementAssignmentPresentationHelpersV2';
+import {
+  useArrangementFunctionCandidateAssignees,
+  type ArrangementFunctionCandidateAssignee,
+} from './useArrangementFunctionCandidateAssignees';
 
 type ArrangementParticipantManagementDrawerV2Props = {
   functionSummary: ArrangementFunctionSummaryV2 | null;
@@ -56,14 +55,6 @@ type ArrangementAssignmentDetailDrawerV2Props = {
   row: ArrangementRowV2 | null;
   open: boolean;
   onClose: () => void;
-};
-
-type AssigneeOption = {
-  candidateType: string;
-  displayName: string;
-  familyId: string;
-  key: string;
-  personId: string | null;
 };
 
 export function ArrangementParticipantManagementDrawerV2({
@@ -208,10 +199,12 @@ function ArrangementAssignmentDetailDrawerV2({
   const familyId = familyIdMaybe.familyId ?? partneringFamilyId;
   const permissions = useFamilyIdPermissions(partneringFamilyId);
   const canEditAssignments = permissions(Permission.EditAssignments);
-  const visibleFamilies = useVisibleFamilies();
-  const familyAndPersonLookup = usePersonAndFamilyLookup();
   const v1CasesModel = useV1CasesModel();
   const withBackdrop = useBackdrop();
+  const candidateAssignees = useArrangementFunctionCandidateAssignees({
+    arrangement: row?.source,
+    arrangementFunction: functionSummary?.functionPolicy,
+  });
 
   useEffect(() => {
     setUnassignmentParameter(null);
@@ -231,150 +224,6 @@ function ArrangementAssignmentDetailDrawerV2({
 
   const arrangement = row.source;
   const arrangementFunction = functionSummary.functionPolicy;
-  const candidateNamedPeopleAssignees = arrangementFunction.eligiblePeople
-    ? arrangementFunction.eligiblePeople
-        .map((personId) => familyAndPersonLookup(personId))
-        .filter(
-          (personResult) =>
-            personResult &&
-            personResult.family &&
-            !arrangement.individualVolunteerAssignments?.find(
-              (iva) =>
-                iva.arrangementFunction === arrangementFunction.functionName &&
-                iva.familyId === personResult.family!.id &&
-                iva.personId === personResult.person?.id
-            )
-        )
-        .map((personResult) => ({
-          family: personResult.family!,
-          person: personResult.person || null,
-        }))
-    : [];
-  const candidateVolunteerIndividualAssignees =
-    arrangementFunction.eligibleIndividualVolunteerRoles
-      ? visibleFamilies.flatMap((family) =>
-          family.volunteerFamilyInfo?.individualVolunteers
-            ? Object.entries(family.volunteerFamilyInfo.individualVolunteers)
-                .filter(
-                  ([volunteerId]) =>
-                    family.family!.adults!.find(
-                      (adult) => adult.item1!.id === volunteerId
-                    )!.item1!.active
-                )
-                .flatMap(([volunteerId, volunteerInfo]) =>
-                  volunteerInfo.approvalStatusByRole
-                    ? Object.entries(
-                        volunteerInfo.approvalStatusByRole
-                      ).flatMap(([roleName, roleApprovalStatus]) =>
-                        arrangementFunction.eligibleIndividualVolunteerRoles!.find(
-                          (eligibleRole) => eligibleRole === roleName
-                        ) &&
-                        (roleApprovalStatus.currentStatus ===
-                          RoleApprovalStatus.Approved ||
-                          roleApprovalStatus.currentStatus ===
-                            RoleApprovalStatus.Onboarded) &&
-                        !arrangement.individualVolunteerAssignments?.find(
-                          (iva) =>
-                            iva.arrangementFunction ===
-                              arrangementFunction.functionName &&
-                            iva.familyId === family.family!.id &&
-                            iva.personId === volunteerId
-                        )
-                          ? [
-                              {
-                                family: family.family!,
-                                person:
-                                  family.family!.adults!.find(
-                                    (adult) => adult.item1!.id === volunteerId
-                                  )!.item1 || null,
-                              },
-                            ]
-                          : []
-                      )
-                    : []
-                )
-            : []
-        )
-      : [];
-  const candidateVolunteerFamilyAssignees =
-    arrangementFunction.eligibleVolunteerFamilyRoles
-      ? visibleFamilies.flatMap((family) =>
-          family.volunteerFamilyInfo?.familyRoleApprovals
-            ? Object.entries(
-                family.volunteerFamilyInfo.familyRoleApprovals
-              ).flatMap(([roleName, roleApprovalStatus]) =>
-                arrangementFunction.eligibleVolunteerFamilyRoles!.find(
-                  (eligibleRole) => eligibleRole === roleName
-                ) &&
-                (roleApprovalStatus.currentStatus ===
-                  RoleApprovalStatus.Approved ||
-                  roleApprovalStatus.currentStatus ===
-                    RoleApprovalStatus.Onboarded) &&
-                !arrangement.familyVolunteerAssignments?.find(
-                  (fva) =>
-                    fva.arrangementFunction ===
-                      arrangementFunction.functionName &&
-                    fva.familyId === family.family!.id
-                )
-                  ? [{ family: family.family!, person: null as Person | null }]
-                  : []
-              )
-            : []
-        )
-      : [];
-  const allCandidateAssignees = candidateNamedPeopleAssignees
-    .concat(candidateVolunteerFamilyAssignees)
-    .concat(candidateVolunteerIndividualAssignees);
-  const candidateAssignees: AssigneeOption[] = allCandidateAssignees
-    .filter((item, index) => allCandidateAssignees.indexOf(item) === index)
-    .sort((a, b) => {
-      const aPrimaryContact = a.family.adults!.find(
-        (adult) => a.family.primaryFamilyContactPersonId === adult.item1!.id
-      )?.item1;
-      const bPrimaryContact = b.family.adults!.find(
-        (adult) => b.family.primaryFamilyContactPersonId === adult.item1!.id
-      )?.item1;
-      const aFirst = a.person ? a.person.firstName! : null;
-      const aLast = a.person
-        ? a.person.lastName!
-        : (aPrimaryContact?.lastName ?? '');
-      const bFirst = b.person ? b.person.firstName! : null;
-      const bLast = b.person
-        ? b.person.lastName!
-        : (bPrimaryContact?.lastName ?? '');
-
-      if (aLast < bLast) return -1;
-      if (aLast > bLast) return 1;
-      if (aFirst == null || bFirst == null) return 0;
-      if (aFirst < bFirst) return -1;
-      if (aFirst > bFirst) return 1;
-      return 0;
-    })
-    .map((candidate) => {
-      if (candidate.person == null) {
-        return {
-          familyId: candidate.family.id!,
-          personId: null,
-          key: candidate.family.id!,
-          displayName: getFamilyName(
-            candidate.family.adults!.find(
-              (adult) =>
-                candidate.family.primaryFamilyContactPersonId ===
-                adult.item1?.id
-            )
-          ),
-          candidateType: 'Families',
-        };
-      }
-
-      return {
-        familyId: candidate.family.id!,
-        personId: candidate.person.id!,
-        key: `${candidate.family.id!}|${candidate.person.id || ''}`,
-        displayName: `${candidate.person.firstName} ${candidate.person.lastName}`,
-        candidateType: 'Individuals',
-      };
-    });
   const selectedAssignee = candidateAssignees.find(
     (candidate) => candidate.key === fields.assigneeKey
   );
@@ -546,7 +395,10 @@ function ArrangementAssignmentDetailDrawerV2({
             <Autocomplete
               id="assignee"
               clearOnEscape
-              onChange={(_event, newValue: AssigneeOption | null) => {
+              onChange={(
+                _event,
+                newValue: ArrangementFunctionCandidateAssignee | null
+              ) => {
                 setFields({
                   ...fields,
                   assigneeKey: newValue?.key ?? '',

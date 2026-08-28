@@ -336,15 +336,19 @@ export function useVisibleReferralsLoadable() {
   return useJotaiLoadable(visibleReferralsAtom);
 }
 
+export function mapLoadedValue<T, U>(
+  value: T | Promise<T>,
+  mapValue: (value: T) => U
+) {
+  return value instanceof Promise ? value.then(mapValue) : mapValue(value);
+}
+
 function mapVisibleAggregates<T>(
   visibleAggregates: RecordsAggregate[] | Promise<RecordsAggregate[]>,
   mapAggregates: (visibleAggregates: RecordsAggregate[]) => T
 ) {
-  return visibleAggregates instanceof Promise
-    ? visibleAggregates.then(mapAggregates)
-    : mapAggregates(visibleAggregates);
+  return mapLoadedValue(visibleAggregates, mapAggregates);
 }
-
 export const visibleFamiliesAtom = atom((get) => {
   const visibleAggregates = get(visibleAggregatesState);
   return mapVisibleAggregates(visibleAggregates, (aggregates) =>
