@@ -2359,11 +2359,11 @@ namespace CareTogether.Api.OData
                 {
                     var arrangementRecord = arrangements.Single(arr => arr.Id == arrangement.Id);
                     return arrangement
-                        .IndividualVolunteerAssignments.Select(fva =>
+                        .IndividualVolunteerAssignments.Select(iva =>
                         {
                             var volunteerFamily = TryFindFamilyInLocation(
                                 families,
-                                fva.FamilyId,
+                                iva.FamilyId,
                                 organization.Id,
                                 family.Location.Id
                             );
@@ -2374,7 +2374,7 @@ namespace CareTogether.Api.OData
 
                             var person = TryFindPersonInFamily(
                                 people,
-                                fva.PersonId,
+                                iva.PersonId,
                                 volunteerFamily
                             );
                             if (person == null)
@@ -2389,11 +2389,11 @@ namespace CareTogether.Api.OData
                                 arrangementRecord,
                                 arrangement.Id,
                                 person,
-                                fva.PersonId,
-                                fva.ArrangementFunction
+                                iva.PersonId,
+                                iva.ArrangementFunction
                             );
                         })
-                        .Where(fva => fva != null)
+                        .Where(iva => iva != null)
                         .Cast<IndividualFunctionAssignment>();
                 });
             });
