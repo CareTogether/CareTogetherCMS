@@ -14,7 +14,7 @@ import {
 } from '../Model/DirectoryModel';
 import { usePartneringFamilies } from '../Model/V1CasesModel';
 import { usePolicy } from '../Model/PolicyModel';
-import { useVisibleReferralsLoadable } from '../Model/Data';
+import { useVisibleReferrals } from '../Model/Data';
 import { matchesCustomFieldFilters } from '../Generic/CustomFieldsFilter/matchesCustomFieldFilters';
 import { CustomFieldFilterSelectionsByField } from '../Generic/CustomFieldsFilter/types';
 import { getFamilyCounty } from '../Utilities/getFamilyCounty';
@@ -235,16 +235,13 @@ export function useClientsBrowserViewModel({
   sortMode = 'lastNameAsc',
 }: UseClientsBrowserViewModelParameters = {}) {
   const partneringFamilies = usePartneringFamilies();
-  const visibleReferralsLoadable = useVisibleReferralsLoadable();
+  const visibleReferralRecords = useVisibleReferrals();
   const visibleReferrals = useMemo(
-    () =>
-      visibleReferralsLoadable?.map((referralInfo) => referralInfo.referral) ??
-      [],
-    [visibleReferralsLoadable]
+    () => visibleReferralRecords.map((referralInfo) => referralInfo.referral),
+    [visibleReferralRecords]
   );
   const policy = usePolicy();
   const personAndFamilyLookup = usePersonAndFamilyLookup();
-  const isLoading = visibleReferralsLoadable === null;
   const normalizedFilterText = useMemo(() => simplify(filterText), [filterText]);
 
   const openReferralByFamily = useMemo(
@@ -474,7 +471,6 @@ export function useClientsBrowserViewModel({
     rows,
     arrangementRowsByFamily,
     counties,
-    isLoading,
     totalFamilies: partneringFamilies.length,
     activeFamilies,
     intakeFamilies,

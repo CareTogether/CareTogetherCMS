@@ -1,4 +1,4 @@
-import { atom } from 'jotai';
+import { atom, useAtomValue } from 'jotai';
 import {
   ActionRequirement,
   CompleteVolunteerFamilyRequirement,
@@ -28,7 +28,6 @@ import {
   visibleFamiliesAtom,
 } from './Data';
 import { commandFactory } from './CommandFactory';
-import { useJotaiLoadable } from '../State/jotai/useJotaiLoadable';
 
 export const volunteerFamiliesData = atom(async (get) => {
   const visibleFamilies = await get(visibleFamiliesAtom);
@@ -36,7 +35,7 @@ export const volunteerFamiliesData = atom(async (get) => {
 });
 
 export function useVolunteerFamilies() {
-  return useJotaiLoadable(volunteerFamiliesData);
+  return useAtomValue(volunteerFamiliesData);
 }
 
 function useVolunteerFamilyCommandCallbackWithLocation<T extends unknown[]>(

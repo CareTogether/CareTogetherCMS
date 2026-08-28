@@ -142,7 +142,6 @@ export function ClientsScreenV2() {
     assignmentFilterOptions,
     customFieldDefinitions: clientFamilyCustomFieldDefinitions,
     counties,
-    isLoading,
     rows,
   } = useClientsBrowserViewModel({
     arrangementsFilter,
@@ -203,7 +202,6 @@ export function ClientsScreenV2() {
           <ClientsDataGridV2
             assignmentRoles={assignmentColumnRoles}
             customFields={clientFamilyCustomFieldDefinitions}
-            loading={isLoading}
             rows={rows}
             onRowClick={handleRowClick}
           />

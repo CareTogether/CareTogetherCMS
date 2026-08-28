@@ -13,10 +13,7 @@ import { useOrganizationConfiguration } from '../../Model/ConfigurationModel';
 import { usePolicy, useRefreshPolicy } from '../../Model/PolicyModel';
 import { ProgressBackdrop } from '../../Shell/ProgressBackdrop';
 import { useScreenTitle } from '../../Shell/ShellScreenTitle';
-import {
-  useDataLoaded,
-  useRequiredSelectedLocationContext,
-} from '../../Model/Data';
+import { useRequiredSelectedLocationContext } from '../../Model/Data';
 import { useParams } from 'react-router-dom';
 import { Box } from '@mui/system';
 import BasicConfiguration from './Tabs/BasicConfiguration';
@@ -160,8 +157,6 @@ export function LocationEdit() {
     setActiveTab(urlTab as LocationTabId);
   }, [urlTab, availableTabs, featureFlagsLoaded, setSearchParams]);
 
-  const dataLoaded = useDataLoaded();
-
   const permissions = useGlobalPermissions();
   const canAccessSettings = permissions(Permission.AccessSettingsScreen);
 
@@ -196,7 +191,7 @@ export function LocationEdit() {
     });
   }
 
-  if (!dataLoaded || !featureFlagsLoaded) {
+  if (!featureFlagsLoaded) {
     return (
       <ProgressBackdrop>
         <p className="ph-unmask">Loading location configuration...</p>

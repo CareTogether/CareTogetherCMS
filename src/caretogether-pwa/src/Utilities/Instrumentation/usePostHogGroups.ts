@@ -1,8 +1,8 @@
 import { useEffect } from 'react';
 import posthog from 'posthog-js';
 import {
-  useLocationConfiguration,
-  useOrganizationConfiguration,
+  useLocationConfigurationLoadable,
+  useOrganizationConfigurationLoadable,
 } from '../../Model/ConfigurationModel';
 import { useParams } from 'react-router-dom';
 
@@ -12,8 +12,8 @@ export const usePostHogGroups = () => {
     locationId: string;
   }>();
 
-  const organizationConfiguration = useOrganizationConfiguration();
-  const locationConfiguration = useLocationConfiguration();
+  const organizationConfiguration = useOrganizationConfigurationLoadable();
+  const locationConfiguration = useLocationConfigurationLoadable();
 
   useEffect(() => {
     if (organizationId) {

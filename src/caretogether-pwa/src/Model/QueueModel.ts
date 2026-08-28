@@ -1,4 +1,4 @@
-import { atom } from 'jotai';
+import { atom, useAtomValue } from 'jotai';
 import {
   CombinedFamilyInfo,
   ExactAge,
@@ -153,9 +153,9 @@ const queueItemsCountAtom = atom(async (get) => {
 });
 
 export function useQueueItems() {
-  return useJotaiLoadable(queueItemsAtom);
+  return useAtomValue(queueItemsAtom);
 }
 
-export function useQueueItemsCount() {
+export function useQueueItemsCountLoadable() {
   return useJotaiLoadable(queueItemsCountAtom);
 }

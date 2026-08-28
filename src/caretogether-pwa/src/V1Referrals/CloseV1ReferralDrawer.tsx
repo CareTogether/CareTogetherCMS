@@ -12,7 +12,7 @@ export function CloseV1ReferralDrawer({
   onClose,
 }: CloseV1ReferralDrawerProps) {
   const { closeReferral } = useV1ReferralsModel();
-  const referralCloseReasons = useReferralCloseReasons() ?? [];
+  const referralCloseReasons = useReferralCloseReasons();
 
   async function closeCurrentReferral(reason: string, closedAtLocal: Date) {
     await closeReferral(referralId, reason, closedAtLocal);

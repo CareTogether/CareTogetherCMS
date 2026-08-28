@@ -57,7 +57,7 @@ import { WideTableContainer } from '../Utilities/WideTableContainer';
 import { wideTablePageSx } from '../Utilities/wideTablePageSx';
 import { getFamilyCounty } from '../Utilities/getFamilyCounty';
 import { CountyFilter } from '../Generic/CountyFilter';
-import { useVisibleReferralsLoadable } from '../Model/Data';
+import { useVisibleReferrals } from '../Model/Data';
 import {
   normalizePartneringFamiliesSortMode,
   openReferralByFamilyId,
@@ -101,13 +101,10 @@ function PartneringFamilies() {
   } = useSidePanel();
 
   const partneringFamilies = usePartneringFamilies();
-  const visibleReferralsLoadable = useVisibleReferralsLoadable();
+  const visibleReferralRecords = useVisibleReferrals();
   const visibleReferrals = React.useMemo(
-    () =>
-      (visibleReferralsLoadable || []).map(
-        (referralInfo) => referralInfo.referral
-      ),
-    [visibleReferralsLoadable]
+    () => visibleReferralRecords.map((referralInfo) => referralInfo.referral),
+    [visibleReferralRecords]
   );
   const openReferralByFamily = React.useMemo(
     () => openReferralByFamilyId(visibleReferrals),

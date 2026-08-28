@@ -9,21 +9,19 @@ import {
   TableRow,
 } from '@mui/material';
 import { Community, Permission } from '../GeneratedClient';
-import { ProgressBackdrop } from '../Shell/ProgressBackdrop';
 import { useScreenTitle } from '../Shell/ShellScreenTitle';
 import { Add as AddIcon } from '@mui/icons-material';
 import { useState } from 'react';
 import { useGlobalPermissions } from '../Model/SessionModel';
 import { AddEditCommunity } from './AddEditCommunity';
-import { useVisibleCommunitiesLoadable } from '../Model/Data';
+import { useVisibleCommunities } from '../Model/Data';
 import { useAppNavigate } from '../Hooks/useAppNavigate';
 
 export function CommunitiesList() {
   useScreenTitle('Communities');
 
   // The array object returned by state is read-only. We need to copy it before we can do an in-place sort.
-  const communitiesLoadable = useVisibleCommunitiesLoadable();
-  const communities = (communitiesLoadable || [])
+  const communities = useVisibleCommunities()
     .map((x) => x.community!)
     .sort((a, b) => (a.name! < b.name! ? -1 : a.name! > b.name! ? 1 : 0));
 
@@ -35,11 +33,7 @@ export function CommunitiesList() {
   const [addDrawerOpen, setAddDrawerOpen] = useState(false);
   const permissions = useGlobalPermissions();
 
-  return communitiesLoadable === null ? (
-    <ProgressBackdrop>
-      <p>Loading communities...</p>
-    </ProgressBackdrop>
-  ) : (
+  return (
     <>
       <Button
         variant="contained"

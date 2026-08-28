@@ -5,10 +5,7 @@ import { api } from '../Api/Api';
 import { accountInfoState } from '../Authentication/Auth';
 import type { LocationScope } from './LocationScope';
 import { isSameLocationScope } from './LocationScope';
-import {
-  useAtomLoadable,
-  useJotaiLoadable,
-} from '../State/jotai/useJotaiLoadable';
+import { useJotaiLoadable } from '../State/jotai/useJotaiLoadable';
 import {
   createRefreshAtom,
   createRefreshTokenAtom,
@@ -303,7 +300,7 @@ export function useSetSelectedLocationContext() {
   return useSetAtom(selectedLocationContextState);
 }
 
-export function useUserOrganizationAccess() {
+export function useUserOrganizationAccessLoadable() {
   return useJotaiLoadable(userOrganizationAccessAtom);
 }
 
@@ -311,21 +308,16 @@ export function useRefreshUserOrganizationAccess() {
   return useSetAtom(refreshUserOrganizationAccessAtom);
 }
 
-export function useCurrentOrganization() {
+export function useCurrentOrganizationLoadable() {
   return useJotaiLoadable(currentOrganizationAtom);
 }
 
 export function useCurrentLocation() {
-  return useJotaiLoadable(currentLocationAtom);
+  return useAtomValue(currentLocationAtom);
 }
 
 export function useCurrentLocationLoadable() {
-  return useAtomLoadable(currentLocationAtom);
-}
-
-// This hook can be used for convenience to determine if the current scope's records have been loaded.
-export function useDataLoaded() {
-  return useJotaiLoadable(visibleAggregatesState) != null;
+  return useJotaiLoadable(currentLocationAtom);
 }
 
 export function useVisibleFamilies() {
@@ -336,20 +328,12 @@ export function useVisibleCommunities() {
   return useAtomValue(visibleCommunitiesAtom);
 }
 
-export function useVisibleCommunitiesLoadable() {
-  return useJotaiLoadable(visibleCommunitiesAtom);
-}
-
 export function useVisibleReferrals() {
   return useAtomValue(visibleReferralsAtom);
 }
 
 export function useVisibleReferralsLoadable() {
   return useJotaiLoadable(visibleReferralsAtom);
-}
-
-export function useVisibleReferralsLoadableState() {
-  return useAtomLoadable(visibleReferralsAtom);
 }
 
 function mapVisibleAggregates<T>(

@@ -19,16 +19,16 @@ import {
   Stack,
   useTheme,
 } from '@mui/material';
-import { useFeatureFlags } from '../Model/ConfigurationModel';
+import { useFeatureFlagsLoadable } from '../Model/ConfigurationModel';
 import { Copyright } from './Copyright';
 import { Version } from './Version';
-import { useGlobalPermissions } from '../Model/SessionModel';
+import { useGlobalPermissionsLoadable } from '../Model/SessionModel';
 import { Permission } from '../GeneratedClient';
 import {
   useSelectedLocationContext,
   useVisibleReferralsLoadable,
 } from '../Model/Data';
-import { useQueueItemsCount } from '../Model/QueueModel';
+import { useQueueItemsCountLoadable } from '../Model/QueueModel';
 import Feedback from './Feedback';
 import { useAtomValue } from 'jotai';
 import { reportSubmenuItemsAtom } from '../Model/UI';
@@ -43,15 +43,15 @@ interface SideNavigationMenuProps {
   open: boolean;
 }
 function SideNavigationMenu({ open }: SideNavigationMenuProps) {
-  const flags = useFeatureFlags();
-  const permissions = useGlobalPermissions();
+  const flags = useFeatureFlagsLoadable();
+  const permissions = useGlobalPermissionsLoadable();
 
   const appNavigate = useAppNavigate();
 
   const context = useSelectedLocationContext();
   const locationPrefix = `/org/${context?.organizationId}/${context?.locationId}`;
 
-  const queueItemsCount = useQueueItemsCount();
+  const queueItemsCount = useQueueItemsCountLoadable();
 
   const reportSubmenuItems = useAtomValue(reportSubmenuItemsAtom);
 

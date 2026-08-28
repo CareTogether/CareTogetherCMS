@@ -3,10 +3,7 @@ import { Add as AddIcon } from '@mui/icons-material';
 import { Box, Button, Paper, Stack, Typography } from '@mui/material';
 import { useScreenTitle } from '../Shell/ShellScreenTitle';
 import { AddNewReferralDrawer } from './AddNewReferralDrawer';
-import {
-  useCurrentLocationLoadable,
-  useVisibleReferralsLoadableState,
-} from '../Model/Data';
+import { useVisibleReferrals } from '../Model/Data';
 import { Permission } from '../GeneratedClient';
 import { useAppNavigate } from '../Hooks/useAppNavigate';
 import { ProgressBackdrop } from '../Shell/ProgressBackdrop';
@@ -34,44 +31,29 @@ export function ReferralsScreenV2() {
   const featureFlagsLoaded = useFeatureFlagsLoaded();
   const appNavigate = useAppNavigate();
   const permissions = useGlobalPermissions();
-  const currentLocationLoadable = useCurrentLocationLoadable();
-  const referralsLoadable = useVisibleReferralsLoadableState();
+  const referralRecords = useVisibleReferrals();
 
-  const permissionsLoaded = currentLocationLoadable.state === 'hasValue';
-  const referralsLoaded = referralsLoadable.state === 'hasValue';
   const canCreateReferrals = permissions(Permission.CreateV1Referral);
   const canViewGlobalReferrals = permissions(Permission.ViewV1Referral);
-  const canViewContextualReferrals =
-    referralsLoaded && referralsLoadable.contents.length > 0;
+  const canViewContextualReferrals = referralRecords.length > 0;
   const canAccessReferrals =
     canCreateReferrals || canViewGlobalReferrals || canViewContextualReferrals;
 
   useEffect(() => {
     if (
-      permissionsLoaded &&
-      referralsLoaded &&
-      (!canAccessReferrals || (featureFlagsLoaded && referralsEnabled !== true))
+      !canAccessReferrals ||
+      (featureFlagsLoaded && referralsEnabled !== true)
     ) {
       appNavigate.dashboard();
     }
   }, [
     canAccessReferrals,
     featureFlagsLoaded,
-    permissionsLoaded,
-    referralsLoaded,
     referralsEnabled,
     appNavigate,
   ]);
 
-  if (currentLocationLoadable.state === 'hasError') {
-    throw currentLocationLoadable.contents;
-  }
-
-  if (referralsLoadable.state === 'hasError') {
-    throw referralsLoadable.contents;
-  }
-
-  if (!permissionsLoaded || !referralsLoaded || !featureFlagsLoaded) {
+  if (!featureFlagsLoaded) {
     return (
       <ProgressBackdrop opaque>
         <p>Loading...</p>
@@ -108,7 +90,6 @@ function ReferralsScreenV2Content() {
     canViewFunctionAssignments,
     familiesForCountyFilter,
     filteredRows,
-    isLoading,
   } = useReferralsBrowserViewModel({
     assignmentFilterLogicOperator,
     assignmentFilters,
@@ -200,7 +181,6 @@ function ReferralsScreenV2Content() {
             countyValueOptions={countyValueOptions}
             expanded
             filterText={filterText}
-            loading={isLoading}
             rows={filteredRows}
             statusFilter={statusFilter}
             assignmentFilters={assignmentFilters}

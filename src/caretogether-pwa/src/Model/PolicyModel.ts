@@ -147,18 +147,18 @@ export function useRefreshPolicy() {
 }
 
 export function useAllApprovalAndOnboardingRequirements() {
-  return useJotaiLoadable(
+  return useAtomValue(
     usePolicyStringListAtom(allApprovalAndOnboardingRequirementsAtomFamily)
   );
 }
 
-export function useAllFunctionsInPolicy() {
+export function useAllFunctionsInPolicyLoadable() {
   return useJotaiLoadable(
     usePolicyStringListAtom(allFunctionsInPolicyAtomFamily)
   );
 }
 
-export function useAllFunctionAssignmentRolesInPolicy() {
+export function useAllFunctionAssignmentRolesInPolicyLoadable() {
   return useJotaiLoadable(
     usePolicyStringListAtom(allFunctionAssignmentRolesInPolicyAtomFamily)
   );

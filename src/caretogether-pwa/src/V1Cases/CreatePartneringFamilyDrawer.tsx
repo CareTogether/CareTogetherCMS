@@ -85,8 +85,8 @@ export function CreatePartneringFamilyDrawer({
   } = fields;
   const directoryModel = useDirectoryModel();
 
-  const relationshipTypes = useAdultFamilyRelationships() ?? [];
-  const ethnicities = useEthnicities() ?? [];
+  const relationshipTypes = useAdultFamilyRelationships();
+  const ethnicities = useEthnicities();
 
   const [dobError, setDobError] = useState(false);
 

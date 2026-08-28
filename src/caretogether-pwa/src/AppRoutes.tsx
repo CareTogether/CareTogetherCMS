@@ -11,7 +11,7 @@ import {
   LocationContext,
   useSelectedLocationContext,
   useSetSelectedLocationContext,
-  useUserOrganizationAccess,
+  useUserOrganizationAccessLoadable,
 } from './Model/Data';
 import ShellRootLayout from './Shell/ShellRootLayout';
 import { ProgressBackdrop } from './Shell/ProgressBackdrop';
@@ -45,7 +45,7 @@ function RouteMigrator() {
   const location = useLocation();
   const navigate = useNavigate();
 
-  const userOrganizationAccess = useUserOrganizationAccess();
+  const userOrganizationAccess = useUserOrganizationAccessLoadable();
   trace(
     `userOrganizationAccess contents: ${JSON.stringify(
       userOrganizationAccess?.organizations?.map((org) => ({
@@ -211,7 +211,7 @@ function LocationContextWrapper() {
     organizationId: string;
     locationId: string;
   }>();
-  const userOrganizationAccess = useUserOrganizationAccess();
+  const userOrganizationAccess = useUserOrganizationAccessLoadable();
 
   const requestedLocationContext = useMemo(
     () =>

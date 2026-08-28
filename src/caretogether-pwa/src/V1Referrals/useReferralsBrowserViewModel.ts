@@ -14,7 +14,7 @@ import {
   usePersonAndFamilyLookup,
 } from '../Model/DirectoryModel';
 import { usePolicy } from '../Model/PolicyModel';
-import { useVisibleReferralsLoadable } from '../Model/Data';
+import { useVisibleReferrals } from '../Model/Data';
 import { useGlobalPermissions } from '../Model/SessionModel';
 import { FUNCTION_ASSIGNMENTS_FEATURE_FLAG } from '../featureFlags';
 import { familyNameString } from '../Families/FamilyName';
@@ -217,7 +217,7 @@ export function useReferralsBrowserViewModel({
   filterText,
   statusFilter,
 }: UseReferralsBrowserViewModelParameters) {
-  const referralsLoadable = useVisibleReferralsLoadable();
+  const referralRecords = useVisibleReferrals();
   const familyLookup = useFamilyLookup();
   const personAndFamilyLookup = usePersonAndFamilyLookup();
   const permissions = useGlobalPermissions();
@@ -227,9 +227,8 @@ export function useReferralsBrowserViewModel({
   );
 
   const referrals = useMemo(
-    () =>
-      referralsLoadable?.map((referralInfo) => referralInfo.referral) ?? [],
-    [referralsLoadable]
+    () => referralRecords.map((referralInfo) => referralInfo.referral),
+    [referralRecords]
   );
   const canViewFunctionAssignments =
     functionAssignmentsEnabled === true &&
@@ -332,7 +331,6 @@ export function useReferralsBrowserViewModel({
     canViewFunctionAssignments,
     familiesForCountyFilter,
     filteredRows,
-    isLoading: referralsLoadable === null,
     referrals,
     tableColumnCount,
     tableMinWidth: Math.max(700, tableColumnCount * 160),

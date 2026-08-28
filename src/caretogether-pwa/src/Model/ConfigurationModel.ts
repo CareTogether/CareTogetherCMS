@@ -1,4 +1,4 @@
-import { atom as jotaiAtom, type Atom } from 'jotai';
+import { atom as jotaiAtom, type Atom, useAtomValue } from 'jotai';
 import { atomFamily } from 'jotai-family';
 import {
   CurrentFeatureFlags,
@@ -8,11 +8,7 @@ import {
 import { api } from '../Api/Api';
 import { LocationContext, useSelectedLocationContext } from './Data';
 import { isSameLocationScope } from './LocationScope';
-import {
-  type LoadableState,
-  useAtomLoadable,
-  useJotaiLoadable,
-} from '../State/jotai/useJotaiLoadable';
+import { useJotaiLoadable } from '../State/jotai/useJotaiLoadable';
 
 //TODO: Distinguish by organization ID
 export const organizationConfigurationEdited =
@@ -143,43 +139,39 @@ function useOrganizationStringListAtom(
 }
 
 export function useOrganizationConfiguration() {
+  return useAtomValue(useOrganizationConfigurationAtom());
+}
+
+export function useOrganizationConfigurationLoadable() {
   return useJotaiLoadable(useOrganizationConfigurationAtom());
 }
 
-export function useOrganizationConfigurationLoadable(): LoadableState<
-  ExtendedOrganizationConfiguration | null
-> {
-  return useAtomLoadable(useOrganizationConfigurationAtom());
+export function useLocationConfiguration() {
+  return useAtomValue(useLocationConfigurationAtom());
 }
 
-export function useLocationConfiguration() {
+export function useLocationConfigurationLoadable() {
   return useJotaiLoadable(useLocationConfigurationAtom());
 }
 
-export function useLocationConfigurationLoadable(): LoadableState<
-  LocationConfiguration | null
-> {
-  return useAtomLoadable(useLocationConfigurationAtom());
-}
-
 export function useEthnicities() {
-  return useJotaiLoadable(useLocationStringListAtom(ethnicitiesAtomFamily));
+  return useAtomValue(useLocationStringListAtom(ethnicitiesAtomFamily));
 }
 
 export function useAdultFamilyRelationships() {
-  return useJotaiLoadable(
+  return useAtomValue(
     useLocationStringListAtom(adultFamilyRelationshipsAtomFamily)
   );
 }
 
 export function useReferralCloseReasons() {
-  return useJotaiLoadable(
+  return useAtomValue(
     useOrganizationStringListAtom(referralCloseReasonsAtomFamily)
   );
 }
 
 export function useCaseCloseReasons() {
-  return useJotaiLoadable(
+  return useAtomValue(
     useOrganizationStringListAtom(caseCloseReasonsAtomFamily)
   );
 }
@@ -201,6 +193,16 @@ const featureFlagAtomFamily = atomFamily(
 );
 
 export function useFeatureFlags() {
+  const selectedLocationContext = useSelectedLocationContext();
+
+  return useAtomValue(
+    selectedLocationContext
+      ? featureFlagAtomFamily(selectedLocationContext)
+      : noLocationFeatureFlags
+  );
+}
+
+export function useFeatureFlagsLoadable() {
   const selectedLocationContext = useSelectedLocationContext();
 
   return useJotaiLoadable(

@@ -27,8 +27,8 @@ import {
   useOrganizationConfiguration,
 } from '../../Model/ConfigurationModel';
 import {
-  useAllFunctionAssignmentRolesInPolicy,
-  useAllFunctionsInPolicy,
+  useAllFunctionAssignmentRolesInPolicyLoadable,
+  useAllFunctionsInPolicyLoadable,
 } from '../../Model/PolicyModel';
 
 interface ContextSelectorProps<T extends PermissionContext> {
@@ -201,7 +201,8 @@ function AssignmentRoleSelector({
   | AssignedVolunteerInV1CasePermissionContext
   | AssignedVolunteerInV1ReferralPermissionContext
 >) {
-  const allFunctionAssignmentRoles = useAllFunctionAssignmentRolesInPolicy();
+  const allFunctionAssignmentRoles =
+    useAllFunctionAssignmentRolesInPolicyLoadable();
   const hasValue =
     typeof context.whenAssignmentRoleIsIn !== 'undefined' &&
     context.whenAssignmentRoleIsIn !== null;
@@ -277,7 +278,7 @@ function OwnFunctionSelector({
   | AssignedFunctionsInV1CasePartneringFamilyPermissionContext
   | AssignedFunctionsInV1CaseCoAssigneeFamiliesPermissionContext
 >) {
-  const allFunctionsInPolicy = useAllFunctionsInPolicy();
+  const allFunctionsInPolicy = useAllFunctionsInPolicyLoadable();
   const hasValue =
     typeof context.whenOwnFunctionIsIn !== 'undefined' &&
     context.whenOwnFunctionIsIn !== null;
@@ -351,7 +352,7 @@ function AssigneeFunctionSelector({
   | AssignedFunctionsInV1CaseCoAssigneeFamiliesPermissionContext
   | OwnV1CaseAssigneeFamiliesPermissionContext
 >) {
-  const allFunctionsInPolicy = useAllFunctionsInPolicy();
+  const allFunctionsInPolicy = useAllFunctionsInPolicyLoadable();
   const hasValue =
     typeof context.whenAssigneeFunctionIsIn !== 'undefined' &&
     context.whenAssigneeFunctionIsIn !== null;

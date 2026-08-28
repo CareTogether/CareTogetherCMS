@@ -4,10 +4,9 @@ import {
   InteractionRequiredAuthError,
   AuthenticationResult,
 } from '@azure/msal-browser';
-import { atom } from 'jotai';
+import { atom, useAtomValue } from 'jotai';
 import { appInsights } from '../ApplicationInsightsService';
 import posthog from 'posthog-js';
-import { useJotaiLoadable } from '../State/jotai/useJotaiLoadable';
 
 // MSAL configuration for single page application authorization. For guidance, see
 // https://docs.microsoft.com/en-us/azure/active-directory/develop/scenario-spa-app-configuration?tabs=react and
@@ -504,7 +503,7 @@ async function initializeAccountInfoStateAsync() {
 export const accountInfoState = atom(async () => initializeAccountInfoStateAsync());
 
 export function useAccountInfo() {
-  return useJotaiLoadable(accountInfoState);
+  return useAtomValue(accountInfoState);
 }
 
 export async function tryAcquireAccessToken(): Promise<string | null> {

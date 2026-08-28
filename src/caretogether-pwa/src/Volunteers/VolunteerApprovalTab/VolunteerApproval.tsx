@@ -57,7 +57,6 @@ import {
 import { BulkSmsSideSheet } from '../BulkSmsSideSheet';
 import { useWindowSize } from '../../Hooks/useWindowSize';
 import { useScreenTitle } from '../../Shell/ShellScreenTitle';
-import { ProgressBackdrop } from '../../Shell/ProgressBackdrop';
 import { useRequiredSelectedLocationContext } from '../../Model/Data';
 import { useAppNavigate } from '../../Hooks/useAppNavigate';
 import { useGlobalSnackBar } from '../../Hooks/useGlobalSnackBar';
@@ -160,7 +159,7 @@ function VolunteerApproval(props: { onOpen: () => void }) {
   //#endregion
 
   // The array object returned by state is read-only. We need to copy it before we can do an in-place sort.
-  const volunteerFamiliesLoadable = useVolunteerFamilies();
+  const volunteerFamiliesData = useVolunteerFamilies();
   const [storedSortMode, setStoredSortMode] =
     useLocalStorage<FamilyNameSortMode>(
       VOLUNTEER_APPROVAL_SORT_STORAGE_KEY,
@@ -173,7 +172,7 @@ function VolunteerApproval(props: { onOpen: () => void }) {
   }
 
   const volunteerFamilies = sortFamiliesByName(
-    volunteerFamiliesLoadable || [],
+    volunteerFamiliesData,
     sortMode
   );
 
@@ -622,11 +621,7 @@ function VolunteerApproval(props: { onOpen: () => void }) {
 
   useScreenTitle('Volunteers');
 
-  return !volunteerFamiliesLoadable ? (
-    <ProgressBackdrop>
-      <p>Loading families...</p>
-    </ProgressBackdrop>
-  ) : (
+  return (
     <>
       <Box
         sx={{

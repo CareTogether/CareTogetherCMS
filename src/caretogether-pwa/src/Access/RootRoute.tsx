@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 import { Navigate } from 'react-router-dom';
 import { useLocalStorage } from '../Hooks/useLocalStorage';
-import { useUserOrganizationAccess } from '../Model/Data';
+import { useUserOrganizationAccessLoadable } from '../Model/Data';
 import type { LocationContext } from '../Model/Data';
 import { ProgressBackdrop } from '../Shell/ProgressBackdrop';
 import {
@@ -11,7 +11,7 @@ import {
 import { NoOrganizationAccessScreen } from './NoOrganizationAccessScreen';
 
 export function RootRoute() {
-  const userOrganizationAccess = useUserOrganizationAccess();
+  const userOrganizationAccess = useUserOrganizationAccessLoadable();
   const [lastVisitedLocation] = useLocalStorage<LocationContext | null>(
     LAST_VISITED_LOCATION,
     null

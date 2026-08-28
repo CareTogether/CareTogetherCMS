@@ -8,10 +8,9 @@ import {
   useMediaQuery,
   useTheme,
 } from '@mui/material';
-import { useParams } from 'react-router-dom';
+import { Navigate, useParams } from 'react-router-dom';
 import { Permission } from '../GeneratedClient';
 import { useCommunityPermissions } from '../Model/SessionModel';
-import { ProgressBackdrop } from '../Shell/ProgressBackdrop';
 import { useScreenTitle } from '../Shell/ShellScreenTitle';
 import {
   CloudUpload as CloudUploadIcon,
@@ -27,14 +26,14 @@ import { AddRoleAssignmentForm } from './AddRoleAssignmentForm';
 import { CommunityMemberFamilies } from './CommunityMemberFamilies';
 import { CommunityRoleAssignments } from './CommunityRoleAssignments';
 import { useDrawer } from '../Generic/ShellDrawer';
-import { useVisibleCommunitiesLoadable } from '../Model/Data';
+import { useVisibleCommunities } from '../Model/Data';
 
 export function CommunityScreen() {
   const communityIdMaybe = useParams<{ communityId: string }>();
   const communityId = communityIdMaybe.communityId as string;
 
-  const visibleCommunities = useVisibleCommunitiesLoadable();
-  const communityInfo = visibleCommunities?.find(
+  const visibleCommunities = useVisibleCommunities();
+  const communityInfo = visibleCommunities.find(
     ({ community }) => community?.id === communityId
   );
   const community = communityInfo?.community;
@@ -53,11 +52,11 @@ export function CommunityScreen() {
   const addRoleAssignmentDrawer = useDrawer();
   // const deleteCommunityDrawer = useDrawer();
 
-  return visibleCommunities === null || !community ? (
-    <ProgressBackdrop>
-      <p>Loading community...</p>
-    </ProgressBackdrop>
-  ) : (
+  if (!community) {
+    return <Navigate to=".." replace />;
+  }
+
+  return (
     <Container maxWidth={false} sx={{ paddingLeft: '12px' }}>
       <Toolbar disableGutters variant={isDesktop ? 'dense' : 'regular'}>
         {permissions(Permission.EditCommunity) && (

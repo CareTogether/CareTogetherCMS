@@ -63,7 +63,6 @@ export function VolunteersBrowserV2() {
     customFieldFilters,
     customFields,
     getCustomFieldFilterOptionsForField,
-    loading,
     requirementFilter,
     requirementFilterOptions,
     roleFilters,
@@ -262,7 +261,6 @@ export function VolunteersBrowserV2() {
         <VolunteersDataGridV2
           customFields={customFields}
           filterModel={filterModel}
-          loading={loading}
           onFilterModelChange={handleFilterModelChange}
           onRowClick={(row) => appNavigate.family(row.id)}
           onRowSelectionModelChange={handleRowSelectionModelChange}
