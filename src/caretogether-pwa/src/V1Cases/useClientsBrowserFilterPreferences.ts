@@ -10,10 +10,6 @@ import {
   useScopedFilterPreferences,
 } from '../Hooks/useScopedFilterPreferences';
 import {
-  normalizePartneringFamiliesSortMode,
-  type PartneringFamiliesSortMode,
-} from './PartneringFamilies/sortPartneringFamilies';
-import {
   type ArrangementsFilter,
   normalizeArrangementsFilter,
 } from './PartneringFamilies/types';
@@ -24,7 +20,6 @@ export type ClientsBrowserFilterPreferencesV1 = {
   assignmentFilters: AssignmentFilterSelectionsByRole;
   countyFilter: (string | null)[];
   customFieldFilters: CustomFieldFilterSelectionsByField;
-  sortMode: PartneringFamiliesSortMode;
 };
 
 type ValidationOptions = {
@@ -42,7 +37,6 @@ const defaultClientsFilterPreferences: ClientsBrowserFilterPreferencesV1 = {
   assignmentFilters: {},
   countyFilter: [],
   customFieldFilters: {},
-  sortMode: 'lastNameAsc',
 };
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -61,12 +55,6 @@ function normalizeUnknownArrangementsFilter(value: unknown) {
   return typeof value === 'string'
     ? normalizeArrangementsFilter(value as ArrangementsFilter)
     : 'All';
-}
-
-function normalizeUnknownSortMode(value: unknown) {
-  return typeof value === 'string'
-    ? normalizePartneringFamiliesSortMode(value)
-    : 'lastNameAsc';
 }
 
 function stringOrNullArray(value: unknown): (string | null)[] {
@@ -121,7 +109,6 @@ function preferencesFromUnknown(
     assignmentFilters: assignmentFiltersFromUnknown(value.assignmentFilters),
     countyFilter: stringOrNullArray(value.countyFilter),
     customFieldFilters: customFieldFiltersFromUnknown(value.customFieldFilters),
-    sortMode: normalizeUnknownSortMode(value.sortMode),
   };
 }
 
@@ -218,7 +205,6 @@ export function sanitizeClientsBrowserFilterPreferences(
     assignmentFilters,
     countyFilter: validCountyFilter,
     customFieldFilters,
-    sortMode: normalizePartneringFamiliesSortMode(preferences.sortMode),
   };
 }
 
@@ -242,7 +228,6 @@ export function useClientsBrowserFilterPreferences(
   const {
     canPersistPreferences,
     clearPreferences,
-    hasSavedPreferences,
     preferencesLoaded,
     savedPreferences,
     savePreferences,
@@ -270,7 +255,6 @@ export function useClientsBrowserFilterPreferences(
     canPersistFilters: canPersistPreferences,
     clearSavedFilters: clearPreferences,
     defaultFilters: defaultClientsFilterPreferences,
-    hasSavedFilters: hasSavedPreferences,
     preferencesLoaded,
     savedFilters: savedPreferences,
     saveFilters,

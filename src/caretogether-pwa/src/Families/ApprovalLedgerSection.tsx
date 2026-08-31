@@ -8,29 +8,29 @@ import {
 } from '@mui/material';
 import { SelectChangeEvent } from '@mui/material/Select';
 import { useMemo, useState } from 'react';
-import {
-  ApprovalLedgerRow,
-  ApprovalLedgerStatus,
-} from './approvalLedgerViewModel';
+import { ActiveFiltersAlert } from '../Generic/ActiveFiltersAlert';
+import { useUserLookup } from '../Model/DirectoryModel';
+import { ApprovalLedgerRow } from './approvalLedgerViewModel';
 import { ApprovalDetailsDrawerV2 } from './ApprovalDetailsDrawerV2';
 import { subjectKey } from './approvalLedgerDataGridViewModel';
+import {
+  approvalsDataGridColumns,
+  neededForRoleValueOptions,
+} from './approvalsDataGridColumnsV2';
 import { ApprovalsDataGridV2 } from './ApprovalsDataGridV2';
+import {
+  approvalStatusFilterOptions,
+  ApprovalStatusFilter,
+  useApprovalsFilterPreferences,
+} from './useApprovalsFilterPreferences';
 
 type ApprovalLedgerSectionProps = {
+  familyId: string;
+  locationId: string;
+  organizationId: string;
   rows: ApprovalLedgerRow[];
+  userId?: string;
 };
-
-type StatusFilter = ApprovalLedgerStatus | 'all';
-
-const statusFilterOptions: { value: StatusFilter; label: string }[] = [
-  { value: 'all', label: 'All' },
-  { value: 'missing', label: 'Missing' },
-  { value: 'completed', label: 'Completed' },
-  { value: 'exempted', label: 'Exempted' },
-  { value: 'expiring', label: 'Expiring' },
-  { value: 'expired', label: 'Expired' },
-  { value: 'availableApplication', label: 'Available Application' },
-];
 
 function includesText(value: string, searchText: string) {
   return value.toLocaleLowerCase().includes(searchText);
@@ -40,16 +40,19 @@ function sortStrings(a: string, b: string) {
   return a.localeCompare(b);
 }
 
-export function ApprovalLedgerSection({ rows }: ApprovalLedgerSectionProps) {
-  const [searchText, setSearchText] = useState('');
-  const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
-  const [roleFilter, setRoleFilter] = useState('all');
-  const [appliesToFilter, setAppliesToFilter] = useState('all');
+export function ApprovalLedgerSection({
+  familyId,
+  locationId,
+  organizationId,
+  rows,
+  userId,
+}: ApprovalLedgerSectionProps) {
   const [selectedRowId, setSelectedRowId] = useState<string | null>(null);
   const selectedRow = useMemo(
     () => rows.find((row) => row.id === selectedRowId) ?? null,
     [rows, selectedRowId]
   );
+  const userLookup = useUserLookup();
 
   const roleOptions = useMemo(
     () =>
@@ -76,6 +79,40 @@ export function ApprovalLedgerSection({ rows }: ApprovalLedgerSectionProps) {
       ].sort((a, b) => a.label.localeCompare(b.label)),
     [rows]
   );
+  const neededForRoleOptions = useMemo(
+    () => neededForRoleValueOptions(rows),
+    [rows]
+  );
+  const columns = useMemo(
+    () => approvalsDataGridColumns(userLookup, neededForRoleOptions),
+    [neededForRoleOptions, userLookup]
+  );
+  const {
+    appliesToFilter,
+    clearFilters,
+    filterModel,
+    hasActiveFilters,
+    onFilterModelChange,
+    roleFilter,
+    searchText,
+    setAppliesToFilter,
+    setRoleFilter,
+    setSearchText,
+    setStatusFilter,
+    statusFilter,
+  } = useApprovalsFilterPreferences({
+    appliesToOptionValues: appliesToOptions.map((option) => option.value),
+    columns,
+    neededForRoleOptionValues: neededForRoleOptions.map(
+      (option) => option.value
+    ),
+    scope: {
+      entityId: familyId,
+      locationId,
+      organizationId,
+      userId,
+    },
+  });
 
   const visibleRows = useMemo(() => {
     const normalizedSearchText = searchText.trim().toLocaleLowerCase();
@@ -112,8 +149,10 @@ export function ApprovalLedgerSection({ rows }: ApprovalLedgerSectionProps) {
     });
   }, [appliesToFilter, roleFilter, rows, searchText, statusFilter]);
 
-  function handleStatusFilterChange(event: SelectChangeEvent<StatusFilter>) {
-    setStatusFilter(event.target.value as StatusFilter);
+  function handleStatusFilterChange(
+    event: SelectChangeEvent<ApprovalStatusFilter>
+  ) {
+    setStatusFilter(event.target.value as ApprovalStatusFilter);
   }
 
   function handleRoleFilterChange(event: SelectChangeEvent) {
@@ -162,7 +201,7 @@ export function ApprovalLedgerSection({ rows }: ApprovalLedgerSectionProps) {
             value={statusFilter}
             onChange={handleStatusFilterChange}
           >
-            {statusFilterOptions.map((option) => (
+            {approvalStatusFilterOptions.map((option) => (
               <MenuItem key={option.value} value={option.value}>
                 {option.label}
               </MenuItem>
@@ -204,8 +243,16 @@ export function ApprovalLedgerSection({ rows }: ApprovalLedgerSectionProps) {
           </Select>
         </FormControl>
       </Box>
+      {hasActiveFilters && (
+        <Box sx={{ mb: 1 }}>
+          <ActiveFiltersAlert onClear={clearFilters} />
+        </Box>
+      )}
       <ApprovalsDataGridV2
+        columns={columns}
+        filterModel={filterModel}
         rows={visibleRows}
+        onFilterModelChange={onFilterModelChange}
         onRowClick={(row) => openDetailsDrawer(row.id)}
       />
       <ApprovalDetailsDrawerV2

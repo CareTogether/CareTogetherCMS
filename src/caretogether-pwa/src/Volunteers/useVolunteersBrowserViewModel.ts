@@ -78,6 +78,7 @@ type VolunteersBrowserViewModel = {
   ) => CustomFieldFilterOption[];
   loading: boolean;
   requirementFilter: RequirementFilterValue | undefined;
+  requirementFilterOptionsLoaded: boolean;
   requirementFilterOptions: string[];
   roleFilters: filterOption[];
   rows: VolunteerBrowserRowV2[];
@@ -533,6 +534,7 @@ export function useVolunteersBrowserViewModel(): VolunteersBrowserViewModel {
     getCustomFieldFilterOptionsForField,
     loading,
     requirementFilter,
+    requirementFilterOptionsLoaded: requirementNames !== null,
     requirementFilterOptions: requirementNames ?? [],
     roleFilters,
     rows,

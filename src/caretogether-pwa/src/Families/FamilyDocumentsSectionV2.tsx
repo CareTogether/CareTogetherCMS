@@ -6,12 +6,17 @@ import type {
   Permission,
   V1Referral,
 } from '../GeneratedClient';
+import { accountInfoState } from '../Authentication/Auth';
+import { ActiveFiltersAlert } from '../Generic/ActiveFiltersAlert';
+import { useLoadable } from '../Hooks/useLoadable';
+import { useScopedDataGridFilterPreferences } from '../Hooks/useScopedDataGridFilterPreferences';
 import {
   downloadFamilyFile,
   downloadV1ReferralFile,
 } from '../Model/FilesModel';
 import { DeleteDocumentDialog } from './DeleteDocumentDialog';
 import { FamilyDocumentsDataGridV2 } from './FamilyDocumentsDataGridV2';
+import { familyDocumentsDataGridColumns } from './familyDocumentsDataGridColumnsV2';
 import {
   buildFamilyDocumentRowsV2,
   FamilyDocumentRowV2,
@@ -66,6 +71,7 @@ export function FamilyDocumentsSectionV2({
 }: FamilyDocumentsSectionV2Props) {
   const [selectedDocumentForDelete, setSelectedDocumentForDelete] =
     useState<FamilyDocumentRowV2 | null>(null);
+  const accountInfo = useLoadable(accountInfoState);
   const rows = useMemo(
     () =>
       buildFamilyDocumentRowsV2({
@@ -106,6 +112,29 @@ export function FamilyDocumentsSectionV2({
 
     setSelectedDocumentForDelete(row);
   }, []);
+  const columns = useMemo(
+    () =>
+      familyDocumentsDataGridColumns({
+        onDelete: openDeleteDialog,
+        onDownload: downloadDocument,
+      }),
+    [downloadDocument, openDeleteDialog]
+  );
+  const {
+    clearFilters,
+    filterModel,
+    hasActiveFilters,
+    onFilterModelChange,
+  } = useScopedDataGridFilterPreferences({
+    columns,
+    namespace: 'family-documents-grid-filters',
+    scope: {
+      entityId: family.family?.id,
+      locationId,
+      organizationId,
+      userId: accountInfo?.userId,
+    },
+  });
 
   return (
     <Grid item xs={12} mb={2}>
@@ -115,11 +144,13 @@ export function FamilyDocumentsSectionV2({
             Documents
           </Typography>
         )}
+        {hasActiveFilters && <ActiveFiltersAlert onClear={clearFilters} />}
         {rows.length > 0 ? (
           <FamilyDocumentsDataGridV2
+            columns={columns}
+            filterModel={filterModel}
             rows={rows}
-            onDelete={openDeleteDialog}
-            onDownload={downloadDocument}
+            onFilterModelChange={onFilterModelChange}
           />
         ) : (
           <EmptyFamilyDocumentsState />

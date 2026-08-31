@@ -1,22 +1,29 @@
 import { AddCircle as AddCircleIcon } from '@mui/icons-material';
 import { Box, Button, Typography } from '@mui/material';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useRecoilValue } from 'recoil';
+import { accountInfoState } from '../../../Authentication/Auth';
+import { ActiveFiltersAlert } from '../../../Generic/ActiveFiltersAlert';
 import Grid from '../../../Generic/GridLegacyCompat';
 import {
   ArrangementPolicy,
   Permission,
   V1Case,
 } from '../../../GeneratedClient';
+import { useLoadable } from '../../../Hooks/useLoadable';
+import { useScopedDataGridFilterPreferences } from '../../../Hooks/useScopedDataGridFilterPreferences';
 import { policyData } from '../../../Model/ConfigurationModel';
 import { ArrangementsDataGridV2 } from '../ArrangementsDataGridV2';
 import { ArrangementRowV2 } from '../arrangementViewModel';
+import { arrangementsDataGridColumns } from '../arrangementsDataGridColumnsV2';
 import { CreateArrangementDialog } from '../CreateArrangementDialog';
 import { isArrangementPolicyAvailable } from '../arrangementPolicyVersions';
 
 type ArrangementSectionProps = {
   arrangementRows: ArrangementRowV2[];
   v1Case: V1Case;
+  locationId: string;
+  organizationId: string;
   permissions: (permission: Permission) => boolean;
   hideTitle?: boolean;
   onArrangementRowClick: (row: ArrangementRowV2) => void;
@@ -26,6 +33,8 @@ type ArrangementSectionProps = {
 export function ArrangementsSection({
   arrangementRows,
   v1Case,
+  locationId,
+  organizationId,
   permissions,
   hideTitle = false,
   onArrangementRowClick,
@@ -35,7 +44,24 @@ export function ArrangementsSection({
     createArrangementDialogParameter,
     setCreateArrangementDialogParameter,
   ] = useState<ArrangementPolicy | null>(null);
+  const accountInfo = useLoadable(accountInfoState);
   const policy = useRecoilValue(policyData);
+  const columns = useMemo(() => arrangementsDataGridColumns(), []);
+  const {
+    clearFilters,
+    filterModel,
+    hasActiveFilters,
+    onFilterModelChange,
+  } = useScopedDataGridFilterPreferences({
+    columns,
+    namespace: 'arrangements-grid-filters',
+    scope: {
+      entityId: v1Case.id,
+      locationId,
+      organizationId,
+      userId: accountInfo?.userId,
+    },
+  });
 
   return (
     <Grid item xs={12} sx={{ mb: 3 }}>
@@ -97,11 +123,21 @@ export function ArrangementsSection({
       </Box>
 
       {arrangementRows.length > 0 ? (
-        <ArrangementsDataGridV2
-          highlightedArrangementId={scrollToArrangementId}
-          rows={arrangementRows}
-          onRowClick={onArrangementRowClick}
-        />
+        <>
+          {hasActiveFilters && (
+            <Box sx={{ mb: 1 }}>
+              <ActiveFiltersAlert onClear={clearFilters} />
+            </Box>
+          )}
+          <ArrangementsDataGridV2
+            columns={columns}
+            filterModel={filterModel}
+            highlightedArrangementId={scrollToArrangementId}
+            rows={arrangementRows}
+            onFilterModelChange={onFilterModelChange}
+            onRowClick={onArrangementRowClick}
+          />
+        </>
       ) : (
         <Box
           sx={{

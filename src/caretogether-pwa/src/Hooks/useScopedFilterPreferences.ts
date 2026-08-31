@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
 export type ScopedFilterPreferenceScope = {
+  entityId?: string;
   locationId?: string;
   organizationId?: string;
   userId?: string;
@@ -21,13 +22,19 @@ type LoadedScopedFilterPreferences<TPreferences> = {
 function storageKey(
   namespace: string,
   version: number,
-  { locationId, organizationId, userId }: ScopedFilterPreferenceScope
+  { entityId, locationId, organizationId, userId }: ScopedFilterPreferenceScope
 ) {
   if (!userId || !organizationId || !locationId) return null;
+  if (entityId !== undefined && !entityId) return null;
 
-  return [namespace, `v${version}`, userId, organizationId, locationId].join(
-    ':'
-  );
+  return [
+    namespace,
+    `v${version}`,
+    userId,
+    organizationId,
+    locationId,
+    ...(entityId ? [entityId] : []),
+  ].join(':');
 }
 
 function readPreferences<TPreferences>(
@@ -77,14 +84,16 @@ export function useScopedFilterPreferences<TPreferences>({
   version,
 }: UseScopedFilterPreferencesOptions<TPreferences>) {
   const { locationId, organizationId, userId } = scope;
+  const { entityId } = scope;
   const key = useMemo(
     () =>
       storageKey(namespace, version, {
+        entityId,
         locationId,
         organizationId,
         userId,
       }),
-    [locationId, namespace, organizationId, userId, version]
+    [entityId, locationId, namespace, organizationId, userId, version]
   );
   const [loadedPreferences, setLoadedPreferences] =
     useState<LoadedScopedFilterPreferences<TPreferences>>(() => ({

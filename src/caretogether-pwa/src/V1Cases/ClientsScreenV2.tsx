@@ -1,4 +1,4 @@
-import { Box, Stack, Typography } from '@mui/material';
+import { Alert, Box, Button, Stack, Typography } from '@mui/material';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useFeatureFlagEnabled } from 'posthog-js/react';
 import { useRecoilValue } from 'recoil';
@@ -91,7 +91,6 @@ export function ClientsScreenV2() {
     canPersistFilters,
     clearSavedFilters,
     defaultFilters,
-    hasSavedFilters,
     preferencesLoaded: filterPreferencesLoaded,
     savedFilters,
     saveFilters,
@@ -203,8 +202,30 @@ export function ClientsScreenV2() {
     [assignmentFilterAssignments, assignmentFilterOptions]
   );
   const hasFeaturebaseChat = globalPermissions(Permission.AccessSupportScreen);
-  const handleSaveFilters = useCallback(() => {
-    saveFilters(
+  const clientsFilterValidationOptions = useMemo(
+    () => ({
+      assignmentRoles: isLoading ? undefined : assignmentFilterOptions,
+      assignmentValuesByRole: isLoading
+        ? undefined
+        : assignmentFilterValueOptionsByRole,
+      counties: isLoading ? undefined : counties,
+      customFields: policy ? customFieldDefinitions : undefined,
+      customFieldValueOptionsByField: policy
+        ? customFieldFilterValueOptionsByField
+        : undefined,
+    }),
+    [
+      assignmentFilterOptions,
+      assignmentFilterValueOptionsByRole,
+      counties,
+      customFieldDefinitions,
+      customFieldFilterValueOptionsByField,
+      isLoading,
+      policy,
+    ]
+  );
+  const normalizedStructuredFilters = useMemo(
+    () =>
       sanitizeClientsBrowserFilterPreferences(
         {
           version: 1,
@@ -212,46 +233,56 @@ export function ClientsScreenV2() {
           assignmentFilters,
           countyFilter,
           customFieldFilters: selectedCustomFieldValuesByField,
-          sortMode,
         },
-        {
-          assignmentRoles: assignmentFilterOptions,
-          assignmentValuesByRole: assignmentFilterValueOptionsByRole,
-          counties,
-          customFields: customFieldDefinitions,
-          customFieldValueOptionsByField: Object.fromEntries(
-            customFieldDefinitions.map((field) => [
-              field.name,
-              getCustomFieldFilterOptionsForField(field).map(
-                (option) => option.value
-              ),
-            ])
-          ),
-        }
-      )
+        clientsFilterValidationOptions
+      ),
+    [
+      arrangementsFilter,
+      assignmentFilters,
+      clientsFilterValidationOptions,
+      countyFilter,
+      selectedCustomFieldValuesByField,
+    ]
+  );
+  const structuredFiltersAtDefaults = useMemo(
+    () => isSameJsonValue(normalizedStructuredFilters, defaultFilters),
+    [defaultFilters, normalizedStructuredFilters]
+  );
+  const hasStructuredFilters =
+    arrangementsFilter !== defaultFilters.arrangementsFilter ||
+    countyFilter.length > 0 ||
+    Object.values(assignmentFilters).some(
+      (selectedValues) => selectedValues.length > 0
+    ) ||
+    Object.values(selectedCustomFieldValuesByField).some(
+      (selectedValues) => selectedValues.length > 0
     );
-  }, [
-    arrangementsFilter,
-    assignmentFilterOptions,
-    assignmentFilterValueOptionsByRole,
-    assignmentFilters,
-    counties,
-    countyFilter,
-    customFieldDefinitions,
-    getCustomFieldFilterOptionsForField,
-    saveFilters,
-    selectedCustomFieldValuesByField,
-    sortMode,
-  ]);
-  const handleUnpinFilters = useCallback(() => {
+  const hasActiveFilters =
+    hasStructuredFilters || searchValue.trim().length > 0;
+  const handleClearFilters = useCallback(() => {
     clearSavedFilters();
     setArrangementsFilter(defaultFilters.arrangementsFilter);
     setAssignmentFilters(defaultFilters.assignmentFilters);
     setCountyFilter(defaultFilters.countyFilter);
     setSelectedCustomFieldValuesByField(defaultFilters.customFieldFilters);
-    setSortMode(defaultFilters.sortMode);
+    setSearchValue('');
   }, [clearSavedFilters, defaultFilters, setSelectedCustomFieldValuesByField]);
   const restoredFilterPreferenceStorageKey = useRef<string | null>(null);
+
+  useEffect(() => {
+    if (restoredFilterPreferenceStorageKey.current === filterPreferenceStorageKey) {
+      return;
+    }
+
+    setArrangementsFilter(defaultFilters.arrangementsFilter);
+    setAssignmentFilters(defaultFilters.assignmentFilters);
+    setCountyFilter(defaultFilters.countyFilter);
+    setSelectedCustomFieldValuesByField(defaultFilters.customFieldFilters);
+  }, [
+    defaultFilters,
+    filterPreferenceStorageKey,
+    setSelectedCustomFieldValuesByField,
+  ]);
 
   useEffect(() => {
     if (
@@ -271,12 +302,53 @@ export function ClientsScreenV2() {
     setAssignmentFilters(restoredFilters.assignmentFilters);
     setCountyFilter(restoredFilters.countyFilter);
     setSelectedCustomFieldValuesByField(restoredFilters.customFieldFilters);
-    setSortMode(restoredFilters.sortMode);
   }, [
     filterPreferencesLoaded,
     filterPreferenceStorageKey,
     savedFilters,
     setSelectedCustomFieldValuesByField,
+  ]);
+
+  useEffect(() => {
+    if (
+      !canPersistFilters ||
+      !filterPreferenceStorageKey ||
+      !filterPreferencesLoaded ||
+      restoredFilterPreferenceStorageKey.current !== filterPreferenceStorageKey
+    ) {
+      return;
+    }
+
+    if (structuredFiltersAtDefaults) {
+      if (savedFilters) {
+        clearSavedFilters();
+      }
+
+      return;
+    }
+
+    if (
+      savedFilters &&
+      isSameJsonValue(savedFilters, normalizedStructuredFilters)
+    ) {
+      return;
+    }
+
+    saveFilters({
+      arrangementsFilter: normalizedStructuredFilters.arrangementsFilter,
+      assignmentFilters: normalizedStructuredFilters.assignmentFilters,
+      countyFilter: normalizedStructuredFilters.countyFilter,
+      customFieldFilters: normalizedStructuredFilters.customFieldFilters,
+    });
+  }, [
+    canPersistFilters,
+    clearSavedFilters,
+    filterPreferenceStorageKey,
+    filterPreferencesLoaded,
+    normalizedStructuredFilters,
+    saveFilters,
+    savedFilters,
+    structuredFiltersAtDefaults,
   ]);
 
   useEffect(() => {
@@ -356,6 +428,25 @@ export function ClientsScreenV2() {
             Browse client families, open cases, and arrangement summaries.
           </Typography>
         </Box>
+        {hasActiveFilters && (
+          <Alert
+            action={
+              <Button
+                className="ph-unmask"
+                color="inherit"
+                onClick={handleClearFilters}
+                size="small"
+              >
+                Clear filters
+              </Button>
+            }
+            className="ph-unmask"
+            severity="warning"
+            sx={{ alignItems: 'center' }}
+          >
+            Filters are active
+          </Alert>
+        )}
         <ClientsBrowserToolbarV2
           searchValue={searchValue}
           statusValue={arrangementsFilter}
@@ -370,15 +461,12 @@ export function ClientsScreenV2() {
           }
           activeCustomFieldFilterCount={activeCustomFieldFilterCount}
           customFieldCount={customFieldDefinitions.length}
-          hasSavedFilters={hasSavedFilters}
           onAssignmentFilterChange={handleAssignmentFilterChange}
           onSearchChange={setSearchValue}
-          onSaveFilters={canPersistFilters ? handleSaveFilters : undefined}
           onStatusChange={setArrangementsFilter}
           onCountyChange={setCountyFilter}
           onMoreFiltersClick={openCustomFieldFiltersSidePanel}
           onSortChange={setSortMode}
-          onUnpinFilters={handleUnpinFilters}
         />
         <Box sx={{ flex: 1, minHeight: 0 }}>
           <ClientsDataGridV2

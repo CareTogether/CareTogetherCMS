@@ -218,7 +218,6 @@ export function useVolunteersBrowserFilterPreferences(
   const {
     canPersistPreferences,
     clearPreferences,
-    hasSavedPreferences,
     preferencesLoaded,
     savedPreferences,
     savePreferences,
@@ -244,7 +243,6 @@ export function useVolunteersBrowserFilterPreferences(
     canPersistFilters: canPersistPreferences,
     clearSavedFilters: clearPreferences,
     defaultFilters: defaultVolunteersFilterPreferences,
-    hasSavedFilters: hasSavedPreferences,
     preferencesLoaded,
     savedFilters: savedPreferences,
     saveFilters,

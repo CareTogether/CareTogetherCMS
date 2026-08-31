@@ -1,4 +1,4 @@
-import { Box, Stack, Typography } from '@mui/material';
+import { Alert, Box, Button, Stack, Typography } from '@mui/material';
 import type { GridFilterModel, GridRowSelectionModel } from '@mui/x-data-grid';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useFeatureFlagEnabled } from 'posthog-js/react';
@@ -98,6 +98,7 @@ export function VolunteersBrowserV2() {
     getCustomFieldFilterOptionsForField,
     loading,
     requirementFilter,
+    requirementFilterOptionsLoaded,
     requirementFilterOptions,
     roleFilters,
     rows,
@@ -117,7 +118,6 @@ export function VolunteersBrowserV2() {
     canPersistFilters,
     clearSavedFilters,
     defaultFilters,
-    hasSavedFilters,
     preferencesLoaded: filterPreferencesLoaded,
     savedFilters,
     saveFilters,
@@ -206,8 +206,32 @@ export function VolunteersBrowserV2() {
     () => filterValues(statusFilters),
     [statusFilters]
   );
-  const handleSaveFilters = useCallback(() => {
-    saveFilters(
+  const volunteersFilterValidationOptions = useMemo(
+    () => ({
+      arrangementTypes,
+      customFields,
+      customFieldValueOptionsByField: loading
+        ? undefined
+        : customFieldFilterValueOptionsByField,
+      requirementFilterOptions: requirementFilterOptionsLoaded
+        ? requirementFilterValueOptions
+        : undefined,
+      roleFilterValues: roleFilterValueOptions,
+      statusFilterValues: statusFilterValueOptions,
+    }),
+    [
+      arrangementTypes,
+      customFieldFilterValueOptionsByField,
+      customFields,
+      loading,
+      requirementFilterOptionsLoaded,
+      requirementFilterValueOptions,
+      roleFilterValueOptions,
+      statusFilterValueOptions,
+    ]
+  );
+  const normalizedStructuredFilters = useMemo(
+    () =>
       sanitizeVolunteersBrowserFilterPreferences(
         {
           version: 1,
@@ -217,38 +241,40 @@ export function VolunteersBrowserV2() {
           roleFilterValues: selectedFilterValues(roleFilters),
           statusFilterValues: selectedFilterValues(statusFilters),
         },
-        {
-          arrangementTypes,
-          customFields,
-          customFieldValueOptionsByField:
-            customFieldFilterValueOptionsByField,
-          requirementFilterOptions: requirementFilterValueOptions,
-          roleFilterValues: roleFilterValueOptions,
-          statusFilterValues: statusFilterValueOptions,
-        }
-      )
-    );
-  }, [
-    arrangementTypes,
-    assignmentFilters,
-    customFieldFilterValueOptionsByField,
-    customFieldFilters,
-    customFields,
-    requirementFilter,
-    requirementFilterValueOptions,
-    roleFilterValueOptions,
-    roleFilters,
-    saveFilters,
-    statusFilterValueOptions,
-    statusFilters,
-  ]);
-  const handleUnpinFilters = useCallback(() => {
+        volunteersFilterValidationOptions
+      ),
+    [
+      assignmentFilters,
+      customFieldFilters,
+      requirementFilter,
+      roleFilters,
+      statusFilters,
+      volunteersFilterValidationOptions,
+    ]
+  );
+  const structuredFiltersAtDefaults = useMemo(
+    () => isSameJsonValue(normalizedStructuredFilters, defaultFilters),
+    [defaultFilters, normalizedStructuredFilters]
+  );
+  const hasActiveRoleFilters = selectedFilterValues(roleFilters).length > 0;
+  const hasActiveStatusFilters =
+    selectedFilterValues(statusFilters).length > 0;
+  const hasActiveFilters =
+    activeAssignmentFilterCount > 0 ||
+    activeCustomFieldFilterCount > 0 ||
+    Boolean(requirementFilter) ||
+    hasActiveRoleFilters ||
+    hasActiveStatusFilters ||
+    searchValue.trim().length > 0;
+  const handleClearFilters = useCallback(() => {
     clearSavedFilters();
     setAssignmentFilters(defaultFilters.assignmentFilters);
     setCustomFieldFilters(defaultFilters.customFieldFilters);
     setRequirementFilter(defaultFilters.requirementFilter);
     setRoleFilterValues(defaultFilters.roleFilterValues);
     setStatusFilterValues(defaultFilters.statusFilterValues);
+    setSearchValue('');
+    setPendingFilterModel(null);
   }, [
     clearSavedFilters,
     defaultFilters,
@@ -256,9 +282,31 @@ export function VolunteersBrowserV2() {
     setCustomFieldFilters,
     setRequirementFilter,
     setRoleFilterValues,
+    setSearchValue,
     setStatusFilterValues,
   ]);
   const restoredFilterPreferenceStorageKey = useRef<string | null>(null);
+
+  useEffect(() => {
+    if (restoredFilterPreferenceStorageKey.current === filterPreferenceStorageKey) {
+      return;
+    }
+
+    setAssignmentFilters(defaultFilters.assignmentFilters);
+    setCustomFieldFilters(defaultFilters.customFieldFilters);
+    setRequirementFilter(defaultFilters.requirementFilter);
+    setRoleFilterValues(defaultFilters.roleFilterValues);
+    setStatusFilterValues(defaultFilters.statusFilterValues);
+    setPendingFilterModel(null);
+  }, [
+    defaultFilters,
+    filterPreferenceStorageKey,
+    setAssignmentFilters,
+    setCustomFieldFilters,
+    setRequirementFilter,
+    setRoleFilterValues,
+    setStatusFilterValues,
+  ]);
 
   useEffect(() => {
     if (
@@ -269,8 +317,10 @@ export function VolunteersBrowserV2() {
       return;
     }
 
-    const restoredFilters =
-      savedFilters ?? defaultVolunteersBrowserFilterState();
+    const restoredFilters = sanitizeVolunteersBrowserFilterPreferences(
+      savedFilters ?? defaultVolunteersBrowserFilterState(),
+      volunteersFilterValidationOptions
+    );
 
     restoredFilterPreferenceStorageKey.current = filterPreferenceStorageKey;
     setAssignmentFilters(restoredFilters.assignmentFilters);
@@ -278,6 +328,7 @@ export function VolunteersBrowserV2() {
     setRequirementFilter(restoredFilters.requirementFilter);
     setRoleFilterValues(restoredFilters.roleFilterValues);
     setStatusFilterValues(restoredFilters.statusFilterValues);
+    setPendingFilterModel(null);
   }, [
     filterPreferencesLoaded,
     filterPreferenceStorageKey,
@@ -287,6 +338,50 @@ export function VolunteersBrowserV2() {
     setRequirementFilter,
     setRoleFilterValues,
     setStatusFilterValues,
+    volunteersFilterValidationOptions,
+  ]);
+
+  useEffect(() => {
+    if (
+      !canPersistFilters ||
+      !filterPreferenceStorageKey ||
+      !filterPreferencesLoaded ||
+      restoredFilterPreferenceStorageKey.current !== filterPreferenceStorageKey
+    ) {
+      return;
+    }
+
+    if (structuredFiltersAtDefaults) {
+      if (savedFilters) {
+        clearSavedFilters();
+      }
+
+      return;
+    }
+
+    if (
+      savedFilters &&
+      isSameJsonValue(savedFilters, normalizedStructuredFilters)
+    ) {
+      return;
+    }
+
+    saveFilters({
+      assignmentFilters: normalizedStructuredFilters.assignmentFilters,
+      customFieldFilters: normalizedStructuredFilters.customFieldFilters,
+      requirementFilter: normalizedStructuredFilters.requirementFilter,
+      roleFilterValues: normalizedStructuredFilters.roleFilterValues,
+      statusFilterValues: normalizedStructuredFilters.statusFilterValues,
+    });
+  }, [
+    canPersistFilters,
+    clearSavedFilters,
+    filterPreferenceStorageKey,
+    filterPreferencesLoaded,
+    normalizedStructuredFilters,
+    saveFilters,
+    savedFilters,
+    structuredFiltersAtDefaults,
   ]);
 
   useEffect(() => {
@@ -458,6 +553,25 @@ export function VolunteersBrowserV2() {
           Review volunteer families.
         </Typography>
       </Box>
+      {hasActiveFilters && (
+        <Alert
+          action={
+            <Button
+              className="ph-unmask"
+              color="inherit"
+              onClick={handleClearFilters}
+              size="small"
+            >
+              Clear filters
+            </Button>
+          }
+          className="ph-unmask"
+          severity="warning"
+          sx={{ alignItems: 'center' }}
+        >
+          Filters are active
+        </Alert>
+      )}
       <VolunteersToolbarV2
         activeAssignmentFilterCount={activeAssignmentFilterCount}
         activeCustomFieldFilterCount={activeCustomFieldFilterCount}
@@ -474,10 +588,7 @@ export function VolunteersBrowserV2() {
         onCopyEmailAddresses={copyEmailAddresses}
         onCreateVolunteerFamily={() => setCreateVolunteerFamilyDrawerOpen(true)}
         onCustomFieldFiltersClick={openCustomFieldFiltersSidePanel}
-        hasSavedFilters={hasSavedFilters}
-        onSaveFilters={canPersistFilters ? handleSaveFilters : undefined}
         onToggleBulkSms={() => setSmsMode(!smsMode)}
-        onUnpinFilters={handleUnpinFilters}
       />
       <AssignmentFiltersSidePanel>
         <VolunteerAssignmentFiltersSidePanel
