@@ -2,7 +2,7 @@ import Grid from '../Generic/GridLegacyCompat';
 import { Stack, Typography } from '@mui/material';
 import { CombinedFamilyInfo } from '../GeneratedClient';
 import { useAccountInfo } from '../Authentication/Auth';
-import { ActiveFiltersAlert } from '../Generic/ActiveFiltersAlert';
+import { ActiveFiltersIndicator } from '../Generic/ActiveFiltersIndicator';
 import { useScopedDataGridFilterPreferences } from '../Hooks/useScopedDataGridFilterPreferences';
 import {
   useFamilyLookup,
@@ -101,7 +101,7 @@ export function AssignmentsSection({
             Assignments
           </Typography>
         )}
-        {hasActiveFilters && <ActiveFiltersAlert onClear={clearFilters} />}
+        {hasActiveFilters && <ActiveFiltersIndicator onClear={clearFilters} />}
         <VolunteerAssignmentsDataGridV2
           columns={columns}
           filterModel={filterModel}

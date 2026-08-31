@@ -14,6 +14,7 @@ import {
   TextField,
 } from '@mui/material';
 import type { SelectChangeEvent } from '@mui/material/Select';
+import type { ReactNode } from 'react';
 import type { AssignedIndividualVolunteer, Person } from '../GeneratedClient';
 import type { AssignmentFilterSelectionsByRole } from '../FunctionAssignments/assignmentRoleColumns';
 import { AssignmentRoleFilters } from '../FunctionAssignments/AssignmentRoleFilters';
@@ -25,6 +26,7 @@ const BLANK_COUNTY_SELECT_VALUE = '__blank_county__';
 
 type ClientsBrowserToolbarV2Props = {
   activeCustomFieldFilterCount?: number;
+  activeFiltersIndicator?: ReactNode;
   assignmentFilterAssignments?: AssignedIndividualVolunteer[];
   assignmentFilters?: AssignmentFilterSelectionsByRole;
   assignmentPersonLookup?: (personId: string) => Person | undefined;
@@ -48,6 +50,7 @@ type ClientsBrowserToolbarV2Props = {
 
 export function ClientsBrowserToolbarV2({
   activeCustomFieldFilterCount = 0,
+  activeFiltersIndicator,
   assignmentFilterAssignments = [],
   assignmentFilters = {},
   assignmentPersonLookup,
@@ -192,6 +195,7 @@ export function ClientsBrowserToolbarV2({
           More Filters ({activeCustomFieldFilterCount}/{customFieldCount})
         </Button>
       )}
+      {activeFiltersIndicator}
     </Stack>
   );
 }

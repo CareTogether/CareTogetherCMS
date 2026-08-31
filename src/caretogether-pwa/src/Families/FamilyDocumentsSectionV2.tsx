@@ -7,7 +7,7 @@ import type {
   V1Referral,
 } from '../GeneratedClient';
 import { useAccountInfo } from '../Authentication/Auth';
-import { ActiveFiltersAlert } from '../Generic/ActiveFiltersAlert';
+import { ActiveFiltersIndicator } from '../Generic/ActiveFiltersIndicator';
 import { useScopedDataGridFilterPreferences } from '../Hooks/useScopedDataGridFilterPreferences';
 import {
   downloadFamilyFile,
@@ -143,7 +143,7 @@ export function FamilyDocumentsSectionV2({
             Documents
           </Typography>
         )}
-        {hasActiveFilters && <ActiveFiltersAlert onClear={clearFilters} />}
+        {hasActiveFilters && <ActiveFiltersIndicator onClear={clearFilters} />}
         {rows.length > 0 ? (
           <FamilyDocumentsDataGridV2
             columns={columns}

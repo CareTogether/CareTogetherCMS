@@ -1,7 +1,8 @@
-import { Alert, Box, Button, Stack, Typography } from '@mui/material';
+import { Box, Stack, Typography } from '@mui/material';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useFeatureFlagEnabled } from 'posthog-js/react';
 import { useAccountInfo } from '../Authentication/Auth';
+import { ActiveFiltersIndicator } from '../Generic/ActiveFiltersIndicator';
 import { Permission } from '../GeneratedClient';
 import { useScreenTitle } from '../Shell/ShellScreenTitle';
 import { v2Typography } from '../Families/v2Typography';
@@ -445,26 +446,12 @@ export function ClientsScreenV2() {
             Browse client families, open cases, and arrangement summaries.
           </Typography>
         </Box>
-        {hasActiveFilters && (
-          <Alert
-            action={
-              <Button
-                className="ph-unmask"
-                color="inherit"
-                onClick={handleClearFilters}
-                size="small"
-              >
-                Clear filters
-              </Button>
-            }
-            className="ph-unmask"
-            severity="warning"
-            sx={{ alignItems: 'center' }}
-          >
-            Filters are active
-          </Alert>
-        )}
         <ClientsBrowserToolbarV2
+          activeFiltersIndicator={
+            hasActiveFilters ? (
+              <ActiveFiltersIndicator onClear={handleClearFilters} />
+            ) : undefined
+          }
           searchValue={effectiveSearchValue}
           statusValue={effectiveArrangementsFilter}
           countyOptions={counties}

@@ -8,7 +8,7 @@ import {
 } from '@mui/material';
 import { SelectChangeEvent } from '@mui/material/Select';
 import { useMemo, useState } from 'react';
-import { ActiveFiltersAlert } from '../Generic/ActiveFiltersAlert';
+import { ActiveFiltersIndicator } from '../Generic/ActiveFiltersIndicator';
 import { useUserLookup } from '../Model/DirectoryModel';
 import { ApprovalLedgerRow } from './approvalLedgerViewModel';
 import { ApprovalDetailsDrawerV2 } from './ApprovalDetailsDrawerV2';
@@ -178,8 +178,9 @@ export function ApprovalLedgerSection({
           display: 'grid',
           gridTemplateColumns: {
             xs: '1fr',
-            md: 'minmax(220px, 1fr) 180px 180px 180px',
+            md: 'minmax(220px, 1fr) 180px 180px 180px auto',
           },
+          alignItems: 'center',
           gap: 1,
           mb: 1,
         }}
@@ -242,12 +243,10 @@ export function ApprovalLedgerSection({
             ))}
           </Select>
         </FormControl>
+        {hasActiveFilters && (
+          <ActiveFiltersIndicator onClear={clearFilters} />
+        )}
       </Box>
-      {hasActiveFilters && (
-        <Box sx={{ mb: 1 }}>
-          <ActiveFiltersAlert onClear={clearFilters} />
-        </Box>
-      )}
       <ApprovalsDataGridV2
         columns={columns}
         filterModel={filterModel}

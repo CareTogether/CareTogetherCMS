@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Add as AddIcon } from '@mui/icons-material';
-import { Alert, Box, Button, Paper, Stack, Typography } from '@mui/material';
+import { Box, Button, Paper, Stack, Typography } from '@mui/material';
 import { useAccountInfo } from '../Authentication/Auth';
+import { ActiveFiltersIndicator } from '../Generic/ActiveFiltersIndicator';
 import { useScreenTitle } from '../Shell/ShellScreenTitle';
 import { AddNewReferralDrawer } from './AddNewReferralDrawer';
 import {
@@ -324,34 +325,18 @@ function ReferralsScreenV2Content() {
             Browse and manage referrals.
           </Typography>
         </Box>
-        {hasActiveFilters && (
-          <Alert
-            action={
-              <Button
-                className="ph-unmask"
-                color="inherit"
-                onClick={handleClearFilters}
-                size="small"
-              >
-                Clear filters
-              </Button>
-            }
-            className="ph-unmask"
-            severity="warning"
-            sx={{ alignItems: 'center' }}
-          >
-            Filters are active
-          </Alert>
-        )}
-
         <Box
           sx={{
+            alignItems: 'center',
             display: 'flex',
             flexWrap: 'wrap',
             gap: 1,
             justifyContent: 'flex-end',
           }}
         >
+          {hasActiveFilters && (
+            <ActiveFiltersIndicator onClear={handleClearFilters} />
+          )}
           {permissions(Permission.CreateV1Referral) && (
             <Button
               size="small"

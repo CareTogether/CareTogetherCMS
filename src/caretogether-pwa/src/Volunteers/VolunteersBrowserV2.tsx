@@ -1,4 +1,4 @@
-import { Alert, Box, Button, Stack, Typography } from '@mui/material';
+import { Box, Stack, Typography } from '@mui/material';
 import type { GridFilterModel, GridRowSelectionModel } from '@mui/x-data-grid';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useFeatureFlagEnabled } from 'posthog-js/react';
@@ -7,6 +7,7 @@ import { useAccountInfo } from '../Authentication/Auth';
 import { useAppNavigate } from '../Hooks/useAppNavigate';
 import { useGlobalSnackBar } from '../Hooks/useGlobalSnackBar';
 import { useSidePanel } from '../Hooks/useSidePanel';
+import { ActiveFiltersIndicator } from '../Generic/ActiveFiltersIndicator';
 import { v2Typography } from '../Families/v2Typography';
 import { useRequiredSelectedLocationContext } from '../Model/Data';
 import { useOrganizationConfiguration } from '../Model/ConfigurationModel';
@@ -554,28 +555,14 @@ export function VolunteersBrowserV2() {
           Review volunteer families.
         </Typography>
       </Box>
-      {hasActiveFilters && (
-        <Alert
-          action={
-            <Button
-              className="ph-unmask"
-              color="inherit"
-              onClick={handleClearFilters}
-              size="small"
-            >
-              Clear filters
-            </Button>
-          }
-          className="ph-unmask"
-          severity="warning"
-          sx={{ alignItems: 'center' }}
-        >
-          Filters are active
-        </Alert>
-      )}
       <VolunteersToolbarV2
         activeAssignmentFilterCount={activeAssignmentFilterCount}
         activeCustomFieldFilterCount={activeCustomFieldFilterCount}
+        activeFiltersIndicator={
+          hasActiveFilters ? (
+            <ActiveFiltersIndicator onClear={handleClearFilters} />
+          ) : undefined
+        }
         arrangementTypeCount={arrangementTypes.length}
         canCreateVolunteerFamily={canCreateVolunteerFamily}
         canUseBulkEmail={canUseBulkEmail}

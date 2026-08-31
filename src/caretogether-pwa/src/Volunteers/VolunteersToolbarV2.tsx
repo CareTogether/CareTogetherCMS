@@ -14,10 +14,12 @@ import {
   Tooltip,
   Typography,
 } from '@mui/material';
+import type { ReactNode } from 'react';
 
 type VolunteersToolbarV2Props = {
   activeAssignmentFilterCount: number;
   activeCustomFieldFilterCount: number;
+  activeFiltersIndicator?: ReactNode;
   arrangementTypeCount: number;
   customFieldCount: number;
   canCreateVolunteerFamily: boolean;
@@ -37,6 +39,7 @@ type VolunteersToolbarV2Props = {
 export function VolunteersToolbarV2({
   activeAssignmentFilterCount,
   activeCustomFieldFilterCount,
+  activeFiltersIndicator,
   arrangementTypeCount,
   canCreateVolunteerFamily,
   canUseBulkEmail,
@@ -156,6 +159,7 @@ export function VolunteersToolbarV2({
           </Tooltip>
         )}
       </Stack>
+      {activeFiltersIndicator}
     </Stack>
   );
 }

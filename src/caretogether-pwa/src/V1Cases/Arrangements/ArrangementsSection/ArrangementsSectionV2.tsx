@@ -2,7 +2,7 @@ import { AddCircle as AddCircleIcon } from '@mui/icons-material';
 import { Box, Button, Typography } from '@mui/material';
 import { useMemo, useState } from 'react';
 import { useAccountInfo } from '../../../Authentication/Auth';
-import { ActiveFiltersAlert } from '../../../Generic/ActiveFiltersAlert';
+import { ActiveFiltersIndicator } from '../../../Generic/ActiveFiltersIndicator';
 import Grid from '../../../Generic/GridLegacyCompat';
 import {
   ArrangementPolicy,
@@ -84,7 +84,7 @@ export function ArrangementsSection({
           </Typography>
         )}
 
-        {permissions(Permission.CreateArrangement) && (
+        {(hasActiveFilters || permissions(Permission.CreateArrangement)) && (
           <Box
             sx={{
               display: 'flex',
@@ -97,9 +97,14 @@ export function ArrangementsSection({
               gap: 1,
             }}
           >
+            {hasActiveFilters && (
+              <ActiveFiltersIndicator onClear={clearFilters} />
+            )}
             {policy.referralPolicy?.arrangementPolicies
-              ?.filter((arrangementPolicy) =>
-                isArrangementPolicyAvailable(arrangementPolicy)
+              ?.filter(
+                (arrangementPolicy) =>
+                  permissions(Permission.CreateArrangement) &&
+                  isArrangementPolicyAvailable(arrangementPolicy)
               )
               .map((arrangementPolicy) => (
                 <Box key={arrangementPolicy.arrangementType}>
@@ -122,11 +127,6 @@ export function ArrangementsSection({
 
       {arrangementRows.length > 0 ? (
         <>
-          {hasActiveFilters && (
-            <Box sx={{ mb: 1 }}>
-              <ActiveFiltersAlert onClear={clearFilters} />
-            </Box>
-          )}
           <ArrangementsDataGridV2
             columns={columns}
             filterModel={filterModel}
