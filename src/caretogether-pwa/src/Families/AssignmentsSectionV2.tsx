@@ -1,6 +1,9 @@
 import Grid from '../Generic/GridLegacyCompat';
-import { Typography } from '@mui/material';
+import { Stack, Typography } from '@mui/material';
 import { CombinedFamilyInfo } from '../GeneratedClient';
+import { useAccountInfo } from '../Authentication/Auth';
+import { ActiveFiltersIndicator } from '../Generic/ActiveFiltersIndicator';
+import { useScopedDataGridFilterPreferences } from '../Hooks/useScopedDataGridFilterPreferences';
 import {
   useFamilyLookup,
   usePersonAndFamilyLookup,
@@ -9,6 +12,7 @@ import { useMemo } from 'react';
 import { usePartneringFamilies } from '../Model/V1CasesModel';
 import { useAppNavigate } from '../Hooks/useAppNavigate';
 import { VolunteerAssignmentsDataGridV2 } from './VolunteerAssignmentsDataGridV2';
+import { volunteerAssignmentsDataGridColumns } from './volunteerAssignmentsDataGridColumnsV2';
 import {
   allArrangements,
   buildVolunteerAssignmentRowsV2,
@@ -19,15 +23,20 @@ import { personNameString } from './PersonName';
 interface AssignmentsSectionProps {
   family: CombinedFamilyInfo;
   hideTitle?: boolean;
+  locationId: string;
+  organizationId: string;
 }
 
 export function AssignmentsSection({
   family,
   hideTitle = false,
+  locationId,
+  organizationId,
 }: AssignmentsSectionProps) {
   const personAndFamilyLookup = usePersonAndFamilyLookup();
   const familyLookup = useFamilyLookup();
   const partneringFamilies = usePartneringFamilies();
+  const accountInfo = useAccountInfo();
   const navigate = useAppNavigate();
 
   const assignments = useMemo(
@@ -65,22 +74,44 @@ export function AssignmentsSection({
       }),
     [assignments, familyLookup, partneringFamilies, personAndFamilyLookup]
   );
+  const columns = useMemo(() => volunteerAssignmentsDataGridColumns(), []);
+  const {
+    clearFilters,
+    filterModel,
+    hasActiveFilters,
+    onFilterModelChange,
+  } = useScopedDataGridFilterPreferences({
+    columns,
+    namespace: 'volunteer-assignments-grid-filters',
+    scope: {
+      entityId: family.family?.id,
+      locationId,
+      organizationId,
+      userId: accountInfo?.userId,
+    },
+  });
 
   if (assignments.length === 0) return null;
 
   return (
     <Grid item xs={12}>
-      {!hideTitle && (
-        <Typography variant="h3" sx={{ marginBottom: 2 }}>
-          Assignments
-        </Typography>
-      )}
-      <VolunteerAssignmentsDataGridV2
-        rows={assignmentRows}
-        onRowClick={(row) => {
-          if (row.childFamilyId) navigate.family(row.childFamilyId);
-        }}
-      />
+      <Stack spacing={1}>
+        {!hideTitle && (
+          <Typography variant="h3" sx={{ marginBottom: 1 }}>
+            Assignments
+          </Typography>
+        )}
+        {hasActiveFilters && <ActiveFiltersIndicator onClear={clearFilters} />}
+        <VolunteerAssignmentsDataGridV2
+          columns={columns}
+          filterModel={filterModel}
+          rows={assignmentRows}
+          onFilterModelChange={onFilterModelChange}
+          onRowClick={(row) => {
+            if (row.childFamilyId) navigate.family(row.childFamilyId);
+          }}
+        />
+      </Stack>
     </Grid>
   );
 }

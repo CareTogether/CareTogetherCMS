@@ -1,9 +1,14 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Add as AddIcon } from '@mui/icons-material';
 import { Box, Button, Paper, Stack, Typography } from '@mui/material';
+import { useAccountInfo } from '../Authentication/Auth';
+import { ActiveFiltersIndicator } from '../Generic/ActiveFiltersIndicator';
 import { useScreenTitle } from '../Shell/ShellScreenTitle';
 import { AddNewReferralDrawer } from './AddNewReferralDrawer';
-import { useVisibleReferrals } from '../Model/Data';
+import {
+  useRequiredSelectedLocationContext,
+  useVisibleReferrals,
+} from '../Model/Data';
 import { Permission } from '../GeneratedClient';
 import { useAppNavigate } from '../Hooks/useAppNavigate';
 import { ProgressBackdrop } from '../Shell/ProgressBackdrop';
@@ -23,6 +28,15 @@ import {
   type ReferralAssignmentGridFilter,
   type ReferralsGridFilterLogicOperator,
 } from './referralsGridFilterAdapter';
+import {
+  defaultReferralsBrowserFilterState,
+  sanitizeReferralsBrowserFilterPreferences,
+  useReferralsBrowserFilterPreferences,
+} from './useReferralsBrowserFilterPreferences';
+
+function isSameJsonValue<T>(left: T, right: T) {
+  return JSON.stringify(left) === JSON.stringify(right);
+}
 
 export function ReferralsScreenV2() {
   useScreenTitle('Referrals');
@@ -74,6 +88,8 @@ export function ReferralsScreenV2() {
 
 function ReferralsScreenV2Content() {
   const permissions = useGlobalPermissions();
+  const accountInfo = useAccountInfo();
+  const { organizationId, locationId } = useRequiredSelectedLocationContext();
 
   const [filterText, setFilterText] = useState('');
   const [statusFilter, setStatusFilter] = useState<ReferralStatusFilter>('ALL');
@@ -84,6 +100,36 @@ function ReferralsScreenV2Content() {
   >([]);
   const [assignmentFilterLogicOperator, setAssignmentFilterLogicOperator] =
     useState<ReferralsGridFilterLogicOperator>('and');
+  const {
+    canPersistFilters,
+    clearSavedFilters,
+    defaultFilters,
+    preferencesLoaded: filterPreferencesLoaded,
+    savedFilters,
+    saveFilters,
+    storageKey: filterPreferenceStorageKey,
+  } = useReferralsBrowserFilterPreferences({
+    userId: accountInfo?.userId,
+    organizationId,
+    locationId,
+  });
+  const restoredFilterPreferenceStorageKey = useRef<string | null>(null);
+  const filtersBelongToCurrentScope =
+    filterPreferenceStorageKey !== null &&
+    restoredFilterPreferenceStorageKey.current === filterPreferenceStorageKey;
+  const effectiveFilterText = filtersBelongToCurrentScope ? filterText : '';
+  const effectiveStatusFilter = filtersBelongToCurrentScope
+    ? statusFilter
+    : defaultFilters.statusFilter;
+  const effectiveCountyFilter = filtersBelongToCurrentScope
+    ? countyFilter
+    : defaultFilters.countyFilter;
+  const effectiveAssignmentFilters = filtersBelongToCurrentScope
+    ? assignmentFilters
+    : defaultFilters.assignmentFilters;
+  const effectiveAssignmentFilterLogicOperator = filtersBelongToCurrentScope
+    ? assignmentFilterLogicOperator
+    : defaultFilters.assignmentFilterLogicOperator;
 
   const {
     assignmentRoles,
@@ -91,11 +137,11 @@ function ReferralsScreenV2Content() {
     familiesForCountyFilter,
     filteredRows,
   } = useReferralsBrowserViewModel({
-    assignmentFilterLogicOperator,
-    assignmentFilters,
-    countyFilter,
-    filterText,
-    statusFilter,
+    assignmentFilterLogicOperator: effectiveAssignmentFilterLogicOperator,
+    assignmentFilters: effectiveAssignmentFilters,
+    countyFilter: effectiveCountyFilter,
+    filterText: effectiveFilterText,
+    statusFilter: effectiveStatusFilter,
   });
   const hasFeaturebaseChat = permissions(Permission.AccessSupportScreen);
   const appNavigate = useAppNavigate();
@@ -117,6 +163,145 @@ function ReferralsScreenV2Content() {
       ...counties.map((county) => ({ label: county, value: county })),
     ];
   }, [familiesForCountyFilter]);
+  const referralsFilterValidationOptions = useMemo(
+    () => ({
+      assignmentRoles,
+      counties: countyValueOptions.map((option) =>
+        option.value === REFERRAL_COUNTY_BLANK_FILTER_VALUE
+          ? null
+          : option.value
+      ),
+    }),
+    [assignmentRoles, countyValueOptions]
+  );
+  const normalizedStructuredFilters = useMemo(
+    () =>
+      sanitizeReferralsBrowserFilterPreferences(
+        {
+          version: 1,
+          assignmentFilterLogicOperator: effectiveAssignmentFilterLogicOperator,
+          assignmentFilters: effectiveAssignmentFilters,
+          countyFilter: effectiveCountyFilter,
+          statusFilter: effectiveStatusFilter,
+        },
+        referralsFilterValidationOptions
+      ),
+    [
+      effectiveAssignmentFilterLogicOperator,
+      effectiveAssignmentFilters,
+      effectiveCountyFilter,
+      effectiveStatusFilter,
+      referralsFilterValidationOptions,
+    ]
+  );
+  const structuredFiltersAtDefaults = useMemo(
+    () => isSameJsonValue(normalizedStructuredFilters, defaultFilters),
+    [defaultFilters, normalizedStructuredFilters]
+  );
+  const hasActiveAssignmentFilters = normalizedStructuredFilters
+    .assignmentFilters.length > 0;
+  const hasActiveFilters =
+    effectiveStatusFilter !== defaultFilters.statusFilter ||
+    effectiveCountyFilter.length > 0 ||
+    hasActiveAssignmentFilters ||
+    effectiveFilterText.trim().length > 0;
+  const handleClearFilters = useCallback(() => {
+    clearSavedFilters();
+    setStatusFilter(defaultFilters.statusFilter);
+    setCountyFilter(defaultFilters.countyFilter);
+    setAssignmentFilters(defaultFilters.assignmentFilters);
+    setAssignmentFilterLogicOperator(
+      defaultFilters.assignmentFilterLogicOperator
+    );
+    setFilterText('');
+  }, [clearSavedFilters, defaultFilters]);
+  useEffect(() => {
+    if (
+      restoredFilterPreferenceStorageKey.current === filterPreferenceStorageKey
+    ) {
+      return;
+    }
+
+    setStatusFilter(defaultFilters.statusFilter);
+    setCountyFilter(defaultFilters.countyFilter);
+    setAssignmentFilters(defaultFilters.assignmentFilters);
+    setAssignmentFilterLogicOperator(
+      defaultFilters.assignmentFilterLogicOperator
+    );
+    setFilterText('');
+  }, [defaultFilters, filterPreferenceStorageKey]);
+
+  useEffect(() => {
+    if (
+      !filterPreferenceStorageKey ||
+      !filterPreferencesLoaded ||
+      restoredFilterPreferenceStorageKey.current === filterPreferenceStorageKey
+    ) {
+      return;
+    }
+
+    const restoredFilters = sanitizeReferralsBrowserFilterPreferences(
+      savedFilters ?? defaultReferralsBrowserFilterState(),
+      referralsFilterValidationOptions
+    );
+
+    restoredFilterPreferenceStorageKey.current = filterPreferenceStorageKey;
+    setStatusFilter(restoredFilters.statusFilter);
+    setCountyFilter(restoredFilters.countyFilter);
+    setAssignmentFilters(restoredFilters.assignmentFilters);
+    setAssignmentFilterLogicOperator(
+      restoredFilters.assignmentFilterLogicOperator
+    );
+    setFilterText('');
+  }, [
+    filterPreferenceStorageKey,
+    filterPreferencesLoaded,
+    referralsFilterValidationOptions,
+    savedFilters,
+  ]);
+
+  useEffect(() => {
+    if (
+      !canPersistFilters ||
+      !filterPreferenceStorageKey ||
+      !filterPreferencesLoaded ||
+      restoredFilterPreferenceStorageKey.current !== filterPreferenceStorageKey
+    ) {
+      return;
+    }
+
+    if (structuredFiltersAtDefaults) {
+      if (savedFilters) {
+        clearSavedFilters();
+      }
+
+      return;
+    }
+
+    if (
+      savedFilters &&
+      isSameJsonValue(savedFilters, normalizedStructuredFilters)
+    ) {
+      return;
+    }
+
+    saveFilters({
+      assignmentFilterLogicOperator:
+        normalizedStructuredFilters.assignmentFilterLogicOperator,
+      assignmentFilters: normalizedStructuredFilters.assignmentFilters,
+      countyFilter: normalizedStructuredFilters.countyFilter,
+      statusFilter: normalizedStructuredFilters.statusFilter,
+    });
+  }, [
+    canPersistFilters,
+    clearSavedFilters,
+    filterPreferenceStorageKey,
+    filterPreferencesLoaded,
+    normalizedStructuredFilters,
+    saveFilters,
+    savedFilters,
+    structuredFiltersAtDefaults,
+  ]);
 
   return (
     <Box
@@ -140,14 +325,19 @@ function ReferralsScreenV2Content() {
             Browse and manage referrals.
           </Typography>
         </Box>
-
-        {permissions(Permission.CreateV1Referral) && (
-          <Box
-            sx={{
-              display: 'flex',
-              justifyContent: 'flex-end',
-            }}
-          >
+        <Box
+          sx={{
+            alignItems: 'center',
+            display: 'flex',
+            flexWrap: 'wrap',
+            gap: 1,
+            justifyContent: 'flex-end',
+          }}
+        >
+          {hasActiveFilters && (
+            <ActiveFiltersIndicator onClear={handleClearFilters} />
+          )}
+          {permissions(Permission.CreateV1Referral) && (
             <Button
               size="small"
               variant="contained"
@@ -161,8 +351,8 @@ function ReferralsScreenV2Content() {
             >
               Add new referral
             </Button>
-          </Box>
-        )}
+          )}
+        </Box>
 
         <Paper
           variant="outlined"
@@ -177,14 +367,16 @@ function ReferralsScreenV2Content() {
         >
           <ReferralsDataGridV2
             assignmentRoles={canViewFunctionAssignments ? assignmentRoles : []}
-            countyFilter={countyFilter}
+            countyFilter={effectiveCountyFilter}
             countyValueOptions={countyValueOptions}
             expanded
-            filterText={filterText}
+            filterText={effectiveFilterText}
             rows={filteredRows}
-            statusFilter={statusFilter}
-            assignmentFilters={assignmentFilters}
-            assignmentFilterLogicOperator={assignmentFilterLogicOperator}
+            statusFilter={effectiveStatusFilter}
+            assignmentFilters={effectiveAssignmentFilters}
+            assignmentFilterLogicOperator={
+              effectiveAssignmentFilterLogicOperator
+            }
             onAssignmentFiltersChange={setAssignmentFilters}
             onAssignmentFilterLogicOperatorChange={
               setAssignmentFilterLogicOperator

@@ -1,4 +1,11 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import {
+  type Dispatch,
+  type SetStateAction,
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+} from 'react';
 import {
   CombinedFamilyInfo,
   CustomField,
@@ -68,25 +75,38 @@ type VolunteersBrowserViewModel = {
     field: CustomField
   ) => CustomFieldFilterOption[];
   requirementFilter: RequirementFilterValue | undefined;
+  requirementFilterOptionsLoaded: boolean;
   requirementFilterOptions: string[];
   roleFilters: filterOption[];
   rows: VolunteerBrowserRowV2[];
   searchValue: string;
+  setAssignmentFilters: Dispatch<
+    SetStateAction<AssignmentFilterSelectionsByArrangementType>
+  >;
   setAssignmentFilter: (
     arrangementType: string,
     selectedValues: AssignmentFilterValue[]
   ) => void;
+  setCustomFieldFilters: Dispatch<
+    SetStateAction<CustomFieldFilterSelectionsByField>
+  >;
   setCustomFieldFilter: (
     fieldName: string,
     selectedValues: CustomFieldFilterValue[]
   ) => void;
-  setRequirementFilter: (value: RequirementFilterValue | undefined) => void;
+  setRequirementFilter: Dispatch<
+    SetStateAction<RequirementFilterValue | undefined>
+  >;
   setRoleFilterValues: (values: string[]) => void;
   setSearchValue: (value: string) => void;
   setStatusFilterValues: (values: string[]) => void;
   statusFilters: filterOption[];
   totalVolunteerFamilies: number;
   visibleVolunteerFamilies: CombinedFamilyInfo[];
+};
+
+type UseVolunteersBrowserViewModelOptions = {
+  filtersEnabled?: boolean;
 };
 
 type CustomFieldValuesByFamily = Map<CombinedFamilyInfo, Record<string, unknown>>;
@@ -348,7 +368,13 @@ function withSelectedFilterValues(
   }));
 }
 
-export function useVolunteersBrowserViewModel(): VolunteersBrowserViewModel {
+function withoutSelectedFilterValues(filters: filterOption[]) {
+  return withSelectedFilterValues(filters, []);
+}
+
+export function useVolunteersBrowserViewModel({
+  filtersEnabled = true,
+}: UseVolunteersBrowserViewModelOptions = {}): VolunteersBrowserViewModel {
   const volunteerFamilies = useVolunteerFamilies();
   const requirementNames = useAllApprovalAndOnboardingRequirements();
   const policy = usePolicy();
@@ -400,6 +426,7 @@ export function useVolunteersBrowserViewModel(): VolunteersBrowserViewModel {
   );
   const {
     selectedValuesByField: customFieldFilters,
+    setSelectedValuesByField: setCustomFieldFilters,
     setSelectedValuesForField: setCustomFieldFilter,
     getOptionsForField: getCustomFieldFilterOptionsForField,
   } = useCustomFieldFilters({
@@ -412,6 +439,36 @@ export function useVolunteersBrowserViewModel(): VolunteersBrowserViewModel {
   const activeCustomFieldFilterCount = Object.values(
     customFieldFilters
   ).filter((selectedValues) => selectedValues.length > 0).length;
+  const effectiveAssignmentFilters = useMemo(
+    () => (filtersEnabled ? assignmentFilters : {}),
+    [assignmentFilters, filtersEnabled]
+  );
+  const effectiveCustomFieldFilters = useMemo(
+    () => (filtersEnabled ? customFieldFilters : {}),
+    [customFieldFilters, filtersEnabled]
+  );
+  const effectiveRequirementFilter = filtersEnabled
+    ? requirementFilter
+    : undefined;
+  const effectiveRoleFilters = useMemo(
+    () =>
+      filtersEnabled ? roleFilters : withoutSelectedFilterValues(roleFilters),
+    [filtersEnabled, roleFilters]
+  );
+  const effectiveSearchValue = filtersEnabled ? searchValue : '';
+  const effectiveStatusFilters = useMemo(
+    () =>
+      filtersEnabled
+        ? statusFilters
+        : withoutSelectedFilterValues(statusFilters),
+    [filtersEnabled, statusFilters]
+  );
+  const effectiveActiveAssignmentFilterCount = filtersEnabled
+    ? activeAssignmentFilterCount
+    : 0;
+  const effectiveActiveCustomFieldFilterCount = filtersEnabled
+    ? activeCustomFieldFilterCount
+    : 0;
 
   useEffect(() => {
     setAssignmentFilters((currentFilters) => {
@@ -428,89 +485,103 @@ export function useVolunteersBrowserViewModel(): VolunteersBrowserViewModel {
     });
   }, [arrangementTypes]);
 
-  function setAssignmentFilter(
-    arrangementType: string,
-    selectedValues: AssignmentFilterValue[]
-  ) {
-    setAssignmentFilters((previous) => ({
-      ...previous,
-      [arrangementType]: selectedValues,
-    }));
-  }
+  const setAssignmentFilter = useCallback(
+    (arrangementType: string, selectedValues: AssignmentFilterValue[]) => {
+      setAssignmentFilters((previous) => ({
+        ...previous,
+        [arrangementType]: selectedValues,
+      }));
+    },
+    []
+  );
 
-  function setRoleFilterValues(values: string[]) {
-    setRoleFilters(withSelectedFilterValues(roleFilters, values));
-  }
+  const setRoleFilterValues = useCallback(
+    (values: string[]) => {
+      setRoleFilters((current) =>
+        withSelectedFilterValues(current ?? roleFilters, values)
+      );
+    },
+    [roleFilters, setRoleFilters]
+  );
 
-  function setStatusFilterValues(values: string[]) {
-    setStatusFilters(withSelectedFilterValues(statusFilters, values));
-  }
+  const setStatusFilterValues = useCallback(
+    (values: string[]) => {
+      setStatusFilters((current) => withSelectedFilterValues(current, values));
+    },
+    [setStatusFilters]
+  );
 
   const visibleVolunteerFamilies = useMemo(() => {
-    const searchedFamilies = applySearchStage(sourceFamilies, searchValue);
+    const searchedFamilies = applySearchStage(
+      sourceFamilies,
+      effectiveSearchValue
+    );
     const filteredFamilies = applyFilterStage(
       searchedFamilies,
-      roleFilters,
-      statusFilters,
-      assignmentFilters,
+      effectiveRoleFilters,
+      effectiveStatusFilters,
+      effectiveAssignmentFilters,
       customFields,
-      customFieldFilters,
+      effectiveCustomFieldFilters,
       customFieldValuesByFamily,
-      requirementFilter
+      effectiveRequirementFilter
     );
 
     return filteredFamilies;
   }, [
-    assignmentFilters,
-    customFieldFilters,
+    effectiveAssignmentFilters,
+    effectiveCustomFieldFilters,
     customFieldValuesByFamily,
     customFields,
-    requirementFilter,
-    roleFilters,
-    searchValue,
+    effectiveRequirementFilter,
+    effectiveRoleFilters,
+    effectiveSearchValue,
+    effectiveStatusFilters,
     sourceFamilies,
-    statusFilters,
   ]);
   const rows = useMemo(
     () =>
       mapRows(
         visibleVolunteerFamilies,
         customFields,
-        roleFilters,
-        statusFilters,
+        effectiveRoleFilters,
+        effectiveStatusFilters,
         customFieldValuesByFamily
       ),
     [
       customFieldValuesByFamily,
       customFields,
-      roleFilters,
-      statusFilters,
+      effectiveRoleFilters,
+      effectiveStatusFilters,
       visibleVolunteerFamilies,
     ]
   );
 
   return {
-    activeAssignmentFilterCount,
-    activeCustomFieldFilterCount,
+    activeAssignmentFilterCount: effectiveActiveAssignmentFilterCount,
+    activeCustomFieldFilterCount: effectiveActiveCustomFieldFilterCount,
     arrangementTypes,
-    assignmentFilters,
+    assignmentFilters: effectiveAssignmentFilters,
     customFieldCount,
-    customFieldFilters,
+    customFieldFilters: effectiveCustomFieldFilters,
     customFields,
     empty: rows.length === 0,
     getCustomFieldFilterOptionsForField,
-    requirementFilter,
+    requirementFilter: effectiveRequirementFilter,
+    requirementFilterOptionsLoaded: true,
     requirementFilterOptions: requirementNames,
-    roleFilters,
+    roleFilters: effectiveRoleFilters,
     rows,
-    searchValue,
+    searchValue: effectiveSearchValue,
+    setAssignmentFilters,
     setAssignmentFilter,
+    setCustomFieldFilters,
     setCustomFieldFilter,
     setRequirementFilter,
     setRoleFilterValues,
     setSearchValue,
     setStatusFilterValues,
-    statusFilters,
+    statusFilters: effectiveStatusFilters,
     totalVolunteerFamilies: sourceFamilies.length,
     visibleVolunteerFamilies,
   };

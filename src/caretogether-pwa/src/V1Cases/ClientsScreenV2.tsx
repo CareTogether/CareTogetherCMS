@@ -1,10 +1,11 @@
 import { Box, Stack, Typography } from '@mui/material';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useFeatureFlagEnabled } from 'posthog-js/react';
+import { useAccountInfo } from '../Authentication/Auth';
+import { ActiveFiltersIndicator } from '../Generic/ActiveFiltersIndicator';
 import { Permission } from '../GeneratedClient';
 import { useScreenTitle } from '../Shell/ShellScreenTitle';
 import { v2Typography } from '../Families/v2Typography';
-import { useLocalStorage } from '../Hooks/useLocalStorage';
 import { ClientsBrowserToolbarV2 } from './ClientsBrowserToolbarV2';
 import { ClientsDataGridV2 } from './ClientsDataGridV2';
 import {
@@ -12,14 +13,8 @@ import {
   useClientsBrowserViewModel,
 } from './useClientsBrowserViewModel';
 import { useAppNavigate } from '../Hooks/useAppNavigate';
-import {
-  normalizePartneringFamiliesSortMode,
-  PartneringFamiliesSortMode,
-} from './PartneringFamilies/sortPartneringFamilies';
-import {
-  ArrangementsFilter,
-  normalizeArrangementsFilter,
-} from './PartneringFamilies/types';
+import { PartneringFamiliesSortMode } from './PartneringFamilies/sortPartneringFamilies';
+import { ArrangementsFilter } from './PartneringFamilies/types';
 import { FUNCTION_ASSIGNMENTS_FEATURE_FLAG } from '../featureFlags';
 import {
   useAllPartneringFamiliesPermissions,
@@ -30,13 +25,16 @@ import type { AssignmentFilterSelectionsByRole } from '../FunctionAssignments/as
 import { useCustomFieldFilters } from '../Generic/CustomFieldsFilter/useCustomFieldFilters';
 import { useSidePanel } from '../Hooks/useSidePanel';
 import { PartneringFamilyCustomFieldFiltersSidePanel } from './PartneringFamilies/PartneringFamilyCustomFieldFiltersSidePanel';
+import { useRequiredSelectedLocationContext } from '../Model/Data';
 import { usePartneringFamilies } from '../Model/V1CasesModel';
 import { usePolicy } from '../Model/PolicyModel';
 import { wideTablePageSx } from '../Utilities/wideTablePageSx';
+import {
+  defaultClientsBrowserFilterState,
+  sanitizeClientsBrowserFilterPreferences,
+  useClientsBrowserFilterPreferences,
+} from './useClientsBrowserFilterPreferences';
 
-const PARTNERING_FAMILIES_SORT_STORAGE_KEY = 'partnering-families-sortMode';
-const ARRANGEMENTS_FILTER_STORAGE_KEY =
-  'partnering-families-arrangementsFilter';
 const CLIENT_SEARCH_DEBOUNCE_MS = 200;
 
 function useDebouncedValue<T>(value: T, delayMs: number) {
@@ -51,9 +49,15 @@ function useDebouncedValue<T>(value: T, delayMs: number) {
   return debouncedValue;
 }
 
+function isSameJsonValue<T>(left: T, right: T) {
+  return JSON.stringify(left) === JSON.stringify(right);
+}
+
 export function ClientsScreenV2() {
   useScreenTitle('Clients');
   const appNavigate = useAppNavigate();
+  const accountInfo = useAccountInfo();
+  const { organizationId, locationId } = useRequiredSelectedLocationContext();
   const personAndFamilyLookup = usePersonAndFamilyLookup();
   const globalPermissions = useGlobalPermissions();
   const permissions = useAllPartneringFamiliesPermissions();
@@ -76,23 +80,43 @@ export function ClientsScreenV2() {
   const [countyFilter, setCountyFilter] = useState<(string | null)[]>([]);
   const [assignmentFilters, setAssignmentFilters] =
     useState<AssignmentFilterSelectionsByRole>({});
-  const [storedArrangementsFilter, setStoredArrangementsFilter] =
-    useLocalStorage<ArrangementsFilter | null>(
-      ARRANGEMENTS_FILTER_STORAGE_KEY,
-      'All'
-    );
-  const arrangementsFilter = normalizeArrangementsFilter(
-    storedArrangementsFilter
-  );
-  const [storedSortMode, setStoredSortMode] =
-    useLocalStorage<PartneringFamiliesSortMode>(
-      PARTNERING_FAMILIES_SORT_STORAGE_KEY,
-      'lastNameAsc'
-    );
-  const sortMode = normalizePartneringFamiliesSortMode(storedSortMode);
+  const [arrangementsFilter, setArrangementsFilter] =
+    useState<ArrangementsFilter>('All');
+  const [sortMode, setSortMode] =
+    useState<PartneringFamiliesSortMode>('lastNameAsc');
+  const {
+    canPersistFilters,
+    clearSavedFilters,
+    defaultFilters,
+    preferencesLoaded: filterPreferencesLoaded,
+    savedFilters,
+    saveFilters,
+    storageKey: filterPreferenceStorageKey,
+  } = useClientsBrowserFilterPreferences({
+    userId: accountInfo?.userId,
+    organizationId,
+    locationId,
+  });
+  const restoredFilterPreferenceStorageKey = useRef<string | null>(null);
+  const filtersBelongToCurrentScope =
+    filterPreferenceStorageKey !== null &&
+    restoredFilterPreferenceStorageKey.current === filterPreferenceStorageKey;
+  const effectiveArrangementsFilter = filtersBelongToCurrentScope
+    ? arrangementsFilter
+    : defaultFilters.arrangementsFilter;
+  const effectiveAssignmentFilters = filtersBelongToCurrentScope
+    ? assignmentFilters
+    : defaultFilters.assignmentFilters;
+  const effectiveCountyFilter = filtersBelongToCurrentScope
+    ? countyFilter
+    : defaultFilters.countyFilter;
+  const effectiveSearchValue = filtersBelongToCurrentScope ? searchValue : '';
   const customFieldFilterItems = usePartneringFamilies();
   const policy = usePolicy();
-  const customFieldDefinitions = policy.referralPolicy?.customFields ?? [];
+  const customFieldDefinitions = useMemo(
+    () => policy.referralPolicy?.customFields ?? [],
+    [policy.referralPolicy?.customFields]
+  );
   const isBlankCustomFieldValue = useCallback(
     (family: (typeof customFieldFilterItems)[number], fieldName: string) =>
       family.partneringFamilyInfo?.openV1Case?.missingCustomFields?.includes(
@@ -109,6 +133,7 @@ export function ClientsScreenV2() {
   );
   const {
     selectedValuesByField: selectedCustomFieldValuesByField,
+    setSelectedValuesByField: setSelectedCustomFieldValuesByField,
     setSelectedValuesForField: setSelectedCustomFieldValuesForField,
     getOptionsForField: getCustomFieldFilterOptionsForField,
   } = useCustomFieldFilters({
@@ -118,8 +143,22 @@ export function ClientsScreenV2() {
     getValue: getCustomFieldValue,
   });
   const activeCustomFieldFilterCount = Object.values(
-    selectedCustomFieldValuesByField
+    filtersBelongToCurrentScope
+      ? selectedCustomFieldValuesByField
+      : defaultFilters.customFieldFilters
   ).filter((selectedValues) => selectedValues.length > 0).length;
+  const customFieldFilterValueOptionsByField = useMemo(
+    () =>
+      Object.fromEntries(
+        customFieldDefinitions.map((field) => [
+          field.name,
+          getCustomFieldFilterOptionsForField(field).map(
+            (option) => option.value
+          ),
+        ])
+      ),
+    [customFieldDefinitions, getCustomFieldFilterOptionsForField]
+  );
   const assignmentPersonLookup = useCallback(
     (personId: string) => personAndFamilyLookup(personId).person,
     [personAndFamilyLookup]
@@ -144,15 +183,245 @@ export function ClientsScreenV2() {
     counties,
     rows,
   } = useClientsBrowserViewModel({
-    arrangementsFilter,
-    assignmentFilters,
+    arrangementsFilter: effectiveArrangementsFilter,
+    assignmentFilters: effectiveAssignmentFilters,
     canViewFunctionAssignments,
-    countyFilter,
-    filterText: debouncedSearchValue,
-    selectedCustomFieldValuesByField,
+    countyFilter: effectiveCountyFilter,
+    filterText: filtersBelongToCurrentScope ? debouncedSearchValue : '',
+    selectedCustomFieldValuesByField: filtersBelongToCurrentScope
+      ? selectedCustomFieldValuesByField
+      : defaultFilters.customFieldFilters,
     sortMode,
   });
+  const assignmentFilterValueOptionsByRole = useMemo(
+    () =>
+      Object.fromEntries(
+        assignmentFilterOptions.map((assignmentRole) => [
+          assignmentRole,
+          [
+            null,
+            ...Array.from(
+              new Set(
+                assignmentFilterAssignments
+                  .filter(
+                    (assignment) =>
+                      assignment.assignmentRole === assignmentRole
+                  )
+                  .map((assignment) => assignment.personId)
+                  .filter((personId): personId is string =>
+                    typeof personId === 'string'
+                  )
+              )
+            ),
+          ],
+        ])
+      ),
+    [assignmentFilterAssignments, assignmentFilterOptions]
+  );
   const hasFeaturebaseChat = globalPermissions(Permission.AccessSupportScreen);
+  const clientsFilterValidationOptions = useMemo(
+    () => ({
+      assignmentRoles: assignmentFilterOptions,
+      assignmentValuesByRole: assignmentFilterValueOptionsByRole,
+      counties,
+      customFields: customFieldDefinitions,
+      customFieldValueOptionsByField: customFieldFilterValueOptionsByField,
+    }),
+    [
+      assignmentFilterOptions,
+      assignmentFilterValueOptionsByRole,
+      counties,
+      customFieldDefinitions,
+      customFieldFilterValueOptionsByField,
+    ]
+  );
+  const normalizedStructuredFilters = useMemo(
+    () =>
+      sanitizeClientsBrowserFilterPreferences(
+        {
+          version: 1,
+          arrangementsFilter: effectiveArrangementsFilter,
+          assignmentFilters: effectiveAssignmentFilters,
+          countyFilter: effectiveCountyFilter,
+          customFieldFilters: filtersBelongToCurrentScope
+            ? selectedCustomFieldValuesByField
+            : defaultFilters.customFieldFilters,
+        },
+        clientsFilterValidationOptions
+      ),
+    [
+      clientsFilterValidationOptions,
+      defaultFilters.customFieldFilters,
+      effectiveArrangementsFilter,
+      effectiveAssignmentFilters,
+      effectiveCountyFilter,
+      filtersBelongToCurrentScope,
+      selectedCustomFieldValuesByField,
+    ]
+  );
+  const structuredFiltersAtDefaults = useMemo(
+    () => isSameJsonValue(normalizedStructuredFilters, defaultFilters),
+    [defaultFilters, normalizedStructuredFilters]
+  );
+  const hasStructuredFilters =
+    effectiveArrangementsFilter !== defaultFilters.arrangementsFilter ||
+    effectiveCountyFilter.length > 0 ||
+    Object.values(effectiveAssignmentFilters).some(
+      (selectedValues) => selectedValues.length > 0
+    ) ||
+    Object.values(
+      filtersBelongToCurrentScope
+        ? selectedCustomFieldValuesByField
+        : defaultFilters.customFieldFilters
+    ).some(
+      (selectedValues) => selectedValues.length > 0
+    );
+  const hasActiveFilters =
+    hasStructuredFilters || effectiveSearchValue.trim().length > 0;
+  const handleClearFilters = useCallback(() => {
+    clearSavedFilters();
+    setArrangementsFilter(defaultFilters.arrangementsFilter);
+    setAssignmentFilters(defaultFilters.assignmentFilters);
+    setCountyFilter(defaultFilters.countyFilter);
+    setSelectedCustomFieldValuesByField(defaultFilters.customFieldFilters);
+    setSearchValue('');
+  }, [clearSavedFilters, defaultFilters, setSelectedCustomFieldValuesByField]);
+  useEffect(() => {
+    if (restoredFilterPreferenceStorageKey.current === filterPreferenceStorageKey) {
+      return;
+    }
+
+    setArrangementsFilter(defaultFilters.arrangementsFilter);
+    setAssignmentFilters(defaultFilters.assignmentFilters);
+    setCountyFilter(defaultFilters.countyFilter);
+    setSelectedCustomFieldValuesByField(defaultFilters.customFieldFilters);
+    setSearchValue('');
+  }, [
+    defaultFilters,
+    filterPreferenceStorageKey,
+    setSelectedCustomFieldValuesByField,
+  ]);
+
+  useEffect(() => {
+    if (
+      !filterPreferenceStorageKey ||
+      !filterPreferencesLoaded ||
+      restoredFilterPreferenceStorageKey.current === filterPreferenceStorageKey
+    ) {
+      return;
+    }
+
+    const restoredFilters = sanitizeClientsBrowserFilterPreferences(
+      savedFilters ?? defaultClientsBrowserFilterState(),
+      clientsFilterValidationOptions
+    );
+
+    restoredFilterPreferenceStorageKey.current = filterPreferenceStorageKey;
+    setArrangementsFilter(restoredFilters.arrangementsFilter);
+    setAssignmentFilters(restoredFilters.assignmentFilters);
+    setCountyFilter(restoredFilters.countyFilter);
+    setSelectedCustomFieldValuesByField(restoredFilters.customFieldFilters);
+    setSearchValue('');
+  }, [
+    filterPreferencesLoaded,
+    filterPreferenceStorageKey,
+    clientsFilterValidationOptions,
+    savedFilters,
+    setSelectedCustomFieldValuesByField,
+  ]);
+
+  useEffect(() => {
+    if (
+      !canPersistFilters ||
+      !filterPreferenceStorageKey ||
+      !filterPreferencesLoaded ||
+      restoredFilterPreferenceStorageKey.current !== filterPreferenceStorageKey
+    ) {
+      return;
+    }
+
+    if (structuredFiltersAtDefaults) {
+      if (savedFilters) {
+        clearSavedFilters();
+      }
+
+      return;
+    }
+
+    if (
+      savedFilters &&
+      isSameJsonValue(savedFilters, normalizedStructuredFilters)
+    ) {
+      return;
+    }
+
+    saveFilters({
+      arrangementsFilter: normalizedStructuredFilters.arrangementsFilter,
+      assignmentFilters: normalizedStructuredFilters.assignmentFilters,
+      countyFilter: normalizedStructuredFilters.countyFilter,
+      customFieldFilters: normalizedStructuredFilters.customFieldFilters,
+    });
+  }, [
+    canPersistFilters,
+    clearSavedFilters,
+    filterPreferenceStorageKey,
+    filterPreferencesLoaded,
+    normalizedStructuredFilters,
+    saveFilters,
+    savedFilters,
+    structuredFiltersAtDefaults,
+  ]);
+
+  useEffect(() => {
+    setAssignmentFilters((current) => {
+      const next = sanitizeClientsBrowserFilterPreferences(
+        {
+          ...defaultFilters,
+          assignmentFilters: current,
+        },
+        {
+          assignmentRoles: assignmentFilterOptions,
+          assignmentValuesByRole: assignmentFilterValueOptionsByRole,
+        }
+      ).assignmentFilters;
+
+      return isSameJsonValue(current, next) ? current : next;
+    });
+    setCountyFilter((current) => {
+      const next = sanitizeClientsBrowserFilterPreferences(
+        {
+          ...defaultFilters,
+          countyFilter: current,
+        },
+        { counties }
+      ).countyFilter;
+
+      return isSameJsonValue(current, next) ? current : next;
+    });
+    setSelectedCustomFieldValuesByField((current) => {
+      const next = sanitizeClientsBrowserFilterPreferences(
+        {
+          ...defaultFilters,
+          customFieldFilters: current,
+        },
+        {
+          customFields: customFieldDefinitions,
+          customFieldValueOptionsByField:
+            customFieldFilterValueOptionsByField,
+        }
+      ).customFieldFilters;
+
+      return isSameJsonValue(current, next) ? current : next;
+    });
+  }, [
+    assignmentFilterOptions,
+    assignmentFilterValueOptionsByRole,
+    counties,
+    customFieldDefinitions,
+    customFieldFilterValueOptionsByField,
+    defaultFilters,
+    setSelectedCustomFieldValuesByField,
+  ]);
 
   return (
     <Box
@@ -178,13 +447,18 @@ export function ClientsScreenV2() {
           </Typography>
         </Box>
         <ClientsBrowserToolbarV2
-          searchValue={searchValue}
-          statusValue={arrangementsFilter}
+          activeFiltersIndicator={
+            hasActiveFilters ? (
+              <ActiveFiltersIndicator onClear={handleClearFilters} />
+            ) : undefined
+          }
+          searchValue={effectiveSearchValue}
+          statusValue={effectiveArrangementsFilter}
           countyOptions={counties}
-          countyValue={countyFilter}
+          countyValue={effectiveCountyFilter}
           sortValue={sortMode}
           assignmentFilterAssignments={assignmentFilterAssignments}
-          assignmentFilters={assignmentFilters}
+          assignmentFilters={effectiveAssignmentFilters}
           assignmentPersonLookup={assignmentPersonLookup}
           assignmentRoles={
             canViewFunctionAssignments ? assignmentFilterOptions : []
@@ -193,10 +467,10 @@ export function ClientsScreenV2() {
           customFieldCount={customFieldDefinitions.length}
           onAssignmentFilterChange={handleAssignmentFilterChange}
           onSearchChange={setSearchValue}
-          onStatusChange={setStoredArrangementsFilter}
+          onStatusChange={setArrangementsFilter}
           onCountyChange={setCountyFilter}
           onMoreFiltersClick={openCustomFieldFiltersSidePanel}
-          onSortChange={setStoredSortMode}
+          onSortChange={setSortMode}
         />
         <Box sx={{ flex: 1, minHeight: 0 }}>
           <ClientsDataGridV2
@@ -211,7 +485,11 @@ export function ClientsScreenV2() {
         <PartneringFamilyCustomFieldFiltersSidePanel
           customFields={customFieldDefinitions}
           getOptionsForField={getCustomFieldFilterOptionsForField}
-          selectedValuesByField={selectedCustomFieldValuesByField}
+          selectedValuesByField={
+            filtersBelongToCurrentScope
+              ? selectedCustomFieldValuesByField
+              : defaultFilters.customFieldFilters
+          }
           onFieldChange={setSelectedCustomFieldValuesForField}
           onClose={closeCustomFieldFiltersSidePanel}
         />

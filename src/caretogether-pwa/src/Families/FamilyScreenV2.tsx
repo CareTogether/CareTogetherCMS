@@ -933,7 +933,12 @@ export function FamilyScreenV2() {
           >
             <Grid container spacing={2}>
               {showArrangementsOrAssignments && isVolunteerFamily && family && (
-                <AssignmentsSection family={family} hideTitle />
+                <AssignmentsSection
+                  family={family}
+                  hideTitle
+                  locationId={locationId}
+                  organizationId={organizationId}
+                />
               )}
             </Grid>
 
@@ -956,7 +961,13 @@ export function FamilyScreenV2() {
               {showApprovals && family.volunteerFamilyInfo && (
                 <>
                   <Grid item xs={12}>
-                    <ApprovalLedgerSection rows={approvalLedgerRows} />
+                    <ApprovalLedgerSection
+                      familyId={familyId}
+                      locationId={locationId}
+                      organizationId={organizationId}
+                      rows={approvalLedgerRows}
+                      userId={currentUserId}
+                    />
                   </Grid>
                 </>
               )}
@@ -981,6 +992,8 @@ export function FamilyScreenV2() {
                   <ArrangementsSection
                     arrangementRows={selectedCaseArrangementRows}
                     v1Case={selectedV1Case}
+                    locationId={locationId}
+                    organizationId={organizationId}
                     permissions={permissions}
                     hideTitle
                     onArrangementRowClick={openArrangementWorkspace}
