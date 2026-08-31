@@ -29,8 +29,8 @@ import { useDrawer } from '../Generic/ShellDrawer';
 import { useVisibleCommunities } from '../Model/Data';
 import { useState } from 'react';
 import { useOrganizationConfigurationLoadable } from '../Model/ConfigurationModel';
-import { OrganizationCategoriesSection } from './OrganizationCategoriesSection';
-import { EditOrganizationCategoriesDrawer } from './EditOrganizationCategoriesDrawer';
+import { OrganizationPrimaryHeaderInfo } from './OrganizationPrimaryHeaderInfo';
+import { ProgressBackdrop } from '../Shell/ProgressBackdrop';
 
 export function CommunityScreen() {
   const communityIdMaybe = useParams<{ communityId: string }>();
@@ -50,30 +50,74 @@ export function CommunityScreen() {
   // const isWideScreen = useMediaQuery(theme.breakpoints.up('xl'));
 
   const permissions = useCommunityPermissions(communityInfo);
+  const canEditOrganization = permissions(Permission.EditOrganization);
 
   const editDrawer = useDrawer();
   const uploadDrawer = useDrawer();
   const addMemberFamilyDrawer = useDrawer();
   const addRoleAssignmentDrawer = useDrawer();
-  const [categoriesDrawerOpen, setCategoriesDrawerOpen] = useState(false);
+  const [editHasUnsavedChanges, setEditHasUnsavedChanges] = useState(false);
   // const deleteCommunityDrawer = useDrawer();
+
+  function closeEditor() {
+    setEditHasUnsavedChanges(false);
+    editDrawer.closeDrawer();
+  }
+
+  function requestCloseEditor() {
+    if (
+      editHasUnsavedChanges &&
+      !window.confirm(
+        'You have unsaved changes that will be lost. Are you sure?'
+      )
+    ) {
+      return;
+    }
+
+    closeEditor();
+  }
 
   if (!community) {
     return <Navigate to=".." replace />;
   }
 
+  if (!organizationConfiguration) {
+    return (
+      <ProgressBackdrop>
+        <p>Loading organization...</p>
+      </ProgressBackdrop>
+    );
+  }
+
   return (
     <Container maxWidth={false} sx={{ paddingLeft: '12px' }}>
-      <Toolbar disableGutters variant={isDesktop ? 'dense' : 'regular'}>
-        {permissions(Permission.EditOrganization) && (
+      <Toolbar
+        disableGutters
+        variant={isDesktop ? 'dense' : 'regular'}
+        sx={{
+          alignItems: 'flex-start',
+          justifyContent: 'space-between',
+          flexWrap: 'wrap',
+          gap: 2,
+          py: 1,
+        }}
+      >
+        <OrganizationPrimaryHeaderInfo
+          availableCategories={
+            organizationConfiguration.organizationCategories ?? []
+          }
+          community={community}
+          onEdit={canEditOrganization ? editDrawer.openDrawer : undefined}
+        />
+        {canEditOrganization && (
           <Button
+            className="ph-unmask"
             onClick={editDrawer.openDrawer}
             variant="contained"
             size={isDesktop ? 'small' : 'medium'}
-            sx={{ margin: 1 }}
             startIcon={<EditIcon />}
           >
-            Rename
+            Edit
           </Button>
         )}
         {/* {permissions(Permission.DeleteOrganization) && <Button
@@ -85,29 +129,10 @@ export function CommunityScreen() {
             Delete
           </Button>} */}
       </Toolbar>
-      <OrganizationCategoriesSection
-        availableCategories={
-          organizationConfiguration?.organizationCategories ?? []
-        }
-        categoryIds={community.categoryIds ?? []}
-        canEdit={permissions(Permission.EditOrganization)}
-        onEdit={() => setCategoriesDrawerOpen(true)}
-      />
       <Grid container spacing={2} sx={{ marginTop: 0 }}>
         <Grid size={{ xs: 12, sm: 6 }}>
-          <Typography variant="h5">
+          <Typography className="ph-unmask" variant="h5">
             Description
-            {permissions(Permission.EditOrganization) && (
-              <Button
-                onClick={editDrawer.openDrawer}
-                variant="text"
-                size={isDesktop ? 'small' : 'medium'}
-                sx={{ marginLeft: 2 }}
-                startIcon={<EditIcon />}
-              >
-                Edit
-              </Button>
-            )}
           </Typography>
           <p style={{ marginTop: 12, whiteSpace: 'pre-wrap' }}>
             {community.description}
@@ -177,23 +202,19 @@ export function CommunityScreen() {
           <CommunityMemberFamilies communityInfo={communityInfo} />
         </Grid>
       </Grid>
-      {permissions(Permission.EditOrganization) &&
+      {canEditOrganization &&
         editDrawer.drawerFor(
           <AddEditCommunity
+            availableCategories={
+              organizationConfiguration.organizationCategories ?? []
+            }
             community={community}
-            onClose={editDrawer.closeDrawer}
-          />
+            onClose={requestCloseEditor}
+            onDirtyChange={setEditHasUnsavedChanges}
+            onSaveCompleted={closeEditor}
+          />,
+          requestCloseEditor
         )}
-      {permissions(Permission.EditOrganization) && categoriesDrawerOpen && (
-        <EditOrganizationCategoriesDrawer
-          availableCategories={
-            organizationConfiguration?.organizationCategories ?? []
-          }
-          categoryIds={community.categoryIds ?? []}
-          communityId={community.id!}
-          onClose={() => setCategoriesDrawerOpen(false)}
-        />
-      )}
       {permissions(Permission.UploadOrganizationDocuments) &&
         uploadDrawer.drawerFor(
           <CommunityDocumentUpload
