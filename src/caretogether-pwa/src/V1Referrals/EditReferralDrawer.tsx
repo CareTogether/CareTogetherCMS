@@ -2,11 +2,10 @@ import Grid from '@mui/material/Grid';
 import { Button, Drawer, TextField, Typography } from '@mui/material';
 import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useRecoilValue } from 'recoil';
 
 import { ValidateDatePicker } from '../Generic/Forms/ValidateDatePicker';
 import { useV1ReferralsModel } from '../Model/V1ReferralsModel';
-import { policyData } from '../Model/ConfigurationModel';
+import { usePolicy } from '../Model/PolicyModel';
 import { CustomField, V1Referral } from '../GeneratedClient';
 import { CustomFieldInput } from '../Generic/CustomFieldInput';
 
@@ -24,7 +23,7 @@ export function EditReferralDrawer({
   referral,
   onClose,
 }: EditReferralDrawerProps) {
-  const policy = useRecoilValue(policyData);
+  const policy = usePolicy();
 
   const { updateReferralDetails, updateCustomReferralField } =
     useV1ReferralsModel();

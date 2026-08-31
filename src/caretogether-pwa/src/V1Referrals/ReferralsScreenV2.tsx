@@ -1,18 +1,15 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Add as AddIcon } from '@mui/icons-material';
 import { Alert, Box, Button, Paper, Stack, Typography } from '@mui/material';
-import { useRecoilValue, useRecoilValueLoadable } from 'recoil';
-import { accountInfoState } from '../Authentication/Auth';
+import { useAccountInfo } from '../Authentication/Auth';
 import { useScreenTitle } from '../Shell/ShellScreenTitle';
 import { AddNewReferralDrawer } from './AddNewReferralDrawer';
 import {
-  currentLocationQuery,
-  selectedLocationContextState,
-  visibleReferralsQuery,
+  useRequiredSelectedLocationContext,
+  useVisibleReferrals,
 } from '../Model/Data';
 import { Permission } from '../GeneratedClient';
 import { useAppNavigate } from '../Hooks/useAppNavigate';
-import { useLoadable } from '../Hooks/useLoadable';
 import { ProgressBackdrop } from '../Shell/ProgressBackdrop';
 import { useGlobalPermissions } from '../Model/SessionModel';
 import { useFeatureFlagEnabled } from 'posthog-js/react';
@@ -47,44 +44,29 @@ export function ReferralsScreenV2() {
   const featureFlagsLoaded = useFeatureFlagsLoaded();
   const appNavigate = useAppNavigate();
   const permissions = useGlobalPermissions();
-  const currentLocationLoadable = useRecoilValueLoadable(currentLocationQuery);
-  const referralsLoadable = useRecoilValueLoadable(visibleReferralsQuery);
+  const referralRecords = useVisibleReferrals();
 
-  const permissionsLoaded = currentLocationLoadable.state === 'hasValue';
-  const referralsLoaded = referralsLoadable.state === 'hasValue';
   const canCreateReferrals = permissions(Permission.CreateV1Referral);
   const canViewGlobalReferrals = permissions(Permission.ViewV1Referral);
-  const canViewContextualReferrals =
-    referralsLoaded && referralsLoadable.contents.length > 0;
+  const canViewContextualReferrals = referralRecords.length > 0;
   const canAccessReferrals =
     canCreateReferrals || canViewGlobalReferrals || canViewContextualReferrals;
 
   useEffect(() => {
     if (
-      permissionsLoaded &&
-      referralsLoaded &&
-      (!canAccessReferrals || (featureFlagsLoaded && referralsEnabled !== true))
+      !canAccessReferrals ||
+      (featureFlagsLoaded && referralsEnabled !== true)
     ) {
       appNavigate.dashboard();
     }
   }, [
     canAccessReferrals,
     featureFlagsLoaded,
-    permissionsLoaded,
-    referralsLoaded,
     referralsEnabled,
     appNavigate,
   ]);
 
-  if (currentLocationLoadable.state === 'hasError') {
-    throw currentLocationLoadable.contents;
-  }
-
-  if (referralsLoadable.state === 'hasError') {
-    throw referralsLoadable.contents;
-  }
-
-  if (!permissionsLoaded || !referralsLoaded || !featureFlagsLoaded) {
+  if (!featureFlagsLoaded) {
     return (
       <ProgressBackdrop opaque>
         <p>Loading...</p>
@@ -105,10 +87,8 @@ export function ReferralsScreenV2() {
 
 function ReferralsScreenV2Content() {
   const permissions = useGlobalPermissions();
-  const accountInfo = useLoadable(accountInfoState);
-  const { organizationId, locationId } = useRecoilValue(
-    selectedLocationContextState
-  );
+  const accountInfo = useAccountInfo();
+  const { organizationId, locationId } = useRequiredSelectedLocationContext();
 
   const [filterText, setFilterText] = useState('');
   const [statusFilter, setStatusFilter] = useState<ReferralStatusFilter>('ALL');
@@ -132,19 +112,35 @@ function ReferralsScreenV2Content() {
     organizationId,
     locationId,
   });
+  const restoredFilterPreferenceStorageKey = useRef<string | null>(null);
+  const filtersBelongToCurrentScope =
+    filterPreferenceStorageKey !== null &&
+    restoredFilterPreferenceStorageKey.current === filterPreferenceStorageKey;
+  const effectiveFilterText = filtersBelongToCurrentScope ? filterText : '';
+  const effectiveStatusFilter = filtersBelongToCurrentScope
+    ? statusFilter
+    : defaultFilters.statusFilter;
+  const effectiveCountyFilter = filtersBelongToCurrentScope
+    ? countyFilter
+    : defaultFilters.countyFilter;
+  const effectiveAssignmentFilters = filtersBelongToCurrentScope
+    ? assignmentFilters
+    : defaultFilters.assignmentFilters;
+  const effectiveAssignmentFilterLogicOperator = filtersBelongToCurrentScope
+    ? assignmentFilterLogicOperator
+    : defaultFilters.assignmentFilterLogicOperator;
 
   const {
     assignmentRoles,
     canViewFunctionAssignments,
     familiesForCountyFilter,
     filteredRows,
-    isLoading,
   } = useReferralsBrowserViewModel({
-    assignmentFilterLogicOperator,
-    assignmentFilters,
-    countyFilter,
-    filterText,
-    statusFilter,
+    assignmentFilterLogicOperator: effectiveAssignmentFilterLogicOperator,
+    assignmentFilters: effectiveAssignmentFilters,
+    countyFilter: effectiveCountyFilter,
+    filterText: effectiveFilterText,
+    statusFilter: effectiveStatusFilter,
   });
   const hasFeaturebaseChat = permissions(Permission.AccessSupportScreen);
   const appNavigate = useAppNavigate();
@@ -168,35 +164,33 @@ function ReferralsScreenV2Content() {
   }, [familiesForCountyFilter]);
   const referralsFilterValidationOptions = useMemo(
     () => ({
-      assignmentRoles: isLoading ? undefined : assignmentRoles,
-      counties: isLoading
-        ? undefined
-        : countyValueOptions.map((option) =>
-            option.value === REFERRAL_COUNTY_BLANK_FILTER_VALUE
-              ? null
-              : option.value
-          ),
+      assignmentRoles,
+      counties: countyValueOptions.map((option) =>
+        option.value === REFERRAL_COUNTY_BLANK_FILTER_VALUE
+          ? null
+          : option.value
+      ),
     }),
-    [assignmentRoles, countyValueOptions, isLoading]
+    [assignmentRoles, countyValueOptions]
   );
   const normalizedStructuredFilters = useMemo(
     () =>
       sanitizeReferralsBrowserFilterPreferences(
         {
           version: 1,
-          assignmentFilterLogicOperator,
-          assignmentFilters,
-          countyFilter,
-          statusFilter,
+          assignmentFilterLogicOperator: effectiveAssignmentFilterLogicOperator,
+          assignmentFilters: effectiveAssignmentFilters,
+          countyFilter: effectiveCountyFilter,
+          statusFilter: effectiveStatusFilter,
         },
         referralsFilterValidationOptions
       ),
     [
-      assignmentFilterLogicOperator,
-      assignmentFilters,
-      countyFilter,
+      effectiveAssignmentFilterLogicOperator,
+      effectiveAssignmentFilters,
+      effectiveCountyFilter,
+      effectiveStatusFilter,
       referralsFilterValidationOptions,
-      statusFilter,
     ]
   );
   const structuredFiltersAtDefaults = useMemo(
@@ -206,29 +200,34 @@ function ReferralsScreenV2Content() {
   const hasActiveAssignmentFilters = normalizedStructuredFilters
     .assignmentFilters.length > 0;
   const hasActiveFilters =
-    statusFilter !== defaultFilters.statusFilter ||
-    countyFilter.length > 0 ||
+    effectiveStatusFilter !== defaultFilters.statusFilter ||
+    effectiveCountyFilter.length > 0 ||
     hasActiveAssignmentFilters ||
-    filterText.trim().length > 0;
+    effectiveFilterText.trim().length > 0;
   const handleClearFilters = useCallback(() => {
     clearSavedFilters();
     setStatusFilter(defaultFilters.statusFilter);
     setCountyFilter(defaultFilters.countyFilter);
     setAssignmentFilters(defaultFilters.assignmentFilters);
-    setAssignmentFilterLogicOperator(defaultFilters.assignmentFilterLogicOperator);
+    setAssignmentFilterLogicOperator(
+      defaultFilters.assignmentFilterLogicOperator
+    );
     setFilterText('');
   }, [clearSavedFilters, defaultFilters]);
-  const restoredFilterPreferenceStorageKey = useRef<string | null>(null);
-
   useEffect(() => {
-    if (restoredFilterPreferenceStorageKey.current === filterPreferenceStorageKey) {
+    if (
+      restoredFilterPreferenceStorageKey.current === filterPreferenceStorageKey
+    ) {
       return;
     }
 
     setStatusFilter(defaultFilters.statusFilter);
     setCountyFilter(defaultFilters.countyFilter);
     setAssignmentFilters(defaultFilters.assignmentFilters);
-    setAssignmentFilterLogicOperator(defaultFilters.assignmentFilterLogicOperator);
+    setAssignmentFilterLogicOperator(
+      defaultFilters.assignmentFilterLogicOperator
+    );
+    setFilterText('');
   }, [defaultFilters, filterPreferenceStorageKey]);
 
   useEffect(() => {
@@ -252,6 +251,7 @@ function ReferralsScreenV2Content() {
     setAssignmentFilterLogicOperator(
       restoredFilters.assignmentFilterLogicOperator
     );
+    setFilterText('');
   }, [
     filterPreferenceStorageKey,
     filterPreferencesLoaded,
@@ -382,15 +382,16 @@ function ReferralsScreenV2Content() {
         >
           <ReferralsDataGridV2
             assignmentRoles={canViewFunctionAssignments ? assignmentRoles : []}
-            countyFilter={countyFilter}
+            countyFilter={effectiveCountyFilter}
             countyValueOptions={countyValueOptions}
             expanded
-            filterText={filterText}
-            loading={isLoading}
+            filterText={effectiveFilterText}
             rows={filteredRows}
-            statusFilter={statusFilter}
-            assignmentFilters={assignmentFilters}
-            assignmentFilterLogicOperator={assignmentFilterLogicOperator}
+            statusFilter={effectiveStatusFilter}
+            assignmentFilters={effectiveAssignmentFilters}
+            assignmentFilterLogicOperator={
+              effectiveAssignmentFilterLogicOperator
+            }
             onAssignmentFiltersChange={setAssignmentFilters}
             onAssignmentFilterLogicOperatorChange={
               setAssignmentFilterLogicOperator

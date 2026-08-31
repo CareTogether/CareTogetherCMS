@@ -1,39 +1,24 @@
 import { Container, Stack, Typography } from '@mui/material';
-import { useRecoilValueLoadable } from 'recoil';
 import {
-  locationConfigurationQuery,
-  organizationConfigurationQuery,
+  useLocationConfiguration,
+  useOrganizationConfiguration,
 } from '../Model/ConfigurationModel';
 import { useScreenTitle } from '../Shell/ShellScreenTitle';
-import { useDataLoaded } from '../Model/Data';
-import { ProgressBackdrop } from '../Shell/ProgressBackdrop';
 import { DashboardCalendar } from './DashboardCalendar';
 
 function Dashboard() {
-  const organizationConfiguration = useRecoilValueLoadable(
-    organizationConfigurationQuery
-  );
-  const locationConfiguration = useRecoilValueLoadable(
-    locationConfigurationQuery
-  );
-
-  const dataLoaded = useDataLoaded();
+  const organizationConfiguration = useOrganizationConfiguration();
+  const locationConfiguration = useLocationConfiguration();
 
   useScreenTitle('Dashboard');
 
-  return !dataLoaded ||
-    (locationConfiguration.state !== 'hasValue' &&
-      organizationConfiguration.state !== 'hasValue') ? (
-    <ProgressBackdrop>
-      <p>Loading dashboard...</p>
-    </ProgressBackdrop>
-  ) : (
+  return (
     <Container maxWidth={false} sx={{ paddingLeft: '12px' }}>
       <Stack direction="column">
         <Stack direction="row" sx={{ justifyContent: 'space-between' }}>
           <Typography variant="h5" sx={{ marginTop: 3 }}>
-            <strong>{locationConfiguration.contents?.name}</strong> (
-            {organizationConfiguration.contents?.organizationName})
+            <strong>{locationConfiguration?.name}</strong> (
+            {organizationConfiguration?.organizationName})
           </Typography>
         </Stack>
         <DashboardCalendar />

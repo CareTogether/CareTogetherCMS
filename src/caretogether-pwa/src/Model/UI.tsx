@@ -1,4 +1,4 @@
-import { atom } from 'recoil';
+import { atom } from 'jotai';
 
 export const reportSubmenuItemsAtom = atom<
   {
@@ -6,7 +6,4 @@ export const reportSubmenuItemsAtom = atom<
     isActive: boolean;
     onClick: () => void;
   }[]
->({
-  key: 'reportSubmenuItems',
-  default: [],
-});
+>([]);

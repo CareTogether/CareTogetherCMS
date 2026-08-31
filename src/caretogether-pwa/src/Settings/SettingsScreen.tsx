@@ -6,9 +6,7 @@ import {
   CardContent,
   Typography,
 } from '@mui/material';
-import { ProgressBackdrop } from '../Shell/ProgressBackdrop';
 import { useScreenTitle } from '../Shell/ShellScreenTitle';
-import { useDataLoaded } from '../Model/Data';
 import {
   AssignmentInd as AssignmentIndIcon,
   LocationOn as LocationOnIcon,
@@ -17,16 +15,7 @@ import { useAppNavigate } from '../Hooks/useAppNavigate';
 
 export function SettingsScreen() {
   useScreenTitle('Settings');
-  const dataLoaded = useDataLoaded();
   const appNavigate = useAppNavigate();
-
-  if (!dataLoaded) {
-    return (
-      <ProgressBackdrop>
-        <p>Loading settings...</p>
-      </ProgressBackdrop>
-    );
-  }
 
   return (
     <Box

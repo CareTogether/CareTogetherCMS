@@ -8,7 +8,6 @@ import {
   TableRow,
 } from '@mui/material';
 import { Routes, Route } from 'react-router-dom';
-import { useRecoilValueLoadable } from 'recoil';
 
 import { useScreenTitle } from '../Shell/ShellScreenTitle';
 import { ReferralRow } from './ReferralRow';
@@ -20,7 +19,7 @@ import {
   usePersonAndFamilyLookup,
 } from '../Model/DirectoryModel';
 import { familyNameString } from '../Families/FamilyName';
-import { currentLocationQuery, visibleReferralsQuery } from '../Model/Data';
+import { useVisibleReferrals } from '../Model/Data';
 import { Permission, V1ReferralStatus } from '../GeneratedClient';
 import { getFamilyCounty } from '../Utilities/getFamilyCounty';
 import { ReferralStatusFilter } from './ReferralsFilters';
@@ -28,8 +27,7 @@ import { useAppNavigate } from '../Hooks/useAppNavigate';
 import { ProgressBackdrop } from '../Shell/ProgressBackdrop';
 import { useGlobalPermissions } from '../Model/SessionModel';
 import { useFeatureFlagEnabled } from 'posthog-js/react';
-import { policyData } from '../Model/ConfigurationModel';
-import { useLoadable } from '../Hooks/useLoadable';
+import { usePolicy } from '../Model/PolicyModel';
 import {
   FUNCTION_ASSIGNMENTS_FEATURE_FLAG,
   REFERRALS_FEATURE_FLAG,
@@ -63,44 +61,29 @@ export function V1Referrals() {
   const featureFlagsLoaded = useFeatureFlagsLoaded();
   const appNavigate = useAppNavigate();
   const permissions = useGlobalPermissions();
-  const currentLocationLoadable = useRecoilValueLoadable(currentLocationQuery);
-  const referralsLoadable = useRecoilValueLoadable(visibleReferralsQuery);
+  const referralRecords = useVisibleReferrals();
 
-  const permissionsLoaded = currentLocationLoadable.state === 'hasValue';
-  const referralsLoaded = referralsLoadable.state === 'hasValue';
   const canCreateReferrals = permissions(Permission.CreateV1Referral);
   const canViewGlobalReferrals = permissions(Permission.ViewV1Referral);
-  const canViewContextualReferrals =
-    referralsLoaded && referralsLoadable.contents.length > 0;
+  const canViewContextualReferrals = referralRecords.length > 0;
   const canAccessReferrals =
     canCreateReferrals || canViewGlobalReferrals || canViewContextualReferrals;
 
   useEffect(() => {
     if (
-      permissionsLoaded &&
-      referralsLoaded &&
-      (!canAccessReferrals || (featureFlagsLoaded && referralsEnabled !== true))
+      !canAccessReferrals ||
+      (featureFlagsLoaded && referralsEnabled !== true)
     ) {
       appNavigate.dashboard();
     }
   }, [
     canAccessReferrals,
     featureFlagsLoaded,
-    permissionsLoaded,
-    referralsLoaded,
     referralsEnabled,
     appNavigate,
   ]);
 
-  if (currentLocationLoadable.state === 'hasError') {
-    throw currentLocationLoadable.contents;
-  }
-
-  if (referralsLoadable.state === 'hasError') {
-    throw referralsLoadable.contents;
-  }
-
-  if (!permissionsLoaded || !referralsLoaded || !featureFlagsLoaded) {
+  if (!featureFlagsLoaded) {
     return (
       <ProgressBackdrop opaque>
         <p>Loading...</p>
@@ -120,11 +103,11 @@ export function V1Referrals() {
 }
 
 function V1ReferralsContent() {
-  const referralsLoadable = useRecoilValueLoadable(visibleReferralsQuery);
+  const referralRecords = useVisibleReferrals();
   const familyLookup = useFamilyLookup();
   const personAndFamilyLookup = usePersonAndFamilyLookup();
   const permissions = useGlobalPermissions();
-  const policy = useLoadable(policyData);
+  const policy = usePolicy();
   const functionAssignmentsEnabled = useFeatureFlagEnabled(
     FUNCTION_ASSIGNMENTS_FEATURE_FLAG
   );
@@ -137,16 +120,15 @@ function V1ReferralsContent() {
   const [assignmentFilters, setAssignmentFilters] =
     useState<AssignmentFilterSelectionsByRole>({});
 
-  const referrals =
-    referralsLoadable.state === 'hasValue'
-      ? referralsLoadable.contents.map((referralInfo) => referralInfo.referral)
-      : [];
+  const referrals = referralRecords.map(
+    (referralInfo) => referralInfo.referral
+  );
   const canViewFunctionAssignments =
     functionAssignmentsEnabled === true &&
     permissions(Permission.ViewV1ReferralFunctionAssignments);
   const assignmentRoles = canViewFunctionAssignments
     ? assignmentRolesForColumns(
-        policy?.v1ReferralPolicy?.functionAssignmentPolicies?.map(
+        policy.v1ReferralPolicy?.functionAssignmentPolicies?.map(
           (assignmentPolicy) => assignmentPolicy.assignmentRole
         ) ?? [],
         referrals.flatMap(

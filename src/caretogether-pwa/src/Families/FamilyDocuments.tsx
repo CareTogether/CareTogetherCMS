@@ -1,7 +1,6 @@
 import { useMemo, useState } from 'react';
 import { Menu, MenuItem, Box } from '@mui/material';
 import { format } from 'date-fns';
-import { useRecoilValue } from 'recoil';
 import {
   CombinedFamilyInfo,
   Permission,
@@ -14,7 +13,7 @@ import {
 } from '../Model/FilesModel';
 import { useFamilyPermissions } from '../Model/SessionModel';
 import { DeleteDocumentDialog } from './DeleteDocumentDialog';
-import { selectedLocationContextState } from '../Model/Data';
+import { useRequiredSelectedLocationContext } from '../Model/Data';
 
 type FamilyDocumentsProps = {
   family: CombinedFamilyInfo;
@@ -43,9 +42,7 @@ export function FamilyDocuments({
   family,
   referrals = [],
 }: FamilyDocumentsProps) {
-  const { organizationId, locationId } = useRecoilValue(
-    selectedLocationContextState
-  );
+  const { organizationId, locationId } = useRequiredSelectedLocationContext();
 
   const [moreMenuAnchor, setMoreMenuAnchor] = useState<{
     anchor: Element;

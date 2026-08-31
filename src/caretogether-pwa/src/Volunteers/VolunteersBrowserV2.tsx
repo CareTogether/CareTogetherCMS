@@ -2,16 +2,14 @@ import { Alert, Box, Button, Stack, Typography } from '@mui/material';
 import type { GridFilterModel, GridRowSelectionModel } from '@mui/x-data-grid';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useFeatureFlagEnabled } from 'posthog-js/react';
-import { useRecoilValue } from 'recoil';
 import { EmailAddress, Permission } from '../GeneratedClient';
-import { accountInfoState } from '../Authentication/Auth';
+import { useAccountInfo } from '../Authentication/Auth';
 import { useAppNavigate } from '../Hooks/useAppNavigate';
 import { useGlobalSnackBar } from '../Hooks/useGlobalSnackBar';
-import { useLoadable } from '../Hooks/useLoadable';
 import { useSidePanel } from '../Hooks/useSidePanel';
 import { v2Typography } from '../Families/v2Typography';
-import { selectedLocationContextState } from '../Model/Data';
-import { organizationConfigurationQuery } from '../Model/ConfigurationModel';
+import { useRequiredSelectedLocationContext } from '../Model/Data';
+import { useOrganizationConfiguration } from '../Model/ConfigurationModel';
 import { useAllVolunteerFamiliesPermissions } from '../Model/SessionModel';
 import { BulkSmsSideSheet } from './BulkSmsSideSheet';
 import { CreateVolunteerFamilyDrawer } from './CreateVolunteerFamilyDrawer';
@@ -77,15 +75,30 @@ export function VolunteersBrowserV2() {
     UPDATE_TEST_FAMILY_FEATURE_FLAG
   );
   const { setAndShowGlobalSnackBar } = useGlobalSnackBar();
-  const accountInfo = useLoadable(accountInfoState);
-  const { organizationId, locationId } = useRecoilValue(
-    selectedLocationContextState
-  );
-  const organizationConfiguration = useLoadable(organizationConfigurationQuery);
+  const accountInfo = useAccountInfo();
+  const { organizationId, locationId } = useRequiredSelectedLocationContext();
+  const organizationConfiguration = useOrganizationConfiguration();
   const [createVolunteerFamilyDrawerOpen, setCreateVolunteerFamilyDrawerOpen] =
     useState(false);
   const [smsMode, setSmsMode] = useState(false);
   const [selectedFamilyIds, setSelectedFamilyIds] = useState<string[]>([]);
+  const {
+    canPersistFilters,
+    clearSavedFilters,
+    defaultFilters,
+    preferencesLoaded: filterPreferencesLoaded,
+    savedFilters,
+    saveFilters,
+    storageKey: filterPreferenceStorageKey,
+  } = useVolunteersBrowserFilterPreferences({
+    userId: accountInfo?.userId,
+    organizationId,
+    locationId,
+  });
+  const restoredFilterPreferenceStorageKey = useRef<string | null>(null);
+  const filtersBelongToCurrentScope =
+    filterPreferenceStorageKey !== null &&
+    restoredFilterPreferenceStorageKey.current === filterPreferenceStorageKey;
 
   const {
     activeAssignmentFilterCount,
@@ -96,7 +109,6 @@ export function VolunteersBrowserV2() {
     customFieldFilters,
     customFields,
     getCustomFieldFilterOptionsForField,
-    loading,
     requirementFilter,
     requirementFilterOptionsLoaded,
     requirementFilterOptions,
@@ -113,19 +125,8 @@ export function VolunteersBrowserV2() {
     setStatusFilterValues,
     statusFilters,
     visibleVolunteerFamilies,
-  } = useVolunteersBrowserViewModel();
-  const {
-    canPersistFilters,
-    clearSavedFilters,
-    defaultFilters,
-    preferencesLoaded: filterPreferencesLoaded,
-    savedFilters,
-    saveFilters,
-    storageKey: filterPreferenceStorageKey,
-  } = useVolunteersBrowserFilterPreferences({
-    userId: accountInfo?.userId,
-    organizationId,
-    locationId,
+  } = useVolunteersBrowserViewModel({
+    filtersEnabled: filtersBelongToCurrentScope,
   });
   const {
     SidePanel: AssignmentFiltersSidePanel,
@@ -177,7 +178,9 @@ export function VolunteersBrowserV2() {
   );
   const [pendingFilterModel, setPendingFilterModel] =
     useState<GridFilterModel | null>(null);
-  const filterModel = pendingFilterModel ?? appliedFilterModel;
+  const filterModel = filtersBelongToCurrentScope
+    ? pendingFilterModel ?? appliedFilterModel
+    : appliedFilterModel;
   const customFieldFilterValueOptionsByField = useMemo(
     () =>
       Object.fromEntries(
@@ -210,9 +213,7 @@ export function VolunteersBrowserV2() {
     () => ({
       arrangementTypes,
       customFields,
-      customFieldValueOptionsByField: loading
-        ? undefined
-        : customFieldFilterValueOptionsByField,
+      customFieldValueOptionsByField: customFieldFilterValueOptionsByField,
       requirementFilterOptions: requirementFilterOptionsLoaded
         ? requirementFilterValueOptions
         : undefined,
@@ -223,7 +224,6 @@ export function VolunteersBrowserV2() {
       arrangementTypes,
       customFieldFilterValueOptionsByField,
       customFields,
-      loading,
       requirementFilterOptionsLoaded,
       requirementFilterValueOptions,
       roleFilterValueOptions,
@@ -285,10 +285,10 @@ export function VolunteersBrowserV2() {
     setSearchValue,
     setStatusFilterValues,
   ]);
-  const restoredFilterPreferenceStorageKey = useRef<string | null>(null);
-
   useEffect(() => {
-    if (restoredFilterPreferenceStorageKey.current === filterPreferenceStorageKey) {
+    if (
+      restoredFilterPreferenceStorageKey.current === filterPreferenceStorageKey
+    ) {
       return;
     }
 
@@ -297,6 +297,7 @@ export function VolunteersBrowserV2() {
     setRequirementFilter(defaultFilters.requirementFilter);
     setRoleFilterValues(defaultFilters.roleFilterValues);
     setStatusFilterValues(defaultFilters.statusFilterValues);
+    setSearchValue('');
     setPendingFilterModel(null);
   }, [
     defaultFilters,
@@ -305,6 +306,7 @@ export function VolunteersBrowserV2() {
     setCustomFieldFilters,
     setRequirementFilter,
     setRoleFilterValues,
+    setSearchValue,
     setStatusFilterValues,
   ]);
 
@@ -328,6 +330,7 @@ export function VolunteersBrowserV2() {
     setRequirementFilter(restoredFilters.requirementFilter);
     setRoleFilterValues(restoredFilters.roleFilterValues);
     setStatusFilterValues(restoredFilters.statusFilterValues);
+    setSearchValue('');
     setPendingFilterModel(null);
   }, [
     filterPreferencesLoaded,
@@ -337,6 +340,7 @@ export function VolunteersBrowserV2() {
     setCustomFieldFilters,
     setRequirementFilter,
     setRoleFilterValues,
+    setSearchValue,
     setStatusFilterValues,
     volunteersFilterValidationOptions,
   ]);
@@ -385,8 +389,6 @@ export function VolunteersBrowserV2() {
   ]);
 
   useEffect(() => {
-    if (loading) return;
-
     setAssignmentFilters((current) => {
       const next = sanitizeVolunteersBrowserFilterPreferences(
         {
@@ -447,7 +449,6 @@ export function VolunteersBrowserV2() {
     customFields,
     customFieldFilterValueOptionsByField,
     defaultFilters,
-    loading,
     requirementFilterValueOptions,
     roleFilterValueOptions,
     roleFilters,
@@ -611,7 +612,6 @@ export function VolunteersBrowserV2() {
         <VolunteersDataGridV2
           customFields={customFields}
           filterModel={filterModel}
-          loading={loading}
           onFilterModelChange={handleFilterModelChange}
           onRowClick={(row) => appNavigate.family(row.id)}
           onRowSelectionModelChange={handleRowSelectionModelChange}

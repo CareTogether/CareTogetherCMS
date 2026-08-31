@@ -1,7 +1,6 @@
 import { CompletedCustomFieldInfo, CustomField } from '../GeneratedClient';
 import { useV1CasesModel } from '../Model/V1CasesModel';
-import { useRecoilValue } from 'recoil';
-import { policyData } from '../Model/ConfigurationModel';
+import { usePolicy } from '../Model/PolicyModel';
 import { CustomFieldEditor } from '../Generic/CustomFieldEditor';
 
 type V1CaseCustomFieldProps = {
@@ -15,7 +14,7 @@ export function V1CaseCustomField({
   v1CaseId,
   customField,
 }: V1CaseCustomFieldProps) {
-  const policy = useRecoilValue(policyData);
+  const policy = usePolicy();
 
   const savedCustomField =
     customField instanceof CompletedCustomFieldInfo ? customField : null;

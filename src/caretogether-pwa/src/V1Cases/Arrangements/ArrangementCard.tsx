@@ -1,7 +1,6 @@
 import { Card, CardContent, CardHeader } from '@mui/material';
 import { Arrangement, CombinedFamilyInfo } from '../../GeneratedClient';
-import { useRecoilValue } from 'recoil';
-import { policyData } from '../../Model/ConfigurationModel';
+import { usePolicy } from '../../Model/PolicyModel';
 import { ArrangementPhaseSummary } from './ArrangementPhaseSummary';
 import { ArrangementCardTitle } from './ArrangementCardTitle';
 import { ArrangementCardHeaderSection } from './ArrangementCardHeaderSection';
@@ -22,7 +21,7 @@ export function ArrangementCard({
   arrangement,
   summaryOnly,
 }: ArrangementCardProps) {
-  const policy = useRecoilValue(policyData);
+  const policy = usePolicy();
 
   const arrangementPolicy = resolveArrangementPolicy(
     policy.referralPolicy?.arrangementPolicies,

@@ -6,9 +6,8 @@ import type {
   Permission,
   V1Referral,
 } from '../GeneratedClient';
-import { accountInfoState } from '../Authentication/Auth';
+import { useAccountInfo } from '../Authentication/Auth';
 import { ActiveFiltersAlert } from '../Generic/ActiveFiltersAlert';
-import { useLoadable } from '../Hooks/useLoadable';
 import { useScopedDataGridFilterPreferences } from '../Hooks/useScopedDataGridFilterPreferences';
 import {
   downloadFamilyFile,
@@ -71,7 +70,7 @@ export function FamilyDocumentsSectionV2({
 }: FamilyDocumentsSectionV2Props) {
   const [selectedDocumentForDelete, setSelectedDocumentForDelete] =
     useState<FamilyDocumentRowV2 | null>(null);
-  const accountInfo = useLoadable(accountInfoState);
+  const accountInfo = useAccountInfo();
   const rows = useMemo(
     () =>
       buildFamilyDocumentRowsV2({

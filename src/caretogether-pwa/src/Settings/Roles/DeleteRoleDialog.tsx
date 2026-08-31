@@ -1,9 +1,9 @@
-import { useRecoilValue, useSetRecoilState } from 'recoil';
+import { useSetAtom } from 'jotai';
 import { api } from '../../Api/Api';
 import { DialogHandle } from '../../Hooks/useDialogHandle';
 import { UpdateDialog } from '../../Generic/UpdateDialog';
 import { organizationConfigurationEdited } from '../../Model/ConfigurationModel';
-import { selectedLocationContextState } from '../../Model/Data';
+import { useRequiredSelectedLocationContext } from '../../Model/Data';
 import { useState } from 'react';
 import { Typography } from '@mui/material';
 
@@ -13,9 +13,9 @@ interface DeleteRoleDialogProps {
 }
 
 export function DeleteRoleDialog({ roleName, handle }: DeleteRoleDialogProps) {
-  const { organizationId } = useRecoilValue(selectedLocationContextState);
+  const { organizationId } = useRequiredSelectedLocationContext();
 
-  const storeEdits = useSetRecoilState(organizationConfigurationEdited);
+  const storeEdits = useSetAtom(organizationConfigurationEdited);
 
   const [error, setError] = useState<boolean>(false);
 
@@ -26,7 +26,7 @@ export function DeleteRoleDialog({ roleName, handle }: DeleteRoleDialogProps) {
         roleName
       );
       storeEdits(newConfig);
-    } catch (error) {
+    } catch {
       setError(true);
     }
   }

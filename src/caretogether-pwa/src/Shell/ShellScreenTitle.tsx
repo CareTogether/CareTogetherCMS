@@ -1,25 +1,19 @@
 import { ReactNode, useEffect } from 'react';
-import { atom, useSetRecoilState } from 'recoil';
+import { atom, useSetAtom } from 'jotai';
 
-export const screenTitleState = atom<string | null>({
-  key: 'screenTitleState',
-  default: null,
-});
+export const screenTitleState = atom<string | null>(null);
 
 export function useScreenTitle(title: string) {
-  const setScreenTitle = useSetRecoilState(screenTitleState);
+  const setScreenTitle = useSetAtom(screenTitleState);
   useEffect(() => {
     setScreenTitle(title);
   }, [setScreenTitle, title]);
 }
 
-export const screenTitleComponentState = atom<ReactNode | null>({
-  key: 'screenTitleComponentState',
-  default: null,
-});
+export const screenTitleComponentState = atom<ReactNode | null>(null);
 
 export function useScreenTitleComponent(component: ReactNode) {
-  const setScreenTitleComponent = useSetRecoilState(screenTitleComponentState);
+  const setScreenTitleComponent = useSetAtom(screenTitleComponentState);
   useEffect(() => {
     setScreenTitleComponent(component);
 

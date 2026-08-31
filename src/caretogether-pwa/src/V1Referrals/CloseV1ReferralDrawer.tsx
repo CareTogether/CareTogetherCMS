@@ -1,6 +1,5 @@
-import { useRecoilValue } from 'recoil';
 import { CloseReasonDrawer } from '../Generic/CloseReasonDrawer';
-import { referralCloseReasonsData } from '../Model/ConfigurationModel';
+import { useReferralCloseReasons } from '../Model/ConfigurationModel';
 import { useV1ReferralsModel } from '../Model/V1ReferralsModel';
 
 interface CloseV1ReferralDrawerProps {
@@ -13,7 +12,7 @@ export function CloseV1ReferralDrawer({
   onClose,
 }: CloseV1ReferralDrawerProps) {
   const { closeReferral } = useV1ReferralsModel();
-  const referralCloseReasons = useRecoilValue(referralCloseReasonsData);
+  const referralCloseReasons = useReferralCloseReasons();
 
   async function closeCurrentReferral(reason: string, closedAtLocal: Date) {
     await closeReferral(referralId, reason, closedAtLocal);

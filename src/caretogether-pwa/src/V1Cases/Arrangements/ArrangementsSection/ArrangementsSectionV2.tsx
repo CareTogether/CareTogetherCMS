@@ -1,8 +1,7 @@
 import { AddCircle as AddCircleIcon } from '@mui/icons-material';
 import { Box, Button, Typography } from '@mui/material';
 import { useMemo, useState } from 'react';
-import { useRecoilValue } from 'recoil';
-import { accountInfoState } from '../../../Authentication/Auth';
+import { useAccountInfo } from '../../../Authentication/Auth';
 import { ActiveFiltersAlert } from '../../../Generic/ActiveFiltersAlert';
 import Grid from '../../../Generic/GridLegacyCompat';
 import {
@@ -10,9 +9,8 @@ import {
   Permission,
   V1Case,
 } from '../../../GeneratedClient';
-import { useLoadable } from '../../../Hooks/useLoadable';
 import { useScopedDataGridFilterPreferences } from '../../../Hooks/useScopedDataGridFilterPreferences';
-import { policyData } from '../../../Model/ConfigurationModel';
+import { usePolicy } from '../../../Model/PolicyModel';
 import { ArrangementsDataGridV2 } from '../ArrangementsDataGridV2';
 import { ArrangementRowV2 } from '../arrangementViewModel';
 import { arrangementsDataGridColumns } from '../arrangementsDataGridColumnsV2';
@@ -44,8 +42,8 @@ export function ArrangementsSection({
     createArrangementDialogParameter,
     setCreateArrangementDialogParameter,
   ] = useState<ArrangementPolicy | null>(null);
-  const accountInfo = useLoadable(accountInfoState);
-  const policy = useRecoilValue(policyData);
+  const accountInfo = useAccountInfo();
+  const policy = usePolicy();
   const columns = useMemo(() => arrangementsDataGridColumns(), []);
   const {
     clearFilters,

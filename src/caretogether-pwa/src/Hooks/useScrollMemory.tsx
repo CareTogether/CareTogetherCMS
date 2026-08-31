@@ -1,21 +1,21 @@
 import { useLayoutEffect, useMemo } from 'react';
 import { useLocation } from 'react-router-dom';
-import { atomFamily, useRecoilState } from 'recoil';
+import { atom, useAtom } from 'jotai';
+import { atomFamily } from 'jotai-family';
 
 type ScrollPosition = {
   x: number;
   y: number;
 };
 
-const pageScrollPositions = atomFamily({
-  key: 'pageScrollPositions',
-  default: { x: 0, y: 0 } as ScrollPosition,
-});
+const pageScrollPositions = atomFamily(() =>
+  atom<ScrollPosition>({ x: 0, y: 0 })
+);
 
 export function useScrollMemory() {
   const { pathname } = useLocation();
 
-  const [pagePosition, setPagePosition] = useRecoilState(
+  const [pagePosition, setPagePosition] = useAtom(
     pageScrollPositions(pathname)
   );
 

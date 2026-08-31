@@ -30,10 +30,9 @@ import {
 } from '../GeneratedClient';
 import { useDirectoryModel } from '../Model/DirectoryModel';
 import { ValidateDatePicker } from '../Generic/Forms/ValidateDatePicker';
-import { useRecoilValue } from 'recoil';
 import {
-  adultFamilyRelationshipsData,
-  ethnicitiesData,
+  useAdultFamilyRelationships,
+  useEthnicities,
 } from '../Model/ConfigurationModel';
 import { useBackdrop } from '../Hooks/useBackdrop';
 import { subYears } from 'date-fns';
@@ -86,8 +85,8 @@ export function CreatePartneringFamilyDrawer({
   } = fields;
   const directoryModel = useDirectoryModel();
 
-  const relationshipTypes = useRecoilValue(adultFamilyRelationshipsData);
-  const ethnicities = useRecoilValue(ethnicitiesData);
+  const relationshipTypes = useAdultFamilyRelationships();
+  const ethnicities = useEthnicities();
 
   const [dobError, setDobError] = useState(false);
 

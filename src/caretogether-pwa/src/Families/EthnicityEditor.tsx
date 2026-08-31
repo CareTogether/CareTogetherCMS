@@ -3,11 +3,10 @@ import { FormControl, InputLabel, MenuItem, Select } from '@mui/material';
 import { useDirectoryModel } from '../Model/DirectoryModel';
 import { useInlineEditor } from '../Hooks/useInlineEditor';
 import { PersonEditorProps } from './PersonEditorProps';
-import { ethnicitiesData } from '../Model/ConfigurationModel';
-import { useRecoilValue } from 'recoil';
+import { useEthnicities } from '../Model/ConfigurationModel';
 
 export function EthnicityEditor({ familyId, person }: PersonEditorProps) {
-  const ethnicities = useRecoilValue(ethnicitiesData);
+  const ethnicities = useEthnicities();
   const directoryModel = useDirectoryModel();
 
   const editor = useInlineEditor(

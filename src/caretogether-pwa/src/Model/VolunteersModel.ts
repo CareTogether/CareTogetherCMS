@@ -1,4 +1,4 @@
-import { selector } from 'recoil';
+import { atom, useAtomValue } from 'jotai';
 import {
   ActionRequirement,
   CompleteVolunteerFamilyRequirement,
@@ -23,16 +23,23 @@ import {
   IndividualApprovalRecordsCommand,
   UpdateCustomVolunteerFamilyField,
 } from '../GeneratedClient';
-import { useAtomicRecordsCommandCallback, visibleFamiliesQuery } from './Data';
+import {
+  mapLoadedValue,
+  useAtomicRecordsCommandCallback,
+  visibleFamiliesAtom,
+} from './Data';
 import { commandFactory } from './CommandFactory';
 
-export const volunteerFamiliesData = selector({
-  key: 'volunteerFamiliesData',
-  get: ({ get }) => {
-    const visibleFamilies = get(visibleFamiliesQuery);
-    return visibleFamilies.filter((f) => f.volunteerFamilyInfo);
-  },
+export const volunteerFamiliesData = atom((get) => {
+  const visibleFamilies = get(visibleFamiliesAtom);
+  return mapLoadedValue(visibleFamilies, (families) =>
+    families.filter((f) => f.volunteerFamilyInfo)
+  );
 });
+
+export function useVolunteerFamilies() {
+  return useAtomValue(volunteerFamiliesData);
+}
 
 function useVolunteerFamilyCommandCallbackWithLocation<T extends unknown[]>(
   callback: (familyId: string, ...args: T) => Promise<VolunteerFamilyCommand>

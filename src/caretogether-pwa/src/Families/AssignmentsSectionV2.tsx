@@ -1,7 +1,7 @@
 import Grid from '../Generic/GridLegacyCompat';
 import { Stack, Typography } from '@mui/material';
 import { CombinedFamilyInfo } from '../GeneratedClient';
-import { accountInfoState } from '../Authentication/Auth';
+import { useAccountInfo } from '../Authentication/Auth';
 import { ActiveFiltersAlert } from '../Generic/ActiveFiltersAlert';
 import { useScopedDataGridFilterPreferences } from '../Hooks/useScopedDataGridFilterPreferences';
 import {
@@ -9,8 +9,7 @@ import {
   usePersonAndFamilyLookup,
 } from '../Model/DirectoryModel';
 import { useMemo } from 'react';
-import { useLoadable } from '../Hooks/useLoadable';
-import { partneringFamiliesData } from '../Model/V1CasesModel';
+import { usePartneringFamilies } from '../Model/V1CasesModel';
 import { useAppNavigate } from '../Hooks/useAppNavigate';
 import { VolunteerAssignmentsDataGridV2 } from './VolunteerAssignmentsDataGridV2';
 import { volunteerAssignmentsDataGridColumns } from './volunteerAssignmentsDataGridColumnsV2';
@@ -36,8 +35,8 @@ export function AssignmentsSection({
 }: AssignmentsSectionProps) {
   const personAndFamilyLookup = usePersonAndFamilyLookup();
   const familyLookup = useFamilyLookup();
-  const partneringFamilies = useLoadable(partneringFamiliesData);
-  const accountInfo = useLoadable(accountInfoState);
+  const partneringFamilies = usePartneringFamilies();
+  const accountInfo = useAccountInfo();
   const navigate = useAppNavigate();
 
   const assignments = useMemo(
@@ -55,7 +54,7 @@ export function AssignmentsSection({
       buildVolunteerAssignmentRowsV2({
         assignments,
         childFamilyIdForAssignment: (assignment) =>
-          partneringFamilies?.find(
+          partneringFamilies.find(
             (fam) =>
               fam.partneringFamilyInfo &&
               allArrangements(fam.partneringFamilyInfo).some(
