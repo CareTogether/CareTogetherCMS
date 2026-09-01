@@ -3,9 +3,9 @@ using System.Collections.Immutable;
 using System.Linq;
 using System.Threading.Tasks;
 using CareTogether.Engines.Authorization;
-using CareTogether.Managers.OrganizationCategories;
 using CareTogether.Resources.Accounts;
 using CareTogether.Resources.Approvals;
+using CareTogether.Resources.Communities;
 using CareTogether.Resources.Directory;
 using CareTogether.Resources.Policies;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -48,7 +48,7 @@ namespace CareTogether.Api.Controllers
         private readonly IApprovalsResource approvalsResource;
         private readonly IFeatureManager featureManager;
         private readonly IAuthorizationEngine authorizationEngine;
-        private readonly IOrganizationCategoriesManager organizationCategoriesManager;
+        private readonly ICommunitiesResource communitiesResource;
 
         public ConfigurationController(
             IPoliciesResource policiesResource,
@@ -57,17 +57,16 @@ namespace CareTogether.Api.Controllers
             IApprovalsResource approvalsResource,
             IFeatureManager featureManager,
             IAuthorizationEngine authorizationEngine,
-            IOrganizationCategoriesManager organizationCategoriesManager
+            ICommunitiesResource communitiesResource
         )
         {
-            //TODO: Delegate this controller's methods to a manager service
             this.policiesResource = policiesResource;
             this.directoryResource = directoryResource;
             this.accountsResource = accountsResource;
             this.approvalsResource = approvalsResource;
             this.featureManager = featureManager;
             this.authorizationEngine = authorizationEngine;
-            this.organizationCategoriesManager = organizationCategoriesManager;
+            this.communitiesResource = communitiesResource;
         }
 
         [HttpGet("/api/{organizationId:guid}/[controller]")]
@@ -450,7 +449,7 @@ namespace CareTogether.Api.Controllers
             if (!User.IsInRole(SystemConstants.ORGANIZATION_ADMINISTRATOR))
                 return Forbid();
 
-            var result = await organizationCategoriesManager.UpsertCategoryAsync(
+            var result = await policiesResource.UpsertOrganizationCategoryAsync(
                 organizationId,
                 new OrganizationCategory(categoryId, payload.name)
             );
@@ -468,7 +467,36 @@ namespace CareTogether.Api.Controllers
             if (!User.IsInRole(SystemConstants.ORGANIZATION_ADMINISTRATOR))
                 return Forbid();
 
-            var result = await organizationCategoriesManager.DeleteCategoryAsync(
+            var configuration = await policiesResource.GetConfigurationAsync(organizationId);
+            var category = configuration.OrganizationCategories.SingleOrDefault(category =>
+                category.Id == categoryId
+            );
+            if (category == null)
+                throw new InvalidOperationException(
+                    "The specified organization category does not exist."
+                );
+
+            var communitiesByLocation = await Task.WhenAll(
+                configuration
+                    .Locations.Select(location => location.Id)
+                    .OfType<Guid>()
+                    .Select(locationId =>
+                        communitiesResource.ListLocationCommunitiesAsync(
+                            organizationId,
+                            locationId
+                        )
+                    )
+            );
+            if (
+                communitiesByLocation.Any(communities =>
+                    communities.Any(community => community.CategoryIds.Contains(categoryId))
+                )
+            )
+                throw new InvalidOperationException(
+                    $"Cannot delete organization category '{category.Name}' because it is assigned to one or more organizations."
+                );
+
+            var result = await policiesResource.DeleteOrganizationCategoryAsync(
                 organizationId,
                 categoryId
             );

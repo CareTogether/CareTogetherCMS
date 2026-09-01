@@ -11,7 +11,6 @@ using CareTogether.Engines.PolicyEvaluation;
 using CareTogether.Managers;
 using CareTogether.Managers.Communications;
 using CareTogether.Managers.Membership;
-using CareTogether.Managers.OrganizationCategories;
 using CareTogether.Managers.Records;
 using CareTogether.Resources.Accounts;
 using CareTogether.Resources.Approvals;
@@ -265,6 +264,7 @@ namespace CareTogether.Api
             services.AddSingleton<IAccountsResource>(accountsResource);
             services.AddSingleton<IDirectoryResource>(directoryResource);
             services.AddSingleton<IApprovalsResource>(approvalsResource);
+            services.AddSingleton<ICommunitiesResource>(communitiesResource);
             services.AddSingleton<IV1ReferralsResource>(v1ReferralsResource);
             services.AddSingleton<IV1ReferralNotesResource>(v1ReferralNotesResource);
 
@@ -303,9 +303,6 @@ namespace CareTogether.Api
             );
 
             // Manager services
-            services.AddSingleton<IOrganizationCategoriesManager>(
-                new OrganizationCategoriesManager(policiesResource, communitiesResource)
-            );
             services.AddSingleton<ICommunicationsManager>(
                 new CommunicationsManager(
                     authorizationEngine,

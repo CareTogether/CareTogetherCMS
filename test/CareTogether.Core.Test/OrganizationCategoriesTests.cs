@@ -2,13 +2,20 @@ using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
+using System.Security.Claims;
 using System.Threading.Tasks;
-using CareTogether.Managers.OrganizationCategories;
+using CareTogether.Api.Controllers;
+using CareTogether.Engines.Authorization;
 using CareTogether.Resources.Accounts;
+using CareTogether.Resources.Approvals;
 using CareTogether.Resources.Communities;
+using CareTogether.Resources.Directory;
 using CareTogether.Resources.Policies;
 using CareTogether.Utilities.EventLog;
 using CareTogether.Utilities.FileStore;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.FeatureManagement;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
 
@@ -83,13 +90,37 @@ namespace CareTogether.Core.Test
                         },
                     ]
                 );
-            var manager = new OrganizationCategoriesManager(
+            var controller = new ConfigurationController(
                 policiesResource,
+                Mock.Of<IDirectoryResource>(),
+                Mock.Of<IAccountsResource>(),
+                Mock.Of<IApprovalsResource>(),
+                Mock.Of<IFeatureManager>(),
+                Mock.Of<IAuthorizationEngine>(),
                 communitiesResource.Object
-            );
+            )
+            {
+                ControllerContext = new ControllerContext
+                {
+                    HttpContext = new DefaultHttpContext
+                    {
+                        User = new ClaimsPrincipal(
+                            new ClaimsIdentity(
+                                [
+                                    new Claim(
+                                        ClaimTypes.Role,
+                                        SystemConstants.ORGANIZATION_ADMINISTRATOR
+                                    ),
+                                ],
+                                "Test"
+                            )
+                        ),
+                    },
+                },
+            };
 
             var exception = await Assert.ThrowsExactlyAsync<InvalidOperationException>(() =>
-                manager.DeleteCategoryAsync(organizationId, category.Id)
+                controller.DeleteOrganizationCategory(organizationId, category.Id)
             );
 
             StringAssert.Contains(exception.Message, "assigned");
