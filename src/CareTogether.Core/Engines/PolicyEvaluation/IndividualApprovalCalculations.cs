@@ -91,7 +91,10 @@ namespace CareTogether.Engines.PolicyEvaluation
             // Calculate the combined approval status timeline for this
             // role under this policy version.
             var roleVersionApprovalStatus = SharedCalculations.CalculateRoleVersionApprovalStatus(
-                requirementCompletionStatus.Select(x => (x.Stage, x.WhenMet)).ToImmutableList(),
+                requirementCompletionStatus
+                    .Where(x => x.IsRequired != false)
+                    .Select(x => (x.Stage, x.WhenMet))
+                    .ToImmutableList(),
                 removalsOfThisRole
             );
 
@@ -125,7 +128,8 @@ namespace CareTogether.Engines.PolicyEvaluation
             return new IndividualRoleRequirementCompletionStatus(
                 requirement.ActionName,
                 requirement.Stage,
-                whenMet
+                whenMet,
+                requirement.IsRequired
             );
         }
     }

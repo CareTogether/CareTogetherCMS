@@ -4468,6 +4468,7 @@ export interface IVolunteerRolePolicyVersion {
 export class VolunteerApprovalRequirement implements IVolunteerApprovalRequirement {
     stage!: RequirementStage;
     actionName!: string;
+    isRequired?: boolean | undefined;
 
     constructor(data?: IVolunteerApprovalRequirement) {
         if (data) {
@@ -4482,6 +4483,7 @@ export class VolunteerApprovalRequirement implements IVolunteerApprovalRequireme
         if (_data) {
             this.stage = _data["stage"];
             this.actionName = _data["actionName"];
+            this.isRequired = _data["isRequired"];
         }
     }
 
@@ -4496,6 +4498,7 @@ export class VolunteerApprovalRequirement implements IVolunteerApprovalRequireme
         data = typeof data === 'object' ? data : {};
         data["stage"] = this.stage;
         data["actionName"] = this.actionName;
+        data["isRequired"] = this.isRequired;
         return data;
     }
 }
@@ -4503,6 +4506,7 @@ export class VolunteerApprovalRequirement implements IVolunteerApprovalRequireme
 export interface IVolunteerApprovalRequirement {
     stage: RequirementStage;
     actionName: string;
+    isRequired?: boolean | undefined;
 }
 
 export enum RequirementStage {
@@ -4621,6 +4625,7 @@ export class VolunteerFamilyApprovalRequirement implements IVolunteerFamilyAppro
     stage!: RequirementStage;
     actionName!: string;
     scope!: VolunteerFamilyRequirementScope;
+    isRequired?: boolean | undefined;
 
     constructor(data?: IVolunteerFamilyApprovalRequirement) {
         if (data) {
@@ -4636,6 +4641,7 @@ export class VolunteerFamilyApprovalRequirement implements IVolunteerFamilyAppro
             this.stage = _data["stage"];
             this.actionName = _data["actionName"];
             this.scope = _data["scope"];
+            this.isRequired = _data["isRequired"];
         }
     }
 
@@ -4651,6 +4657,7 @@ export class VolunteerFamilyApprovalRequirement implements IVolunteerFamilyAppro
         data["stage"] = this.stage;
         data["actionName"] = this.actionName;
         data["scope"] = this.scope;
+        data["isRequired"] = this.isRequired;
         return data;
     }
 }
@@ -4659,6 +4666,7 @@ export interface IVolunteerFamilyApprovalRequirement {
     stage: RequirementStage;
     actionName: string;
     scope: VolunteerFamilyRequirementScope;
+    isRequired?: boolean | undefined;
 }
 
 export enum VolunteerFamilyRequirementScope {
@@ -8067,6 +8075,7 @@ export class FamilyRoleRequirementCompletionStatus implements IFamilyRoleRequire
     scope!: VolunteerFamilyRequirementScope;
     whenMet?: DateOnlyTimeline | undefined;
     statusDetails!: FamilyRequirementStatusDetail[];
+    isRequired?: boolean | undefined;
 
     constructor(data?: IFamilyRoleRequirementCompletionStatus) {
         if (data) {
@@ -8091,6 +8100,7 @@ export class FamilyRoleRequirementCompletionStatus implements IFamilyRoleRequire
                 for (let item of _data["statusDetails"])
                     this.statusDetails!.push(FamilyRequirementStatusDetail.fromJS(item));
             }
+            this.isRequired = _data["isRequired"];
         }
     }
 
@@ -8112,6 +8122,7 @@ export class FamilyRoleRequirementCompletionStatus implements IFamilyRoleRequire
             for (let item of this.statusDetails)
                 data["statusDetails"].push(item ? item.toJSON() : undefined as any);
         }
+        data["isRequired"] = this.isRequired;
         return data;
     }
 }
@@ -8122,6 +8133,7 @@ export interface IFamilyRoleRequirementCompletionStatus {
     scope: VolunteerFamilyRequirementScope;
     whenMet?: DateOnlyTimeline | undefined;
     statusDetails: FamilyRequirementStatusDetail[];
+    isRequired?: boolean | undefined;
 }
 
 export class DateOnlyTimeline implements IDateOnlyTimeline {
@@ -8725,6 +8737,7 @@ export class IndividualRoleRequirementCompletionStatus implements IIndividualRol
     actionName!: string;
     stage!: RequirementStage;
     whenMet?: DateOnlyTimeline | undefined;
+    isRequired?: boolean | undefined;
 
     constructor(data?: IIndividualRoleRequirementCompletionStatus) {
         if (data) {
@@ -8740,6 +8753,7 @@ export class IndividualRoleRequirementCompletionStatus implements IIndividualRol
             this.actionName = _data["actionName"];
             this.stage = _data["stage"];
             this.whenMet = _data["whenMet"] ? DateOnlyTimeline.fromJS(_data["whenMet"]) : undefined as any;
+            this.isRequired = _data["isRequired"];
         }
     }
 
@@ -8755,6 +8769,7 @@ export class IndividualRoleRequirementCompletionStatus implements IIndividualRol
         data["actionName"] = this.actionName;
         data["stage"] = this.stage;
         data["whenMet"] = this.whenMet ? this.whenMet.toJSON() : undefined as any;
+        data["isRequired"] = this.isRequired;
         return data;
     }
 }
@@ -8763,6 +8778,7 @@ export interface IIndividualRoleRequirementCompletionStatus {
     actionName: string;
     stage: RequirementStage;
     whenMet?: DateOnlyTimeline | undefined;
+    isRequired?: boolean | undefined;
 }
 
 export class ArrangementEntry implements IArrangementEntry {

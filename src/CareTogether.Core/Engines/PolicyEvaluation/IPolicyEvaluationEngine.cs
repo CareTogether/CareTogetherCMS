@@ -241,6 +241,7 @@ namespace CareTogether.Engines.PolicyEvaluation
         [Newtonsoft.Json.JsonIgnore]
         public ImmutableList<IndividualRoleRequirementCompletionStatus> CurrentMissingRequirements =>
             Requirements
+                .Where(r => r.IsRequired != false)
                 .Where(r =>
                     (
                         r.Stage == RequirementStage.Approval
@@ -264,6 +265,7 @@ namespace CareTogether.Engines.PolicyEvaluation
         [Newtonsoft.Json.JsonIgnore]
         public ImmutableList<IndividualRoleRequirementCompletionStatus> CurrentAvailableApplications =>
             Requirements
+                .Where(r => r.IsRequired != false)
                 .Where(r =>
                     r.Stage == RequirementStage.Application
                     && (CurrentStatus == null || CurrentStatus == RoleApprovalStatus.Expired)
@@ -275,7 +277,8 @@ namespace CareTogether.Engines.PolicyEvaluation
     public sealed record IndividualRoleRequirementCompletionStatus(
         string ActionName,
         RequirementStage Stage,
-        DateOnlyTimeline? WhenMet
+        DateOnlyTimeline? WhenMet,
+        bool? IsRequired = null
     );
 
     public sealed record FamilyRoleApprovalStatus(
@@ -402,6 +405,7 @@ namespace CareTogether.Engines.PolicyEvaluation
         [Newtonsoft.Json.JsonIgnore]
         public ImmutableList<FamilyRoleRequirementCompletionStatus> CurrentMissingRequirements =>
             Requirements
+                .Where(r => r.IsRequired != false)
                 .Where(r =>
                     (
                         r.Stage == RequirementStage.Approval
@@ -425,6 +429,7 @@ namespace CareTogether.Engines.PolicyEvaluation
         [Newtonsoft.Json.JsonIgnore]
         public ImmutableList<FamilyRoleRequirementCompletionStatus> CurrentAvailableApplications =>
             Requirements
+                .Where(r => r.IsRequired != false)
                 .Where(r =>
                     r.Stage == RequirementStage.Application
                     && (CurrentStatus == null || CurrentStatus == RoleApprovalStatus.Expired)
@@ -438,7 +443,8 @@ namespace CareTogether.Engines.PolicyEvaluation
         RequirementStage Stage,
         VolunteerFamilyRequirementScope Scope,
         DateOnlyTimeline? WhenMet,
-        ImmutableList<FamilyRequirementStatusDetail> StatusDetails
+        ImmutableList<FamilyRequirementStatusDetail> StatusDetails,
+        bool? IsRequired = null
     );
 
     public sealed record FamilyRequirementStatusDetail(Guid? PersonId, DateOnlyTimeline? WhenMet);

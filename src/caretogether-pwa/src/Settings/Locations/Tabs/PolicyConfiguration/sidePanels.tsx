@@ -1,4 +1,22 @@
-import { Autocomplete, Button, FormControlLabel, MenuItem, Switch, TextField, Typography } from '@mui/material';
+import { Add as AddIcon, Delete as DeleteIcon } from '@mui/icons-material';
+import {
+  Autocomplete,
+  Button,
+  FormControlLabel,
+  IconButton,
+  MenuItem,
+  Stack,
+  Switch,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  TextField,
+  Tooltip,
+  Typography,
+} from '@mui/material';
 import { useState } from 'react';
 import Grid from '../../../../Generic/GridLegacyCompat';
 import {
@@ -17,13 +35,42 @@ import {
   NoteEntryRequirement,
   OneTimeRecurrencePolicy,
   RequirementDefinition,
+  RequirementStage,
   VolunteerApprovalRequirement,
   VolunteerFamilyApprovalRequirement,
   VolunteerFamilyRolePolicyVersion,
+  VolunteerFamilyRequirementScope,
   VolunteerRolePolicyVersion,
 } from '../../../../GeneratedClient';
-import type { ActionDefinitionDraft, ArrangementFunctionDraft, ArrangementPolicyDraft, CustomFieldDraft, FunctionAssignmentPolicyDraft, MonitoringRequirementDraft, PersonOption, RequirementDraft, ValidityUnit, VolunteerRolePolicyVersionDraft } from './types';
-import { actionToDraft, arrangementFunctionToDraft, arrangementPolicyToDraft, customFieldToDraft, enumOptions, functionAssignmentPolicyToDraft, monitoringRequirementToDraft, normalizeStringList, parseValidityAmount, parseVolunteerFamilyRequirements, parseVolunteerRequirements, requirementToDraft, toTimeSpanString, volunteerRolePolicyVersionToDraft } from './policyUtils';
+import type {
+  ActionDefinitionDraft,
+  ArrangementFunctionDraft,
+  ArrangementPolicyDraft,
+  CustomFieldDraft,
+  FunctionAssignmentPolicyDraft,
+  MonitoringRequirementDraft,
+  PersonOption,
+  RequirementDraft,
+  ValidityUnit,
+  VolunteerRequirementDraft,
+  VolunteerRolePolicyVersionDraft,
+} from './types';
+import {
+  actionToDraft,
+  arrangementFunctionToDraft,
+  arrangementPolicyToDraft,
+  customFieldToDraft,
+  enumOptions,
+  functionAssignmentPolicyToDraft,
+  monitoringRequirementToDraft,
+  normalizeStringList,
+  parseValidityAmount,
+  requirementToDraft,
+  toTimeSpanString,
+  volunteerFamilyRequirementDraftToRequirement,
+  volunteerRequirementDraftToRequirement,
+  volunteerRolePolicyVersionToDraft,
+} from './policyUtils';
 
 export function ActionDefinitionSidePanel({
   actionName,
@@ -56,9 +103,7 @@ export function ActionDefinitionSidePanel({
     !draft.validityEnabled ||
     typeof parseValidityAmount(draft.validityAmount) !== 'undefined';
   const canSave =
-    trimmedName.length > 0 &&
-    !duplicateName &&
-    validityAmountIsValid;
+    trimmedName.length > 0 && !duplicateName && validityAmountIsValid;
 
   function save() {
     if (!canSave) return;
@@ -844,7 +889,9 @@ export function ArrangementFunctionSidePanel({
     >
       <Grid item xs={12}>
         <Typography variant="h6">
-          {arrangementFunction ? 'Edit Arrangement Function' : 'Add Arrangement Function'}
+          {arrangementFunction
+            ? 'Edit Arrangement Function'
+            : 'Add Arrangement Function'}
         </Typography>
       </Grid>
 
@@ -900,7 +947,10 @@ export function ArrangementFunctionSidePanel({
             }))
           }
           renderInput={(params) => (
-            <TextField {...params} label="Eligible Individual Volunteer Roles" />
+            <TextField
+              {...params}
+              label="Eligible Individual Volunteer Roles"
+            />
           )}
         />
       </Grid>
@@ -992,7 +1042,9 @@ export function FunctionAssignmentPolicySidePanel({
     trimmedRole.length > 0 &&
     trimmedRole !== policy?.assignmentRole &&
     existingAssignmentRoles.includes(trimmedRole);
-  const eligibleLocationRoles = normalizeStringList(draft.eligibleLocationRoles);
+  const eligibleLocationRoles = normalizeStringList(
+    draft.eligibleLocationRoles
+  );
   const eligibleIndividualVolunteerRoles = normalizeStringList(
     draft.eligibleIndividualVolunteerRoles
   );
@@ -1009,10 +1061,7 @@ export function FunctionAssignmentPolicySidePanel({
       eligibleVolunteerFamilyRoles.length +
       eligiblePeople.length >
     0;
-  const canSave =
-    trimmedRole.length > 0 &&
-    !duplicateRole &&
-    hasEligibility;
+  const canSave = trimmedRole.length > 0 && !duplicateRole && hasEligibility;
 
   function save() {
     if (!canSave) return;
@@ -1094,7 +1143,10 @@ export function FunctionAssignmentPolicySidePanel({
             }))
           }
           renderInput={(params) => (
-            <TextField {...params} label="Eligible Individual Volunteer Roles" />
+            <TextField
+              {...params}
+              label="Eligible Individual Volunteer Roles"
+            />
           )}
         />
       </Grid>
@@ -1326,6 +1378,213 @@ export function ArrangementPolicySidePanel({
   );
 }
 
+function newVolunteerRequirementDraft(
+  family: boolean
+): VolunteerRequirementDraft {
+  return {
+    stage: '',
+    actionName: '',
+    isRequired: true,
+    scope: family ? '' : undefined,
+  };
+}
+
+function VolunteerRequirementsEditor({
+  family,
+  actionNames,
+  requirements,
+  onChange,
+}: {
+  family: boolean;
+  actionNames: string[];
+  requirements: VolunteerRequirementDraft[];
+  onChange: (requirements: VolunteerRequirementDraft[]) => void;
+}) {
+  function updateRequirement(
+    index: number,
+    changes: Partial<VolunteerRequirementDraft>
+  ) {
+    onChange(
+      requirements.map((requirement, requirementIndex) =>
+        requirementIndex === index
+          ? { ...requirement, ...changes }
+          : requirement
+      )
+    );
+  }
+
+  function deleteRequirement(index: number) {
+    onChange(
+      requirements.filter((_, requirementIndex) => requirementIndex !== index)
+    );
+  }
+
+  return (
+    <Stack spacing={1.5}>
+      <Stack
+        direction="row"
+        spacing={1}
+        sx={{ alignItems: 'center', justifyContent: 'space-between' }}
+      >
+        <Typography variant="subtitle1">Requirements</Typography>
+        <Button
+          size="small"
+          variant="contained"
+          startIcon={<AddIcon />}
+          onClick={() =>
+            onChange([...requirements, newVolunteerRequirementDraft(family)])
+          }
+        >
+          Add
+        </Button>
+      </Stack>
+
+      {requirements.length === 0 ? (
+        <Typography variant="body2" color="text.secondary">
+          No requirements configured.
+        </Typography>
+      ) : (
+        <TableContainer>
+          <Table size="small">
+            <TableHead>
+              <TableRow>
+                <TableCell sx={{ width: family ? '20%' : '25%' }}>
+                  Stage
+                </TableCell>
+                <TableCell>Action Name</TableCell>
+                {family && <TableCell sx={{ width: '24%' }}>Scope</TableCell>}
+                <TableCell sx={{ width: 112 }}>Required</TableCell>
+                <TableCell sx={{ width: 56 }}>Actions</TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {requirements.map((requirement, index) => {
+                const actionName = requirement.actionName.trim();
+                const unknownActionName =
+                  actionName.length > 0 && !actionNames.includes(actionName);
+
+                return (
+                  <TableRow key={index}>
+                    <TableCell>
+                      <TextField
+                        fullWidth
+                        required
+                        select
+                        size="small"
+                        label="Stage"
+                        value={requirement.stage}
+                        error={requirement.stage === ''}
+                        onChange={(event) =>
+                          updateRequirement(index, {
+                            stage: Number(
+                              event.target.value
+                            ) as RequirementStage,
+                          })
+                        }
+                      >
+                        {enumOptions(RequirementStage).map((option) => (
+                          <MenuItem key={option.label} value={option.value}>
+                            {option.label}
+                          </MenuItem>
+                        ))}
+                      </TextField>
+                    </TableCell>
+                    <TableCell>
+                      <Autocomplete
+                        fullWidth
+                        size="small"
+                        options={actionNames}
+                        value={requirement.actionName || null}
+                        onChange={(_, value) =>
+                          updateRequirement(index, {
+                            actionName: value ?? '',
+                          })
+                        }
+                        renderInput={(params) => (
+                          <TextField
+                            {...params}
+                            required
+                            label="Action Name"
+                            error={actionName.length === 0 || unknownActionName}
+                            helperText={
+                              unknownActionName
+                                ? 'Action name must exist in Action Definitions.'
+                                : undefined
+                            }
+                          />
+                        )}
+                      />
+                    </TableCell>
+                    {family && (
+                      <TableCell>
+                        <TextField
+                          fullWidth
+                          required
+                          select
+                          size="small"
+                          label="Scope"
+                          value={requirement.scope ?? ''}
+                          error={
+                            typeof requirement.scope === 'undefined' ||
+                            requirement.scope === ''
+                          }
+                          onChange={(event) =>
+                            updateRequirement(index, {
+                              scope: Number(
+                                event.target.value
+                              ) as VolunteerFamilyRequirementScope,
+                            })
+                          }
+                        >
+                          {enumOptions(VolunteerFamilyRequirementScope).map(
+                            (option) => (
+                              <MenuItem key={option.label} value={option.value}>
+                                {option.label}
+                              </MenuItem>
+                            )
+                          )}
+                        </TextField>
+                      </TableCell>
+                    )}
+                    <TableCell>
+                      <Switch
+                        checked={requirement.isRequired}
+                        onChange={(event) =>
+                          updateRequirement(index, {
+                            isRequired: event.target.checked,
+                          })
+                        }
+                        slotProps={{
+                          input: {
+                            'aria-label': `Required requirement ${
+                              actionName || index + 1
+                            }`,
+                          },
+                        }}
+                      />
+                    </TableCell>
+                    <TableCell>
+                      <Tooltip title="Delete">
+                        <IconButton
+                          size="small"
+                          aria-label={`Delete requirement ${index + 1}`}
+                          onClick={() => deleteRequirement(index)}
+                        >
+                          <DeleteIcon fontSize="small" />
+                        </IconButton>
+                      </Tooltip>
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
+            </TableBody>
+          </Table>
+        </TableContainer>
+      )}
+    </Stack>
+  );
+}
+
 export function VolunteerRolePolicyVersionSidePanel({
   title,
   roleName,
@@ -1357,15 +1616,17 @@ export function VolunteerRolePolicyVersionSidePanel({
   );
   const trimmedRoleName = draft.roleName.trim();
   const trimmedVersion = draft.version.trim();
-  const requirements = family
-    ? parseVolunteerFamilyRequirements(draft.requirements)
-    : parseVolunteerRequirements(draft.requirements);
-  const referencedActions = requirements.map(
-    (requirement) => requirement.actionName
-  );
-  const unknownActions = referencedActions.filter(
-    (actionName) => !actionNames.includes(actionName)
-  );
+  const invalidRequirements = draft.requirements.filter((requirement) => {
+    const actionName = requirement.actionName.trim();
+
+    return (
+      requirement.stage === '' ||
+      actionName.length === 0 ||
+      !actionNames.includes(actionName) ||
+      (family &&
+        (typeof requirement.scope === 'undefined' || requirement.scope === ''))
+    );
+  });
   const duplicateVersion =
     trimmedVersion.length > 0 &&
     (trimmedRoleName !== roleName || trimmedVersion !== version?.version) &&
@@ -1374,10 +1635,22 @@ export function VolunteerRolePolicyVersionSidePanel({
     trimmedRoleName.length > 0 &&
     trimmedVersion.length > 0 &&
     !duplicateVersion &&
-    unknownActions.length === 0;
+    invalidRequirements.length === 0;
 
   function save() {
     if (!canSave) return;
+
+    const individualRequirements = draft.requirements
+      .map(volunteerRequirementDraftToRequirement)
+      .filter((requirement): requirement is VolunteerApprovalRequirement =>
+        Boolean(requirement)
+      );
+    const familyRequirements = draft.requirements
+      .map(volunteerFamilyRequirementDraftToRequirement)
+      .filter(
+        (requirement): requirement is VolunteerFamilyApprovalRequirement =>
+          Boolean(requirement)
+      );
 
     onSave(
       roleName,
@@ -1390,7 +1663,7 @@ export function VolunteerRolePolicyVersionSidePanel({
               draft.superseded && draft.supersededAtUtc
                 ? new Date(draft.supersededAtUtc)
                 : undefined,
-            requirements: requirements as VolunteerFamilyApprovalRequirement[],
+            requirements: familyRequirements,
           })
         : new VolunteerRolePolicyVersion({
             version: trimmedVersion,
@@ -1398,7 +1671,7 @@ export function VolunteerRolePolicyVersionSidePanel({
               draft.superseded && draft.supersededAtUtc
                 ? new Date(draft.supersededAtUtc)
                 : undefined,
-            requirements: requirements as VolunteerApprovalRequirement[],
+            requirements: individualRequirements,
           })
     );
   }
@@ -1492,27 +1765,19 @@ export function VolunteerRolePolicyVersionSidePanel({
       )}
 
       <Grid item xs={12}>
-        <TextField
-          fullWidth
-          multiline
-          minRows={5}
-          label="Requirements"
-          value={draft.requirements}
-          error={unknownActions.length > 0}
-          helperText={
-            unknownActions.length > 0
-              ? `Unknown Action Definitions: ${unknownActions.join(', ')}`
-              : family
-                ? 'One per line: Stage | Action Name | Scope'
-                : 'One per line: Stage | Action Name'
-          }
-          onChange={(event) =>
-            setDraft((current) => ({
-              ...current,
-              requirements: event.target.value,
-            }))
+        <VolunteerRequirementsEditor
+          family={family}
+          actionNames={actionNames}
+          requirements={draft.requirements}
+          onChange={(requirements) =>
+            setDraft((current) => ({ ...current, requirements }))
           }
         />
+        {invalidRequirements.length > 0 && (
+          <Typography variant="body2" color="error" sx={{ mt: 1 }}>
+            Complete each requirement before saving.
+          </Typography>
+        )}
       </Grid>
 
       <Grid item xs={12} sx={{ textAlign: 'right' }}>

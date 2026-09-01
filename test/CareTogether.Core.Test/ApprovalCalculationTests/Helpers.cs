@@ -347,6 +347,17 @@ namespace CareTogether.Core.Test.ApprovalCalculationTests
                 ))
                 .ToImmutableList();
 
+        public static ImmutableList<VolunteerApprovalRequirement> IndividualApprovalRequirementsWithRequired(
+            params (RequirementStage, string, bool?)[] requirements
+        ) =>
+            requirements
+                .Select(requirement => new VolunteerApprovalRequirement(
+                    requirement.Item1,
+                    requirement.Item2,
+                    requirement.Item3
+                ))
+                .ToImmutableList();
+
         public static ImmutableList<VolunteerFamilyApprovalRequirement> FamilyApprovalRequirements(
             params (RequirementStage, string, VolunteerFamilyRequirementScope)[] requirements
         ) =>
@@ -355,6 +366,18 @@ namespace CareTogether.Core.Test.ApprovalCalculationTests
                     requirement.Item1,
                     requirement.Item2,
                     requirement.Item3
+                ))
+                .ToImmutableList();
+
+        public static ImmutableList<VolunteerFamilyApprovalRequirement> FamilyApprovalRequirementsWithRequired(
+            params (RequirementStage, string, VolunteerFamilyRequirementScope, bool?)[] requirements
+        ) =>
+            requirements
+                .Select(requirement => new VolunteerFamilyApprovalRequirement(
+                    requirement.Item1,
+                    requirement.Item2,
+                    requirement.Item3,
+                    requirement.Item4
                 ))
                 .ToImmutableList();
     }
