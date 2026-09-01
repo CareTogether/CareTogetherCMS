@@ -3040,6 +3040,10 @@
           },
           "actionName": {
             "type": "string"
+          },
+          "isRequired": {
+            "type": "boolean",
+            "nullable": true
           }
         }
       },
@@ -3117,6 +3121,10 @@
           },
           "scope": {
             "$ref": "#/components/schemas/VolunteerFamilyRequirementScope"
+          },
+          "isRequired": {
+            "type": "boolean",
+            "nullable": true
           }
         }
       },
@@ -5112,6 +5120,10 @@
             "items": {
               "$ref": "#/components/schemas/FamilyRequirementStatusDetail"
             }
+          },
+          "isRequired": {
+            "type": "boolean",
+            "nullable": true
           }
         }
       },
@@ -5433,6 +5445,10 @@
                 "$ref": "#/components/schemas/DateOnlyTimeline"
               }
             ]
+          },
+          "isRequired": {
+            "type": "boolean",
+            "nullable": true
           }
         }
       },

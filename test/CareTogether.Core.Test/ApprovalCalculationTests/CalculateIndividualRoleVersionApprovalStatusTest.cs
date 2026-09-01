@@ -6,6 +6,7 @@ using CareTogether.Resources;
 using CareTogether.Resources.Approvals;
 using CareTogether.Resources.Policies;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Newtonsoft.Json;
 using Timelines;
 using H = CareTogether.Core.Test.ApprovalCalculationTests.Helpers;
 
@@ -217,5 +218,154 @@ namespace CareTogether.Core.Test.ApprovalCalculationTests
                 )
             );
         }
+
+        [TestMethod]
+        public void OldJsonRequirementWithoutIsRequiredDeserializesAsRequired()
+        {
+            var requirement = JsonConvert.DeserializeObject<VolunteerApprovalRequirement>(
+                @"{""stage"":0,""actionName"":""Application""}"
+            );
+
+            Assert.IsNotNull(requirement);
+            Assert.AreEqual(RequirementStage.Application, requirement!.Stage);
+            Assert.AreEqual("Application", requirement.ActionName);
+            Assert.IsNull(requirement.IsRequired);
+        }
+
+        [TestMethod]
+        public void NullIsRequiredApplicationRequirementStillBlocksProspective()
+        {
+            var result = CalculateIndividualStatus(
+                H.IndividualApprovalRequirementsWithRequired(
+                    (RequirementStage.Application, "Application", null)
+                ),
+                completedRequirements: []
+            );
+
+            Assert.IsNull(result.Status);
+            Assert.AreEqual(1, result.CurrentAvailableApplications.Count);
+            Assert.AreEqual("Application", result.CurrentAvailableApplications.Single().ActionName);
+        }
+
+        [TestMethod]
+        public void TrueIsRequiredApplicationRequirementStillBlocksProspective()
+        {
+            var result = CalculateIndividualStatus(
+                H.IndividualApprovalRequirementsWithRequired(
+                    (RequirementStage.Application, "Application", true)
+                ),
+                completedRequirements: []
+            );
+
+            Assert.IsNull(result.Status);
+            Assert.AreEqual(1, result.CurrentAvailableApplications.Count);
+            Assert.AreEqual("Application", result.CurrentAvailableApplications.Single().ActionName);
+        }
+
+        [TestMethod]
+        public void OptionalApplicationRequirementDoesNotBlockProgression()
+        {
+            var result = CalculateIndividualStatus(
+                H.IndividualApprovalRequirementsWithRequired(
+                    (RequirementStage.Application, "OptionalApplication", false),
+                    (RequirementStage.Approval, "Approval", true),
+                    (RequirementStage.Onboarding, "Onboarding", true)
+                ),
+                completedRequirements: H.Completed(("Approval", 1), ("Onboarding", 2))
+            );
+
+            Assert.AreEqual(
+                new DateOnlyTimeline<RoleApprovalStatus>(
+                    [
+                        H.DR(1, 1, RoleApprovalStatus.Approved),
+                        H.DR(2, null, RoleApprovalStatus.Onboarded),
+                    ]
+                ),
+                result.Status
+            );
+            Assert.AreEqual(0, result.CurrentAvailableApplications.Count);
+        }
+
+        [TestMethod]
+        public void OptionalApprovalRequirementDoesNotBlockProgression()
+        {
+            var result = CalculateIndividualStatus(
+                H.IndividualApprovalRequirementsWithRequired(
+                    (RequirementStage.Application, "Application", true),
+                    (RequirementStage.Approval, "OptionalApproval", false),
+                    (RequirementStage.Onboarding, "Onboarding", true)
+                ),
+                completedRequirements: H.Completed(("Application", 1), ("Onboarding", 2))
+            );
+
+            Assert.AreEqual(
+                new DateOnlyTimeline<RoleApprovalStatus>(
+                    [
+                        H.DR(1, 1, RoleApprovalStatus.Approved),
+                        H.DR(2, null, RoleApprovalStatus.Onboarded),
+                    ]
+                ),
+                result.Status
+            );
+            Assert.AreEqual(0, result.CurrentMissingRequirements.Count);
+        }
+
+        [TestMethod]
+        public void OptionalOnboardingRequirementDoesNotBlockProgression()
+        {
+            var result = CalculateIndividualStatus(
+                H.IndividualApprovalRequirementsWithRequired(
+                    (RequirementStage.Application, "Application", true),
+                    (RequirementStage.Approval, "Approval", true),
+                    (RequirementStage.Onboarding, "OptionalOnboarding", false)
+                ),
+                completedRequirements: H.Completed(("Application", 1), ("Approval", 2))
+            );
+
+            Assert.AreEqual(
+                new DateOnlyTimeline<RoleApprovalStatus>(
+                    [
+                        H.DR(1, 1, RoleApprovalStatus.Prospective),
+                        H.DR(2, null, RoleApprovalStatus.Onboarded),
+                    ]
+                ),
+                result.Status
+            );
+            Assert.AreEqual(0, result.CurrentMissingRequirements.Count);
+        }
+
+        [TestMethod]
+        public void CompletedOptionalRequirementStillHasCompletionStatus()
+        {
+            var result = CalculateIndividualStatus(
+                H.IndividualApprovalRequirementsWithRequired(
+                    (RequirementStage.Application, "OptionalApplication", false)
+                ),
+                completedRequirements: H.Completed(("OptionalApplication", 3))
+            );
+
+            var requirement = result.Requirements.Single();
+            Assert.AreEqual("OptionalApplication", requirement.ActionName);
+            Assert.AreEqual(false, requirement.IsRequired);
+            Assert.AreEqual(new DateOnlyTimeline([H.DR(3, null)]), requirement.WhenMet);
+            Assert.IsNull(result.Status);
+        }
+
+        private static IndividualRoleVersionApprovalStatus CalculateIndividualStatus(
+            ImmutableList<VolunteerApprovalRequirement> requirements,
+            ImmutableList<Resources.CompletedRequirementInfo> completedRequirements
+        ) =>
+            IndividualApprovalCalculations.CalculateIndividualRoleVersionApprovalStatus(
+                locationPolicy: TestLocationPolicy,
+                new VolunteerRolePolicy("Family Coach", []),
+                new VolunteerRolePolicyVersion(
+                    "v1",
+                    SupersededAtUtc: null,
+                    requirements
+                ),
+                completedRequirements,
+                exemptedRequirements: [],
+                removalsOfThisRole: []
+            );
     }
 }

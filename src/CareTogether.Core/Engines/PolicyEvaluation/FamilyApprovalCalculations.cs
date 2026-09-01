@@ -152,6 +152,7 @@ namespace CareTogether.Engines.PolicyEvaluation
                         ),
                         requirement.Stage,
                         requirement.Scope,
+                        requirement.IsRequired,
                         policyVersion.SupersededAtUtc,
                         completedFamilyRequirements,
                         exemptedFamilyRequirements,
@@ -164,7 +165,10 @@ namespace CareTogether.Engines.PolicyEvaluation
             // Calculate the combined approval status timeline for this
             // role under this policy version.
             var roleVersionApprovalStatus = SharedCalculations.CalculateRoleVersionApprovalStatus(
-                requirementCompletions.Select(x => (x.Stage, x.WhenMet)).ToImmutableList(),
+                requirementCompletions
+                    .Where(x => x.IsRequired != false)
+                    .Select(x => (x.Stage, x.WhenMet))
+                    .ToImmutableList(),
                 removalsOfThisRole
             );
 
@@ -182,6 +186,7 @@ namespace CareTogether.Engines.PolicyEvaluation
             ImmutableList<string> requirementNameWithSynonyms,
             RequirementStage requirementStage,
             VolunteerFamilyRequirementScope requirementScope,
+            bool? isRequired,
             DateTime? policyVersionSupersededAtUtc,
             ImmutableList<Resources.CompletedRequirementInfo> completedFamilyRequirements,
             ImmutableList<Resources.ExemptedRequirementInfo> exemptedFamilyRequirements,
@@ -200,7 +205,8 @@ namespace CareTogether.Engines.PolicyEvaluation
                     requirementStage,
                     requirementScope,
                     null,
-                    ImmutableList<FamilyRequirementStatusDetail>.Empty
+                    ImmutableList<FamilyRequirementStatusDetail>.Empty,
+                    isRequired
                 );
 
             var statusDetails = requirementScope switch
@@ -262,7 +268,8 @@ namespace CareTogether.Engines.PolicyEvaluation
                 requirementStage,
                 requirementScope,
                 WhenMet: whenCombinedRequirementsAreMet,
-                StatusDetails: statusDetails
+                StatusDetails: statusDetails,
+                IsRequired: isRequired
             );
         }
     }
