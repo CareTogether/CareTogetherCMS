@@ -2,7 +2,7 @@ import { Box, Chip, Typography } from '@mui/material';
 import { Community, OrganizationCategory } from '../GeneratedClient';
 
 type OrganizationPrimaryHeaderInfoProps = {
-  availableCategories: OrganizationCategory[];
+  availableCategories?: OrganizationCategory[];
   community: Community;
   onEdit?: () => void;
 };
@@ -13,7 +13,7 @@ export function OrganizationPrimaryHeaderInfo({
   onEdit,
 }: OrganizationPrimaryHeaderInfoProps) {
   const categoriesById = new Map(
-    availableCategories.map((category) => [category.id, category])
+    (availableCategories ?? []).map((category) => [category.id, category])
   );
   const assignedCategories = (community.categoryIds ?? [])
     .map((categoryId) => categoriesById.get(categoryId))
@@ -36,19 +36,23 @@ export function OrganizationPrimaryHeaderInfo({
         }}
       >
         <Typography variant="h4">{community.name}</Typography>
-        {assignedCategories.map((category) => (
-          <Chip key={category.id} label={category.name} />
-        ))}
-        {assignedCategories.length === 0 && (
-          <Chip
-            className="ph-unmask"
-            label="No categories"
-            variant="outlined"
-            clickable={onEdit != null}
-            onClick={onEdit}
-            aria-label={onEdit ? 'Edit organization categories' : undefined}
-            sx={{ color: 'text.secondary', borderStyle: 'dashed' }}
-          />
+        {availableCategories != null && (
+          <>
+            {assignedCategories.map((category) => (
+              <Chip key={category.id} label={category.name} />
+            ))}
+            {assignedCategories.length === 0 && (
+              <Chip
+                className="ph-unmask"
+                label="No categories"
+                variant="outlined"
+                clickable={onEdit != null}
+                onClick={onEdit}
+                aria-label={onEdit ? 'Edit organization categories' : undefined}
+                sx={{ color: 'text.secondary', borderStyle: 'dashed' }}
+              />
+            )}
+          </>
         )}
       </Box>
     </Box>

@@ -14,12 +14,16 @@ import {
 } from '@mui/icons-material';
 import { useAppNavigate } from '../Hooks/useAppNavigate';
 import { useUserIsOrganizationAdministrator } from '../Model/SessionModel';
+import { useFeatureFlagEnabled } from 'posthog-js/react';
+import { ORGANIZATION_CATEGORIES_FEATURE_FLAG } from '../featureFlags';
 
 export function SettingsScreen() {
   useScreenTitle('Settings');
   const appNavigate = useAppNavigate();
   const isOrganizationAdministrator =
     useUserIsOrganizationAdministrator() === true;
+  const organizationCategoriesEnabled =
+    useFeatureFlagEnabled(ORGANIZATION_CATEGORIES_FEATURE_FLAG) === true;
 
   return (
     <Box
@@ -61,7 +65,7 @@ export function SettingsScreen() {
           </Card>
         </Grid>
 
-        {isOrganizationAdministrator && (
+        {isOrganizationAdministrator && organizationCategoriesEnabled && (
           <Grid size={{ xs: 12, sm: 6, md: 4 }}>
             <Card variant="outlined">
               <CardActionArea

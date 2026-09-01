@@ -31,12 +31,17 @@ import { useState } from 'react';
 import { useOrganizationConfigurationLoadable } from '../Model/ConfigurationModel';
 import { OrganizationPrimaryHeaderInfo } from './OrganizationPrimaryHeaderInfo';
 import { ProgressBackdrop } from '../Shell/ProgressBackdrop';
+import { useFeatureFlagEnabled } from 'posthog-js/react';
+import { ORGANIZATION_CATEGORIES_FEATURE_FLAG } from '../featureFlags';
 
 export function CommunityScreen() {
   const communityIdMaybe = useParams<{ communityId: string }>();
   const communityId = communityIdMaybe.communityId as string;
 
   const organizationConfiguration = useOrganizationConfigurationLoadable();
+  const organizationCategoriesEnabled =
+    useFeatureFlagEnabled(ORGANIZATION_CATEGORIES_FEATURE_FLAG) === true;
+
   const visibleCommunities = useVisibleCommunities();
   const communityInfo = visibleCommunities.find(
     ({ community }) => community?.id === communityId
@@ -81,7 +86,7 @@ export function CommunityScreen() {
     return <Navigate to=".." replace />;
   }
 
-  if (!organizationConfiguration) {
+  if (organizationCategoriesEnabled && !organizationConfiguration) {
     return (
       <ProgressBackdrop>
         <p>Loading organization...</p>
@@ -104,10 +109,16 @@ export function CommunityScreen() {
       >
         <OrganizationPrimaryHeaderInfo
           availableCategories={
-            organizationConfiguration.organizationCategories ?? []
+            organizationCategoriesEnabled
+              ? (organizationConfiguration?.organizationCategories ?? [])
+              : undefined
           }
           community={community}
-          onEdit={canEditOrganization ? editDrawer.openDrawer : undefined}
+          onEdit={
+            organizationCategoriesEnabled && canEditOrganization
+              ? editDrawer.openDrawer
+              : undefined
+          }
         />
         {canEditOrganization && (
           <Button
@@ -206,7 +217,9 @@ export function CommunityScreen() {
         editDrawer.drawerFor(
           <AddEditCommunity
             availableCategories={
-              organizationConfiguration.organizationCategories ?? []
+              organizationCategoriesEnabled
+                ? (organizationConfiguration?.organizationCategories ?? [])
+                : undefined
             }
             community={community}
             onClose={requestCloseEditor}

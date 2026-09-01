@@ -47,7 +47,7 @@ function categoryIdKey(categoryIds: string[]) {
 }
 
 export function AddEditCommunity({
-  availableCategories = [],
+  availableCategories,
   community,
   onDirtyChange,
   onSaveCompleted,
@@ -55,9 +55,10 @@ export function AddEditCommunity({
 }: AddEditCommunityDrawerProps) {
   const [name, setName] = useState(community?.name || '');
   const [description, setDescription] = useState(community?.description || '');
+  const organizationCategoriesEnabled = availableCategories != null;
   const categoryOptions = useMemo(
     () =>
-      availableCategories
+      (availableCategories ?? [])
         .map((category) => ({ id: category.id!, label: category.name! }))
         .sort((first, second) =>
           first.label.localeCompare(second.label, undefined, {
@@ -111,6 +112,7 @@ export function AddEditCommunity({
   const categorySettingsHref = `/org/${organizationId}/${locationId}/settings/organization-categories`;
   const categoriesChanged =
     community != null &&
+    organizationCategoriesEnabled &&
     categoryIdKey(community.categoryIds ?? []) !==
       categoryIdKey(selectedCategories.map((category) => category.id));
   const detailsChanged =
@@ -195,7 +197,7 @@ export function AddEditCommunity({
           onChange={(e) => setDescription(e.target.value)}
         />
       </Grid>
-      {community && (
+      {community && organizationCategoriesEnabled && (
         <Grid size={12}>
           <FormControl fullWidth size="small">
             {categoryOptions.length === 0 ? (
