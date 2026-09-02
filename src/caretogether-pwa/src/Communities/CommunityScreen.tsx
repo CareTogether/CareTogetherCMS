@@ -34,7 +34,10 @@ import { useOrganizationConfigurationLoadable } from '../Model/ConfigurationMode
 import { OrganizationPrimaryHeaderInfo } from './OrganizationPrimaryHeaderInfo';
 import { ProgressBackdrop } from '../Shell/ProgressBackdrop';
 import { useFeatureFlagEnabled } from 'posthog-js/react';
-import { ORGANIZATION_CATEGORIES_FEATURE_FLAG } from '../featureFlags';
+import {
+  ORGANIZATION_APPROVALS_FEATURE_FLAG,
+  ORGANIZATION_CATEGORIES_FEATURE_FLAG,
+} from '../featureFlags';
 import {
   OrganizationApprovalRoleSummaryCards,
   OrganizationApprovalSection,
@@ -54,6 +57,8 @@ export function CommunityScreen() {
   const organizationConfiguration = useOrganizationConfigurationLoadable();
   const organizationCategoriesEnabled =
     useFeatureFlagEnabled(ORGANIZATION_CATEGORIES_FEATURE_FLAG) === true;
+  const organizationApprovalsEnabled =
+    useFeatureFlagEnabled(ORGANIZATION_APPROVALS_FEATURE_FLAG) === true;
   const policy = usePolicy();
 
   const visibleCommunities = useVisibleCommunities();
@@ -89,7 +94,10 @@ export function CommunityScreen() {
     ? permissions(Permission.ViewApprovalStatus) ||
       permissions(Permission.ViewApprovalProgress)
     : permissions(Permission.ActivateOrganizationApprovals);
-  const showApprovalsTab = hasConfiguredApprovalRoles && canAccessApprovals;
+  const showApprovalsTab =
+    organizationApprovalsEnabled &&
+    hasConfiguredApprovalRoles &&
+    canAccessApprovals;
 
   useEffect(() => {
     if (selectedTab === 'approvals' && !showApprovalsTab) {
