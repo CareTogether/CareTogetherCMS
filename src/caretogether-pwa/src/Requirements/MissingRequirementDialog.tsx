@@ -16,15 +16,11 @@ import {
   TextField,
 } from '@mui/material';
 import { useState } from 'react';
-import { useRecoilValue } from 'recoil';
 import {
   ActionRequirement,
-  Arrangement,
-  ArrangementPhase,
   DocumentLinkRequirement,
   MissingArrangementRequirement,
   NoteEntryRequirement,
-  V1Case,
   RequirementDefinition,
 } from '../GeneratedClient';
 import {
@@ -36,20 +32,30 @@ import {
   uploadFamilyFileToTenant,
   uploadV1ReferralFileToTenant,
 } from '../Model/FilesModel';
-import { visibleReferralsQuery } from '../Model/Data';
-import { useV1CasesModel } from '../Model/V1CasesModel';
-import { useVolunteersModel } from '../Model/VolunteersModel';
+import {
+  useRequiredSelectedLocationContext,
+  useVisibleReferrals,
+} from '../Model/Data';
 import { UpdateDialog } from '../Generic/UpdateDialog';
 import { RequirementContext } from './RequirementContext';
 import { a11yProps, TabPanel } from '../Generic/TabPanel';
 import { personNameString } from '../Families/PersonName';
 import { DialogHandle } from '../Hooks/useDialogHandle';
 import { familyNameString } from '../Families/FamilyName';
-import { add, format, formatDuration, formatRelative, isValid } from 'date-fns';
-import { selectedLocationContextState } from '../Model/Data';
+import { add, format, formatDuration, isValid } from 'date-fns';
 import { ValidateDatePicker } from '../Generic/Forms/ValidateDatePicker';
 import { useV1ReferralsModel } from '../Model/V1ReferralsModel';
 import { useV1ReferralNotesModel } from '../Model/V1ReferralNotesModel';
+import {
+  familyIdFromRequirementContext,
+  getArrangementRequirementStatusLabel,
+  parseRequirementValidity,
+  requirementNameFromRequirement,
+} from './requirementWorkflowModel';
+import { useArrangementRequirementSelection } from './useArrangementRequirementSelection';
+import { useRequirementCompletionForm } from './useRequirementCompletionForm';
+import { useRequirementCommands } from './useRequirementCommands';
+import { useRequirementExemptionForm } from './useRequirementExemptionForm';
 
 type MissingRequirementDialogProps = {
   handle: DialogHandle;
@@ -71,44 +77,21 @@ export function MissingRequirementDialog({
   canExempt,
 }: MissingRequirementDialogProps) {
   const directory = useDirectoryModel();
-  const v1Cases = useV1CasesModel();
-  const volunteers = useVolunteersModel();
   const referrals = useV1ReferralsModel();
   const referralNotes = useV1ReferralNotesModel();
+  const requirementCommands = useRequirementCommands();
 
   const now = new Date();
 
-  const validityDuration = policy.validity
-    ? { days: parseInt(policy.validity.split('.')[0]) }
-    : null;
+  const validityDuration = parseRequirementValidity(policy.validity);
 
   const [tabValue, setTabValue] = useState(canComplete ? 0 : 1);
-  const [documentFile, setDocumentFile] = useState<File | null>(null);
-  const [documentId, setDocumentId] = useState<string>('');
-  const [completedAtLocal, setCompletedAtLocal] = useState(null as Date | null);
-  const [completedAtError, setCompletedAtError] = useState(false);
-  const [notes, setNotes] = useState('');
   const UPLOAD_NEW = '__uploadnew__';
-  const { organizationId, locationId } = useRecoilValue(
-    selectedLocationContextState
-  );
-  const [additionalComments, setAdditionalComments] = useState('');
-  const [exemptionExpiresAtLocal, setExemptionExpiresAtLocal] = useState(
-    null as Date | null
-  );
-  const [exemptAll, setExemptAll] = useState(false);
+  const { organizationId, locationId } = useRequiredSelectedLocationContext();
 
   const familyLookup = useFamilyLookup();
 
-  const familyId: string | null =
-    context.kind === 'V1Case' ||
-    context.kind === 'Arrangement' ||
-    context.kind === 'Family Volunteer Assignment' ||
-    context.kind === 'Individual Volunteer Assignment'
-      ? context.partneringFamilyId
-      : context.kind === 'V1Referral'
-        ? (context.partneringFamilyId ?? null)
-        : context.volunteerFamilyId;
+  const familyId = familyIdFromRequirementContext(context);
 
   const contextFamily = familyId ? familyLookup(familyId) : undefined;
 
@@ -122,7 +105,7 @@ export function MissingRequirementDialog({
     return familyId;
   }
 
-  const referralInfos = useRecoilValue(visibleReferralsQuery);
+  const referralInfos = useVisibleReferrals();
   const currentReferral =
     context.kind === 'V1Referral'
       ? referralInfos.find(
@@ -131,104 +114,72 @@ export function MissingRequirementDialog({
         )?.referral
       : undefined;
 
-  const openV1Cases: V1Case[] =
+  const openV1Cases =
     contextFamily?.partneringFamilyInfo?.openV1Case !== undefined
       ? [contextFamily.partneringFamilyInfo.openV1Case]
       : [];
 
-  const closedV1Cases: V1Case[] =
+  const closedV1Cases =
     contextFamily?.partneringFamilyInfo?.closedV1Cases
       ?.slice()
       .sort((r1, r2) => (r1.closedAtUtc! > r2.closedAtUtc! ? -1 : 1)) || [];
 
-  const allV1Cases: V1Case[] = [...openV1Cases, ...closedV1Cases];
+  const allV1Cases = [...openV1Cases, ...closedV1Cases];
   const selectedV1Case = v1CaseId
     ? allV1Cases.find((r) => r.id === v1CaseId)
     : undefined;
 
-  const availableArrangements =
-    selectedV1Case && requirement instanceof MissingArrangementRequirement
-      ? selectedV1Case.arrangements!.filter((arrangement) =>
-          [
-            ...arrangement.missingRequirements!,
-            ...arrangement.missingOptionalRequirements!,
-          ].some((missingRequirementInfo) => {
-            if (context.kind === 'Family Volunteer Assignment')
-              return (
-                missingRequirementInfo.action?.actionName ===
-                  requirement.action?.actionName &&
-                missingRequirementInfo.arrangementFunction ===
-                  context.assignment.arrangementFunction &&
-                missingRequirementInfo.arrangementFunctionVariant ===
-                  context.assignment.arrangementFunctionVariant &&
-                missingRequirementInfo.volunteerFamilyId ===
-                  context.assignment.familyId
-              );
-            else if (context.kind === 'Individual Volunteer Assignment')
-              return (
-                missingRequirementInfo.action?.actionName ===
-                  requirement.action?.actionName &&
-                missingRequirementInfo.arrangementFunction ===
-                  context.assignment.arrangementFunction &&
-                missingRequirementInfo.arrangementFunctionVariant ===
-                  context.assignment.arrangementFunctionVariant &&
-                missingRequirementInfo.volunteerFamilyId ===
-                  context.assignment.familyId &&
-                missingRequirementInfo.personId === context.assignment.personId
-              );
-            else
-              return (
-                missingRequirementInfo.action?.actionName ===
-                requirement.action?.actionName
-              );
-          })
-        )
-      : [];
-
-  const [applyToArrangements, setApplyToArrangements] = useState(
-    context.kind === 'Arrangement'
-      ? availableArrangements.filter(
-          (arrangement) => arrangement.id === context.arrangementId
-        )
-      : []
-  );
-
-  function toggleApplyToArrangement(
-    arrangement: Arrangement,
-    include: boolean
-  ) {
-    if (include) {
-      setApplyToArrangements(applyToArrangements.concat(arrangement));
-    } else {
-      setApplyToArrangements(
-        applyToArrangements.filter((a) => a.id !== arrangement.id)
-      );
-    }
-  }
+  const {
+    applyToArrangements,
+    availableArrangements,
+    selectedArrangementIds,
+    toggleApplyToArrangement,
+  } = useArrangementRequirementSelection({
+    context,
+    requirement,
+    selectedV1Case,
+  });
+  const {
+    canCompleteRequirement,
+    completedAtLocal,
+    documentFile,
+    documentId,
+    notes,
+    setCompletedAtError,
+    setCompletedAtLocal,
+    setDocumentFile,
+    setDocumentId,
+    setNotes,
+  } = useRequirementCompletionForm({
+    canComplete,
+    hasValidArrangementSelection:
+      (availableArrangements.length === 0) !== applyToArrangements.length > 0,
+    policy,
+    uploadNewDocumentId: UPLOAD_NEW,
+  });
+  const {
+    additionalComments,
+    canExemptRequirement,
+    exemptAll,
+    exemptionExpiresAtLocal,
+    setAdditionalComments,
+    setExemptAll,
+    setExemptionExpiresAtLocal,
+  } = useRequirementExemptionForm({
+    canExempt,
+    hasValidArrangementSelection:
+      (availableArrangements.length === 0) !== applyToArrangements.length > 0,
+    validateExpiryDate: false,
+  });
 
   const enableSave = () =>
     tabValue === 0
       ? // mark complete
-        canComplete &&
-        completedAtLocal != null &&
-        !completedAtError &&
-        ((documentId === UPLOAD_NEW && documentFile) ||
-          (documentId !== UPLOAD_NEW && documentId !== '') ||
-          policy.documentLink !== DocumentLinkRequirement.Required) &&
-        (notes !== '' || policy.noteEntry !== NoteEntryRequirement.Required) &&
-        (availableArrangements.length === 0) !== applyToArrangements.length > 0 // logical XOR
+        canCompleteRequirement
       : // grant exemption
-        canExempt &&
-        (availableArrangements.length === 0) !==
-          applyToArrangements.length > 0 && // logical XOR
-        additionalComments !== '';
+        canExemptRequirement;
 
-  const requirementName =
-    requirement instanceof MissingArrangementRequirement
-      ? requirement.action!.actionName!
-      : requirement instanceof RequirementDefinition
-        ? requirement.actionName!
-        : requirement;
+  const requirementName = requirementNameFromRequirement(requirement);
 
   type UploadV1ReferralFile_ReturnsDocumentId = (
     orgId: string,
@@ -303,204 +254,27 @@ export function MissingRequirementDialog({
       }
     }
 
-    switch (context.kind) {
-      case 'V1Case': {
-        const fid = requireFamilyId();
-
-        await v1Cases.completeV1CaseRequirement(
-          fid,
-          context.v1CaseId,
-          requirementName,
-          policy,
-          completedAtLocal!,
-          document === '' ? null : document,
-          noteId
-        );
-        break;
-      }
-
-      case 'V1Referral':
-        await referrals.completeReferralRequirement(
-          context.referralId,
-          requirementName,
-          policy,
-          completedAtLocal!,
-          document === '' ? null : document,
-          noteId
-        );
-        break;
-
-      case 'Arrangement': {
-        const fid = requireFamilyId();
-
-        await v1Cases.completeArrangementRequirement(
-          fid,
-          context.v1CaseId,
-          applyToArrangements.map((arrangement) => arrangement.id!),
-          requirementName,
-          policy,
-          completedAtLocal!,
-          document === '' ? null : document,
-          noteId
-        );
-        break;
-      }
-
-      case 'Family Volunteer Assignment': {
-        const fid = requireFamilyId();
-
-        await v1Cases.completeVolunteerFamilyAssignmentRequirement(
-          fid,
-          context.v1CaseId,
-          applyToArrangements.map((arrangement) => arrangement.id!),
-          context.assignment,
-          requirementName,
-          policy,
-          completedAtLocal!,
-          document === '' ? null : document,
-          noteId
-        );
-        break;
-      }
-
-      case 'Individual Volunteer Assignment': {
-        const fid = requireFamilyId();
-
-        await v1Cases.completeIndividualVolunteerAssignmentRequirement(
-          fid,
-          context.v1CaseId,
-          applyToArrangements.map((arrangement) => arrangement.id!),
-          context.assignment,
-          requirementName,
-          policy,
-          completedAtLocal!,
-          document === '' ? null : document,
-          noteId
-        );
-        break;
-      }
-
-      case 'Volunteer Family': {
-        const fid = requireFamilyId();
-
-        await volunteers.completeFamilyRequirement(
-          fid,
-          requirementName,
-          policy,
-          completedAtLocal!,
-          document === '' ? null : document,
-          noteId
-        );
-        break;
-      }
-
-      case 'Individual Volunteer': {
-        const fid = requireFamilyId();
-
-        await volunteers.completeIndividualRequirement(
-          fid,
-          context.personId,
-          requirementName,
-          policy,
-          completedAtLocal!,
-          document === '' ? null : document,
-          noteId
-        );
-        break;
-      }
-    }
+    await requirementCommands.completeRequirement({
+      completedAtLocal: completedAtLocal!,
+      context,
+      document: document === '' ? null : document,
+      noteId,
+      policy,
+      requirementName,
+      selectedArrangementIds,
+    });
   }
 
   async function exempt() {
-    switch (context.kind) {
-      case 'V1Case': {
-        const fid = requireFamilyId();
-
-        await v1Cases.exemptV1CaseRequirement(
-          fid,
-          context.v1CaseId,
-          requirementName,
-          additionalComments,
-          exemptionExpiresAtLocal
-        );
-        break;
-      }
-      case 'V1Referral':
-        await referrals.exemptReferralRequirement(
-          context.referralId,
-          requirementName,
-          additionalComments,
-          exemptionExpiresAtLocal
-        );
-        break;
-      case 'Arrangement': {
-        const fid = requireFamilyId();
-
-        await v1Cases.exemptArrangementRequirement(
-          fid,
-          context.v1CaseId,
-          applyToArrangements.map((arrangement) => arrangement.id!),
-          requirement as MissingArrangementRequirement,
-          exemptAll,
-          additionalComments,
-          exemptionExpiresAtLocal
-        );
-        break;
-      }
-      case 'Family Volunteer Assignment': {
-        const fid = requireFamilyId();
-
-        await v1Cases.exemptVolunteerFamilyAssignmentRequirement(
-          fid,
-          context.v1CaseId,
-          applyToArrangements.map((arrangement) => arrangement.id!),
-          context.assignment,
-          requirement as MissingArrangementRequirement,
-          exemptAll,
-          additionalComments,
-          exemptionExpiresAtLocal
-        );
-        break;
-      }
-      case 'Individual Volunteer Assignment': {
-        const fid = requireFamilyId();
-
-        await v1Cases.exemptIndividualVolunteerAssignmentRequirement(
-          fid,
-          context.v1CaseId,
-          applyToArrangements.map((arrangement) => arrangement.id!),
-          context.assignment,
-          requirement as MissingArrangementRequirement,
-          exemptAll,
-          additionalComments,
-          exemptionExpiresAtLocal
-        );
-        break;
-      }
-      case 'Volunteer Family': {
-        const fid = requireFamilyId();
-
-        await volunteers.exemptVolunteerFamilyRequirement(
-          fid,
-          requirementName,
-          additionalComments,
-          exemptionExpiresAtLocal
-        );
-        break;
-      }
-      case 'Individual Volunteer': {
-        const fid = requireFamilyId();
-
-        await volunteers.exemptVolunteerRequirement(
-          fid,
-          context.personId,
-          requirementName,
-          additionalComments,
-          exemptionExpiresAtLocal
-        );
-        break;
-      }
-    }
+    await requirementCommands.exemptRequirement({
+      additionalComments,
+      context,
+      exemptAll,
+      exemptionExpiresAtLocal,
+      requirement: requirement as MissingArrangementRequirement,
+      requirementName,
+      selectedArrangementIds,
+    });
   }
 
   async function save() {
@@ -591,16 +365,10 @@ export function MissingRequirementDialog({
                             ? ` (${personLookup ? personNameString(personLookup(context.assignment.personId)) : ''})`
                             : '') +
                           ` - ` +
-                          (arrangement.phase === ArrangementPhase.Cancelled
-                            ? `Cancelled ${formatRelative(arrangement.cancelledAtUtc!, now)}`
-                            : arrangement.phase === ArrangementPhase.SettingUp
-                              ? 'Setting up'
-                              : arrangement.phase ===
-                                  ArrangementPhase.ReadyToStart
-                                ? 'Ready to start'
-                                : arrangement.phase === ArrangementPhase.Started
-                                  ? `Started ${formatRelative(arrangement.startedAtUtc!, now)}`
-                                  : `Ended ${formatRelative(arrangement.endedAtUtc!, now)}`)
+                           getArrangementRequirementStatusLabel(
+                             arrangement,
+                             now
+                           )
                         }
                       />
                     ))}
@@ -753,16 +521,10 @@ export function MissingRequirementDialog({
                                 )
                               : ''
                           } - ` +
-                          (arrangement.phase === ArrangementPhase.Cancelled
-                            ? `Cancelled ${formatRelative(arrangement.cancelledAtUtc!, now)}`
-                            : arrangement.phase === ArrangementPhase.SettingUp
-                              ? 'Setting up'
-                              : arrangement.phase ===
-                                  ArrangementPhase.ReadyToStart
-                                ? 'Ready to start'
-                                : arrangement.phase === ArrangementPhase.Started
-                                  ? `Started ${formatRelative(arrangement.startedAtUtc!, now)}`
-                                  : `Ended ${formatRelative(arrangement.endedAtUtc!, now)}`)
+                           getArrangementRequirementStatusLabel(
+                             arrangement,
+                             now
+                           )
                         }
                       />
                     ))}

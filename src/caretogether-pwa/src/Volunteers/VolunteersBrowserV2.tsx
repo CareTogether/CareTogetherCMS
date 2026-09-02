@@ -2,15 +2,13 @@ import { Box, Stack, Typography } from '@mui/material';
 import type { GridFilterModel, GridRowSelectionModel } from '@mui/x-data-grid';
 import { useMemo, useState } from 'react';
 import { useFeatureFlagEnabled } from 'posthog-js/react';
-import { useRecoilValue } from 'recoil';
 import { EmailAddress, Permission } from '../GeneratedClient';
 import { useAppNavigate } from '../Hooks/useAppNavigate';
 import { useGlobalSnackBar } from '../Hooks/useGlobalSnackBar';
-import { useLoadable } from '../Hooks/useLoadable';
 import { useSidePanel } from '../Hooks/useSidePanel';
 import { v2Typography } from '../Families/v2Typography';
-import { selectedLocationContextState } from '../Model/Data';
-import { organizationConfigurationQuery } from '../Model/ConfigurationModel';
+import { useRequiredSelectedLocationContext } from '../Model/Data';
+import { useOrganizationConfiguration } from '../Model/ConfigurationModel';
 import { useAllVolunteerFamiliesPermissions } from '../Model/SessionModel';
 import { BulkSmsSideSheet } from './BulkSmsSideSheet';
 import { CreateVolunteerFamilyDrawer } from './CreateVolunteerFamilyDrawer';
@@ -24,6 +22,7 @@ import {
   gridFilterModelFromVolunteerFilters,
   volunteerFiltersFromGridFilterModel,
 } from './volunteersGridFilterAdapter';
+import { UPDATE_TEST_FAMILY_FEATURE_FLAG } from '../featureFlags';
 
 function selectedFilterValues(filters: filterOption[]) {
   return filters
@@ -45,11 +44,11 @@ export function VolunteersBrowserV2() {
   const appNavigate = useAppNavigate();
   const permissions = useAllVolunteerFamiliesPermissions();
   const updateTestFamilyFlagEnabled = useFeatureFlagEnabled(
-    'updateTestFamilyFlag'
+    UPDATE_TEST_FAMILY_FEATURE_FLAG
   );
   const { setAndShowGlobalSnackBar } = useGlobalSnackBar();
-  const { locationId } = useRecoilValue(selectedLocationContextState);
-  const organizationConfiguration = useLoadable(organizationConfigurationQuery);
+  const { locationId } = useRequiredSelectedLocationContext();
+  const organizationConfiguration = useOrganizationConfiguration();
   const [createVolunteerFamilyDrawerOpen, setCreateVolunteerFamilyDrawerOpen] =
     useState(false);
   const [smsMode, setSmsMode] = useState(false);
@@ -64,7 +63,6 @@ export function VolunteersBrowserV2() {
     customFieldFilters,
     customFields,
     getCustomFieldFilterOptionsForField,
-    loading,
     requirementFilter,
     requirementFilterOptions,
     roleFilters,
@@ -263,7 +261,6 @@ export function VolunteersBrowserV2() {
         <VolunteersDataGridV2
           customFields={customFields}
           filterModel={filterModel}
-          loading={loading}
           onFilterModelChange={handleFilterModelChange}
           onRowClick={(row) => appNavigate.family(row.id)}
           onRowSelectionModelChange={handleRowSelectionModelChange}

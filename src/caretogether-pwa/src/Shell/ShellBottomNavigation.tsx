@@ -21,21 +21,20 @@ import {
 } from '@mui/material';
 import { Link, useLocation } from 'react-router-dom';
 import { ShellContextSwitcher } from './ShellContextSwitcher';
-import { selectedLocationContextState } from '../Model/Data';
-import { useLoadable } from '../Hooks/useLoadable';
+import { useSelectedLocationContext } from '../Model/Data';
 import { ListItemLink } from './ListItemLink';
-import { useFeatureFlags } from '../Model/ConfigurationModel';
-import { useGlobalPermissions } from '../Model/SessionModel';
+import { useFeatureFlagsLoadable } from '../Model/ConfigurationModel';
+import { useGlobalPermissionsLoadable } from '../Model/SessionModel';
 import { Permission } from '../GeneratedClient';
 import { Stack } from '@mui/system';
-import { queueItemsCountQuery } from '../Model/QueueModel';
+import { useQueueItemsCountLoadable } from '../Model/QueueModel';
 
 export function ShellBottomNavigation() {
   const theme = useTheme();
 
   const location = useLocation();
 
-  const context = useLoadable(selectedLocationContextState);
+  const context = useSelectedLocationContext();
   const locationPrefix = `/org/${context?.organizationId}/${context?.locationId}`;
 
   const links = [
@@ -51,10 +50,10 @@ export function ShellBottomNavigation() {
   );
   const [drawerOpen, setDrawerOpen] = useState(false);
 
-  const flags = useFeatureFlags();
-  const permissions = useGlobalPermissions();
+  const flags = useFeatureFlagsLoadable();
+  const permissions = useGlobalPermissionsLoadable();
 
-  const queueItemsCount = useLoadable(queueItemsCountQuery);
+  const queueItemsCount = useQueueItemsCountLoadable();
 
   return (
     <Paper

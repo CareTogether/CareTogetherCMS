@@ -25,7 +25,6 @@ import {
 } from '@mui/icons-material';
 import {
   useNoteAuthorLookup,
-  usePersonLookup,
   useUserLookup,
 } from '../Model/DirectoryModel';
 import { PersonName } from '../Families/PersonName';
@@ -33,9 +32,13 @@ import { Box, Stack, Typography, Link } from '@mui/material';
 import { NoteCard } from '../Notes/NoteCard';
 import { useAccessLevelDialog } from '../Notes/AccessLevelDialog/useAccessLevelDialog';
 import { FormControl, InputLabel, Select, MenuItem } from '@mui/material';
-import { useMemo, useState } from 'react';
-import { buildGroupedV1ReferralTimelineEntries } from '../V1Referrals/referralTimelineHelpers';
 import { formatTimelineTimestamp } from './timelineTimestampFormatting';
+import {
+  ActivitySorting,
+  composeNoteType,
+  getTimelineItemKey,
+} from './activityTimelineModel';
+import { useActivityTimelineViewModel } from './useActivityTimelineViewModel';
 
 type ActivityTimelineProps = {
   family: CombinedFamilyInfo;
@@ -43,274 +46,26 @@ type ActivityTimelineProps = {
   printContentRef: React.RefObject<HTMLDivElement | null>;
 };
 
-type ActivitySorting = 'activity' | 'created' | 'edited' | 'approved';
-
-type ReferralNoteEntry = NonNullable<V1Referral['notes']>[number];
-
-type MergedTimelineItem =
-  | {
-      kind: 'family-activity';
-      timestamp: Date;
-      userId?: string;
-      activity: Activity;
-      note?: Note;
-    }
-  | {
-      kind: 'referral';
-      timestamp: Date;
-      userId?: string;
-      label: string;
-      referralId: string;
-      referralTitle: string;
-      documentName?: string | null;
-      note?: ReferralNoteEntry;
-    }
-  | {
-      kind: 'referral-note';
-      timestamp: Date;
-      userId?: string;
-      label: string;
-      referralId: string;
-      referralTitle: string;
-      referralNote: ReferralNoteEntry;
-    };
-
-const composeNoteType = (activity: Activity): string | null => {
-  if (activity instanceof V1CaseRequirementCompleted) {
-    return 'Case requirement completed';
-  }
-
-  if (activity instanceof ArrangementRequirementCompleted) {
-    return 'Arrangement requirement completed';
-  }
-
-  if (activity instanceof ChildLocationChanged) {
-    return 'Child location changed';
-  }
-
-  if (activity instanceof V1CaseOpened) {
-    return 'Case opened';
-  }
-
-  return null;
-};
-
-function embedNotesInActivities(notes: Note[], activities: Activity[]) {
-  // We only want to show each note once, on the most recent activity entry that is
-  // linked to that particular note. The following stateful code works by pulling from the
-  // set of all the family's notes, so that each time this component renders, each note will
-  // be "found" at most once. Since activities render in order from most recent to oldest,
-  // the result is that each note is shown only on the most recent matching activity entry.
-  // This is a simplistic fix; at some point it would be better to support actual matching of
-  // related activity entries and showing those as a single "grouped" activity.
-  const unlinkedNotes = notes.slice() || [];
-  function noteLookup(noteId?: string) {
-    const noteIndex = unlinkedNotes.findIndex((n) => n.id === noteId);
-    if (noteIndex === -1) return undefined;
-    const note = unlinkedNotes.splice(noteIndex, 1)[0];
-    return note;
-  }
-
-  return activities.map((activity) => {
-    return {
-      activity,
-      note: noteLookup(activity.noteId),
-    };
-  });
-}
-
 export function ActivityTimeline({
   family,
   referrals,
   printContentRef,
 }: ActivityTimelineProps) {
   const userLookup = useUserLookup();
-  const personLookup = usePersonLookup();
   const noteAuthorLookup = useNoteAuthorLookup();
-
-  const activities = (
-    family.partneringFamilyInfo?.history?.slice() || []
-  ).concat(family.volunteerFamilyInfo?.history?.slice() || []);
-
-  const unmatchedNotesAsActivities =
-    family.notes
-      ?.filter((note) => activities?.every((a) => a.noteId !== note.id))
-      ?.map(
-        (note) =>
-          ({
-            userId: note.authorUserId ?? '',
-            activityTimestampUtc:
-              note.backdatedTimestampUtc ??
-              note.createdTimestampUtc ??
-              note.lastEditTimestampUtc,
-            auditTimestampUtc:
-              note.createdTimestampUtc ?? note.lastEditTimestampUtc,
-            noteId: note.id,
-          }) as Activity
-      ) || [];
-
-  const allActivitiesSorted = activities
-    ?.concat(unmatchedNotesAsActivities)
-    ?.sort((a, b) =>
-      a.activityTimestampUtc! < b.activityTimestampUtc!
-        ? 1
-        : a.activityTimestampUtc! > b.activityTimestampUtc!
-          ? -1
-          : 0
-    );
-
-  function arrangementPartneringPerson(arrangementId?: string) {
-    const allArrangements = (
-      family.partneringFamilyInfo?.openV1Case?.arrangements || []
-    ).concat(
-      family.partneringFamilyInfo?.closedV1Cases?.flatMap(
-        (r) => r.arrangements || []
-      ) || []
-    );
-    const arrangement = allArrangements.find((a) => a.id === arrangementId);
-    const partneringPerson = personLookup(
-      family.family!.id!,
-      arrangement?.partneringFamilyPersonId
-    );
-    return partneringPerson;
-  }
-
-  function documentLookup(uploadedDocumentId?: string) {
-    const document = family.uploadedDocuments?.find(
-      (d) => d.uploadedDocumentId === uploadedDocumentId
-    );
-    return document;
-  }
+  const {
+    arrangementPartneringPerson,
+    displayActivitiesWithNotes,
+    documentLookup,
+    mergedTimelineItems,
+    personLookup,
+    setSortBy,
+    sortBy,
+  } = useActivityTimelineViewModel({ family, referrals });
 
   const { noteAccessLevelDialog, open } = useAccessLevelDialog({
     familyId: family.family.id,
   });
-
-  const [sortBy, setSortBy] = useState<ActivitySorting>('activity');
-
-  const getDateValue = (value?: string | Date | null): number => {
-    if (!value) return 0;
-    if (value instanceof Date) return value.getTime();
-    return new Date(value).getTime();
-  };
-
-  const activitiesWithEmbeddedNotes = embedNotesInActivities(
-    family.notes || [],
-    allActivitiesSorted
-  );
-
-  type ActivityWithNote = {
-    activity: Activity;
-    note: Note | undefined;
-  };
-
-  const sortStrategies: Record<
-    ActivitySorting,
-    (a: ActivityWithNote, b: ActivityWithNote) => number
-  > = {
-    created: (a, b) =>
-      getDateValue(
-        b.note?.createdTimestampUtc ?? b.activity.activityTimestampUtc
-      ) -
-      getDateValue(
-        a.note?.createdTimestampUtc ?? a.activity.activityTimestampUtc
-      ),
-    edited: (a, b) =>
-      getDateValue(
-        b.note?.lastEditTimestampUtc ?? b.activity.activityTimestampUtc
-      ) -
-      getDateValue(
-        a.note?.lastEditTimestampUtc ?? a.activity.activityTimestampUtc
-      ),
-    approved: (a, b) =>
-      getDateValue(
-        b.note?.approvedTimestampUtc ?? b.activity.activityTimestampUtc
-      ) -
-      getDateValue(
-        a.note?.approvedTimestampUtc ?? a.activity.activityTimestampUtc
-      ),
-    activity: (a, b) =>
-      getDateValue(b.activity.activityTimestampUtc) -
-      getDateValue(a.activity.activityTimestampUtc),
-  };
-
-  const sortedActivitiesWithNotes = [...activitiesWithEmbeddedNotes].sort(
-    sortStrategies[sortBy]
-  );
-
-  const pinnedActivitiesWithNotes = sortedActivitiesWithNotes
-    .filter((item) => item.note?.isPinned)
-    .sort(
-      (a, b) =>
-        getDateValue(b.note?.pinnedAtUtc ?? b.activity.activityTimestampUtc) -
-        getDateValue(a.note?.pinnedAtUtc ?? a.activity.activityTimestampUtc)
-    );
-
-  const unpinnedActivitiesWithNotes = sortedActivitiesWithNotes.filter(
-    (item) => !item.note?.isPinned
-  );
-
-  const displayActivitiesWithNotes = [
-    ...pinnedActivitiesWithNotes,
-    ...unpinnedActivitiesWithNotes,
-  ].filter((item) => Boolean(item.note));
-
-  const pinnedFamilyTimelineItems: MergedTimelineItem[] =
-    pinnedActivitiesWithNotes.map(({ activity, note }) => ({
-      kind: 'family-activity',
-      timestamp: activity.activityTimestampUtc ?? new Date(0),
-      userId: activity.userId,
-      activity,
-      note,
-    }));
-
-  const unpinnedFamilyTimelineItems: MergedTimelineItem[] =
-    unpinnedActivitiesWithNotes.map(({ activity, note }) => ({
-      kind: 'family-activity',
-      timestamp: activity.activityTimestampUtc ?? new Date(0),
-      userId: activity.userId,
-      activity,
-      note,
-    }));
-
-  const referralTimelineItems = useMemo<MergedTimelineItem[]>(() => {
-    return referrals.flatMap((referral) => {
-      return buildGroupedV1ReferralTimelineEntries(referral).map((entry) => {
-        if (entry.kind === 'note') {
-          return {
-            kind: 'referral-note',
-            timestamp: entry.timestamp,
-            userId: entry.userId,
-            label: entry.label,
-            referralId: referral.referralId,
-            referralTitle: referral.title,
-            referralNote: entry.note,
-          };
-        }
-
-        return {
-          kind: 'referral',
-          timestamp: entry.timestamp,
-          userId: entry.userId,
-          label: entry.label,
-          referralId: referral.referralId,
-          referralTitle: referral.title,
-          documentName:
-            entry.kind === 'activity'
-              ? entry.document?.uploadedFileName
-              : undefined,
-          note: entry.kind === 'activity' ? entry.note : undefined,
-        };
-      });
-    });
-  }, [referrals]);
-
-  const mergedTimelineItems = [
-    ...pinnedFamilyTimelineItems,
-    ...[...unpinnedFamilyTimelineItems, ...referralTimelineItems].sort(
-      (a, b) => b.timestamp.getTime() - a.timestamp.getTime()
-    ),
-  ];
 
   function renderVisibility(note?: Note) {
     return (
@@ -540,7 +295,7 @@ export function ActivityTimeline({
                 Boolean(nextItem.note?.isPinned);
 
           return (
-            <AppTimelineItem key={`${item.kind}:${i}`}>
+            <AppTimelineItem key={getTimelineItemKey(item)}>
               <AppTimelineOppositeContent sx={{ display: 'none' }} />
               <AppTimelineSeparator>
                 <AppTimelineDot

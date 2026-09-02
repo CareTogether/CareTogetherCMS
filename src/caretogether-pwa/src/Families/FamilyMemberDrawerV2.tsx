@@ -15,7 +15,6 @@ import {
 } from '@mui/material';
 import { differenceInYears } from 'date-fns';
 import { useState } from 'react';
-import { useRecoilValue } from 'recoil';
 import {
   CombinedFamilyInfo,
   CustodialRelationship,
@@ -29,7 +28,8 @@ import {
 } from '../GeneratedClient';
 import { useDialogHandle } from '../Hooks/useDialogHandle';
 import { useBackdrop } from '../Hooks/useBackdrop';
-import { policyData, useFeatureFlags } from '../Model/ConfigurationModel';
+import { useFeatureFlags } from '../Model/ConfigurationModel';
+import { usePolicy } from '../Model/PolicyModel';
 import { useDirectoryModel } from '../Model/DirectoryModel';
 import { useFamilyPermissions } from '../Model/SessionModel';
 import { useDrawer } from '../Generic/ShellDrawer';
@@ -147,7 +147,7 @@ export function FamilyMemberDrawerV2({
 }: FamilyMemberDrawerV2Props) {
   const familyId = family.family!.id!;
   const permissions = useFamilyPermissions(family);
-  const policy = useRecoilValue(policyData);
+  const policy = usePolicy();
   const featureFlags = useFeatureFlags();
   const directoryModel = useDirectoryModel();
   const withBackdrop = useBackdrop();

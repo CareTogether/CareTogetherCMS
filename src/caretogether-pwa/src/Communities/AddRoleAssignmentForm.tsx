@@ -14,10 +14,9 @@ import { AddCommunityRoleAssignment, Community } from '../GeneratedClient';
 import { useCommunityCommand } from '../Model/DirectoryModel';
 import { useState } from 'react';
 import { useBackdrop } from '../Hooks/useBackdrop';
-import { useRecoilValue } from 'recoil';
 import { personNameString } from '../Families/PersonName';
-import { organizationConfigurationQuery } from '../Model/ConfigurationModel';
-import { visibleFamiliesQuery } from '../Model/Data';
+import { useOrganizationConfiguration } from '../Model/ConfigurationModel';
+import { useVisibleFamilies } from '../Model/Data';
 
 interface DrawerProps {
   onClose: () => void;
@@ -56,7 +55,7 @@ export function AddRoleAssignmentForm({
     });
   }
 
-  const allFamilies = useRecoilValue(visibleFamiliesQuery);
+  const allFamilies = useVisibleFamilies();
   const allAdults = allFamilies
     .flatMap((family) => family.family!.adults!.map((adult) => adult.item1!))
     .sort((a, b) => {
@@ -84,9 +83,7 @@ export function AddRoleAssignmentForm({
         }) as CandidatePerson
     );
 
-  const organizationConfiguration = useRecoilValue(
-    organizationConfigurationQuery
-  );
+  const organizationConfiguration = useOrganizationConfiguration();
   const communityRoles = organizationConfiguration?.communityRoles || [];
 
   const duplicate =

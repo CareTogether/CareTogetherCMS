@@ -1,12 +1,9 @@
-import { atom, useRecoilState } from 'recoil';
+import { atom, useAtom } from 'jotai';
 
-export const showGlobalSnackBar = atom<string | null>({
-  key: 'showGlobalSnackBar',
-  default: null,
-});
+export const showGlobalSnackBar = atom<string | null>(null);
 
 export function useGlobalSnackBar() {
-  const [message, setMessage] = useRecoilState(showGlobalSnackBar);
+  const [message, setMessage] = useAtom(showGlobalSnackBar);
 
   return {
     message,

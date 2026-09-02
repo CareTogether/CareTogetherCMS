@@ -29,9 +29,8 @@ web.WithEnvironment("VITE_APP_AUTH_AUTHORITY", keycloakAuthority);
 web.WithEnvironment("VITE_APP_AUTH_SCOPES", "openid profile email");
 web.WithEnvironment("VITE_APP_AUTH_REDIRECT_URI", web.GetEndpoint("http"));
 web.WithEnvironment("VITE_APP_APPINSIGHTS_CONNECTIONSTRING", "");
-web.WithEnvironment("VITE_APP_PUBLIC_POSTHOG_KEY", "");
-web.WithEnvironment("VITE_APP_PUBLIC_POSTHOG_HOST", "");
+web.WithEnvironment("VITE_APP_PUBLIC_POSTHOG_KEY", "phc_W1D3ENe9BnQS18UsldYTiDyI51tlqFIDy2p8BldZpI3");
+web.WithEnvironment("VITE_APP_PUBLIC_POSTHOG_HOST", "https://us.i.posthog.com");
 web.WithEnvironment("VITE_APP_FEATUREBASE_APP_ID", "");
-web.WithEnvironment("VITE_APP_LOCAL_FEATURE_FLAGS", "referrals");
 
 builder.Build().Run();

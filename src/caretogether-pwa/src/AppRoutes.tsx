@@ -7,16 +7,15 @@ import {
   useNavigate,
   useParams,
 } from 'react-router-dom';
-import { useRecoilStateLoadable } from 'recoil';
 import {
   LocationContext,
-  selectedLocationContextState,
-  userOrganizationAccessQuery,
+  useSelectedLocationContext,
+  useSetSelectedLocationContext,
+  useUserOrganizationAccessLoadable,
 } from './Model/Data';
 import ShellRootLayout from './Shell/ShellRootLayout';
 import { ProgressBackdrop } from './Shell/ProgressBackdrop';
 import { useScopedTrace } from './Hooks/useScopedTrace';
-import { useLoadable } from './Hooks/useLoadable';
 import { useLocalStorage } from './Hooks/useLocalStorage';
 import { usePostHogIdentify } from './Utilities/Instrumentation/usePostHogIdentify';
 import { usePostHogGroups } from './Utilities/Instrumentation/usePostHogGroups';
@@ -32,7 +31,7 @@ import { Dashboard } from './Dashboard/Dashboard';
 import { InboxScreen } from './Inbox/InboxScreen';
 import { FamilyScreenRoute } from './Families/FamilyScreenRoute';
 import { ClientsScreenRoute } from './V1Cases/ClientsScreenRoute';
-import { V1Referrals } from './V1Referrals/V1Referrals';
+import { ReferralsScreenRoute } from './V1Referrals/ReferralsScreenRoute';
 import { VolunteersScreenRoute } from './Volunteers/VolunteersScreenRoute';
 import { Organizations } from './Communities/Communities';
 import { Reports } from './Reports/Reports';
@@ -46,7 +45,7 @@ function RouteMigrator() {
   const location = useLocation();
   const navigate = useNavigate();
 
-  const userOrganizationAccess = useLoadable(userOrganizationAccessQuery);
+  const userOrganizationAccess = useUserOrganizationAccessLoadable();
   trace(
     `userOrganizationAccess contents: ${JSON.stringify(
       userOrganizationAccess?.organizations?.map((org) => ({
@@ -155,8 +154,8 @@ function AuthorizedLocationContextWrapper({
 }: AuthorizedLocationContextWrapperProps) {
   const trace = useScopedTrace('LocationContext');
 
-  const [selectedLocationContext, setSelectedLocationContext] =
-    useRecoilStateLoadable(selectedLocationContextState);
+  const selectedLocationContext = useSelectedLocationContext();
+  const setSelectedLocationContext = useSetSelectedLocationContext();
   const [, setLastVisitedLocation] = useLocalStorage<LocationContext | null>(
     LAST_VISITED_LOCATION,
     null
@@ -187,10 +186,10 @@ function AuthorizedLocationContextWrapper({
     // We need to wait for this to have a value before rendering the child tree; otherwise,
     // the tree will suspend as soon as a data dependency on selectedLocationContextState is encountered, and
     // the effect above (that actually sets the selectedLocationContextState) will not fire.
-    selectedLocationContext.state === 'hasValue' &&
+    selectedLocationContext !== null &&
       // As an added benefit, we can also use this component to show the spinner when switching locations.
-      selectedLocationContext.contents.organizationId === organizationId &&
-      selectedLocationContext.contents.locationId === locationId ? (
+      selectedLocationContext.organizationId === organizationId &&
+      selectedLocationContext.locationId === locationId ? (
       <ShellRootLayout>
         <Routes>
           <Route index element={<Dashboard />} />
@@ -198,7 +197,7 @@ function AuthorizedLocationContextWrapper({
           <Route path="families/:familyId" element={<FamilyScreenRoute />} />
           <Route path="clients/*" element={<ClientsScreenRoute />} />
           <Route path="cases/*" element={<CasesToClientsRedirect />} />
-          <Route path="referrals/*" element={<V1Referrals />} />
+          <Route path="referrals/*" element={<ReferralsScreenRoute />} />
           <Route path="volunteers/*" element={<VolunteersScreenRoute />} />
           <Route path="organizations/*" element={<Organizations />} />
           <Route
@@ -224,7 +223,7 @@ function LocationContextWrapper() {
     organizationId: string;
     locationId: string;
   }>();
-  const userOrganizationAccess = useLoadable(userOrganizationAccessQuery);
+  const userOrganizationAccess = useUserOrganizationAccessLoadable();
 
   const requestedLocationContext = useMemo(
     () =>

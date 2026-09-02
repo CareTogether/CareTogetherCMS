@@ -1,4 +1,4 @@
-import { selector } from 'recoil';
+import { atom, useAtomValue } from 'jotai';
 import {
   CombinedFamilyInfo,
   ExactAge,
@@ -6,13 +6,14 @@ import {
   RoleApprovalStatus,
   V1Case,
 } from '../GeneratedClient';
-import { visibleFamiliesQuery } from './Data';
+import { mapLoadedValue, visibleFamiliesAtom } from './Data';
 import { differenceInYears } from 'date-fns';
 import {
   Arrangement,
   ChildLocationPlan,
   ArrangementPhase,
 } from '../GeneratedClient';
+import { useJotaiLoadable } from '../State/jotai/useJotaiLoadable';
 
 export type QueueItem = ChildOver18 | MissingPrimaryContact | ChildNotReturned;
 
@@ -35,19 +36,22 @@ export interface ChildNotReturned {
   arrangementId: string;
 }
 
-const childrenOver18Query = selector<ChildOver18[]>({
-  key: 'childrenOver18Query',
-  get: ({ get }) => {
-    // Only show these alerts for volunteer families with active family roles.
-    const visibleFamilies = get(visibleFamiliesQuery);
-    return visibleFamilies
+const childrenOver18Atom = atom((get) => {
+  const visibleFamilies = get(visibleFamiliesAtom);
+
+  return mapLoadedValue(visibleFamilies, (families) =>
+    families
       ?.filter((family) => family.volunteerFamilyInfo)
       .flatMap((family) => {
-        if (Object.entries(family.volunteerFamilyInfo!.familyRoleApprovals).every(([, approvalStatus]) =>
-          approvalStatus.currentStatus === RoleApprovalStatus.Inactive ||
-          approvalStatus.currentStatus === RoleApprovalStatus.Denied))
+        if (
+          Object.entries(family.volunteerFamilyInfo!.familyRoleApprovals).every(
+            ([, approvalStatus]) =>
+              approvalStatus.currentStatus === RoleApprovalStatus.Inactive ||
+              approvalStatus.currentStatus === RoleApprovalStatus.Denied
+          )
+        )
           return [];
-        
+
         const children = family.family?.children ?? [];
         return children
           .filter(
@@ -58,39 +62,36 @@ const childrenOver18Query = selector<ChildOver18[]>({
                 (child.age as ExactAge).dateOfBirth!
               ) >= 18
           )
-          .map((child) => ({ type: 'ChildOver18', family, child }));
-      });
-  },
+          .map((child) => ({ type: 'ChildOver18' as const, family, child }));
+      })
+  );
 });
 
-const missingPrimaryContactsQuery = selector<MissingPrimaryContact[]>({
-  key: 'missingPrimaryContactsQuery',
-  get: ({ get }) => {
-    const visibleFamilies = get(visibleFamiliesQuery);
-    return (
-      visibleFamilies
-        ?.filter(
-          (family) =>
-            !family.family!.adults?.find(
-              (adult) =>
-                adult.item1!.id === family.family?.primaryFamilyContactPersonId
-            )
-        )
-        .map((family) => ({ type: 'MissingPrimaryContact', family })) || []
-    );
-  },
+const missingPrimaryContactsAtom = atom((get) => {
+  const visibleFamilies = get(visibleFamiliesAtom);
+
+  return mapLoadedValue(visibleFamilies, (families) =>
+    families
+      .filter(
+        (family) =>
+          !family.family!.adults?.find(
+            (adult) =>
+              adult.item1!.id === family.family?.primaryFamilyContactPersonId
+          )
+      )
+      .map((family) => ({ type: 'MissingPrimaryContact' as const, family }))
+  );
 });
 
-const childNotReturnedQuery = selector<ChildNotReturned[]>({
-  key: 'childNotReturnedQuery',
-  get: ({ get }) => {
-    const visibleFamilies = get(visibleFamiliesQuery);
+const childNotReturnedAtom = atom((get) => {
+  const visibleFamilies = get(visibleFamiliesAtom);
 
+  return mapLoadedValue(visibleFamilies, (families) => {
     const allArrangements: {
       arrangement: Arrangement;
       family: CombinedFamilyInfo;
       v1Case: V1Case;
-    }[] = visibleFamilies?.flatMap((family) => {
+    }[] = families.flatMap((family) => {
       if (!family.partneringFamilyInfo) return [];
 
       const openV1CaseArrangements =
@@ -136,30 +137,62 @@ const childNotReturnedQuery = selector<ChildNotReturned[]>({
         );
 
         return {
-          type: 'ChildNotReturned',
+          type: 'ChildNotReturned' as const,
           family: family,
           child: child ?? ({} as Person),
           v1CaseId: v1Case?.id ?? '',
           arrangementId: arrangement.id ?? '',
         };
       });
-  },
+  });
 });
 
-export const queueItemsQuery = selector<QueueItem[]>({
-  key: 'queueItemsQuery',
-  get: ({ get }) => {
-    const childrenOver18 = get(childrenOver18Query);
-    const missingPrimaryContacts = get(missingPrimaryContactsQuery);
-    const childNotReturned = get(childNotReturnedQuery);
-    return [...childrenOver18, ...missingPrimaryContacts, ...childNotReturned];
-  },
+function combineQueueItems(
+  childrenOver18: ChildOver18[] | Promise<ChildOver18[]>,
+  missingPrimaryContacts:
+    | MissingPrimaryContact[]
+    | Promise<MissingPrimaryContact[]>,
+  childNotReturned: ChildNotReturned[] | Promise<ChildNotReturned[]>
+) {
+  if (
+    childrenOver18 instanceof Promise ||
+    missingPrimaryContacts instanceof Promise ||
+    childNotReturned instanceof Promise
+  ) {
+    return Promise.all([
+      childrenOver18,
+      missingPrimaryContacts,
+      childNotReturned,
+    ]).then(([childrenOver18, missingPrimaryContacts, childNotReturned]) => [
+      ...childrenOver18,
+      ...missingPrimaryContacts,
+      ...childNotReturned,
+    ]);
+  }
+
+  return [...childrenOver18, ...missingPrimaryContacts, ...childNotReturned];
+}
+
+const queueItemsAtom = atom((get) => {
+  const childrenOver18 = get(childrenOver18Atom);
+  const missingPrimaryContacts = get(missingPrimaryContactsAtom);
+  const childNotReturned = get(childNotReturnedAtom);
+  return combineQueueItems(
+    childrenOver18,
+    missingPrimaryContacts,
+    childNotReturned
+  );
 });
 
-export const queueItemsCountQuery = selector({
-  key: 'queueItemsCountQuery',
-  get: ({ get }) => {
-    const queueItems = get(queueItemsQuery);
-    return queueItems.length;
-  },
+const queueItemsCountAtom = atom((get) => {
+  const queueItems = get(queueItemsAtom);
+  return mapLoadedValue(queueItems, (items) => items.length);
 });
+
+export function useQueueItems() {
+  return useAtomValue(queueItemsAtom);
+}
+
+export function useQueueItemsCountLoadable() {
+  return useJotaiLoadable(queueItemsCountAtom);
+}

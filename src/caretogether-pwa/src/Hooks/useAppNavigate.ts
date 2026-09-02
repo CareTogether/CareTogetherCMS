@@ -1,5 +1,4 @@
-import { useRecoilValue } from 'recoil';
-import { selectedLocationContextState } from '../Model/Data';
+import { useRequiredSelectedLocationContext } from '../Model/Data';
 import { NavigateOptions, useNavigate } from 'react-router-dom';
 
 export interface AppNavigate {
@@ -33,9 +32,7 @@ type AppNavigateOptions = {
  */
 export function useAppNavigate(): AppNavigate {
   const navigate = useNavigate();
-  const { organizationId, locationId } = useRecoilValue(
-    selectedLocationContextState
-  );
+  const { organizationId, locationId } = useRequiredSelectedLocationContext();
 
   function inContext(pathSuffix: string, options?: AppNavigateOptions) {
     navigate(

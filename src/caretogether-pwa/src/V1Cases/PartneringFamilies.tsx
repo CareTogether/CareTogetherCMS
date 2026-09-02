@@ -19,7 +19,7 @@ import {
   useMediaQuery,
   useTheme,
 } from '@mui/material';
-import { partneringFamiliesData } from '../Model/V1CasesModel';
+import { usePartneringFamilies } from '../Model/V1CasesModel';
 import React, { useState } from 'react';
 import {
   Add as AddIcon,
@@ -31,7 +31,7 @@ import { ArrangementPhase, Permission } from '../GeneratedClient';
 import { CreatePartneringFamilyDrawer } from './CreatePartneringFamilyDrawer';
 import { useScrollMemory } from '../Hooks/useScrollMemory';
 import { useLocalStorage } from '../Hooks/useLocalStorage';
-import { policyData } from '../Model/ConfigurationModel';
+import { usePolicy } from '../Model/PolicyModel';
 import { SearchBar } from '../Shell/SearchBar';
 import { filterFamiliesByText } from '../Families/FamilyUtils';
 import { usePersonAndFamilyLookup } from '../Model/DirectoryModel';
@@ -40,13 +40,11 @@ import {
   useGlobalPermissions,
 } from '../Model/SessionModel';
 import { useScreenTitle } from '../Shell/ShellScreenTitle';
-import { useLoadable } from '../Hooks/useLoadable';
 import { ProgressBackdrop } from '../Shell/ProgressBackdrop';
 import { useAppNavigate } from '../Hooks/useAppNavigate';
 import { useCustomFieldFilters } from '../Generic/CustomFieldsFilter/useCustomFieldFilters';
 import { matchesCustomFieldFilters } from '../Generic/CustomFieldsFilter/matchesCustomFieldFilters';
 import { useFeatureFlagEnabled } from 'posthog-js/react';
-import { useFeatureFlagEnabledWithLocalOverride } from '../Utilities/Instrumentation/useFeatureFlagWithLocalOverride';
 import { forceCheck } from '../Utilities/reactLazyLoadInterop';
 import { PartneringFamilyTableItem } from './PartneringFamilies/PartneringFamilyTableItem';
 import { arrangementStatusSummary } from './PartneringFamilies/arrangementStatusSummary';
@@ -58,8 +56,8 @@ import { containedStickyHeaderTableSx } from '../Utilities/stickyHeaderTableSx';
 import { WideTableContainer } from '../Utilities/WideTableContainer';
 import { wideTablePageSx } from '../Utilities/wideTablePageSx';
 import { getFamilyCounty } from '../Utilities/getFamilyCounty';
-import { CountyFilter } from '../V1Referrals/CountyFilter';
-import { visibleReferralsQuery } from '../Model/Data';
+import { CountyFilter } from '../Generic/CountyFilter';
+import { useVisibleReferrals } from '../Model/Data';
 import {
   normalizePartneringFamiliesSortMode,
   openReferralByFamilyId,
@@ -68,7 +66,11 @@ import {
 } from './PartneringFamilies/sortPartneringFamilies';
 import { useSidePanel } from '../Hooks/useSidePanel';
 import { PartneringFamilyCustomFieldFiltersSidePanel } from './PartneringFamilies/PartneringFamilyCustomFieldFiltersSidePanel';
-import { FUNCTION_ASSIGNMENTS_FEATURE_FLAG } from '../featureFlags';
+import {
+  FUNCTION_ASSIGNMENTS_FEATURE_FLAG,
+  REFERRALS_FEATURE_FLAG,
+  UPDATE_TEST_FAMILY_FEATURE_FLAG,
+} from '../featureFlags';
 import {
   AssignmentFilterSelectionsByRole,
   assignmentRolesForColumns,
@@ -98,35 +100,27 @@ function PartneringFamilies() {
     closeSidePanel: closeCustomFieldFiltersSidePanel,
   } = useSidePanel();
 
-  const partneringFamiliesLoadable = useLoadable(partneringFamiliesData);
-  const partneringFamilies = React.useMemo(
-    () => partneringFamiliesLoadable || [],
-    [partneringFamiliesLoadable]
-  );
-  const visibleReferralsLoadable = useLoadable(visibleReferralsQuery);
+  const partneringFamilies = usePartneringFamilies();
+  const visibleReferralRecords = useVisibleReferrals();
   const visibleReferrals = React.useMemo(
-    () =>
-      (visibleReferralsLoadable || []).map(
-        (referralInfo) => referralInfo.referral
-      ),
-    [visibleReferralsLoadable]
+    () => visibleReferralRecords.map((referralInfo) => referralInfo.referral),
+    [visibleReferralRecords]
   );
   const openReferralByFamily = React.useMemo(
     () => openReferralByFamilyId(visibleReferrals),
     [visibleReferrals]
   );
 
-  const arrangementTypes = useLoadable(
-    policyData
-  )?.referralPolicy?.arrangementPolicies?.map((a) => {
-    return a.arrangementType!;
-  });
-
-  const loadablePolicy = useLoadable(policyData);
+  const policy = usePolicy();
+  const arrangementTypes = policy.referralPolicy?.arrangementPolicies?.map(
+    (a) => {
+      return a.arrangementType!;
+    }
+  );
 
   const referralCustomFields = React.useMemo(() => {
-    return loadablePolicy?.referralPolicy?.customFields || [];
-  }, [loadablePolicy]);
+    return policy.referralPolicy?.customFields || [];
+  }, [policy.referralPolicy?.customFields]);
   const customFieldCount = referralCustomFields.length;
 
   const [filterText, setFilterText] = useState('');
@@ -178,7 +172,7 @@ function PartneringFamilies() {
     permissions(Permission.ViewV1CaseFunctionAssignments);
   const assignmentRoles = canViewFunctionAssignments
     ? assignmentRolesForColumns(
-        loadablePolicy?.referralPolicy?.functionAssignmentPolicies?.map(
+        policy.referralPolicy?.functionAssignmentPolicies?.map(
           (assignmentPolicy) => assignmentPolicy.assignmentRole
         ) ?? [],
         partneringFamilies.flatMap(
@@ -336,7 +330,7 @@ function PartneringFamilies() {
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
 
   const updateTestFamilyFlagEnabled = useFeatureFlagEnabled(
-    'updateTestFamilyFlag'
+    UPDATE_TEST_FAMILY_FEATURE_FLAG
   );
 
   const canCreateFamily =
@@ -350,12 +344,12 @@ function PartneringFamilies() {
   const tableMinWidth = Math.max(700, tableColumnCount * 160);
   const hasFeaturebaseChat = globalPermissions(Permission.AccessSupportScreen);
 
-  const referralsEnabled = useFeatureFlagEnabledWithLocalOverride('referrals');
+  const referralsEnabled = useFeatureFlagEnabled(REFERRALS_FEATURE_FLAG);
   const showAddFamilyButton = !referralsEnabled && canCreateFamily;
 
   useScreenTitle('Clients');
 
-  return !partneringFamiliesLoadable || !arrangementTypes ? (
+  return !arrangementTypes ? (
     <ProgressBackdrop>
       <p>Loading families...</p>
     </ProgressBackdrop>

@@ -1,4 +1,4 @@
-import { selector } from 'recoil';
+import { atom, useAtomValue } from 'jotai';
 import {
   V1CaseCommand,
   ArrangementsCommand,
@@ -58,18 +58,21 @@ import {
   AssignIndividualVolunteer2 as AssignCaseIndividualVolunteer,
   UnassignIndividualVolunteer2 as UnassignCaseIndividualVolunteer,
 } from '../GeneratedClient';
-import { visibleFamiliesQuery } from './Data';
+import { mapLoadedValue, visibleFamiliesAtom } from './Data';
 import { convertUtcDateToLocalDate } from '../Utilities/dateUtils';
 import { commandFactory } from './CommandFactory';
 import { useAtomicRecordsCommandCallback } from '../Model/Data';
 
-export const partneringFamiliesData = selector({
-  key: 'partneringFamiliesData',
-  get: ({ get }) => {
-    const visibleFamilies = get(visibleFamiliesQuery);
-    return visibleFamilies.filter((f) => f.partneringFamilyInfo);
-  },
+export const partneringFamiliesData = atom((get) => {
+  const visibleFamilies = get(visibleFamiliesAtom);
+  return mapLoadedValue(visibleFamilies, (families) =>
+    families.filter((f) => f.partneringFamilyInfo)
+  );
 });
+
+export function usePartneringFamilies() {
+  return useAtomValue(partneringFamiliesData);
+}
 
 function useV1CaseCommandCallbackWithLocation<T extends unknown[]>(
   callback: (familyId: string, ...args: T) => Promise<V1CaseCommand>

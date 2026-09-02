@@ -10,14 +10,11 @@ import {
   Logout as LogoutIcon,
   Refresh as RefreshIcon,
 } from '@mui/icons-material';
-import { useRecoilRefresher_UNSTABLE } from 'recoil';
 import { logoutAsync } from '../Authentication/Auth';
-import { userOrganizationAccessQuery } from '../Model/Data';
+import { useRefreshUserOrganizationAccess } from '../Model/Data';
 
 export function NoOrganizationAccessScreen() {
-  const refreshUserOrganizationAccess = useRecoilRefresher_UNSTABLE(
-    userOrganizationAccessQuery
-  );
+  const refreshUserOrganizationAccess = useRefreshUserOrganizationAccess();
 
   return (
     <Container maxWidth="sm" sx={{ py: { xs: 6, sm: 10 } }}>

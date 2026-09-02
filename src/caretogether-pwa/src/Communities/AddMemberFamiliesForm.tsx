@@ -4,9 +4,8 @@ import { AddCommunityMemberFamily, Community } from '../GeneratedClient';
 import { useCommunityCommand } from '../Model/DirectoryModel';
 import { useState } from 'react';
 import { useBackdrop } from '../Hooks/useBackdrop';
-import { useRecoilValue } from 'recoil';
 import { familyNameString } from '../Families/FamilyName';
-import { visibleFamiliesQuery } from '../Model/Data';
+import { useVisibleFamilies } from '../Model/Data';
 
 interface DrawerProps {
   onClose: () => void;
@@ -45,7 +44,7 @@ export function AddMemberFamiliesForm({
     });
   }
 
-  const allFamilies = useRecoilValue(visibleFamiliesQuery);
+  const allFamilies = useVisibleFamilies();
 
   // Only include families that are not already members of this community
   const candidateFamilies = allFamilies

@@ -1,6 +1,5 @@
-import { useRecoilValue } from 'recoil';
 import { MissingArrangementRequirement, Permission } from '../GeneratedClient';
-import { policyData } from '../Model/ConfigurationModel';
+import { usePolicy } from '../Model/PolicyModel';
 import { useFamilyLookup, usePersonLookup } from '../Model/DirectoryModel';
 import { useFamilyIdPermissions } from '../Model/SessionModel';
 import { useDialogHandle } from '../Hooks/useDialogHandle';
@@ -20,7 +19,7 @@ export function MissingArrangementRequirementRow({
   requirement,
   context,
 }: MissingArrangementRequirementRowProps) {
-  const policy = useRecoilValue(policyData);
+  const policy = usePolicy();
   const permissions = useFamilyIdPermissions(
     context.kind === 'V1Case' ||
       context.kind === 'Arrangement' ||

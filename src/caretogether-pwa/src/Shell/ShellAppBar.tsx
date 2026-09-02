@@ -18,7 +18,7 @@ import {
   screenTitleComponentState,
   screenTitleState,
 } from './ShellScreenTitle';
-import { useRecoilValue } from 'recoil';
+import { useAtomValue } from 'jotai';
 import { ShellSearchBar } from './ShellSearchBar';
 import { ShellUserProfileMenu } from './ShellUserProfileMenu';
 import { SHELL_APP_BAR_HEIGHT } from './shellLayoutConstants';
@@ -39,8 +39,8 @@ export function ShellAppBar({
 
   const [openMobileSearch, setOpenMobileSearch] = useState(true);
 
-  const screenTitle = useRecoilValue(screenTitleState);
-  const screenTitleComponent = useRecoilValue(screenTitleComponentState);
+  const screenTitle = useAtomValue(screenTitleState);
+  const screenTitleComponent = useAtomValue(screenTitleComponentState);
 
   return (
     <AppBar

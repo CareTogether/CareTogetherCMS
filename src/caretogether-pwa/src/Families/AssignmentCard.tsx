@@ -8,8 +8,7 @@ import {
   usePersonAndFamilyLookup,
   useFamilyLookup,
 } from '../Model/DirectoryModel';
-import { useLoadable } from '../Hooks/useLoadable';
-import { partneringFamiliesData } from '../Model/V1CasesModel';
+import { usePartneringFamilies } from '../Model/V1CasesModel';
 import { useAppNavigate } from '../Hooks/useAppNavigate';
 import { format } from 'date-fns';
 import { FamilyName } from './FamilyName';
@@ -41,7 +40,7 @@ function allArrangements(partneringFamilyInfo: PartneringFamilyInfo) {
 export function AssignmentCard({ assignment }: AssignmentCardProps) {
   const personAndFamilyLookup = usePersonAndFamilyLookup();
   const familyLookup = useFamilyLookup();
-  const partneringFamilies = useLoadable(partneringFamiliesData);
+  const partneringFamilies = usePartneringFamilies();
   const navigate = useAppNavigate();
 
   const status = getAssignmentStatus(assignment);
@@ -72,7 +71,7 @@ export function AssignmentCard({ assignment }: AssignmentCardProps) {
   const nextPlanIsPastDue =
     nextPlannedLocation && nextPlannedLocation.timestampUtc! < new Date();
 
-  const childFamily = partneringFamilies?.find(
+  const childFamily = partneringFamilies.find(
     (fam) =>
       fam.partneringFamilyInfo &&
       allArrangements(fam.partneringFamilyInfo).some(
