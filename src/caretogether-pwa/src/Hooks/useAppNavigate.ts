@@ -6,7 +6,7 @@ export interface AppNavigate {
   inbox: () => void;
   family: (
     familyId: string,
-    v1CaseId?: string,
+    v1CaseIdOrOptions?: string | FamilyNavigationOptions,
     arrangementId?: string,
     options?: { replace?: boolean }
   ) => void;
@@ -23,6 +23,13 @@ type AppNavigateOptions = {
   replaceOrganizationId?: string;
   replaceLocationId?: string;
   navigateOptions?: NavigateOptions;
+};
+
+export type FamilyNavigationOptions = {
+  v1CaseId?: string;
+  arrangementId?: string;
+  familyMemberId?: string;
+  replace?: boolean;
 };
 
 /**
@@ -46,22 +53,39 @@ export function useAppNavigate(): AppNavigate {
     inbox: () => inContext('inbox'),
     family: (
       familyId: string,
-      v1CaseId?: string,
+      v1CaseIdOrOptions?: string | FamilyNavigationOptions,
       arrangement?: string,
       options?: { replace?: boolean }
     ) => {
+      const familyNavigationOptions =
+        typeof v1CaseIdOrOptions === 'object'
+          ? v1CaseIdOrOptions
+          : {
+              v1CaseId: v1CaseIdOrOptions,
+              arrangementId: arrangement,
+              replace: options?.replace,
+            };
       const searchParams = new URLSearchParams();
-      if (v1CaseId) {
-        searchParams.append('v1CaseId', v1CaseId);
+      if (familyNavigationOptions.v1CaseId) {
+        searchParams.append('v1CaseId', familyNavigationOptions.v1CaseId);
       }
-      if (arrangement) {
-        searchParams.append('arrangementId', arrangement);
+      if (familyNavigationOptions.arrangementId) {
+        searchParams.append(
+          'arrangementId',
+          familyNavigationOptions.arrangementId
+        );
+      }
+      if (familyNavigationOptions.familyMemberId) {
+        searchParams.append(
+          'familyMemberId',
+          familyNavigationOptions.familyMemberId
+        );
       }
       const searchParamsString = searchParams.size
         ? `?${searchParams.toString()}`
         : '';
       return inContext(`families/${familyId}${searchParamsString}`, {
-        navigateOptions: { replace: options?.replace },
+        navigateOptions: { replace: familyNavigationOptions.replace },
       });
     },
 
