@@ -90,10 +90,9 @@ export function CommunityScreen() {
   const hasConfiguredApprovalRoles =
     Object.keys(policy?.organizationApprovalPolicy?.organizationRoles ?? {})
       .length > 0;
-  const canAccessApprovals = communityInfo?.approvalInfo
-    ? permissions(Permission.ViewApprovalStatus) ||
-      permissions(Permission.ViewApprovalProgress)
-    : permissions(Permission.ActivateOrganizationApprovals);
+  const canAccessApprovals =
+    permissions(Permission.ViewApprovalStatus) ||
+    permissions(Permission.ViewApprovalProgress);
   const showApprovalsTab =
     organizationApprovalsEnabled &&
     hasConfiguredApprovalRoles &&

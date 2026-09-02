@@ -1,5 +1,4 @@
 import {
-  ActivateOrganizationApprovals,
   CompleteOrganizationRequirement,
   CompletedRequirementInfo,
   ExemptOrganizationRequirement,
@@ -29,9 +28,6 @@ function useOrganizationApprovalCommand<T extends unknown[]>(
 }
 
 export function useOrganizationApprovalsModel() {
-  const activate = useOrganizationApprovalCommand((organizationId) =>
-    commandFactory(ActivateOrganizationApprovals, { organizationId })
-  );
   const completeRequirement = useOrganizationApprovalCommand(
     (
       organizationId,
@@ -99,7 +95,6 @@ export function useOrganizationApprovalsModel() {
   );
 
   return {
-    activate,
     completeRequirement,
     markRequirementIncomplete,
     exemptRequirement,

@@ -1,7 +1,4 @@
-import {
-  AssignmentTurnedInOutlined,
-  Close as CloseIcon,
-} from '@mui/icons-material';
+import { Close as CloseIcon } from '@mui/icons-material';
 import {
   Alert,
   Box,
@@ -12,7 +9,6 @@ import {
   Drawer,
   IconButton,
   LinearProgress,
-  Paper,
   Stack,
   Typography,
 } from '@mui/material';
@@ -338,11 +334,7 @@ export function OrganizationApprovalSection({
   communityInfo: CommunityInfo;
   policy: EffectiveLocationPolicy;
 }) {
-  const organization = communityInfo.community;
-  const approval = communityInfo.approvalInfo;
   const permissions = useCommunityPermissions(communityInfo);
-  const model = useOrganizationApprovalsModel();
-  const withBackdrop = useBackdrop();
   const { approvalLedgerRows } =
     useOrganizationApprovalViewModel(communityInfo);
   const configuredRoles = Object.keys(
@@ -350,53 +342,6 @@ export function OrganizationApprovalSection({
   );
 
   if (configuredRoles.length === 0) return null;
-
-  async function activate() {
-    await withBackdrop(() => model.activate(organization.id));
-  }
-
-  if (!approval) {
-    return (
-      <Paper
-        variant="outlined"
-        sx={{
-          p: { xs: 2, md: 3 },
-          borderStyle: 'dashed',
-          background: (theme) =>
-            `linear-gradient(135deg, ${alpha(theme.palette.primary.main, 0.04)}, transparent 70%)`,
-        }}
-      >
-        <Stack
-          direction={{ xs: 'column', sm: 'row' }}
-          spacing={2}
-          sx={{
-            alignItems: { sm: 'center' },
-            justifyContent: 'space-between',
-          }}
-        >
-          <Box>
-            <Typography className="ph-unmask" variant="h5">
-              Approval roles
-            </Typography>
-            <Typography color="text.secondary" variant="body2" sx={{ mt: 0.5 }}>
-              Start an approval process to view available Organization role
-              applications.
-            </Typography>
-          </Box>
-          {permissions(Permission.ActivateOrganizationApprovals) && (
-            <Button
-              className="ph-unmask"
-              variant="contained"
-              startIcon={<AssignmentTurnedInOutlined />}
-              onClick={() => void activate()}
-            >
-              Start approval process
-            </Button>
-          )}
-        </Stack>
-      </Paper>
-    );
-  }
 
   const canViewStatus = permissions(Permission.ViewApprovalStatus);
   const canViewProgress = permissions(Permission.ViewApprovalProgress);

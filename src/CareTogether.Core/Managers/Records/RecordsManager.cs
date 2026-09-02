@@ -268,13 +268,19 @@ namespace CareTogether.Managers.Records
             OrganizationApprovalEntry? approvalEntry
         )
         {
-            if (approvalEntry == null)
-                return new CommunityInfo(community, ImmutableList<Permission>.Empty);
+            var effectiveApprovalEntry =
+                approvalEntry
+                ?? new OrganizationApprovalEntry(
+                    community.Id,
+                    ImmutableList<Resources.CompletedRequirementInfo>.Empty,
+                    ImmutableList<Resources.ExemptedRequirementInfo>.Empty,
+                    ImmutableList<RoleRemoval>.Empty
+                );
 
             var calculation = await policyEvaluationEngine.CalculateOrganizationApprovalsAsync(
                 tenantId,
                 locationId,
-                approvalEntry
+                effectiveApprovalEntry
             );
             var roles = calculation.ApprovalStatus.ApprovalStatusByRole;
             var availableApplications = roles
@@ -296,7 +302,7 @@ namespace CareTogether.Managers.Records
                     calculation.ExemptedRequirements,
                     availableApplications,
                     missingRequirements,
-                    approvalEntry.RoleRemovals
+                    effectiveApprovalEntry.RoleRemovals
                 ),
             };
         }
