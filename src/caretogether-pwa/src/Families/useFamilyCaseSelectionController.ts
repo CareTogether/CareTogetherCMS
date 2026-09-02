@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import posthog from 'posthog-js';
 import { useLocation } from 'react-router-dom';
 import type {
@@ -7,7 +7,6 @@ import type {
   V1Case,
   V1Referral,
 } from '../GeneratedClient';
-import { useAppNavigate } from '../Hooks/useAppNavigate';
 import { useSyncV1CaseIdInURL } from '../Hooks/useSyncV1CaseIdInURL';
 import { useFamilyLookup, usePersonLookup } from '../Model/DirectoryModel';
 import { personNameString } from './PersonName';
@@ -48,7 +47,6 @@ export function useFamilyCaseSelectionController({
   );
   const arrangementIdFromNavigation =
     arrangementIdFromQuery ?? arrangementIdFromState;
-  const appNavigate = useAppNavigate();
   const familyLookup = useFamilyLookup();
   const personLookup = usePersonLookup();
 
@@ -83,6 +81,9 @@ export function useFamilyCaseSelectionController({
   const [selectedArrangementRowId, setSelectedArrangementRowId] = useState<
     string | null
   >(null);
+  const previousArrangementIdFromNavigationRef = useRef<string | undefined>(
+    undefined
+  );
   const caseViewModel = useFamilyCaseViewModel({
     allV1Cases,
     family,
@@ -138,6 +139,36 @@ export function useFamilyCaseSelectionController({
   }, [arrangementIdFromNavigation, allV1Cases, v1CaseIdFromNavigation]);
 
   useEffect(() => {
+    const previousArrangementIdFromNavigation =
+      previousArrangementIdFromNavigationRef.current;
+    previousArrangementIdFromNavigationRef.current = arrangementIdFromNavigation;
+
+    if (!arrangementIdFromNavigation) {
+      if (previousArrangementIdFromNavigation) {
+        setSelectedArrangementRowId(null);
+      }
+
+      return;
+    }
+
+    const arrangementExistsInSelectedCase =
+      caseViewModel.selectedCaseArrangementRows.some(
+        (row) => row.id === arrangementIdFromNavigation
+      );
+
+    if (!arrangementExistsInSelectedCase) {
+      setSelectedArrangementRowId(null);
+      return;
+    }
+
+    setSelectedArrangementRowId((current) =>
+      current === arrangementIdFromNavigation
+        ? current
+        : arrangementIdFromNavigation
+    );
+  }, [arrangementIdFromNavigation, caseViewModel.selectedCaseArrangementRows]);
+
+  useEffect(() => {
     if (!caseViewModel.selectedV1Case) {
       posthog.capture('auto selected first v1Case');
 
@@ -152,14 +183,6 @@ export function useFamilyCaseSelectionController({
     v1CaseIdFromQuery,
     selectedV1CaseId,
   });
-
-  useEffect(() => {
-    if (!arrangementIdFromQuery) return;
-
-    appNavigate.family(familyId, v1CaseIdFromQuery, undefined, {
-      replace: true,
-    });
-  }, [arrangementIdFromQuery, familyId, v1CaseIdFromQuery, appNavigate]);
 
   return {
     ...caseViewModel,

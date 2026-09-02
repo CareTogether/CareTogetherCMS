@@ -269,7 +269,7 @@ export function DashboardCalendar() {
     const { familyId, v1CaseId, arrangementId } = event;
 
     if (familyId && v1CaseId && arrangementId) {
-      appNavigate.family(familyId, v1CaseId, arrangementId);
+      appNavigate.family(familyId, { v1CaseId, arrangementId });
       return;
     }
 

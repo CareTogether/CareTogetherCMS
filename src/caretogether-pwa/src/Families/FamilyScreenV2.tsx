@@ -16,7 +16,7 @@ import {
   RoleRemovalReason,
   Note,
 } from '../GeneratedClient';
-import { useParams } from 'react-router';
+import { useLocation, useNavigate, useParams } from 'react-router';
 import {
   Check as CheckIcon,
   DeleteForever as DeleteForeverIcon,
@@ -101,6 +101,12 @@ type RecentNoteAction = 'edit' | 'approve' | 'delete';
 export function FamilyScreenV2() {
   const familyIdMaybe = useParams<{ familyId: string }>();
   const familyId = familyIdMaybe.familyId as string;
+  const location = useLocation();
+  const navigate = useNavigate();
+  const searchParams = new URLSearchParams(location.search);
+  const familyMemberIdFromQuery =
+    searchParams.get('familyMemberId') ?? undefined;
+  const arrangementIdFromQuery = searchParams.get('arrangementId') ?? undefined;
 
   const {
     addCommunityCandidateCommunities,
@@ -187,6 +193,9 @@ export function FamilyScreenV2() {
   const [selectedFamilyMemberRowId, setSelectedFamilyMemberRowId] = useState<
     string | null
   >(null);
+  const previousFamilyMemberIdFromQueryRef = useRef<string | undefined>(
+    undefined
+  );
   const [addNoteDialogOpen, setAddNoteDialogOpen] = useState(false);
   const [recentFamilyNoteAction, setRecentFamilyNoteAction] = useState<{
     action: RecentNoteAction;
@@ -416,6 +425,60 @@ export function FamilyScreenV2() {
 
     return () => cancelAnimationFrame(frame);
   }, [familyMemberPrintRequested, familyMemberToPrint, printFamilyMemberFn]);
+
+  useEffect(() => {
+    const previousFamilyMemberIdFromQuery =
+      previousFamilyMemberIdFromQueryRef.current;
+    previousFamilyMemberIdFromQueryRef.current = familyMemberIdFromQuery;
+
+    if (!familyMemberIdFromQuery) {
+      if (previousFamilyMemberIdFromQuery) {
+        setSelectedFamilyMemberRowId(null);
+      }
+
+      return;
+    }
+
+    const matchingFamilyMemberRow = familyMemberRows.find(
+      (row) => row.id === familyMemberIdFromQuery
+    );
+
+    if (!matchingFamilyMemberRow) {
+      setSelectedFamilyMemberRowId(null);
+      return;
+    }
+
+    setSelectedFamilyMemberRowId((current) =>
+      current === familyMemberIdFromQuery ? current : familyMemberIdFromQuery
+    );
+  }, [familyMemberIdFromQuery, familyMemberRows]);
+
+  function removeSearchParam(paramName: string) {
+    const nextSearchParams = new URLSearchParams(location.search);
+    nextSearchParams.delete(paramName);
+
+    const searchParamsString = nextSearchParams.size
+      ? `?${nextSearchParams.toString()}`
+      : '';
+
+    navigate(`${location.pathname}${searchParamsString}`, { replace: true });
+  }
+
+  function closeFamilyMemberDrawer() {
+    setSelectedFamilyMemberRowId(null);
+
+    if (familyMemberIdFromQuery) {
+      removeSearchParam('familyMemberId');
+    }
+  }
+
+  function closeArrangementDrawer() {
+    setSelectedArrangementRowId(null);
+
+    if (arrangementIdFromQuery) {
+      removeSearchParam('arrangementId');
+    }
+  }
 
   function printFamilyMemberInformation(member: PrintableFamilyMember) {
     setFamilyMoreMenuAnchor(null);
@@ -824,10 +887,10 @@ export function FamilyScreenV2() {
         }
         onAddCommunityClose={() => setAddCommunityDrawerOpen(false)}
         onAddNoteClose={() => setAddNoteDialogOpen(false)}
-        onArrangementClose={() => setSelectedArrangementRowId(null)}
+        onArrangementClose={closeArrangementDrawer}
         onCloseCaseDrawerClose={() => setCloseCaseDrawerOpen(false)}
         onFamilyCompleteOtherClose={() => setFamilyCompleteOtherOpen(false)}
-        onFamilyMemberClose={() => setSelectedFamilyMemberRowId(null)}
+        onFamilyMemberClose={closeFamilyMemberDrawer}
         onOpenNewV1CaseDialogClose={() => setOpenNewV1CaseDialogOpen(false)}
         onRecentFamilyNoteActionClose={() => setRecentFamilyNoteAction(null)}
         onRecentReferralNoteActionClose={() =>

@@ -1,5 +1,5 @@
 import { useMemo, useEffect } from 'react';
-import { useAppNavigate } from './useAppNavigate';
+import { useLocation, useNavigate } from 'react-router-dom';
 
 export const useSyncV1CaseIdInURL = ({
   familyId,
@@ -10,16 +10,36 @@ export const useSyncV1CaseIdInURL = ({
   v1CaseIdFromQuery?: string;
   selectedV1CaseId?: string;
 }) => {
-  const appNavigate = useAppNavigate();
+  const location = useLocation();
+  const navigate = useNavigate();
 
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  const memoizedNavigateFamily = useMemo(() => appNavigate.family, []);
+  const memoizedNavigate = useMemo(() => navigate, []);
 
   useEffect(() => {
     if (v1CaseIdFromQuery !== selectedV1CaseId) {
-      memoizedNavigateFamily(familyId, selectedV1CaseId, undefined, {
+      const searchParams = new URLSearchParams(location.search);
+
+      if (selectedV1CaseId) {
+        searchParams.set('v1CaseId', selectedV1CaseId);
+      } else {
+        searchParams.delete('v1CaseId');
+      }
+
+      const searchParamsString = searchParams.size
+        ? `?${searchParams.toString()}`
+        : '';
+
+      memoizedNavigate(`${location.pathname}${searchParamsString}`, {
         replace: true,
       });
     }
-  }, [familyId, v1CaseIdFromQuery, selectedV1CaseId, memoizedNavigateFamily]);
+  }, [
+    familyId,
+    location.pathname,
+    location.search,
+    v1CaseIdFromQuery,
+    selectedV1CaseId,
+    memoizedNavigate,
+  ]);
 };
