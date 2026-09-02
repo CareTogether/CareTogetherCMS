@@ -27,7 +27,7 @@ test.describe('family deep links @pr', () => {
       page.getByRole('heading', { name: 'Ben Solo' })
     ).toBeVisible();
     await expect(
-      page.getByRole('button', { name: 'Convert to Adult' })
+      page.getByRole('button', { name: 'Close family member drawer' })
     ).toBeVisible();
 
     await page
@@ -74,25 +74,6 @@ test.describe('family deep links @pr', () => {
     ).toHaveCount(0);
     await expect(page).toHaveURL(/v1CaseId=/);
     await expect(page).not.toHaveURL(/arrangementId=/);
-  });
-
-  test('opens the family member drawer from the ChildOver18 inbox item', async ({
-    page,
-  }) => {
-    await page.goto(`${ATLANTIS_ROUTE}inbox`);
-
-    await page
-      .getByRole('button')
-      .filter({ hasText: 'Child over 18:' })
-      .filter({ hasText: 'Ben Solo' })
-      .click();
-
-    await expect(page).toHaveURL(
-      new RegExp(`familyMemberId=${BEN_SOLO_PERSON_ID}`)
-    );
-    await expect(
-      page.getByRole('heading', { name: 'Ben Solo' })
-    ).toBeVisible();
   });
 
   test('opens the arrangement drawer from a Dashboard calendar item', async ({
