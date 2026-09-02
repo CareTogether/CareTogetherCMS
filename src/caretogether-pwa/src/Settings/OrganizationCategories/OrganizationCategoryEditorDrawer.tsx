@@ -15,8 +15,8 @@ import {
 import { api } from '../../Api/Api';
 import { useBackdrop } from '../../Hooks/useBackdrop';
 import { organizationConfigurationEdited } from '../../Model/ConfigurationModel';
-import { selectedLocationContextState } from '../../Model/Data';
-import { useRecoilValue, useSetRecoilState } from 'recoil';
+import { useRequiredSelectedLocationContext } from '../../Model/Data';
+import { useSetAtom } from 'jotai';
 
 type OrganizationCategoryEditorDrawerProps = {
   categories: OrganizationCategory[];
@@ -31,8 +31,8 @@ export function OrganizationCategoryEditorDrawer({
 }: OrganizationCategoryEditorDrawerProps) {
   const [name, setName] = useState(category?.name ?? '');
   const [saveFailed, setSaveFailed] = useState(false);
-  const { organizationId } = useRecoilValue(selectedLocationContextState);
-  const storeEdits = useSetRecoilState(organizationConfigurationEdited);
+  const { organizationId } = useRequiredSelectedLocationContext();
+  const storeEdits = useSetAtom(organizationConfigurationEdited);
   const withBackdrop = useBackdrop();
 
   const normalizedName = name.trim();

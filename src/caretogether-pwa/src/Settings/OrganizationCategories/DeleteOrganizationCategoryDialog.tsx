@@ -1,11 +1,11 @@
 import { useState } from 'react';
 import { Alert, Typography } from '@mui/material';
-import { useRecoilValue, useSetRecoilState } from 'recoil';
+import { useSetAtom } from 'jotai';
 import { OrganizationCategory } from '../../GeneratedClient';
 import { api } from '../../Api/Api';
 import { UpdateDialog } from '../../Generic/UpdateDialog';
 import { organizationConfigurationEdited } from '../../Model/ConfigurationModel';
-import { selectedLocationContextState } from '../../Model/Data';
+import { useRequiredSelectedLocationContext } from '../../Model/Data';
 
 type DeleteOrganizationCategoryDialogProps = {
   category: OrganizationCategory;
@@ -17,8 +17,8 @@ export function DeleteOrganizationCategoryDialog({
   onClose,
 }: DeleteOrganizationCategoryDialogProps) {
   const [deleteFailed, setDeleteFailed] = useState(false);
-  const { organizationId } = useRecoilValue(selectedLocationContextState);
-  const storeEdits = useSetRecoilState(organizationConfigurationEdited);
+  const { organizationId } = useRequiredSelectedLocationContext();
+  const storeEdits = useSetAtom(organizationConfigurationEdited);
 
   async function deleteCategory() {
     setDeleteFailed(false);

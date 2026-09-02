@@ -17,12 +17,10 @@ import {
   Typography,
 } from '@mui/material';
 import { Navigate } from 'react-router-dom';
-import { useRecoilValue } from 'recoil';
 import { OrganizationCategory } from '../../GeneratedClient';
 import { Breadcrumbs } from '../../Generic/Breadcrumbs';
-import { useLoadable } from '../../Hooks/useLoadable';
-import { organizationConfigurationQuery } from '../../Model/ConfigurationModel';
-import { useDataLoaded, selectedLocationContextState } from '../../Model/Data';
+import { useOrganizationConfigurationLoadable } from '../../Model/ConfigurationModel';
+import { useRequiredSelectedLocationContext } from '../../Model/Data';
 import { useUserIsOrganizationAdministrator } from '../../Model/SessionModel';
 import { ProgressBackdrop } from '../../Shell/ProgressBackdrop';
 import { useScreenTitle } from '../../Shell/ShellScreenTitle';
@@ -31,19 +29,16 @@ import { OrganizationCategoryEditorDrawer } from './OrganizationCategoryEditorDr
 
 export function OrganizationCategoriesScreen() {
   useScreenTitle('Organization Categories');
-  const dataLoaded = useDataLoaded();
-  const configuration = useLoadable(organizationConfigurationQuery);
+  const configuration = useOrganizationConfigurationLoadable();
   const isOrganizationAdministrator =
     useUserIsOrganizationAdministrator() === true;
-  const { organizationId, locationId } = useRecoilValue(
-    selectedLocationContextState
-  );
+  const { organizationId, locationId } = useRequiredSelectedLocationContext();
   const [editorOpen, setEditorOpen] = useState(false);
   const [categoryToEdit, setCategoryToEdit] = useState<OrganizationCategory>();
   const [categoryToDelete, setCategoryToDelete] =
     useState<OrganizationCategory>();
 
-  if (!dataLoaded || !configuration) {
+  if (!configuration) {
     return (
       <ProgressBackdrop>
         <p className="ph-unmask">Loading Organization categories...</p>

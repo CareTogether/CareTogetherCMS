@@ -18,11 +18,10 @@ import {
 } from '../GeneratedClient';
 import { useCommunityCommand } from '../Model/DirectoryModel';
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { useRecoilValue } from 'recoil';
 import { Link as RouterLink, useBeforeUnload } from 'react-router-dom';
 import { useBackdrop } from '../Hooks/useBackdrop';
 import { useAppNavigate } from '../Hooks/useAppNavigate';
-import { selectedLocationContextState } from '../Model/Data';
+import { useRequiredSelectedLocationContext } from '../Model/Data';
 
 const UNSAVED_CHANGES_MESSAGE =
   'You have unsaved changes that will be lost. Are you sure?';
@@ -106,9 +105,7 @@ export function AddEditCommunity({
 
   const withBackdrop = useBackdrop();
   const appNavigate = useAppNavigate();
-  const { organizationId, locationId } = useRecoilValue(
-    selectedLocationContextState
-  );
+  const { organizationId, locationId } = useRequiredSelectedLocationContext();
   const categorySettingsHref = `/org/${organizationId}/${locationId}/settings/organization-categories`;
   const categoriesChanged =
     community != null &&
