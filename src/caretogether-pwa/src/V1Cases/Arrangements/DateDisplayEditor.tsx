@@ -4,7 +4,7 @@ import { IconButton, Typography } from '@mui/material';
 import { useState } from 'react';
 import { EditDateDialog } from './EditDateDialog';
 
-interface DateDisplayEditorProps {
+type DateDisplayEditorCommonProps = {
   initialValue: Date | undefined;
   disablePast?: boolean;
   disableFuture?: boolean;
@@ -13,20 +13,34 @@ interface DateDisplayEditorProps {
   canEdit: boolean;
   availableInCurrentPhase: boolean;
   unavailableTooltip?: string;
-  onChange: (value: Date) => Promise<void>;
-}
+};
 
-export function DateDisplayEditor({
-  initialValue,
-  disablePast = false,
-  disableFuture = true,
-  label,
-  hideDisplayLabel = false,
-  canEdit,
-  availableInCurrentPhase,
-  unavailableTooltip,
-  onChange,
-}: DateDisplayEditorProps) {
+type RequiredDateDisplayEditorProps = DateDisplayEditorCommonProps & {
+  allowClear?: false;
+  onChange: (value: Date) => Promise<void>;
+};
+
+type ClearableDateDisplayEditorProps = DateDisplayEditorCommonProps & {
+  allowClear: true;
+  onChange: (value: Date | null) => Promise<void>;
+};
+
+type DateDisplayEditorProps =
+  | RequiredDateDisplayEditorProps
+  | ClearableDateDisplayEditorProps;
+
+export function DateDisplayEditor(props: DateDisplayEditorProps) {
+  const {
+    initialValue,
+    disablePast = false,
+    disableFuture = true,
+    label,
+    hideDisplayLabel = false,
+    canEdit,
+    availableInCurrentPhase,
+    unavailableTooltip,
+  } = props;
+  const allowClear = props.allowClear === true;
   const [editing, setEditing] = useState(false);
 
   return (
@@ -66,9 +80,17 @@ export function DateDisplayEditor({
           disablePast={disablePast}
           disableFuture={disableFuture}
           label={label}
+          allowClear={allowClear}
           onClose={() => setEditing(false)}
-          onSave={async (date) => {
-            await onChange(date);
+          onSave={async (date: Date | null) => {
+            if (props.allowClear === true) {
+              await props.onChange(date);
+              return;
+            }
+
+            if (date !== null) {
+              await props.onChange(date);
+            }
           }}
         />
       )}
