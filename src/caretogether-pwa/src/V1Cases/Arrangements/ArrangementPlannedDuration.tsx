@@ -53,14 +53,14 @@ export function ArrangementPlannedDuration({
 
   const withBackdrop = useBackdrop();
 
-  const onDateChange = async (
+  const onDateChange = async <TDate extends Date | null>(
     callback: (
       aggregateId: string,
       v1CaseId: string,
       arrangementId: string,
-      plannedStartLocal: Date
+      plannedStartLocal: TDate
     ) => Promise<void>,
-    newDate: Date
+    newDate: TDate
   ) =>
     await withBackdrop(async () => {
       await callback(partneringFamilyId, v1CaseId, arrangement.id!, newDate);
@@ -134,6 +134,7 @@ export function ArrangementPlannedDuration({
           disableFuture={false}
           canEdit={canEdit}
           availableInCurrentPhase // Available in all phases
+          allowClear
           onChange={(newDate) =>
             onDateChange(v1CasesModel.planArrangementStart, newDate)
           }
@@ -162,6 +163,7 @@ export function ArrangementPlannedDuration({
           disableFuture={false}
           canEdit={canEdit}
           availableInCurrentPhase // Available in all phases
+          allowClear
           onChange={(newDate) =>
             onDateChange(v1CasesModel.planArrangementEnd, newDate)
           }

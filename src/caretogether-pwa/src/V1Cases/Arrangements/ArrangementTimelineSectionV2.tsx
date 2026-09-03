@@ -8,11 +8,11 @@ import { useV1CasesModel } from '../../Model/V1CasesModel';
 import { ArrangementRowV2 } from './arrangementViewModel';
 import { DateDisplayEditor } from './DateDisplayEditor';
 
-type DateCommand = (
+type DateCommand<TDate extends Date | null> = (
   aggregateId: string,
   v1CaseId: string,
   arrangementId: string,
-  date: Date
+  date: TDate
 ) => Promise<void>;
 
 function TimelineHeaderCell({ children }: { children: ReactNode }) {
@@ -88,7 +88,10 @@ export function ArrangementTimelineSectionV2({
   const withBackdrop = useBackdrop();
   const canEdit = permissions(Permission.EditArrangement);
 
-  const onDateChange = async (callback: DateCommand, newDate: Date) => {
+  const onDateChange = async <TDate extends Date | null>(
+    callback: DateCommand<TDate>,
+    newDate: TDate
+  ) => {
     await withBackdrop(async () => {
       await callback(partneringFamilyId, v1CaseId, arrangement.id!, newDate);
     });
@@ -134,6 +137,7 @@ export function ArrangementTimelineSectionV2({
           disableFuture={false}
           canEdit={canEdit}
           availableInCurrentPhase
+          allowClear
           onChange={(newDate) =>
             onDateChange(v1CasesModel.planArrangementStart, newDate)
           }
@@ -164,6 +168,7 @@ export function ArrangementTimelineSectionV2({
           disableFuture={false}
           canEdit={canEdit}
           availableInCurrentPhase
+          allowClear
           onChange={(newDate) =>
             onDateChange(v1CasesModel.planArrangementEnd, newDate)
           }
