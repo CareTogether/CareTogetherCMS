@@ -18,7 +18,6 @@ import {
   ActionRequirement,
   DocumentLinkRequirement,
   NoteEntryRequirement,
-  RequirementDefinition,
 } from '../GeneratedClient';
 import { ValidateDatePicker } from '../Generic/Forms/ValidateDatePicker';
 import { useBackdrop } from '../Hooks/useBackdrop';
@@ -33,6 +32,7 @@ import type {
   VolunteerFamilyContext,
 } from '../Requirements/RequirementContext';
 import type { ApprovalLedgerOccurrence } from '../Approvals/approvalLedgerViewModel';
+import { approvalRequirementName } from '../Approvals/approvalDetails';
 
 type ApprovalWorkflowMissingSectionV2Props = {
   occurrence: ApprovalLedgerOccurrence;
@@ -44,18 +44,6 @@ type ApprovalWorkflowMissingSectionV2Props = {
 };
 
 const UPLOAD_NEW = '__uploadnew__';
-
-function requirementNameFromOccurrence(occurrence: ApprovalLedgerOccurrence) {
-  if (typeof occurrence.requirement === 'string') {
-    return occurrence.requirement;
-  }
-
-  if (occurrence.requirement instanceof RequirementDefinition) {
-    return occurrence.requirement.actionName!;
-  }
-
-  return occurrence.requirement.requirementName;
-}
 
 function findRequirementPolicy(
   actionDefinitions: Record<string, ActionRequirement>,
@@ -101,7 +89,7 @@ export function ApprovalWorkflowMissingSectionV2({
   const withBackdrop = useBackdrop();
   const { organizationId, locationId } = useRequiredSelectedLocationContext();
 
-  const requirementName = requirementNameFromOccurrence(occurrence);
+  const requirementName = approvalRequirementName(occurrence);
   const requirementPolicy = findRequirementPolicy(
     policy.actionDefinitions,
     requirementName

@@ -1,9 +1,5 @@
 import { useState } from 'react';
-import {
-  CompletedRequirementInfo,
-  ExemptedRequirementInfo,
-  Permission,
-} from '../../GeneratedClient';
+import { Permission } from '../../GeneratedClient';
 import { useFamilyIdPermissions } from '../../Model/SessionModel';
 import { useVolunteersModel } from '../../Model/VolunteersModel';
 import { useBackdrop } from '../../Hooks/useBackdrop';
@@ -13,6 +9,10 @@ import type {
   VolunteerFamilyContext,
 } from '../../Requirements/RequirementContext';
 import type { ApprovalLedgerOccurrence } from '../../Approvals/approvalLedgerViewModel';
+import {
+  isCompletedApprovalOccurrence,
+  isExemptedApprovalOccurrence,
+} from '../../Approvals/approvalDetails';
 
 type SupportedApprovalContext =
   | VolunteerFamilyContext
@@ -24,28 +24,6 @@ function isSupportedApprovalContext(
   return (
     context?.kind === 'Volunteer Family' ||
     context?.kind === 'Individual Volunteer'
-  );
-}
-
-function isCompletedRequirementInfo(
-  requirement: ApprovalLedgerOccurrence['requirement'] | undefined
-): requirement is CompletedRequirementInfo {
-  return (
-    typeof requirement === 'object' &&
-    requirement !== null &&
-    'completedRequirementId' in requirement &&
-    'completedAtUtc' in requirement
-  );
-}
-
-function isExemptedRequirementInfo(
-  requirement: ApprovalLedgerOccurrence['requirement'] | undefined
-): requirement is ExemptedRequirementInfo {
-  return (
-    typeof requirement === 'object' &&
-    requirement !== null &&
-    'additionalComments' in requirement &&
-    'timestampUtc' in requirement
   );
 }
 
@@ -64,19 +42,19 @@ export function useApprovalWorkflowActionsV2(
   const canMarkIncomplete =
     occurrence?.status === 'completed' &&
     isSupportedApprovalContext(context) &&
-    isCompletedRequirementInfo(occurrence.requirement) &&
+    isCompletedApprovalOccurrence(occurrence) &&
     permissions(Permission.EditApprovalRequirementCompletion);
   const canRemoveExemption =
     occurrence?.status === 'exempted' &&
     isSupportedApprovalContext(context) &&
-    isExemptedRequirementInfo(occurrence.requirement) &&
+    isExemptedApprovalOccurrence(occurrence) &&
     permissions(Permission.EditApprovalRequirementExemption);
 
   async function markIncomplete() {
     if (
       !canMarkIncomplete ||
       !isSupportedApprovalContext(context) ||
-      !isCompletedRequirementInfo(occurrence?.requirement)
+      !isCompletedApprovalOccurrence(occurrence)
     ) {
       return;
     }
@@ -110,7 +88,7 @@ export function useApprovalWorkflowActionsV2(
     if (
       !canRemoveExemption ||
       !isSupportedApprovalContext(context) ||
-      !isExemptedRequirementInfo(occurrence?.requirement)
+      !isExemptedApprovalOccurrence(occurrence)
     ) {
       return;
     }
