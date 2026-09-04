@@ -1,5 +1,7 @@
 import {
+  Box,
   Button,
+  Chip,
   Drawer,
   Table,
   TableBody,
@@ -16,14 +18,26 @@ import { useGlobalPermissions } from '../Model/SessionModel';
 import { AddEditCommunity } from './AddEditCommunity';
 import { useVisibleCommunities } from '../Model/Data';
 import { useAppNavigate } from '../Hooks/useAppNavigate';
+import { useOrganizationConfigurationLoadable } from '../Model/ConfigurationModel';
+import { useFeatureFlagEnabled } from 'posthog-js/react';
+import { ORGANIZATION_CATEGORIES_FEATURE_FLAG } from '../featureFlags';
 
 export function CommunitiesList() {
   useScreenTitle('Organizations');
+
+  const organizationCategoriesEnabled =
+    useFeatureFlagEnabled(ORGANIZATION_CATEGORIES_FEATURE_FLAG) === true;
 
   // The array object returned by state is read-only. We need to copy it before we can do an in-place sort.
   const communities = useVisibleCommunities()
     .map((x) => x.community!)
     .sort((a, b) => (a.name! < b.name! ? -1 : a.name! > b.name! ? 1 : 0));
+  const organizationConfiguration = useOrganizationConfigurationLoadable();
+  const categoriesById = new Map(
+    (organizationConfiguration?.organizationCategories ?? []).map(
+      (category) => [category.id, category]
+    )
+  );
 
   const appNavigate = useAppNavigate();
   function openCommunity(community: Community) {
@@ -54,6 +68,11 @@ export function CommunitiesList() {
               <TableCell align="left" sx={{ minWidth: 400 }}>
                 Description
               </TableCell>
+              {organizationCategoriesEnabled && (
+                <TableCell align="left" sx={{ minWidth: 220 }}>
+                  Categories
+                </TableCell>
+              )}
               <TableCell align="right" sx={{ minWidth: 50 }}>
                 Member Families
               </TableCell>
@@ -78,6 +97,28 @@ export function CommunitiesList() {
                 <TableCell align="left" sx={{ minWidth: 400 }}>
                   {community.description}
                 </TableCell>
+                {organizationCategoriesEnabled && (
+                  <TableCell align="left" sx={{ minWidth: 220 }}>
+                    <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                      {(community.categoryIds ?? [])
+                        .map((categoryId) => categoriesById.get(categoryId))
+                        .filter((category) => category != null)
+                        .sort((first, second) =>
+                          first.name!.localeCompare(second.name!, undefined, {
+                            sensitivity: 'base',
+                          })
+                        )
+                        .map((category) => (
+                          <Chip
+                            key={category.id}
+                            label={category.name}
+                            size="small"
+                            variant="outlined"
+                          />
+                        ))}
+                    </Box>
+                  </TableCell>
+                )}
                 <TableCell align="right" sx={{ minWidth: 50 }}>
                   {community.memberFamilies?.length}
                 </TableCell>

@@ -777,6 +777,7 @@ namespace CareTogether.Engines.Authorization
                     CreateCommunity => Permission.CreateOrganization,
                     RenameCommunity => Permission.EditOrganization,
                     EditCommunityDescription => Permission.EditOrganization,
+                    SetOrganizationCategories => Permission.EditOrganization,
                     AddCommunityMemberFamily => Permission.EditOrganizationMemberFamilies,
                     RemoveCommunityMemberFamily => Permission.EditOrganizationMemberFamilies,
                     AddCommunityRoleAssignment => Permission.EditOrganizationRoleAssignments,

@@ -12,7 +12,10 @@ namespace CareTogether.Resources.Communities
         ImmutableList<Guid> MemberFamilies,
         ImmutableList<CommunityRoleAssignment> CommunityRoleAssignments,
         ImmutableList<UploadedDocumentInfo> UploadedDocuments
-    );
+    )
+    {
+        public ImmutableList<Guid> CategoryIds { get; init; } = [];
+    }
 
     public sealed record CommunityRoleAssignment(Guid PersonId, string CommunityRole);
 
@@ -27,6 +30,11 @@ namespace CareTogether.Resources.Communities
 
     public sealed record EditCommunityDescription(Guid CommunityId, string Description)
         : CommunityCommand(CommunityId);
+
+    public sealed record SetOrganizationCategories(
+        Guid CommunityId,
+        ImmutableList<Guid> CategoryIds
+    ) : CommunityCommand(CommunityId);
 
     public sealed record AddCommunityMemberFamily(Guid CommunityId, Guid FamilyId)
         : CommunityCommand(CommunityId);

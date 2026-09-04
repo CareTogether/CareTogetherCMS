@@ -253,13 +253,18 @@ namespace CareTogether.Api
                 v1ReferralNotesEventLog,
                 v1ReferralDraftNotesStore
             );
-            var communitiesResource = new CommunitiesResource(communitiesEventLog, uploadsStore);
+            var communitiesResource = new CommunitiesResource(
+                communitiesEventLog,
+                uploadsStore,
+                policiesResource
+            );
 
             //TODO: If we want to be strict about conventions, this should have a manager intermediary for authz.
             services.AddSingleton<IPoliciesResource>(policiesResource);
             services.AddSingleton<IAccountsResource>(accountsResource);
             services.AddSingleton<IDirectoryResource>(directoryResource);
             services.AddSingleton<IApprovalsResource>(approvalsResource);
+            services.AddSingleton<ICommunitiesResource>(communitiesResource);
             services.AddSingleton<IV1ReferralsResource>(v1ReferralsResource);
             services.AddSingleton<IV1ReferralNotesResource>(v1ReferralNotesResource);
 

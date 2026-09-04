@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using CareTogether.Engines.Authorization;
 using CareTogether.Resources.Accounts;
 using CareTogether.Resources.Approvals;
+using CareTogether.Resources.Communities;
 using CareTogether.Resources.Directory;
 using CareTogether.Resources.Policies;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -32,6 +33,8 @@ namespace CareTogether.Api.Controllers
         ImmutableList<string>? caseCloseReasons
     );
 
+    public sealed record PutOrganizationCategoryPayload(string name);
+
     [ApiController]
     [Authorize(
         Policies.ForbidAnonymous,
@@ -45,6 +48,7 @@ namespace CareTogether.Api.Controllers
         private readonly IApprovalsResource approvalsResource;
         private readonly IFeatureManager featureManager;
         private readonly IAuthorizationEngine authorizationEngine;
+        private readonly ICommunitiesResource communitiesResource;
 
         public ConfigurationController(
             IPoliciesResource policiesResource,
@@ -52,16 +56,17 @@ namespace CareTogether.Api.Controllers
             IAccountsResource accountsResource,
             IApprovalsResource approvalsResource,
             IFeatureManager featureManager,
-            IAuthorizationEngine authorizationEngine
+            IAuthorizationEngine authorizationEngine,
+            ICommunitiesResource communitiesResource
         )
         {
-            //TODO: Delegate this controller's methods to a manager service
             this.policiesResource = policiesResource;
             this.directoryResource = directoryResource;
             this.accountsResource = accountsResource;
             this.approvalsResource = approvalsResource;
             this.featureManager = featureManager;
             this.authorizationEngine = authorizationEngine;
+            this.communitiesResource = communitiesResource;
         }
 
         [HttpGet("/api/{organizationId:guid}/[controller]")]
@@ -428,6 +433,72 @@ namespace CareTogether.Api.Controllers
                 organizationId,
                 payload.referralCloseReasons,
                 payload.caseCloseReasons
+            );
+            return Ok(result);
+        }
+
+        [HttpPut(
+            "/api/{organizationId:guid}/[controller]/organization-categories/{categoryId:guid}"
+        )]
+        public async Task<ActionResult<OrganizationConfiguration>> PutOrganizationCategory(
+            Guid organizationId,
+            Guid categoryId,
+            [FromBody] PutOrganizationCategoryPayload payload
+        )
+        {
+            if (!User.IsInRole(SystemConstants.ORGANIZATION_ADMINISTRATOR))
+                return Forbid();
+
+            var result = await policiesResource.UpsertOrganizationCategoryAsync(
+                organizationId,
+                new OrganizationCategory(categoryId, payload.name)
+            );
+            return Ok(result);
+        }
+
+        [HttpDelete(
+            "/api/{organizationId:guid}/[controller]/organization-categories/{categoryId:guid}"
+        )]
+        public async Task<ActionResult<OrganizationConfiguration>> DeleteOrganizationCategory(
+            Guid organizationId,
+            Guid categoryId
+        )
+        {
+            if (!User.IsInRole(SystemConstants.ORGANIZATION_ADMINISTRATOR))
+                return Forbid();
+
+            var configuration = await policiesResource.GetConfigurationAsync(organizationId);
+            var category = configuration.OrganizationCategories.SingleOrDefault(category =>
+                category.Id == categoryId
+            );
+            if (category == null)
+                throw new InvalidOperationException(
+                    "The specified organization category does not exist."
+                );
+
+            var communitiesByLocation = await Task.WhenAll(
+                configuration
+                    .Locations.Select(location => location.Id)
+                    .OfType<Guid>()
+                    .Select(locationId =>
+                        communitiesResource.ListLocationCommunitiesAsync(
+                            organizationId,
+                            locationId
+                        )
+                    )
+            );
+            if (
+                communitiesByLocation.Any(communities =>
+                    communities.Any(community => community.CategoryIds.Contains(categoryId))
+                )
+            )
+                throw new InvalidOperationException(
+                    $"Cannot delete organization category '{category.Name}' because it is assigned to one or more organizations."
+                );
+
+            var result = await policiesResource.DeleteOrganizationCategoryAsync(
+                organizationId,
+                categoryId
             );
             return Ok(result);
         }

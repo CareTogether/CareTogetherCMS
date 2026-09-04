@@ -9,13 +9,21 @@ import {
 import { useScreenTitle } from '../Shell/ShellScreenTitle';
 import {
   AssignmentInd as AssignmentIndIcon,
+  CategoryOutlined as CategoryOutlinedIcon,
   LocationOn as LocationOnIcon,
 } from '@mui/icons-material';
 import { useAppNavigate } from '../Hooks/useAppNavigate';
+import { useUserIsOrganizationAdministrator } from '../Model/SessionModel';
+import { useFeatureFlagEnabled } from 'posthog-js/react';
+import { ORGANIZATION_CATEGORIES_FEATURE_FLAG } from '../featureFlags';
 
 export function SettingsScreen() {
   useScreenTitle('Settings');
   const appNavigate = useAppNavigate();
+  const isOrganizationAdministrator =
+    useUserIsOrganizationAdministrator() === true;
+  const organizationCategoriesEnabled =
+    useFeatureFlagEnabled(ORGANIZATION_CATEGORIES_FEATURE_FLAG) === true;
 
   return (
     <Box
@@ -56,6 +64,28 @@ export function SettingsScreen() {
             </CardActionArea>
           </Card>
         </Grid>
+
+        {isOrganizationAdministrator && organizationCategoriesEnabled && (
+          <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+            <Card variant="outlined">
+              <CardActionArea
+                onClick={() => appNavigate.settingsOrganizationCategories()}
+              >
+                <CardContent sx={{ textAlign: 'center' }}>
+                  <CategoryOutlinedIcon
+                    sx={{ fontSize: 30, color: 'primary.main' }}
+                  />
+
+                  <Typography variant="h6">Organization Categories</Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    Define the categories available for classifying
+                    Organizations across your Tenant.
+                  </Typography>
+                </CardContent>
+              </CardActionArea>
+            </Card>
+          </Grid>
+        )}
       </Grid>
     </Box>
   );
