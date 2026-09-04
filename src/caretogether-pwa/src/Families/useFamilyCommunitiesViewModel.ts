@@ -41,7 +41,7 @@ export function useFamilyCommunitiesViewModel(
           communityInfo.community?.id &&
           !(communityInfo.community.memberFamilies ?? []).includes(familyId) &&
           communityInfo.userPermissions?.includes(
-            Permission.EditCommunityMemberFamilies
+            Permission.EditOrganizationMemberFamilies
           )
       ),
     [allCommunityInfo, familyId]

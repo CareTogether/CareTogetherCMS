@@ -146,11 +146,11 @@ function SideNavigationMenu({ open }: SideNavigationMenuProps) {
               collapsed={collapsed}
             />
           )}
-          {permissions(Permission.AccessCommunitiesScreen) && (
+          {permissions(Permission.AccessOrganizationsScreen) && (
             <ListItemLink
               className="ph-unmask"
-              to={`${locationPrefix}/communities`}
-              primary="Communities"
+              to={`${locationPrefix}/organizations`}
+              primary="Organizations"
               icon={<Diversity3Icon />}
               collapsed={collapsed}
             />

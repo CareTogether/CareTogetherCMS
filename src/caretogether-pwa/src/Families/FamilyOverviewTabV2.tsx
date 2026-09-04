@@ -210,7 +210,7 @@ export function FamilyOverviewTabV2({
             }}
           >
             <Typography className="ph-unmask" variant="h3">
-              Communities
+              Organizations
             </Typography>
             {canAddCommunity && (
               <Button
@@ -226,7 +226,7 @@ export function FamilyOverviewTabV2({
           </Box>
           {communityRows.length === 0 ? (
             <Typography color="text.secondary" variant="body2">
-              No communities.
+              No organizations.
             </Typography>
           ) : (
             communityRows.map((communityInfo) => (

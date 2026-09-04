@@ -59,7 +59,7 @@ export function CommunityScreen() {
   return (
     <Container maxWidth={false} sx={{ paddingLeft: '12px' }}>
       <Toolbar disableGutters variant={isDesktop ? 'dense' : 'regular'}>
-        {permissions(Permission.EditCommunity) && (
+        {permissions(Permission.EditOrganization) && (
           <Button
             onClick={editDrawer.openDrawer}
             variant="contained"
@@ -70,7 +70,7 @@ export function CommunityScreen() {
             Rename
           </Button>
         )}
-        {/* {permissions(Permission.DeleteCommunity) && <Button
+        {/* {permissions(Permission.DeleteOrganization) && <Button
             onClick={() => setDeleteCommunityDrawerOpen(true)}
             variant='contained' disabled
             size={isDesktop ? 'small' : 'medium'}
@@ -83,7 +83,7 @@ export function CommunityScreen() {
         <Grid size={{ xs: 12, sm: 6 }}>
           <Typography variant="h5">
             Description
-            {permissions(Permission.EditCommunity) && (
+            {permissions(Permission.EditOrganization) && (
               <Button
                 onClick={editDrawer.openDrawer}
                 variant="text"
@@ -100,11 +100,11 @@ export function CommunityScreen() {
           </p>
         </Grid>
         <Grid size={{ xs: 12, sm: 6 }}>
-          {permissions(Permission.ViewCommunityDocumentMetadata) && (
+          {permissions(Permission.ViewOrganizationDocumentMetadata) && (
             <>
               <Typography variant="h5">
                 Documents
-                {permissions(Permission.UploadCommunityDocuments) && (
+                {permissions(Permission.UploadOrganizationDocuments) && (
                   <Button
                     onClick={uploadDrawer.openDrawer}
                     variant="text"
@@ -121,14 +121,16 @@ export function CommunityScreen() {
           )}
           <Box
             sx={{
-              marginTop: permissions(Permission.ViewCommunityDocumentMetadata)
+              marginTop: permissions(
+                Permission.ViewOrganizationDocumentMetadata
+              )
                 ? 3
                 : 0,
             }}
           >
             <Typography variant="h5">
               Role Assignments
-              {permissions(Permission.EditCommunityRoleAssignments) && (
+              {permissions(Permission.EditOrganizationRoleAssignments) && (
                 <Button
                   onClick={addRoleAssignmentDrawer.openDrawer}
                   variant="text"
@@ -146,7 +148,7 @@ export function CommunityScreen() {
         <Grid size={12}>
           <Typography variant="h5">
             Member Families
-            {permissions(Permission.EditCommunityMemberFamilies) && (
+            {permissions(Permission.EditOrganizationMemberFamilies) && (
               <Button
                 onClick={addMemberFamilyDrawer.openDrawer}
                 variant="text"
@@ -161,35 +163,35 @@ export function CommunityScreen() {
           <CommunityMemberFamilies communityInfo={communityInfo} />
         </Grid>
       </Grid>
-      {permissions(Permission.EditCommunity) &&
+      {permissions(Permission.EditOrganization) &&
         editDrawer.drawerFor(
           <AddEditCommunity
             community={community}
             onClose={editDrawer.closeDrawer}
           />
         )}
-      {permissions(Permission.UploadCommunityDocuments) &&
+      {permissions(Permission.UploadOrganizationDocuments) &&
         uploadDrawer.drawerFor(
           <CommunityDocumentUpload
             community={community}
             onClose={uploadDrawer.closeDrawer}
           />
         )}
-      {permissions(Permission.EditCommunityMemberFamilies) &&
+      {permissions(Permission.EditOrganizationMemberFamilies) &&
         addMemberFamilyDrawer.drawerFor(
           <AddMemberFamiliesForm
             community={community}
             onClose={addMemberFamilyDrawer.closeDrawer}
           />
         )}
-      {permissions(Permission.EditCommunityRoleAssignments) &&
+      {permissions(Permission.EditOrganizationRoleAssignments) &&
         addRoleAssignmentDrawer.drawerFor(
           <AddRoleAssignmentForm
             community={community}
             onClose={addRoleAssignmentDrawer.closeDrawer}
           />
         )}
-      {/* {permissions(Permission.DeleteCommunity) && deleteCommunityDrawer.drawerFor(
+      {/* {permissions(Permission.DeleteOrganization) && deleteCommunityDrawer.drawerFor(
           <DeleteCommunityForm community={community} onClose={deleteCommunityDrawer.closeDrawer} />
         )} */}
     </Container>

@@ -132,7 +132,7 @@ namespace CareTogether.Managers.Records
             // The following permissions should not be construed as granting access to an actual aggregate.
             //TODO: More of this logic should be handled by the AuthorizationEngine.
             var irrelevantPermissions = ImmutableHashSet.Create(
-                Permission.AccessCommunitiesScreen,
+                Permission.AccessOrganizationsScreen,
                 Permission.AccessPartneringFamiliesScreen,
                 Permission.AccessSettingsScreen,
                 Permission.AccessVolunteersScreen
@@ -394,7 +394,7 @@ namespace CareTogether.Managers.Records
                 new CommunityAuthorizationContext(communityId)
             );
 
-            if (!contextPermissions.Contains(Permission.ReadCommunityDocuments))
+            if (!contextPermissions.Contains(Permission.ReadOrganizationDocuments))
                 throw new Exception("The user is not authorized to perform this command.");
 
             var valetUrl = await communitiesResource.GetCommunityDocumentReadValetUrl(
@@ -424,7 +424,7 @@ namespace CareTogether.Managers.Records
                 new CommunityAuthorizationContext(communityId)
             );
 
-            if (!contextPermissions.Contains(Permission.UploadCommunityDocuments))
+            if (!contextPermissions.Contains(Permission.UploadOrganizationDocuments))
                 throw new Exception("The user is not authorized to perform this command.");
 
             var valetUrl = await communitiesResource.GetCommunityDocumentUploadValetUrl(

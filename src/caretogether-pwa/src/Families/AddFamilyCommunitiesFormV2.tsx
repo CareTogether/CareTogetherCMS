@@ -67,13 +67,13 @@ export function AddFamilyCommunitiesFormV2({
     <Grid container spacing={2} sx={{ maxWidth: 500 }}>
       <Grid size={12}>
         <Typography className="ph-unmask" variant="h6">
-          Add Communities
+          Add Organizations
         </Typography>
       </Grid>
       <Grid size={12}>
         {communityOptions.length === 0 ? (
           <Typography color="text.secondary" variant="body2">
-            There are no communities available to add.
+            There are no organizations available to add.
           </Typography>
         ) : (
           <FormControl required fullWidth size="small" sx={{ mt: 1 }}>
@@ -91,14 +91,17 @@ export function AddFamilyCommunitiesFormV2({
                 <TextField
                   required
                   {...params}
-                  label="Select communities to add"
+                  label="Select organizations to add"
                 />
               )}
             />
           </FormControl>
         )}
       </Grid>
-      <Grid size={12} sx={{ display: 'flex', justifyContent: 'flex-end', gap: 1 }}>
+      <Grid
+        size={12}
+        sx={{ display: 'flex', justifyContent: 'flex-end', gap: 1 }}
+      >
         <Button color="secondary" onClick={onClose}>
           Cancel
         </Button>

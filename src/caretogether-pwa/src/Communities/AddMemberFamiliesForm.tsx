@@ -1,10 +1,5 @@
 import Grid from '@mui/material/Grid';
-import {
-  Autocomplete,
-  Button,
-  FormControl,
-  TextField,
-} from '@mui/material';
+import { Autocomplete, Button, FormControl, TextField } from '@mui/material';
 import { AddCommunityMemberFamily, Community } from '../GeneratedClient';
 import { useCommunityCommand } from '../Model/DirectoryModel';
 import { useState } from 'react';
@@ -106,7 +101,7 @@ export function AddMemberFamiliesForm({
               <TextField
                 required
                 {...params}
-                label="Select families to add to this community"
+                label="Select families to add to this organization"
               />
             )}
           />

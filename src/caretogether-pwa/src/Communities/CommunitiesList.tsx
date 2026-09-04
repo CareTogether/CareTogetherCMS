@@ -18,7 +18,7 @@ import { useVisibleCommunities } from '../Model/Data';
 import { useAppNavigate } from '../Hooks/useAppNavigate';
 
 export function CommunitiesList() {
-  useScreenTitle('Communities');
+  useScreenTitle('Organizations');
 
   // The array object returned by state is read-only. We need to copy it before we can do an in-place sort.
   const communities = useVisibleCommunities()
@@ -27,7 +27,7 @@ export function CommunitiesList() {
 
   const appNavigate = useAppNavigate();
   function openCommunity(community: Community) {
-    appNavigate.community(community.id!);
+    appNavigate.organization(community.id!);
   }
 
   const [addDrawerOpen, setAddDrawerOpen] = useState(false);
@@ -41,7 +41,7 @@ export function CommunitiesList() {
         onClick={() => setAddDrawerOpen(true)}
         sx={{ marginRight: 'auto', marginY: 2 }}
       >
-        Add new community
+        Add new organization
       </Button>
 
       <TableContainer>
@@ -89,7 +89,7 @@ export function CommunitiesList() {
           </TableBody>
         </Table>
       </TableContainer>
-      {permissions(Permission.CreateCommunity) && (
+      {permissions(Permission.CreateOrganization) && (
         <Drawer
           anchor="right"
           open={addDrawerOpen}
