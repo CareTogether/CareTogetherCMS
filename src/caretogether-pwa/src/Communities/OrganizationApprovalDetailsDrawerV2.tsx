@@ -3,7 +3,6 @@ import {
   Alert,
   Box,
   Button,
-  Chip,
   Drawer,
   FormControl,
   IconButton,
@@ -14,7 +13,7 @@ import {
   TextField,
   Typography,
 } from '@mui/material';
-import { useEffect, useState, type ReactNode } from 'react';
+import { useEffect, useState } from 'react';
 import {
   CommunityInfo,
   CompletedRequirementInfo,
@@ -23,18 +22,23 @@ import {
   ExemptedRequirementInfo,
   Permission,
 } from '../GeneratedClient';
+import {
+  ApprovalDetailsDrawerLayout,
+  ApprovalDocumentList,
+  ApprovalHeaderActions,
+} from '../Approvals/ApprovalDetailsDrawerLayout';
+import {
+  findActionableApprovalOccurrence,
+  type ApprovalRequirementManagementMode,
+} from '../Approvals/approvalDetails';
 import type {
   ApprovalLedgerOccurrence,
   ApprovalLedgerRow,
-  ApprovalLedgerStatus,
-} from '../Families/approvalLedgerViewModel';
-import { PersonName } from '../Families/PersonName';
+} from '../Approvals/approvalLedgerViewModel';
 import { v2Typography } from '../Families/v2Typography';
 import { useBackdrop } from '../Hooks/useBackdrop';
-import { useUserLookup } from '../Model/DirectoryModel';
 import { useOrganizationApprovalsModel } from '../Model/OrganizationApprovalsModel';
 import { useCommunityPermissions } from '../Model/SessionModel';
-import { formatUtcDateOnly } from '../Utilities/dateUtils';
 
 type OrganizationApprovalDetailsDrawerV2Props = {
   communityInfo: CommunityInfo;
@@ -43,76 +47,6 @@ type OrganizationApprovalDetailsDrawerV2Props = {
   open: boolean;
   onClose: () => void;
 };
-
-type RequirementManagementMode =
-  | 'complete'
-  | 'grantExemption'
-  | 'markIncomplete'
-  | 'removeExemption';
-
-const statusLabels: Record<ApprovalLedgerStatus, string> = {
-  missing: 'Missing',
-  completed: 'Completed',
-  exempted: 'Exempted',
-  expiring: 'Expiring',
-  expired: 'Expired',
-  availableApplication: 'Application',
-};
-
-function statusColor(status: ApprovalLedgerStatus) {
-  switch (status) {
-    case 'missing':
-      return 'error';
-    case 'expired':
-    case 'expiring':
-      return 'warning';
-    case 'availableApplication':
-      return 'info';
-    case 'completed':
-      return 'success';
-    case 'exempted':
-    default:
-      return 'default';
-  }
-}
-
-function DetailField({
-  label,
-  children,
-}: {
-  label: string;
-  children: ReactNode;
-}) {
-  return (
-    <Box>
-      <Typography {...v2Typography.fieldLabel}>{label}</Typography>
-      <Typography {...v2Typography.primaryValue}>{children}</Typography>
-    </Box>
-  );
-}
-
-function DrawerSection({
-  title,
-  children,
-}: {
-  title: string;
-  children: ReactNode;
-}) {
-  return (
-    <Stack spacing={1}>
-      <Typography {...v2Typography.sectionTitle}>{title}</Typography>
-      {children}
-    </Stack>
-  );
-}
-
-function actionableOccurrence(row: ApprovalLedgerRow | null) {
-  return row?.occurrences.find((occurrence) =>
-    ['missing', 'availableApplication', 'completed', 'exempted'].includes(
-      occurrence.status
-    )
-  );
-}
 
 function requirementName(occurrence: ApprovalLedgerOccurrence | undefined) {
   if (!occurrence) return '';
@@ -149,6 +83,19 @@ function isExemption(
   );
 }
 
+function managementTitle(mode: ApprovalRequirementManagementMode) {
+  switch (mode) {
+    case 'complete':
+      return 'Complete';
+    case 'grantExemption':
+      return 'Exempt';
+    case 'markIncomplete':
+      return 'Mark Incomplete';
+    case 'removeExemption':
+      return 'Remove Exemption';
+  }
+}
+
 function OrganizationRequirementManagementDrawerV2({
   communityInfo,
   mode,
@@ -158,7 +105,7 @@ function OrganizationRequirementManagementDrawerV2({
   onClose,
 }: {
   communityInfo: CommunityInfo;
-  mode: RequirementManagementMode | null;
+  mode: ApprovalRequirementManagementMode | null;
   occurrence: ApprovalLedgerOccurrence | undefined;
   open: boolean;
   policy: EffectiveLocationPolicy;
@@ -231,15 +178,6 @@ function OrganizationRequirementManagementDrawerV2({
     onClose();
   }
 
-  const title =
-    mode === 'complete'
-      ? 'Complete'
-      : mode === 'grantExemption'
-        ? 'Exempt'
-        : mode === 'markIncomplete'
-          ? 'Mark Incomplete'
-          : 'Remove Exemption';
-
   return (
     <Drawer
       anchor="right"
@@ -278,7 +216,7 @@ function OrganizationRequirementManagementDrawerV2({
                 id="organization-requirement-management-title"
                 variant="h5"
               >
-                {title}
+                {managementTitle(mode)}
               </Typography>
               <Typography
                 className="ph-unmask"
@@ -420,6 +358,25 @@ function OrganizationRequirementManagementDrawerV2({
   );
 }
 
+function TextNoteList({ notes }: { notes: string[] }) {
+  if (notes.length === 0) {
+    return <Typography {...v2Typography.secondaryValue}>No notes.</Typography>;
+  }
+
+  return (
+    <Stack spacing={1}>
+      {notes.map((note, index) => (
+        <Box
+          key={`${note}:${index}`}
+          sx={{ border: 1, borderColor: 'divider', borderRadius: 1, p: 1 }}
+        >
+          <Typography {...v2Typography.browserCell}>{note}</Typography>
+        </Box>
+      ))}
+    </Stack>
+  );
+}
+
 export function OrganizationApprovalDetailsDrawerV2({
   communityInfo,
   policy,
@@ -428,267 +385,42 @@ export function OrganizationApprovalDetailsDrawerV2({
   onClose,
 }: OrganizationApprovalDetailsDrawerV2Props) {
   const [managementMode, setManagementMode] =
-    useState<RequirementManagementMode | null>(null);
+    useState<ApprovalRequirementManagementMode | null>(null);
   const permissions = useCommunityPermissions(communityInfo);
-  const userLookup = useUserLookup();
-  const workflowOccurrence = actionableOccurrence(row);
-  const completedOrExemptedOn = row?.completedOrExemptedOn
-    ? formatUtcDateOnly(row.completedOrExemptedOn)
-    : undefined;
-  const validUntil = row?.validUntil
-    ? formatUtcDateOnly(row.validUntil)
-    : undefined;
+  const workflowOccurrence = findActionableApprovalOccurrence(row);
   const documents = communityInfo.community.uploadedDocuments.filter(
     (document) => row?.linkedDocumentIds.includes(document.uploadedDocumentId)
   );
-  const canReadDocuments = permissions(Permission.ReadOrganizationDocuments);
 
   useEffect(() => {
     if (!open) setManagementMode(null);
   }, [open]);
 
-  const headerActions = (() => {
-    if (!workflowOccurrence) return null;
-    if (
-      workflowOccurrence.status === 'missing' ||
-      workflowOccurrence.status === 'availableApplication'
-    ) {
-      return (
-        <Stack direction="row" spacing={1} sx={{ flexWrap: 'wrap', gap: 1 }}>
-          <Button
-            disabled={
-              !permissions(Permission.EditApprovalRequirementCompletion)
-            }
-            onClick={() => setManagementMode('complete')}
-            variant="contained"
-          >
-            Complete
-          </Button>
-          <Button
-            disabled={!permissions(Permission.EditApprovalRequirementExemption)}
-            onClick={() => setManagementMode('grantExemption')}
-            variant="contained"
-          >
-            Exempt
-          </Button>
-        </Stack>
-      );
-    }
-    if (workflowOccurrence.status === 'completed') {
-      return (
-        <Button
-          color="error"
-          disabled={!permissions(Permission.EditApprovalRequirementCompletion)}
-          onClick={() => setManagementMode('markIncomplete')}
-          variant="contained"
-        >
-          Mark Incomplete
-        </Button>
-      );
-    }
-    return (
-      <Button
-        color="error"
-        disabled={!permissions(Permission.EditApprovalRequirementExemption)}
-        onClick={() => setManagementMode('removeExemption')}
-        variant="contained"
-      >
-        Remove Exemption
-      </Button>
-    );
-  })();
-
   return (
     <>
-      <Drawer
-        anchor="right"
-        aria-labelledby="organization-approval-details-title"
+      <ApprovalDetailsDrawerLayout
+        row={row}
         open={open}
         onClose={onClose}
-        slotProps={{
-          paper: {
-            sx: {
-              width: { xs: '100%', sm: 500, md: 560 },
-              p: 2,
-              pt: { xs: 7, sm: 8, md: 6 },
-            },
-          },
-        }}
-      >
-        {row && (
-          <Stack spacing={2}>
-            <Box
-              sx={{
-                display: 'flex',
-                alignItems: 'flex-start',
-                justifyContent: 'space-between',
-                gap: 1,
-              }}
-            >
-              <Box sx={{ minWidth: 0, flex: 1 }}>
-                <Typography
-                  {...v2Typography.fieldLabel}
-                  sx={[
-                    v2Typography.fieldLabel.sx,
-                    { textTransform: 'uppercase' },
-                  ]}
-                >
-                  Requirement
-                </Typography>
-                <Typography
-                  className="ph-unmask"
-                  id="organization-approval-details-title"
-                  {...v2Typography.workspaceTitle}
-                >
-                  {row.requirementName}
-                </Typography>
-                <Box
-                  sx={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    gap: 1,
-                    mt: 1,
-                    flexWrap: 'wrap',
-                  }}
-                >
-                  <Chip
-                    className="ph-unmask"
-                    color={statusColor(row.status)}
-                    label={statusLabels[row.status]}
-                    size="small"
-                  />
-                  {headerActions}
-                </Box>
-              </Box>
-              <IconButton aria-label="close approval details" onClick={onClose}>
-                <CloseIcon />
-              </IconButton>
-            </Box>
-
-            <Stack spacing={1.25}>
-              <DetailField label="Applies To">
-                {row.appliesTo.map((subject) => subject.label).join(', ') ||
-                  'No subject'}
-              </DetailField>
-              <Box>
-                <Typography {...v2Typography.fieldLabel}>
-                  Needed For Roles
-                </Typography>
-                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-                  {row.neededForRoleLabels.length === 0 ? (
-                    <Typography {...v2Typography.primaryValue}>None</Typography>
-                  ) : (
-                    row.neededForRoleLabels.map((label) => (
-                      <Chip
-                        key={label}
-                        className="ph-unmask"
-                        label={label}
-                        size="small"
-                        variant="outlined"
-                      />
-                    ))
-                  )}
-                </Box>
-              </Box>
-              {row.completedOrExemptedByUserId && (
-                <DetailField
-                  label={
-                    row.status === 'completed' ? 'Completed By' : 'Exempted By'
-                  }
-                >
-                  <PersonName
-                    person={userLookup(row.completedOrExemptedByUserId)}
-                  />
-                </DetailField>
-              )}
-              {completedOrExemptedOn && (
-                <DetailField
-                  label={
-                    row.status === 'completed' ? 'Completed On' : 'Exempted On'
-                  }
-                >
-                  {completedOrExemptedOn}
-                </DetailField>
-              )}
-              {validUntil && (
-                <DetailField
-                  label={
-                    row.status === 'completed'
-                      ? 'Valid Until'
-                      : 'Exempted Until'
-                  }
-                >
-                  {validUntil}
-                </DetailField>
-              )}
-            </Stack>
-
-            <DrawerSection title="Documents">
-              {!canReadDocuments ? (
-                <Typography {...v2Typography.secondaryValue}>
-                  You do not have permission to view documents.
-                </Typography>
-              ) : documents.length === 0 ? (
-                <Typography {...v2Typography.secondaryValue}>
-                  No documents.
-                </Typography>
-              ) : (
-                <Stack spacing={1}>
-                  {documents.map((document) => (
-                    <Box
-                      key={document.uploadedDocumentId}
-                      sx={{
-                        border: 1,
-                        borderColor: 'divider',
-                        borderRadius: 1,
-                        p: 1,
-                      }}
-                    >
-                      <Typography {...v2Typography.browserCell}>
-                        {document.uploadedFileName}
-                      </Typography>
-                      <Typography {...v2Typography.fieldLabel}>
-                        Uploaded by{' '}
-                        <PersonName person={userLookup(document.userId)} />
-                        {document.timestampUtc
-                          ? ` on ${formatUtcDateOnly(document.timestampUtc)}`
-                          : ''}
-                      </Typography>
-                    </Box>
-                  ))}
-                </Stack>
-              )}
-            </DrawerSection>
-
-            <DrawerSection title="Notes">
-              {row.notes.length === 0 ? (
-                <Typography {...v2Typography.secondaryValue}>
-                  No notes.
-                </Typography>
-              ) : (
-                <Stack spacing={1}>
-                  {row.notes.map((note, index) => (
-                    <Box
-                      key={`${note}:${index}`}
-                      sx={{
-                        border: 1,
-                        borderColor: 'divider',
-                        borderRadius: 1,
-                        p: 1,
-                      }}
-                    >
-                      <Typography {...v2Typography.browserCell}>
-                        {note}
-                      </Typography>
-                    </Box>
-                  ))}
-                </Stack>
-              )}
-            </DrawerSection>
-          </Stack>
-        )}
-      </Drawer>
+        titleId="organization-approval-details-title"
+        headerActions={
+          <ApprovalHeaderActions
+            occurrence={workflowOccurrence}
+            canComplete={permissions(
+              Permission.EditApprovalRequirementCompletion
+            )}
+            canExempt={permissions(Permission.EditApprovalRequirementExemption)}
+            onSelectMode={setManagementMode}
+          />
+        }
+        documents={
+          <ApprovalDocumentList
+            canReadDocuments={permissions(Permission.ReadOrganizationDocuments)}
+            documents={documents}
+          />
+        }
+        notes={<TextNoteList notes={row?.notes ?? []} />}
+      />
       <OrganizationRequirementManagementDrawerV2
         communityInfo={communityInfo}
         mode={managementMode}

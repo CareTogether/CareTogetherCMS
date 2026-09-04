@@ -2,7 +2,7 @@ import type { RequirementContext } from '../Requirements/RequirementContext';
 import type {
   ApprovalLedgerOccurrence,
   ApprovalLedgerSubject,
-} from './approvalLedgerViewModel';
+} from '../Approvals/approvalLedgerViewModel';
 
 export function createSyntheticApprovalOccurrence({
   requirementName,

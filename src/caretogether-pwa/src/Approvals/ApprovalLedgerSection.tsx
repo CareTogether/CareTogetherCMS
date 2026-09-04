@@ -12,13 +12,12 @@ import {
   ApprovalLedgerRow,
   ApprovalLedgerStatus,
 } from './approvalLedgerViewModel';
-import { ApprovalDetailsDrawerV2 } from './ApprovalDetailsDrawerV2';
 import { subjectKey } from './approvalLedgerDataGridViewModel';
 import { ApprovalsDataGridV2 } from './ApprovalsDataGridV2';
 
 type ApprovalLedgerSectionProps = {
   rows: ApprovalLedgerRow[];
-  renderDetailsDrawer?: (
+  renderDetailsDrawer: (
     row: ApprovalLedgerRow | null,
     open: boolean,
     onClose: () => void
@@ -100,8 +99,7 @@ export function ApprovalLedgerSection({
       if (
         appliesToFilter !== 'all' &&
         !row.appliesTo.some(
-          (subject) =>
-            subjectKey(subject.scope, subject.id) === appliesToFilter
+          (subject) => subjectKey(subject.scope, subject.id) === appliesToFilter
         )
       ) {
         return false;
@@ -216,18 +214,10 @@ export function ApprovalLedgerSection({
         rows={visibleRows}
         onRowClick={(row) => openDetailsDrawer(row.id)}
       />
-      {renderDetailsDrawer ? (
-        renderDetailsDrawer(
-          selectedRow,
-          selectedRow !== null,
-          closeDetailsDrawer
-        )
-      ) : (
-        <ApprovalDetailsDrawerV2
-          row={selectedRow}
-          open={selectedRow !== null}
-          onClose={closeDetailsDrawer}
-        />
+      {renderDetailsDrawer(
+        selectedRow,
+        selectedRow !== null,
+        closeDetailsDrawer
       )}
     </Box>
   );

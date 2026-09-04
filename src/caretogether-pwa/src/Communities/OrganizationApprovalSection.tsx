@@ -21,11 +21,12 @@ import {
   Permission,
   RoleRemovalReason,
 } from '../GeneratedClient';
-import { ApprovalLedgerSection } from '../Families/ApprovalLedgerSection';
-import type {
-  ApprovalLedgerRow,
-  ApprovalLedgerStatus,
-} from '../Families/approvalLedgerViewModel';
+import { ApprovalLedgerSection } from '../Approvals/ApprovalLedgerSection';
+import type { ApprovalLedgerRow } from '../Approvals/approvalLedgerViewModel';
+import {
+  approvalLedgerStatusColor,
+  approvalLedgerStatusLabels,
+} from '../Approvals/approvalLedgerDataGridViewModel';
 import { v2Typography } from '../Families/v2Typography';
 import { useBackdrop } from '../Hooks/useBackdrop';
 import { useOrganizationApprovalsModel } from '../Model/OrganizationApprovalsModel';
@@ -37,39 +38,13 @@ import {
 import { OrganizationApprovalDetailsDrawerV2 } from './OrganizationApprovalDetailsDrawerV2';
 import {
   OrganizationRoleSummaryCard,
+  OrganizationApprovalViewModel,
   RemovedOrganizationRoleSummary,
-  useOrganizationApprovalViewModel,
 } from './useOrganizationApprovalViewModel';
 
 type SelectedRole =
   | { kind: 'active'; card: OrganizationRoleSummaryCard }
   | { kind: 'removed'; card: RemovedOrganizationRoleSummary };
-
-const requirementStatusLabels: Record<ApprovalLedgerStatus, string> = {
-  missing: 'Missing',
-  completed: 'Completed',
-  exempted: 'Exempted',
-  expiring: 'Expiring',
-  expired: 'Expired',
-  availableApplication: 'Application',
-};
-
-function requirementStatusColor(status: ApprovalLedgerStatus) {
-  switch (status) {
-    case 'missing':
-    case 'expired':
-      return 'error';
-    case 'expiring':
-      return 'warning';
-    case 'availableApplication':
-      return 'info';
-    case 'completed':
-      return 'success';
-    case 'exempted':
-    default:
-      return 'default';
-  }
-}
 
 function activeCardSx(status: OrganizationRoleSummaryCard['status']) {
   return (theme: Theme) => {
@@ -302,8 +277,8 @@ function OrganizationRoleDetailsDrawer({
                     </Typography>
                     <Chip
                       className="ph-unmask"
-                      color={requirementStatusColor(requirement.status)}
-                      label={requirementStatusLabels[requirement.status]}
+                      color={approvalLedgerStatusColor(requirement.status)}
+                      label={approvalLedgerStatusLabels[requirement.status]}
                       size="small"
                     />
                   </Box>
@@ -330,22 +305,22 @@ function OrganizationRoleDetailsDrawer({
 export function OrganizationApprovalSection({
   communityInfo,
   policy,
+  viewModel,
 }: {
   communityInfo: CommunityInfo;
   policy: EffectiveLocationPolicy;
+  viewModel: OrganizationApprovalViewModel;
 }) {
   const permissions = useCommunityPermissions(communityInfo);
-  const { approvalLedgerRows } =
-    useOrganizationApprovalViewModel(communityInfo);
+  const { approvalLedgerRows } = viewModel;
   const configuredRoles = Object.keys(
     policy.organizationApprovalPolicy?.organizationRoles ?? {}
   );
 
   if (configuredRoles.length === 0) return null;
 
-  const canViewStatus = permissions(Permission.ViewApprovalStatus);
   const canViewProgress = permissions(Permission.ViewApprovalProgress);
-  if (!canViewStatus && !canViewProgress) return null;
+  if (!canViewProgress) return null;
 
   return (
     <Stack spacing={2}>
@@ -375,13 +350,14 @@ export function OrganizationApprovalSection({
 
 export function OrganizationApprovalRoleSummaryCards({
   communityInfo,
+  viewModel,
 }: {
   communityInfo: CommunityInfo;
+  viewModel: OrganizationApprovalViewModel;
 }) {
   const permissions = useCommunityPermissions(communityInfo);
   const [selectedRole, setSelectedRole] = useState<SelectedRole | null>(null);
-  const { removedRoleSummaries, roleSummaryCards } =
-    useOrganizationApprovalViewModel(communityInfo);
+  const { removedRoleSummaries, roleSummaryCards } = viewModel;
 
   if (
     !communityInfo.approvalInfo ||

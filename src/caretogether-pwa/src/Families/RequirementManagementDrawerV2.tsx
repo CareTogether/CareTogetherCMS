@@ -2,16 +2,13 @@ import CloseIcon from '@mui/icons-material/Close';
 import { Box, Drawer, IconButton, Stack, Typography } from '@mui/material';
 import { Permission } from '../GeneratedClient';
 import { useFamilyIdPermissions } from '../Model/SessionModel';
-import type { ApprovalLedgerOccurrence } from './approvalLedgerViewModel';
+import type { ApprovalLedgerOccurrence } from '../Approvals/approvalLedgerViewModel';
+import type { ApprovalRequirementManagementMode } from '../Approvals/approvalDetails';
 import { ApprovalWorkflowConfirmationSectionV2 } from './ApprovalWorkflowConfirmationSectionV2';
 import { ApprovalWorkflowMissingSectionV2 } from './ApprovalWorkflowMissingSectionV2';
 import { useApprovalWorkflowActionsV2 } from './hooks/useApprovalWorkflowActionsV2';
 
-export type RequirementManagementMode =
-  | 'complete'
-  | 'grantExemption'
-  | 'markIncomplete'
-  | 'removeExemption';
+export type RequirementManagementMode = ApprovalRequirementManagementMode;
 
 type RequirementManagementDrawerV2Props = {
   mode: RequirementManagementMode | null;

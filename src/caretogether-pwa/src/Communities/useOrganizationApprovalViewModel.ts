@@ -1,8 +1,6 @@
 import { useMemo } from 'react';
 import {
   CommunityInfo,
-  CompletedRequirementInfo,
-  ExemptedRequirementInfo,
   OrganizationRoleApprovalStatus,
   RoleApprovalStatus,
   RoleRemoval,
@@ -10,8 +8,13 @@ import {
 import type {
   ApprovalLedgerOccurrence,
   ApprovalLedgerRow,
-  ApprovalLedgerStatus,
-} from '../Families/approvalLedgerViewModel';
+} from '../Approvals/approvalLedgerViewModel';
+import {
+  completedRequirementStatus,
+  exemptedRequirementStatus,
+  normalizeApprovalStrings,
+  sortApprovalLedgerRows,
+} from '../Approvals/approvalLedgerViewModel';
 import { isRoleApprovalStatusVisibleInSummary } from '../Volunteers/roleApprovalStatusPresentation';
 
 export type OrganizationRoleSummaryCard = {
@@ -30,56 +33,12 @@ export type RemovedOrganizationRoleSummary = {
   roleRemoval: RoleRemoval;
 };
 
-const EXPIRING_APPROVAL_DAYS = 30;
-const STATUS_PRIORITY: ApprovalLedgerStatus[] = [
-  'expired',
-  'missing',
-  'expiring',
-  'availableApplication',
-  'exempted',
-  'completed',
-];
-
-function normalizeStrings(values: (string | undefined | null)[]) {
-  return [...new Set(values.filter(Boolean) as string[])].sort((a, b) =>
-    a.localeCompare(b)
-  );
-}
-
 function normalizedRoleName(roleName: string | undefined) {
   return (roleName ?? '').trim().replace(/\s+/g, ' ');
 }
 
 function roleKey(roleName: string | undefined) {
   return normalizedRoleName(roleName).toLocaleLowerCase();
-}
-
-function isExpired(date?: Date, now = new Date()) {
-  return date !== undefined && date <= now;
-}
-
-function isExpiring(date?: Date, now = new Date()) {
-  if (!date || isExpired(date, now)) return false;
-
-  const cutoff = new Date(now);
-  cutoff.setDate(cutoff.getDate() + EXPIRING_APPROVAL_DAYS);
-  return date <= cutoff;
-}
-
-function completedStatus(
-  requirement: CompletedRequirementInfo
-): ApprovalLedgerStatus {
-  if (isExpired(requirement.expiresAtUtc)) return 'expired';
-  if (isExpiring(requirement.expiresAtUtc)) return 'expiring';
-  return 'completed';
-}
-
-function exemptedStatus(
-  requirement: ExemptedRequirementInfo
-): ApprovalLedgerStatus {
-  if (isExpired(requirement.exemptionExpiresAtUtc)) return 'expired';
-  if (isExpiring(requirement.exemptionExpiresAtUtc)) return 'expiring';
-  return 'exempted';
 }
 
 function currentRoleVersions(role: OrganizationRoleApprovalStatus) {
@@ -113,8 +72,11 @@ function roleDetailsByRequirement(
           .filter(Boolean)
           .join(' ');
         details.set(requirement.actionName, {
-          roleNames: normalizeStrings([...current.roleNames, roleName]),
-          roleLabels: normalizeStrings([...current.roleLabels, versionLabel]),
+          roleNames: normalizeApprovalStrings([...current.roleNames, roleName]),
+          roleLabels: normalizeApprovalStrings([
+            ...current.roleLabels,
+            versionLabel,
+          ]),
           versions: [
             ...current.versions,
             { version: version.version, roleName },
@@ -166,7 +128,7 @@ function buildOrganizationApprovalLedgerRows(communityInfo?: CommunityInfo) {
   const roleDetails = roleDetailsByRequirement(approval.approvalStatusByRole);
   const roleInfo = (requirementName: string, explicitRoles?: string[]) => {
     const details = roleDetails.get(requirementName);
-    const roleNames = normalizeStrings(
+    const roleNames = normalizeApprovalStrings(
       explicitRoles?.length ? explicitRoles : (details?.roleNames ?? [])
     );
     return {
@@ -189,14 +151,16 @@ function buildOrganizationApprovalLedgerRows(communityInfo?: CommunityInfo) {
           'completed',
           requirement.completedRequirementId,
         ].join('|'),
-        status: completedStatus(requirement),
+        status: completedRequirementStatus(requirement),
         requirementName: requirement.requirementName,
         appliesTo: [subject],
         completedOrExemptedOn: requirement.completedAtUtc,
         validUntil: requirement.expiresAtUtc,
         neededForRoles: roles.roleNames,
         neededForRoleLabels: roles.roleNames,
-        linkedDocumentIds: normalizeStrings([requirement.uploadedDocumentId]),
+        linkedDocumentIds: normalizeApprovalStrings([
+          requirement.uploadedDocumentId,
+        ]),
         noteIds: [],
         completedOrExemptedByUserId: requirement.userId,
         notes: [],
@@ -228,7 +192,7 @@ function buildOrganizationApprovalLedgerRows(communityInfo?: CommunityInfo) {
           requirement.requirementName,
           requirement.timestampUtc.toISOString(),
         ].join('|'),
-        status: exemptedStatus(requirement),
+        status: exemptedRequirementStatus(requirement),
         requirementName: requirement.requirementName,
         appliesTo: [subject],
         completedOrExemptedOn: requirement.timestampUtc,
@@ -238,7 +202,7 @@ function buildOrganizationApprovalLedgerRows(communityInfo?: CommunityInfo) {
         linkedDocumentIds: [],
         noteIds: [],
         completedOrExemptedByUserId: requirement.userId,
-        notes: normalizeStrings([requirement.additionalComments]),
+        notes: normalizeApprovalStrings([requirement.additionalComments]),
         occurrences: [
           occurrence(
             organization.id,
@@ -310,16 +274,12 @@ function buildOrganizationApprovalLedgerRows(communityInfo?: CommunityInfo) {
     }
   );
 
-  return [
+  return sortApprovalLedgerRows([
     ...completedRows,
     ...exemptedRows,
     ...missingRows,
     ...applicationRows,
-  ].sort((a, b) => {
-    const statusOrder =
-      STATUS_PRIORITY.indexOf(a.status) - STATUS_PRIORITY.indexOf(b.status);
-    return statusOrder || a.requirementName.localeCompare(b.requirementName);
-  });
+  ]);
 }
 
 function activeRoleRemoval(roleRemovals: RoleRemoval[], roleName: string) {
@@ -447,3 +407,7 @@ export function useOrganizationApprovalViewModel(
     roleSummaryCards,
   };
 }
+
+export type OrganizationApprovalViewModel = ReturnType<
+  typeof useOrganizationApprovalViewModel
+>;

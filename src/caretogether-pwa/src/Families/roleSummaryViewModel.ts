@@ -17,7 +17,7 @@ import type {
   ApprovalLedgerOccurrence,
   ApprovalLedgerRow,
   ApprovalLedgerStatus,
-} from './approvalLedgerViewModel';
+} from '../Approvals/approvalLedgerViewModel';
 
 export type RoleSummarySubject = {
   scope: 'family' | 'person';
@@ -157,7 +157,9 @@ function roleNamesFromMissingRequirement(
 function requirementAppliesToRole(roles: string[] | undefined, role: string) {
   const normalizedRole = roleKey(role);
 
-  return roles?.some((candidate) => roleKey(candidate) === normalizedRole) ?? false;
+  return (
+    roles?.some((candidate) => roleKey(candidate) === normalizedRole) ?? false
+  );
 }
 
 function isExpired(date?: Date, now = new Date()) {
@@ -178,7 +180,8 @@ function isExpiring(date?: Date, now = new Date()) {
 function effectiveDate(status?: DateOnlyTimelineOfRoleApprovalStatus) {
   const now = new Date();
   const currentStatusRange = status?.ranges?.find(
-    (range) => range.start && range.start <= now && (!range.end || range.end >= now)
+    (range) =>
+      range.start && range.start <= now && (!range.end || range.end >= now)
   );
 
   return currentStatusRange?.start;
@@ -191,7 +194,10 @@ function requirementCountsForRole(
 ): RoleSummaryRequirementCounts {
   const missingCount =
     source.missingRequirements?.filter((requirement) =>
-      requirementAppliesToRole(roleNamesFromMissingRequirement(requirement), roleName)
+      requirementAppliesToRole(
+        roleNamesFromMissingRequirement(requirement),
+        roleName
+      )
     ).length ?? 0;
   const roleCompletedRequirements =
     source.completedRequirements?.filter((requirement) =>
@@ -201,11 +207,11 @@ function requirementCountsForRole(
     source.exemptedRequirements?.filter((requirement) =>
       requirementAppliesToRole(requirement.roleNames, roleName)
     ) ?? [];
-  const expiredCompletedCount = roleCompletedRequirements.filter((requirement) =>
-    isExpired(requirement.expiresAtUtc)
+  const expiredCompletedCount = roleCompletedRequirements.filter(
+    (requirement) => isExpired(requirement.expiresAtUtc)
   ).length;
-  const expiringCompletedCount = roleCompletedRequirements.filter((requirement) =>
-    isExpiring(requirement.expiresAtUtc)
+  const expiringCompletedCount = roleCompletedRequirements.filter(
+    (requirement) => isExpiring(requirement.expiresAtUtc)
   ).length;
   const expiredExemptedCount = roleExemptedRequirements.filter((requirement) =>
     isExpired(requirement.exemptionExpiresAtUtc)
@@ -223,7 +229,9 @@ function requirementCountsForRole(
   const completionPercentage =
     totalRequirementCount === 0
       ? 0
-      : Math.round(((completedCount + exemptedCount) / totalRequirementCount) * 100);
+      : Math.round(
+          ((completedCount + exemptedCount) / totalRequirementCount) * 100
+        );
 
   return {
     missingCount,
@@ -310,12 +318,13 @@ function roleSummaryRequirements({
           validUntil: row.validUntil,
           ledgerRow: row,
           occurrences: row.occurrences,
-          subject: subject
+          subject: subject,
         })
       )
       .sort((a, b) => {
         const statusOrder =
-          requirementStatusPriority(a.status) - requirementStatusPriority(b.status);
+          requirementStatusPriority(a.status) -
+          requirementStatusPriority(b.status);
 
         if (statusOrder !== 0) {
           return statusOrder;
@@ -326,7 +335,9 @@ function roleSummaryRequirements({
   );
 }
 
-function qualifyingRoleEntries<T extends FamilyRoleApprovalStatus | IndividualRoleApprovalStatus>(
+function qualifyingRoleEntries<
+  T extends FamilyRoleApprovalStatus | IndividualRoleApprovalStatus,
+>(
   roleApprovals: Record<string, T> | undefined,
   roleRemovals: RoleRemoval[] | undefined
 ) {
@@ -339,7 +350,9 @@ function qualifyingRoleEntries<T extends FamilyRoleApprovalStatus | IndividualRo
         isRoleApprovalStatusVisibleInSummary(approval.currentStatus) &&
         !isActiveRoleRemoval(roleRemovals, roleName)
     )
-    .sort(([a], [b]) => normalizeRoleName(a).localeCompare(normalizeRoleName(b)))
+    .sort(([a], [b]) =>
+      normalizeRoleName(a).localeCompare(normalizeRoleName(b))
+    )
     .forEach(([roleName, approval]) => {
       const key = roleKey(roleName);
 
@@ -353,7 +366,9 @@ function qualifyingRoleEntries<T extends FamilyRoleApprovalStatus | IndividualRo
   return [...entries.values()];
 }
 
-function buildCardsForSubject<T extends FamilyRoleApprovalStatus | IndividualRoleApprovalStatus>({
+function buildCardsForSubject<
+  T extends FamilyRoleApprovalStatus | IndividualRoleApprovalStatus,
+>({
   source,
   subject,
   roleApprovals,
@@ -368,35 +383,35 @@ function buildCardsForSubject<T extends FamilyRoleApprovalStatus | IndividualRol
   availableApplicationsForRole: (roleApproval: T) => string[] | undefined;
   approvalLedgerRows: ApprovalLedgerRow[] | undefined;
 }) {
-  return qualifyingRoleEntries(roleApprovals, roleRemovals).map(([
-    roleName,
-    roleApproval,
-  ]): RoleSummaryCard => {
-    const roleAvailableApplications = availableApplicationsForRole(roleApproval);
+  return qualifyingRoleEntries(roleApprovals, roleRemovals).map(
+    ([roleName, roleApproval]): RoleSummaryCard => {
+      const roleAvailableApplications =
+        availableApplicationsForRole(roleApproval);
 
-    return {
-      id: roleSummaryId(subject, roleName),
-      subject,
-      roleName,
-      status: roleApproval.currentStatus!,
-      effectiveStatus: roleApproval.effectiveRoleApprovalStatus,
-      effectiveDate: effectiveDate(roleApproval.effectiveRoleApprovalStatus),
-      roleApproval,
-      roleRemoval: matchingRoleRemoval(roleRemovals, roleName),
-      context: source.context,
-      ...requirementCountsForRole(
-        source,
-        roleName,
-        roleAvailableApplications
-      ),
-      requirements: roleSummaryRequirements({
-        approvalLedgerRows,
-        roleAvailableApplications,
-        roleName,
+      return {
+        id: roleSummaryId(subject, roleName),
         subject,
-      }),
-    };
-  });
+        roleName,
+        status: roleApproval.currentStatus!,
+        effectiveStatus: roleApproval.effectiveRoleApprovalStatus,
+        effectiveDate: effectiveDate(roleApproval.effectiveRoleApprovalStatus),
+        roleApproval,
+        roleRemoval: matchingRoleRemoval(roleRemovals, roleName),
+        context: source.context,
+        ...requirementCountsForRole(
+          source,
+          roleName,
+          roleAvailableApplications
+        ),
+        requirements: roleSummaryRequirements({
+          approvalLedgerRows,
+          roleAvailableApplications,
+          roleName,
+          subject,
+        }),
+      };
+    }
+  );
 }
 
 function buildRemovedRolesForSubject({

@@ -12,7 +12,7 @@ import type {
   RequirementContext,
   VolunteerFamilyContext,
 } from '../../Requirements/RequirementContext';
-import type { ApprovalLedgerOccurrence } from '../approvalLedgerViewModel';
+import type { ApprovalLedgerOccurrence } from '../../Approvals/approvalLedgerViewModel';
 
 type SupportedApprovalContext =
   | VolunteerFamilyContext

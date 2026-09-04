@@ -32,7 +32,7 @@ import type {
   RequirementContext,
   VolunteerFamilyContext,
 } from '../Requirements/RequirementContext';
-import type { ApprovalLedgerOccurrence } from './approvalLedgerViewModel';
+import type { ApprovalLedgerOccurrence } from '../Approvals/approvalLedgerViewModel';
 
 type ApprovalWorkflowMissingSectionV2Props = {
   occurrence: ApprovalLedgerOccurrence;
@@ -126,7 +126,8 @@ export function ApprovalWorkflowMissingSectionV2({
   if (!isSupportedApprovalContext(context)) {
     return (
       <Alert severity="info">
-        This approval workflow is not available for this requirement context yet.
+        This approval workflow is not available for this requirement context
+        yet.
       </Alert>
     );
   }

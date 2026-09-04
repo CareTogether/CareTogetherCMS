@@ -2,10 +2,8 @@ import Grid from '@mui/material/Grid';
 import {
   Button,
   Box,
-  Chip,
   Container,
   Toolbar,
-  Tooltip,
   Typography,
   useMediaQuery,
   useTheme,
@@ -43,12 +41,15 @@ import {
   OrganizationApprovalSection,
 } from './OrganizationApprovalSection';
 import {
-  OrganizationScreenTab,
-  OrganizationScreenTabsV2,
-  OrganizationScreenTabValue,
-} from './OrganizationScreenTabsV2';
+  ResponsiveScreenTabs,
+  type ResponsiveScreenTab,
+} from '../Generic/ResponsiveScreenTabs';
+import { ApprovalTabLabel } from '../Approvals/ApprovalTabLabel';
+import { approvalMobileTabLabel } from '../Approvals/approvalTabPresentation';
 import { useOrganizationApprovalViewModel } from './useOrganizationApprovalViewModel';
 import { usePolicy } from '../Model/PolicyModel';
+
+type OrganizationScreenTabValue = 'overview' | 'approvals';
 
 export function CommunityScreen() {
   const communityIdMaybe = useParams<{ communityId: string }>();
@@ -85,18 +86,16 @@ export function CommunityScreen() {
     useState<OrganizationScreenTabValue>('overview');
   // const deleteCommunityDrawer = useDrawer();
 
-  const { approvalAttentionCounts } =
+  const organizationApprovalViewModel =
     useOrganizationApprovalViewModel(communityInfo);
+  const { approvalAttentionCounts } = organizationApprovalViewModel;
   const hasConfiguredApprovalRoles =
     Object.keys(policy?.organizationApprovalPolicy?.organizationRoles ?? {})
       .length > 0;
-  const canAccessApprovals =
-    permissions(Permission.ViewApprovalStatus) ||
-    permissions(Permission.ViewApprovalProgress);
   const showApprovalsTab =
     organizationApprovalsEnabled &&
     hasConfiguredApprovalRoles &&
-    canAccessApprovals;
+    permissions(Permission.ViewApprovalProgress);
 
   useEffect(() => {
     if (selectedTab === 'approvals' && !showApprovalsTab) {
@@ -104,72 +103,7 @@ export function CommunityScreen() {
     }
   }, [selectedTab, showApprovalsTab]);
 
-  function approvalTabLabel() {
-    return (
-      <Box
-        sx={{
-          display: 'inline-flex',
-          alignItems: 'center',
-          gap: 0.75,
-          flexWrap: 'nowrap',
-          whiteSpace: 'nowrap',
-          width: 'max-content',
-        }}
-      >
-        <Box component="span" className="ph-unmask" sx={{ flexShrink: 0 }}>
-          Approvals
-        </Box>
-        {approvalAttentionCounts.missing > 0 && (
-          <Tooltip title={`${approvalAttentionCounts.missing} missing`}>
-            <Chip
-              className="ph-unmask"
-              size="small"
-              color="error"
-              label={approvalAttentionCounts.missing}
-              aria-label={`${approvalAttentionCounts.missing} missing approvals`}
-              sx={{
-                height: 20,
-                flexShrink: 0,
-                '& .MuiChip-label': { px: 0.75 },
-              }}
-            />
-          </Tooltip>
-        )}
-        {approvalAttentionCounts.expired > 0 && (
-          <Tooltip title={`${approvalAttentionCounts.expired} expired`}>
-            <Chip
-              className="ph-unmask"
-              size="small"
-              color="warning"
-              label={approvalAttentionCounts.expired}
-              aria-label={`${approvalAttentionCounts.expired} expired approvals`}
-              sx={{
-                height: 20,
-                flexShrink: 0,
-                '& .MuiChip-label': { px: 0.75 },
-              }}
-            />
-          </Tooltip>
-        )}
-      </Box>
-    );
-  }
-
-  function approvalsMobileLabel() {
-    const details = [
-      approvalAttentionCounts.missing > 0
-        ? `${approvalAttentionCounts.missing} missing`
-        : null,
-      approvalAttentionCounts.expired > 0
-        ? `${approvalAttentionCounts.expired} expired`
-        : null,
-    ].filter(Boolean);
-    return details.length === 0
-      ? 'Approvals'
-      : `Approvals (${details.join(', ')})`;
-  }
-
-  const tabs: OrganizationScreenTab[] = [
+  const tabs: ResponsiveScreenTab<OrganizationScreenTabValue>[] = [
     {
       value: 'overview',
       desktopLabel: 'Overview',
@@ -179,8 +113,16 @@ export function CommunityScreen() {
       ? [
           {
             value: 'approvals' as const,
-            desktopLabel: approvalTabLabel(),
-            mobileLabel: approvalsMobileLabel(),
+            desktopLabel: (
+              <ApprovalTabLabel
+                label="Approvals"
+                counts={approvalAttentionCounts}
+              />
+            ),
+            mobileLabel: approvalMobileTabLabel(
+              'Approvals',
+              approvalAttentionCounts
+            ),
           },
         ]
       : []),
@@ -262,8 +204,15 @@ export function CommunityScreen() {
             Delete
           </Button>} */}
       </Toolbar>
-      <OrganizationApprovalRoleSummaryCards communityInfo={communityInfo} />
-      <OrganizationScreenTabsV2
+      {organizationApprovalsEnabled && (
+        <OrganizationApprovalRoleSummaryCards
+          communityInfo={communityInfo}
+          viewModel={organizationApprovalViewModel}
+        />
+      )}
+      <ResponsiveScreenTabs
+        ariaLabel="Organization screen sections"
+        idPrefix="organization-screen"
         tabs={tabs}
         selectedTab={selectedTab}
         isDesktop={isDesktop}
@@ -348,6 +297,7 @@ export function CommunityScreen() {
         <OrganizationApprovalSection
           communityInfo={communityInfo}
           policy={policy}
+          viewModel={organizationApprovalViewModel}
         />
       )}
       {canEditOrganization &&

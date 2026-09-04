@@ -29,7 +29,7 @@ import {
 import type {
   ApprovalLedgerRow,
   ApprovalLedgerStatus,
-} from './approvalLedgerViewModel';
+} from '../Approvals/approvalLedgerViewModel';
 import { ApprovalDetailsDrawerV2 } from './ApprovalDetailsDrawerV2';
 import {
   RoleManagementDrawerV2,
@@ -152,14 +152,17 @@ function roleApprovalIsActive(
 }
 
 function personLabel(person: Person | undefined) {
-  return [person?.firstName, person?.lastName].filter(Boolean).join(' ') || 'Adult';
+  return (
+    [person?.firstName, person?.lastName].filter(Boolean).join(' ') || 'Adult'
+  );
 }
 
 function adultPerson(
   family: CombinedFamilyInfo | undefined,
   personId: string | undefined
 ) {
-  return family?.family?.adults?.find((adult) => adult.item1?.id === personId)?.item1;
+  return family?.family?.adults?.find((adult) => adult.item1?.id === personId)
+    ?.item1;
 }
 
 function buildRoleParticipants(
@@ -227,9 +230,7 @@ function ParticipantsSection({
             justifyContent: 'space-between',
           }}
         >
-          <Typography variant="body2">
-            {participant.label}
-          </Typography>
+          <Typography variant="body2">{participant.label}</Typography>
           <Chip
             color={participantStatusColor(participant.state)}
             label={participantStateLabels[participant.state]}
@@ -301,11 +302,7 @@ function RequirementSummaryRow({
                 size="small"
                 sx={{ flex: '0 0 auto' }}
               />
-              <Typography
-                variant="caption"
-              >
-                {completedOrExemptedOn}
-              </Typography>
+              <Typography variant="caption">{completedOrExemptedOn}</Typography>
             </Stack>
             <Stack
               direction="column"
@@ -318,14 +315,20 @@ function RequirementSummaryRow({
                 sx={{ fontWeight: 600 }}
               >
                 {requirement.requirementName}
-                {requirement.occurrences.flatMap(occurrence => occurrence.policyVersions).filter(version => version).map(version =>
-                  <Fragment key={`${version?.roleName}-${version?.version}`}>
-                    &nbsp;
-                    <Chip color='default' variant='outlined' size='small'
-                      label={`${version?.version}`}
+                {requirement.occurrences
+                  .flatMap((occurrence) => occurrence.policyVersions)
+                  .filter((version) => version)
+                  .map((version) => (
+                    <Fragment key={`${version?.roleName}-${version?.version}`}>
+                      &nbsp;
+                      <Chip
+                        color="default"
+                        variant="outlined"
+                        size="small"
+                        label={`${version?.version}`}
                       />
-                  </Fragment>
-                )}
+                    </Fragment>
+                  ))}
               </Typography>
               {(completedOrExemptedOn || validUntil) && (
                 <Typography color="text.secondary" variant="caption">
@@ -346,7 +349,10 @@ function RequirementSummaryRow({
 }
 
 function familyIdFromContext(
-  context: RoleSummaryCard['context'] | RemovedRoleSummary['context'] | undefined
+  context:
+    | RoleSummaryCard['context']
+    | RemovedRoleSummary['context']
+    | undefined
 ) {
   if (
     context?.kind === 'Volunteer Family' ||
@@ -359,8 +365,14 @@ function familyIdFromContext(
 }
 
 function personForSubject(
-  context: RoleSummaryCard['context'] | RemovedRoleSummary['context'] | undefined,
-  subject: RoleSummaryCard['subject'] | RemovedRoleSummary['subject'] | undefined
+  context:
+    | RoleSummaryCard['context']
+    | RemovedRoleSummary['context']
+    | undefined,
+  subject:
+    | RoleSummaryCard['subject']
+    | RemovedRoleSummary['subject']
+    | undefined
 ) {
   if (!context || subject?.scope !== 'person') {
     return undefined;
@@ -395,8 +407,9 @@ export function RoleDetailsDrawerV2({
   );
   const person =
     role?.subject.scope === 'person'
-      ? family?.family?.adults?.find((adult) => adult.item1?.id === role.subject.id)
-          ?.item1 ?? personForSubject(role.context, role.subject)
+      ? (family?.family?.adults?.find(
+          (adult) => adult.item1?.id === role.subject.id
+        )?.item1 ?? personForSubject(role.context, role.subject))
       : undefined;
   const canRemoveRole =
     canEditRoleParticipation &&
@@ -488,10 +501,7 @@ export function RoleDetailsDrawerV2({
                 >
                   {role.roleName}
                 </Typography>
-                <Typography
-                  color="text.secondary"
-                  variant="body2"
-                >
+                <Typography color="text.secondary" variant="body2">
                   {role.subject.label}
                 </Typography>
                 <Box
@@ -575,7 +585,6 @@ export function RoleDetailsDrawerV2({
                 </Stack>
               </>
             )}
-
           </Stack>
         )}
       </Drawer>
