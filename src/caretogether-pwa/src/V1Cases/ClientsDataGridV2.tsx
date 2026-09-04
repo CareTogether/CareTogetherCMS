@@ -1,10 +1,10 @@
 import { Box, Stack, Typography, useTheme } from '@mui/material';
 import {
-  DataGrid,
+  DataGridPremium,
   GridColDef,
   GridColumnVisibilityModel,
   GridRowParams,
-} from '@mui/x-data-grid';
+} from '@mui/x-data-grid-premium';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { v2DataGridStyles } from '../Families/v2DataGridStyles';
 import { v2Typography } from '../Families/v2Typography';
@@ -211,7 +211,7 @@ export function ClientsDataGridV2({
 
   return (
     <Box sx={v2DataGridStyles(theme, { height: '100%' })}>
-      <DataGrid
+      <DataGridPremium
         rows={rows}
         columns={columns}
         columnVisibilityModel={columnVisibilityModel}

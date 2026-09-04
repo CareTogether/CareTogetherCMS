@@ -1,12 +1,12 @@
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import { Box, Chip, Tooltip, Typography, useTheme } from '@mui/material';
 import {
-  DataGrid,
+  DataGridPremium,
   GridColDef,
   GridFilterInputSingleSelect,
   GridFilterOperator,
   GridToolbar,
-} from '@mui/x-data-grid';
+} from '@mui/x-data-grid-premium';
 import { useCallback, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { useUserLookup } from '../Model/DirectoryModel';
 import { PersonName } from './PersonName';
@@ -522,7 +522,7 @@ export function ApprovalsDataGridV2({
         },
       ]}
     >
-      <DataGrid
+      <DataGridPremium
         autoHeight
         rows={rows}
         columns={columns}

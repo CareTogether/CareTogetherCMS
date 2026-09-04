@@ -1,5 +1,8 @@
 import { Box, Stack, Typography } from '@mui/material';
-import type { GridFilterModel, GridRowSelectionModel } from '@mui/x-data-grid';
+import type {
+  GridFilterModel,
+  GridRowSelectionModel,
+} from '@mui/x-data-grid-premium';
 import { useMemo, useState } from 'react';
 import { useFeatureFlagEnabled } from 'posthog-js/react';
 import { EmailAddress, Permission } from '../GeneratedClient';
