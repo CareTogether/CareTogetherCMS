@@ -7,6 +7,7 @@ import { theme } from './theme';
 import { CssBaseline } from '@mui/material';
 import { LocalizationProvider } from '@mui/x-date-pickers';
 import { AdapterDateFns as DateAdapter } from '@mui/x-date-pickers/AdapterDateFns';
+import { LicenseInfo } from '@mui/x-license';
 import { GlobalErrorBoundary } from './GlobalErrorBoundary';
 import { BrowserRouter as Router } from 'react-router-dom';
 import AuthenticationWrapper from './Authentication/AuthenticationWrapper';
@@ -22,6 +23,11 @@ import {
   type FeatureFlagKey,
   type FeatureFlagOverrides,
 } from './featureFlags';
+
+const muiXLicenseKey = import.meta.env.VITE_APP_MUI_X_LICENSE_KEY?.trim();
+if (muiXLicenseKey) {
+  LicenseInfo.setLicenseKey(muiXLicenseKey);
+}
 
 const root = ReactDOM.createRoot(
   document.getElementById('root') as HTMLElement
