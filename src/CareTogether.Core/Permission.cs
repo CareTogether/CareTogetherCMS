@@ -114,5 +114,7 @@
         ReadOrganizationDocuments = 506,
         UploadOrganizationDocuments = 507,
         DeleteOrganizationDocuments = 508,
+        ActivateOrganizationApprovals = 509,
+        EditOrganizationRoleParticipation = 510,
     }
 }

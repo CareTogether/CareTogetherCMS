@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using CareTogether.Resources;
 using CareTogether.Resources.Approvals;
 using CareTogether.Resources.Directory;
+using CareTogether.Resources.OrganizationApprovals;
 using CareTogether.Resources.Policies;
 using CareTogether.Resources.V1Cases;
 using CareTogether.Resources.V1Referrals;
@@ -386,6 +387,94 @@ namespace CareTogether.Engines.PolicyEvaluation
         ImmutableDictionary<Guid, ImmutableList<Resources.ExemptedRequirementInfo>> ExemptedIndividualRequirements
     );
 
+    public sealed record OrganizationApprovalStatus(
+        ImmutableDictionary<string, OrganizationRoleApprovalStatus> ApprovalStatusByRole
+    );
+
+    public sealed record OrganizationRoleApprovalStatus(
+        DateOnlyTimeline<RoleApprovalStatus>? EffectiveRoleApprovalStatus,
+        ImmutableList<OrganizationRoleVersionApprovalStatus> RoleVersionApprovals
+    )
+    {
+        public RoleApprovalStatus? CurrentStatus =>
+            EffectiveRoleApprovalStatus?.ValueAt(DateTime.UtcNow);
+
+        [JsonIgnore]
+        [Newtonsoft.Json.JsonIgnore]
+        public ImmutableList<OrganizationRoleRequirementCompletionStatus> CurrentMissingRequirements =>
+            PolicyEvaluationHelpers
+                .SelectPromptableVersions(RoleVersionApprovals, CurrentStatus)
+                .SelectMany(version => version.CurrentMissingRequirements)
+                .Distinct()
+                .ToImmutableList();
+
+        [JsonIgnore]
+        [Newtonsoft.Json.JsonIgnore]
+        public ImmutableList<OrganizationRoleRequirementCompletionStatus> CurrentAvailableApplications =>
+            PolicyEvaluationHelpers
+                .SelectPromptableVersions(RoleVersionApprovals, CurrentStatus)
+                .SelectMany(version => version.CurrentAvailableApplications)
+                .Distinct()
+                .ToImmutableList();
+    }
+
+    public sealed record OrganizationRoleVersionApprovalStatus(
+        string RoleName,
+        string Version,
+        DateTime? SupersededAtUtc,
+        DateOnlyTimeline<RoleApprovalStatus>? Status,
+        ImmutableList<OrganizationRoleRequirementCompletionStatus> Requirements
+    )
+    {
+        [JsonIgnore]
+        [Newtonsoft.Json.JsonIgnore]
+        public RoleApprovalStatus? CurrentStatus => Status?.ValueAt(DateTime.UtcNow);
+
+        [JsonIgnore]
+        [Newtonsoft.Json.JsonIgnore]
+        public ImmutableList<OrganizationRoleRequirementCompletionStatus> CurrentMissingRequirements =>
+            Requirements
+                .Where(requirement =>
+                    (
+                        requirement.Stage == RequirementStage.Approval
+                        && CurrentStatus is RoleApprovalStatus.Prospective or RoleApprovalStatus.Expired
+                    )
+                    || (
+                        requirement.Stage == RequirementStage.Onboarding
+                        && CurrentStatus is RoleApprovalStatus.Approved or RoleApprovalStatus.Expired
+                    )
+                )
+                .Where(requirement =>
+                    requirement.WhenMet?.Contains(DateOnly.FromDateTime(DateTime.UtcNow)) != true
+                )
+                .ToImmutableList();
+
+        [JsonIgnore]
+        [Newtonsoft.Json.JsonIgnore]
+        public ImmutableList<OrganizationRoleRequirementCompletionStatus> CurrentAvailableApplications =>
+            Requirements
+                .Where(requirement =>
+                    requirement.Stage == RequirementStage.Application
+                    && (CurrentStatus == null || CurrentStatus == RoleApprovalStatus.Expired)
+                )
+                .Where(requirement =>
+                    requirement.WhenMet?.Contains(DateOnly.FromDateTime(DateTime.UtcNow)) != true
+                )
+                .ToImmutableList();
+    }
+
+    public sealed record OrganizationRoleRequirementCompletionStatus(
+        string ActionName,
+        RequirementStage Stage,
+        DateOnlyTimeline? WhenMet
+    );
+
+    public sealed record OrganizationApprovalCalculationResult(
+        OrganizationApprovalStatus ApprovalStatus,
+        ImmutableList<Resources.CompletedRequirementInfo> CompletedRequirements,
+        ImmutableList<Resources.ExemptedRequirementInfo> ExemptedRequirements
+    );
+
     public sealed record FamilyRoleVersionApprovalStatus(
         string RoleName,
         string Version,
@@ -510,6 +599,12 @@ namespace CareTogether.Engines.PolicyEvaluation
             Guid locationId,
             Family family,
             VolunteerFamilyEntry volunteerFamily
+        );
+
+        Task<OrganizationApprovalCalculationResult> CalculateOrganizationApprovalsAsync(
+            Guid tenantId,
+            Guid locationId,
+            OrganizationApprovalEntry organizationApproval
         );
 
         Task<V1CaseStatus> CalculateV1CaseStatusAsync(

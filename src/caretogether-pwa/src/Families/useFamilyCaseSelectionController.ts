@@ -11,7 +11,7 @@ import { useAppNavigate } from '../Hooks/useAppNavigate';
 import { useSyncV1CaseIdInURL } from '../Hooks/useSyncV1CaseIdInURL';
 import { useFamilyLookup, usePersonLookup } from '../Model/DirectoryModel';
 import { personNameString } from './PersonName';
-import type { FamilyScreenTabValue } from './FamilyScreenTabsV2';
+import type { FamilyScreenTabValue } from './FamilyScreenTabs';
 import { useFamilyCaseViewModel } from './useFamilyCaseViewModel';
 
 function stringFromLocationState(state: unknown, key: string) {

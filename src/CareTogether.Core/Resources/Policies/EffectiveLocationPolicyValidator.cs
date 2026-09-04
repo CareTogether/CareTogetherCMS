@@ -25,6 +25,7 @@ namespace CareTogether.Resources.Policies
             ValidateCasePolicy(policy, organizationConfiguration, actionNames, errors);
             ValidateReferralPolicy(policy, organizationConfiguration, errors);
             ValidateVolunteerPolicy(policy, actionNames, errors);
+            ValidateOrganizationApprovalPolicy(policy, actionNames, errors);
 
             return errors.ToImmutable();
         }
@@ -139,6 +140,61 @@ namespace CareTogether.Resources.Policies
                 actionNames,
                 errors
             );
+        }
+
+        private static void ValidateOrganizationApprovalPolicy(
+            EffectiveLocationPolicy policy,
+            HashSet<string> actionNames,
+            ImmutableList<string>.Builder errors
+        )
+        {
+            const string area = "Organization Approval Policies Organization Roles";
+            var roles = policy.OrganizationApprovalPolicy?.OrganizationRoles;
+            var actionDefinitions =
+                policy.ActionDefinitions
+                ?? ImmutableDictionary<string, ActionRequirement>.Empty;
+            ValidateUniqueNames(area, roles?.Keys, errors);
+
+            foreach (
+                var (roleName, rolePolicy) in roles
+                    ?? ImmutableDictionary<string, OrganizationRolePolicy>.Empty
+            )
+            {
+                ValidateUniqueNames(
+                    $"{area} '{roleName}' Versions",
+                    rolePolicy.PolicyVersions?.Select(version => version.Version),
+                    errors
+                );
+
+                foreach (
+                    var version in rolePolicy.PolicyVersions
+                        ?? ImmutableList<OrganizationRolePolicyVersion>.Empty
+                )
+                {
+                    foreach (
+                        var requirement in version.Requirements
+                            ?? ImmutableList<OrganizationApprovalRequirement>.Empty
+                    )
+                    {
+                        ValidateActionReference(
+                            $"{area} '{roleName}' Version '{version.Version}'",
+                            requirement.ActionName,
+                            actionNames,
+                            errors
+                        );
+                        if (
+                            actionDefinitions.TryGetValue(
+                                requirement.ActionName,
+                                out var action
+                            )
+                            && action.NoteEntry == NoteEntryRequirement.Required
+                        )
+                            errors.Add(
+                                $"{area} '{roleName}' Version '{version.Version}' references action '{requirement.ActionName}', which requires a note. Organization approvals do not support notes."
+                            );
+                    }
+                }
+            }
         }
 
         private static void ValidateArrangementPolicies(

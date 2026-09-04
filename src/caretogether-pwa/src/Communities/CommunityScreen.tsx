@@ -27,12 +27,29 @@ import { CommunityMemberFamilies } from './CommunityMemberFamilies';
 import { CommunityRoleAssignments } from './CommunityRoleAssignments';
 import { useDrawer } from '../Generic/ShellDrawer';
 import { useVisibleCommunities } from '../Model/Data';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useOrganizationConfigurationLoadable } from '../Model/ConfigurationModel';
 import { OrganizationPrimaryHeaderInfo } from './OrganizationPrimaryHeaderInfo';
 import { ProgressBackdrop } from '../Shell/ProgressBackdrop';
 import { useFeatureFlagEnabled } from 'posthog-js/react';
-import { ORGANIZATION_CATEGORIES_FEATURE_FLAG } from '../featureFlags';
+import {
+  ORGANIZATION_APPROVALS_FEATURE_FLAG,
+  ORGANIZATION_CATEGORIES_FEATURE_FLAG,
+} from '../featureFlags';
+import {
+  OrganizationApprovalRoleSummaryCards,
+  OrganizationApprovalSection,
+} from './OrganizationApprovalSection';
+import {
+  ResponsiveScreenTabs,
+  type ResponsiveScreenTab,
+} from '../Generic/ResponsiveScreenTabs';
+import { ApprovalTabLabel } from '../Approvals/ApprovalTabLabel';
+import { approvalMobileTabLabel } from '../Approvals/approvalTabPresentation';
+import { useOrganizationApprovalViewModel } from './useOrganizationApprovalViewModel';
+import { usePolicy } from '../Model/PolicyModel';
+
+type OrganizationScreenTabValue = 'overview' | 'approvals';
 
 export function CommunityScreen() {
   const communityIdMaybe = useParams<{ communityId: string }>();
@@ -41,6 +58,9 @@ export function CommunityScreen() {
   const organizationConfiguration = useOrganizationConfigurationLoadable();
   const organizationCategoriesEnabled =
     useFeatureFlagEnabled(ORGANIZATION_CATEGORIES_FEATURE_FLAG) === true;
+  const organizationApprovalsEnabled =
+    useFeatureFlagEnabled(ORGANIZATION_APPROVALS_FEATURE_FLAG) === true;
+  const policy = usePolicy();
 
   const visibleCommunities = useVisibleCommunities();
   const communityInfo = visibleCommunities.find(
@@ -62,7 +82,51 @@ export function CommunityScreen() {
   const addMemberFamilyDrawer = useDrawer();
   const addRoleAssignmentDrawer = useDrawer();
   const [editHasUnsavedChanges, setEditHasUnsavedChanges] = useState(false);
+  const [selectedTab, setSelectedTab] =
+    useState<OrganizationScreenTabValue>('overview');
   // const deleteCommunityDrawer = useDrawer();
+
+  const organizationApprovalViewModel =
+    useOrganizationApprovalViewModel(communityInfo);
+  const { approvalAttentionCounts } = organizationApprovalViewModel;
+  const hasConfiguredApprovalRoles =
+    Object.keys(policy?.organizationApprovalPolicy?.organizationRoles ?? {})
+      .length > 0;
+  const showApprovalsTab =
+    organizationApprovalsEnabled &&
+    hasConfiguredApprovalRoles &&
+    permissions(Permission.ViewApprovalProgress);
+
+  useEffect(() => {
+    if (selectedTab === 'approvals' && !showApprovalsTab) {
+      setSelectedTab('overview');
+    }
+  }, [selectedTab, showApprovalsTab]);
+
+  const tabs: ResponsiveScreenTab<OrganizationScreenTabValue>[] = [
+    {
+      value: 'overview',
+      desktopLabel: 'Overview',
+      mobileLabel: 'Overview',
+    },
+    ...(showApprovalsTab
+      ? [
+          {
+            value: 'approvals' as const,
+            desktopLabel: (
+              <ApprovalTabLabel
+                label="Approvals"
+                counts={approvalAttentionCounts}
+              />
+            ),
+            mobileLabel: approvalMobileTabLabel(
+              'Approvals',
+              approvalAttentionCounts
+            ),
+          },
+        ]
+      : []),
+  ];
 
   function closeEditor() {
     setEditHasUnsavedChanges(false);
@@ -140,79 +204,102 @@ export function CommunityScreen() {
             Delete
           </Button>} */}
       </Toolbar>
-      <Grid container spacing={2} sx={{ marginTop: 0 }}>
-        <Grid size={{ xs: 12, sm: 6 }}>
-          <Typography className="ph-unmask" variant="h5">
-            Description
-          </Typography>
-          <p style={{ marginTop: 12, whiteSpace: 'pre-wrap' }}>
-            {community.description}
-          </p>
-        </Grid>
-        <Grid size={{ xs: 12, sm: 6 }}>
-          {permissions(Permission.ViewOrganizationDocumentMetadata) && (
-            <>
+      {organizationApprovalsEnabled && (
+        <OrganizationApprovalRoleSummaryCards
+          communityInfo={communityInfo}
+          viewModel={organizationApprovalViewModel}
+        />
+      )}
+      <ResponsiveScreenTabs
+        ariaLabel="Organization screen sections"
+        idPrefix="organization-screen"
+        tabs={tabs}
+        selectedTab={selectedTab}
+        isDesktop={isDesktop}
+        onChange={setSelectedTab}
+      />
+      {selectedTab === 'overview' && (
+        <Grid container spacing={2} sx={{ marginTop: 0 }}>
+          <Grid size={{ xs: 12, sm: 6 }}>
+            <Typography className="ph-unmask" variant="h5">
+              Description
+            </Typography>
+            <p style={{ marginTop: 12, whiteSpace: 'pre-wrap' }}>
+              {community.description}
+            </p>
+          </Grid>
+          <Grid size={{ xs: 12, sm: 6 }}>
+            {permissions(Permission.ViewOrganizationDocumentMetadata) && (
+              <>
+                <Typography variant="h5">
+                  Documents
+                  {permissions(Permission.UploadOrganizationDocuments) && (
+                    <Button
+                      onClick={uploadDrawer.openDrawer}
+                      variant="text"
+                      size={isDesktop ? 'small' : 'medium'}
+                      sx={{ marginLeft: 2 }}
+                      startIcon={<CloudUploadIcon />}
+                    >
+                      Upload
+                    </Button>
+                  )}
+                </Typography>
+                <CommunityDocuments communityInfo={communityInfo} />
+              </>
+            )}
+            <Box
+              sx={{
+                marginTop: permissions(
+                  Permission.ViewOrganizationDocumentMetadata
+                )
+                  ? 3
+                  : 0,
+              }}
+            >
               <Typography variant="h5">
-                Documents
-                {permissions(Permission.UploadOrganizationDocuments) && (
+                Role Assignments
+                {permissions(Permission.EditOrganizationRoleAssignments) && (
                   <Button
-                    onClick={uploadDrawer.openDrawer}
+                    onClick={addRoleAssignmentDrawer.openDrawer}
                     variant="text"
                     size={isDesktop ? 'small' : 'medium'}
                     sx={{ marginLeft: 2 }}
-                    startIcon={<CloudUploadIcon />}
+                    startIcon={<PersonAddAlt1 />}
                   >
-                    Upload
+                    Add
                   </Button>
                 )}
               </Typography>
-              <CommunityDocuments communityInfo={communityInfo} />
-            </>
-          )}
-          <Box
-            sx={{
-              marginTop: permissions(
-                Permission.ViewOrganizationDocumentMetadata
-              )
-                ? 3
-                : 0,
-            }}
-          >
+              <CommunityRoleAssignments communityInfo={communityInfo} />
+            </Box>
+          </Grid>
+          <Grid size={12}>
             <Typography variant="h5">
-              Role Assignments
-              {permissions(Permission.EditOrganizationRoleAssignments) && (
+              Member Families
+              {permissions(Permission.EditOrganizationMemberFamilies) && (
                 <Button
-                  onClick={addRoleAssignmentDrawer.openDrawer}
+                  onClick={addMemberFamilyDrawer.openDrawer}
                   variant="text"
                   size={isDesktop ? 'small' : 'medium'}
                   sx={{ marginLeft: 2 }}
-                  startIcon={<PersonAddAlt1 />}
+                  startIcon={<GroupAdd />}
                 >
                   Add
                 </Button>
               )}
             </Typography>
-            <CommunityRoleAssignments communityInfo={communityInfo} />
-          </Box>
+            <CommunityMemberFamilies communityInfo={communityInfo} />
+          </Grid>
         </Grid>
-        <Grid size={12}>
-          <Typography variant="h5">
-            Member Families
-            {permissions(Permission.EditOrganizationMemberFamilies) && (
-              <Button
-                onClick={addMemberFamilyDrawer.openDrawer}
-                variant="text"
-                size={isDesktop ? 'small' : 'medium'}
-                sx={{ marginLeft: 2 }}
-                startIcon={<GroupAdd />}
-              >
-                Add
-              </Button>
-            )}
-          </Typography>
-          <CommunityMemberFamilies communityInfo={communityInfo} />
-        </Grid>
-      </Grid>
+      )}
+      {selectedTab === 'approvals' && policy && (
+        <OrganizationApprovalSection
+          communityInfo={communityInfo}
+          policy={policy}
+          viewModel={organizationApprovalViewModel}
+        />
+      )}
       {canEditOrganization &&
         editDrawer.drawerFor(
           <AddEditCommunity

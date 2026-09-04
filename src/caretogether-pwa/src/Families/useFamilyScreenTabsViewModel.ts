@@ -6,7 +6,7 @@ import {
   V1Referral,
   V1ReferralNoteStatus,
 } from '../GeneratedClient';
-import { FamilyScreenTabValue } from './FamilyScreenTabsV2';
+import type { FamilyScreenTabValue } from './FamilyScreenTabs';
 
 export type FamilyScreenTabModel = {
   count?: number;

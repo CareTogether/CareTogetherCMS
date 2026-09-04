@@ -18,7 +18,7 @@ export type ApprovalLedgerStatus =
   | 'availableApplication';
 
 export type ApprovalLedgerSubject = {
-  scope: 'family' | 'person';
+  scope: 'family' | 'person' | 'organization';
   id: string;
   label: string;
 };
@@ -87,7 +87,7 @@ export type BuildApprovalLedgerRowsInput = {
 
 const EXPIRING_APPROVAL_DAYS = 30;
 
-const STATUS_PRIORITY: ApprovalLedgerStatus[] = [
+export const APPROVAL_LEDGER_STATUS_PRIORITY: ApprovalLedgerStatus[] = [
   'expired',
   'missing',
   'expiring',
@@ -106,7 +106,9 @@ function dateKey(date?: Date) {
   return date?.toISOString() ?? '';
 }
 
-function normalizeStrings(values: (string | undefined | null)[]) {
+export function normalizeApprovalStrings(
+  values: (string | undefined | null)[]
+) {
   return [...new Set(values.filter(Boolean) as string[])].sort((a, b) =>
     a.localeCompare(b)
   );
@@ -115,7 +117,9 @@ function normalizeStrings(values: (string | undefined | null)[]) {
 function roleNamesFromMissingRequirement(
   requirement: ValueTupleOfStringAndValueTuple_2Of
 ) {
-  return normalizeStrings(requirement.item2?.map((version) => version.item2) ?? []);
+  return normalizeApprovalStrings(
+    requirement.item2?.map((version) => version.item2) ?? []
+  );
 }
 
 function policyVersionsFromMissingRequirement(
@@ -131,7 +135,7 @@ function roleLabelsFromPolicyVersions(
   policyVersions: { version: string; roleName: string }[] | undefined,
   neededForRoles: string[]
 ) {
-  return normalizeStrings(
+  return normalizeApprovalStrings(
     policyVersions
       ?.filter((version) => neededForRoles.includes(version.roleName))
       .map((version) =>
@@ -166,17 +170,19 @@ function rolesByAvailableApplication(
 ) {
   const rolesByApplication = new Map<string, string[]>();
 
-  Object.entries(applicationsByRole ?? {}).forEach(([roleName, applications]) => {
-    applications?.forEach((application) => {
-      rolesByApplication.set(
-        application,
-        normalizeStrings([
-          ...(rolesByApplication.get(application) ?? []),
-          roleName,
-        ])
-      );
-    });
-  });
+  Object.entries(applicationsByRole ?? {}).forEach(
+    ([roleName, applications]) => {
+      applications?.forEach((application) => {
+        rolesByApplication.set(
+          application,
+          normalizeApprovalStrings([
+            ...(rolesByApplication.get(application) ?? []),
+            roleName,
+          ])
+        );
+      });
+    }
+  );
 
   return rolesByApplication;
 }
@@ -196,7 +202,7 @@ function isExpiring(date?: Date, now = new Date()) {
   return date <= cutoff;
 }
 
-function completedStatus(
+export function completedRequirementStatus(
   requirement: CompletedRequirementInfo
 ): ApprovalLedgerStatus {
   if (isExpired(requirement.expiresAtUtc)) {
@@ -210,7 +216,7 @@ function completedStatus(
   return 'completed';
 }
 
-function exemptedStatus(
+export function exemptedRequirementStatus(
   requirement: ExemptedRequirementInfo
 ): ApprovalLedgerStatus {
   if (isExpired(requirement.exemptionExpiresAtUtc)) {
@@ -222,6 +228,16 @@ function exemptedStatus(
   }
 
   return 'exempted';
+}
+
+export function sortApprovalLedgerRows(rows: ApprovalLedgerRow[]) {
+  return [...rows].sort((a, b) => {
+    const statusPriority =
+      APPROVAL_LEDGER_STATUS_PRIORITY.indexOf(a.status) -
+      APPROVAL_LEDGER_STATUS_PRIORITY.indexOf(b.status);
+
+    return statusPriority || a.requirementName.localeCompare(b.requirementName);
+  });
 }
 
 function buildAppliedRoleNames(input: BuildApprovalLedgerRowsInput) {
@@ -300,7 +316,7 @@ function addCompletedRows({
   appliedRoleNames: Set<string>;
 }) {
   requirements.forEach((requirement, index) => {
-    const originalRoles = normalizeStrings(requirement.roleNames ?? []);
+    const originalRoles = normalizeApprovalStrings(requirement.roleNames ?? []);
     const neededForRoles = filterAppliedRoles(originalRoles, appliedRoleNames);
 
     if (!shouldIncludeRoleRelatedRow(originalRoles, neededForRoles)) {
@@ -308,15 +324,17 @@ function addCompletedRows({
     }
 
     addRow(rowsByKey, {
-      status: completedStatus(requirement),
+      status: completedRequirementStatus(requirement),
       requirementName: requirement.requirementName,
       appliesTo: [subject],
       completedOrExemptedOn: requirement.completedAtUtc,
       validUntil: requirement.expiresAtUtc,
       neededForRoles,
       neededForRoleLabels: neededForRoles,
-      linkedDocumentIds: normalizeStrings([requirement.uploadedDocumentId]),
-      noteIds: normalizeStrings([requirement.noteId]),
+      linkedDocumentIds: normalizeApprovalStrings([
+        requirement.uploadedDocumentId,
+      ]),
+      noteIds: normalizeApprovalStrings([requirement.noteId]),
       completedOrExemptedByUserId: requirement.userId,
       notes: [],
       occurrences: [
@@ -351,7 +369,7 @@ function addExemptedRows({
   appliedRoleNames: Set<string>;
 }) {
   requirements.forEach((requirement, index) => {
-    const originalRoles = normalizeStrings(requirement.roleNames ?? []);
+    const originalRoles = normalizeApprovalStrings(requirement.roleNames ?? []);
     const neededForRoles = filterAppliedRoles(originalRoles, appliedRoleNames);
 
     if (!shouldIncludeRoleRelatedRow(originalRoles, neededForRoles)) {
@@ -359,7 +377,7 @@ function addExemptedRows({
     }
 
     addRow(rowsByKey, {
-      status: exemptedStatus(requirement),
+      status: exemptedRequirementStatus(requirement),
       requirementName: requirement.requirementName,
       appliesTo: [subject],
       completedOrExemptedOn: requirement.timestampUtc,
@@ -369,7 +387,7 @@ function addExemptedRows({
       linkedDocumentIds: [],
       noteIds: [],
       completedOrExemptedByUserId: requirement.userId,
-      notes: normalizeStrings([requirement.additionalComments]),
+      notes: normalizeApprovalStrings([requirement.additionalComments]),
       occurrences: [
         {
           id: occurrenceId(
@@ -573,14 +591,5 @@ export function buildApprovalLedgerRows(input: BuildApprovalLedgerRowsInput) {
     })
   );
 
-  return [...rowsByKey.values()].sort((a, b) => {
-    const statusPriority =
-      STATUS_PRIORITY.indexOf(a.status) - STATUS_PRIORITY.indexOf(b.status);
-
-    if (statusPriority !== 0) {
-      return statusPriority;
-    }
-
-    return a.requirementName.localeCompare(b.requirementName);
-  });
+  return sortApprovalLedgerRows([...rowsByKey.values()]);
 }

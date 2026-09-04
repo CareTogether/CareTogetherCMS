@@ -13,6 +13,10 @@ import {
   FunctionRequirement,
   MonitoringRequirement,
   NoteEntryRequirement,
+  OrganizationApprovalPolicy,
+  OrganizationApprovalRequirement,
+  OrganizationRolePolicy,
+  OrganizationRolePolicyVersion,
   Person,
   RequirementDefinition,
   RequirementStage,
@@ -28,7 +32,17 @@ import {
   VolunteerFamilyRolePolicyVersion,
 } from '../../../../GeneratedClient';
 import { personNameString } from '../../../../Families/PersonName';
-import type { ActionDefinitionDraft, ArrangementFunctionDraft, ArrangementPolicyDraft, CustomFieldDraft, FunctionAssignmentPolicyDraft, MonitoringRequirementDraft, RequirementDraft, ValidityUnit, VolunteerRolePolicyVersionDraft } from './types';
+import type {
+  ActionDefinitionDraft,
+  ArrangementFunctionDraft,
+  ArrangementPolicyDraft,
+  CustomFieldDraft,
+  FunctionAssignmentPolicyDraft,
+  MonitoringRequirementDraft,
+  RequirementDraft,
+  ValidityUnit,
+  VolunteerRolePolicyVersionDraft,
+} from './types';
 
 const enumLabelOverrides = new Map<object, Record<string, string>>([
   [
@@ -124,11 +138,7 @@ export function personOptionsFromFamilies(families: CombinedFamilyInfo[]) {
 
 export function normalizeStringList(values: string[]) {
   return Array.from(
-    new Set(
-      values
-        .map((value) => value.trim())
-        .filter(Boolean)
-    )
+    new Set(values.map((value) => value.trim()).filter(Boolean))
   );
 }
 
@@ -343,6 +353,7 @@ export function volunteerRolePolicyVersionToDraft(
   version:
     | VolunteerRolePolicyVersion
     | VolunteerFamilyRolePolicyVersion
+    | OrganizationRolePolicyVersion
     | undefined,
   family: boolean
 ): VolunteerRolePolicyVersionDraft {
@@ -432,6 +443,16 @@ export function clonePolicyWithVolunteerPolicy(
   return new EffectiveLocationPolicy({ ...policy, volunteerPolicy });
 }
 
+export function clonePolicyWithOrganizationApprovalPolicy(
+  policy: EffectiveLocationPolicy,
+  organizationApprovalPolicy: OrganizationApprovalPolicy
+) {
+  return new EffectiveLocationPolicy({
+    ...policy,
+    organizationApprovalPolicy,
+  });
+}
+
 export function upsertCustomField(
   fields: CustomField[] | undefined,
   previousName: string | undefined,
@@ -443,7 +464,10 @@ export function upsertCustomField(
   ];
 }
 
-export function removeCustomField(fields: CustomField[] | undefined, name: string) {
+export function removeCustomField(
+  fields: CustomField[] | undefined,
+  name: string
+) {
   return (fields ?? []).filter((field) => field.name !== name);
 }
 
@@ -521,6 +545,21 @@ export function parseVolunteerRequirements(value: string) {
     .map((line) => {
       const [stage, actionName] = line.split('|').map((part) => part.trim());
       return new VolunteerApprovalRequirement({
+        stage: parseRequirementStage(stage),
+        actionName,
+      });
+    })
+    .filter((requirement) => Boolean(requirement.actionName));
+}
+
+export function parseOrganizationRequirements(value: string) {
+  return value
+    .split('\n')
+    .map((line) => line.trim())
+    .filter(Boolean)
+    .map((line) => {
+      const [stage, actionName] = line.split('|').map((part) => part.trim());
+      return new OrganizationApprovalRequirement({
         stage: parseRequirementStage(stage),
         actionName,
       });
@@ -694,4 +733,65 @@ export function removeVolunteerFamilyRolePolicyVersion(
     volunteerRoles: volunteerPolicy?.volunteerRoles ?? {},
     volunteerFamilyRoles,
   });
+}
+
+export function upsertOrganizationRolePolicyVersion(
+  policy: OrganizationApprovalPolicy | undefined,
+  previousRoleName: string | undefined,
+  previousVersion: string | undefined,
+  roleName: string,
+  version: OrganizationRolePolicyVersion
+) {
+  const organizationRoles = { ...(policy?.organizationRoles ?? {}) };
+  if (previousRoleName && previousRoleName !== roleName) {
+    const previousRole = organizationRoles[previousRoleName];
+    if (previousRole) {
+      const remainingVersions = previousRole.policyVersions.filter(
+        (item) => item.version !== previousVersion
+      );
+      if (remainingVersions.length === 0) {
+        delete organizationRoles[previousRoleName];
+      } else {
+        organizationRoles[previousRoleName] = new OrganizationRolePolicy({
+          ...previousRole,
+          policyVersions: remainingVersions,
+        });
+      }
+    }
+  }
+
+  const currentRole = organizationRoles[roleName];
+  organizationRoles[roleName] = new OrganizationRolePolicy({
+    organizationRoleType: roleName,
+    policyVersions: upsertByName(
+      currentRole?.policyVersions ?? [],
+      previousRoleName === roleName ? previousVersion : undefined,
+      version,
+      (item) => item.version
+    ),
+  });
+  return new OrganizationApprovalPolicy({ organizationRoles });
+}
+
+export function removeOrganizationRolePolicyVersion(
+  policy: OrganizationApprovalPolicy | undefined,
+  roleName: string,
+  versionName: string
+) {
+  const organizationRoles = { ...(policy?.organizationRoles ?? {}) };
+  const rolePolicy = organizationRoles[roleName];
+  if (!rolePolicy) return new OrganizationApprovalPolicy({ organizationRoles });
+
+  const remainingVersions = rolePolicy.policyVersions.filter(
+    (version) => version.version !== versionName
+  );
+  if (remainingVersions.length === 0) {
+    delete organizationRoles[roleName];
+  } else {
+    organizationRoles[roleName] = new OrganizationRolePolicy({
+      ...rolePolicy,
+      policyVersions: remainingVersions,
+    });
+  }
+  return new OrganizationApprovalPolicy({ organizationRoles });
 }
