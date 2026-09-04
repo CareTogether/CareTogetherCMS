@@ -36,6 +36,8 @@ jobs:
     - name: Build React app
       run: npm run build
       working-directory: src/caretogether-pwa
+      env:
+        VITE_APP_MUI_X_LICENSE_KEY: ${{ secrets.VITE_APP_MUI_X_LICENSE_KEY }}
     - name: List build outputs
       run: ls -R dist
       working-directory: src/caretogether-pwa

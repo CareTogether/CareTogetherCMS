@@ -1,6 +1,10 @@
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import { Box, Chip, Typography, useTheme } from '@mui/material';
-import { DataGrid, GridColDef, GridToolbar } from '@mui/x-data-grid';
+import {
+  DataGridPremium,
+  GridColDef,
+  GridToolbar,
+} from '@mui/x-data-grid-premium';
 import { useMemo } from 'react';
 import { VolunteerAssignmentRowV2 } from './volunteerAssignmentViewModel';
 import { v2DataGridStyles } from './v2DataGridStyles';
@@ -135,7 +139,7 @@ export function VolunteerAssignmentsDataGridV2({
 
   return (
     <Box sx={v2DataGridStyles(theme)}>
-      <DataGrid
+      <DataGridPremium
         autoHeight
         rows={rows}
         columns={columns}

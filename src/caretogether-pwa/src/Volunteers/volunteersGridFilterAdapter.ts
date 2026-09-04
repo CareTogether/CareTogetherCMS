@@ -1,7 +1,7 @@
 import {
   GridLogicOperator,
   type GridFilterModel,
-} from '@mui/x-data-grid';
+} from '@mui/x-data-grid-premium';
 
 export const VOLUNTEER_ROLES_FILTER_FIELD = 'roles';
 export const VOLUNTEER_STATUS_FILTER_FIELD = 'status';

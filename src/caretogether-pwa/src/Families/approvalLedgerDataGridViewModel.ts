@@ -1,4 +1,4 @@
-import { GridValidRowModel } from '@mui/x-data-grid';
+import { GridValidRowModel } from '@mui/x-data-grid-premium';
 import { formatUtcDateOnly } from '../Utilities/dateUtils';
 import {
   ApprovalLedgerRow,

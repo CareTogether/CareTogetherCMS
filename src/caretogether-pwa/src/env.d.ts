@@ -9,6 +9,7 @@ interface ImportMetaEnv {
   readonly VITE_APP_AUTH_KNOWN_AUTHORITY: string;
   readonly VITE_APP_AUTH_REDIRECT_URI: string;
   readonly VITE_APP_AUTH_SCOPES: string;
+  readonly VITE_APP_MUI_X_LICENSE_KEY?: string;
   readonly VITE_APP_PUBLIC_POSTHOG_KEY?: string;
   readonly VITE_APP_PUBLIC_POSTHOG_HOST?: string;
 }
