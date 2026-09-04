@@ -16,17 +16,10 @@ import {
 import {
   CombinedFamilyInfo,
   CommunityInfo,
-  Permission,
   RemoveCommunityMemberFamily,
 } from '../GeneratedClient';
-import type {
-  EmailAddress,
-  Person,
-  PhoneNumber,
-  ValueTupleOfPersonAndFamilyAdultRelationshipInfo,
-} from '../GeneratedClient';
+import type { EmailAddress, PhoneNumber } from '../GeneratedClient';
 import { useCommunityCommand } from '../Model/DirectoryModel';
-import { useCommunityPermissions } from '../Model/SessionModel';
 import {
   Email as EmailIcon,
   GroupRemove as GroupRemoveIcon,
@@ -35,65 +28,16 @@ import {
 } from '@mui/icons-material';
 import { useBackdrop } from '../Hooks/useBackdrop';
 import { FamilyName, familyNameString } from '../Families/FamilyName';
-import { familyLastName } from '../Families/FamilyUtils';
-import { useVisibleFamilies } from '../Model/Data';
 import { useAppNavigate } from '../Hooks/useAppNavigate';
 import { VolunteerRoleApprovalStatusChip } from '../Volunteers/VolunteerRoleApprovalStatusChip';
 import { PersonName } from '../Families/PersonName';
 import { useGlobalSnackBar } from '../Hooks/useGlobalSnackBar';
 import type { ReactNode } from 'react';
-
-type AdultInfo = ValueTupleOfPersonAndFamilyAdultRelationshipInfo;
+import type { CommunityMemberFamilyApprovalRow } from './communityMemberFamiliesModel';
+import { useCommunityMemberFamiliesViewModel } from './useCommunityMemberFamiliesViewModel';
 
 interface CommunityMemberFamiliesProps {
   communityInfo: CommunityInfo;
-}
-
-function preferredFirst<T extends { id?: string }>(
-  values: T[] | undefined,
-  preferredId: string | undefined,
-  valueSelector: (value: T) => string | undefined
-) {
-  return (values || [])
-    .filter((value) => Boolean(valueSelector(value)?.trim()))
-    .map((value, index) => ({ value, index }))
-    .sort((a, b) => {
-      const aPreferred = a.value.id === preferredId;
-      const bPreferred = b.value.id === preferredId;
-
-      if (aPreferred !== bPreferred) {
-        return aPreferred ? -1 : 1;
-      }
-
-      return a.index - b.index;
-    })
-    .map(({ value }) => value);
-}
-
-function phoneNumbersFor(person?: Person) {
-  return preferredFirst(
-    person?.phoneNumbers,
-    person?.preferredPhoneNumberId,
-    (phoneNumber) => phoneNumber.number
-  );
-}
-
-function emailAddressesFor(person?: Person) {
-  return preferredFirst(
-    person?.emailAddresses,
-    person?.preferredEmailAddressId,
-    (emailAddress) => emailAddress.address
-  );
-}
-
-function adultsFor(family: CombinedFamilyInfo): (AdultInfo | undefined)[] {
-  const adults = family.family?.adults || [];
-
-  if (adults.length === 0) {
-    return [undefined];
-  }
-
-  return adults;
 }
 
 function contactUnavailableText(text: string) {
@@ -156,21 +100,8 @@ function ContactCopyButton({
 export function CommunityMemberFamilies({
   communityInfo,
 }: CommunityMemberFamiliesProps) {
-  const permissions = useCommunityPermissions(communityInfo);
-  const community = communityInfo.community!;
-
-  const visibleFamilies = useVisibleFamilies();
-
-  const memberFamilies = (community?.memberFamilies || [])
-    .map((familyId) =>
-      visibleFamilies.find((family) => family.family?.id === familyId)
-    )
-    .filter((family) => family)
-    .sort((a, b) => {
-      const aName = familyLastName(a!);
-      const bName = familyLastName(b!);
-      return aName?.localeCompare(bName, undefined, { sensitivity: 'base' });
-    }) as CombinedFamilyInfo[];
+  const { canEditMemberFamilies, community, memberFamilyRows } =
+    useCommunityMemberFamiliesViewModel(communityInfo);
 
   const removeMemberFamily = useCommunityCommand(
     (communityId, familyId: string) => {
@@ -208,23 +139,10 @@ export function CommunityMemberFamilies({
     }
   }
 
-  const canEditMemberFamilies = permissions(
-    Permission.EditCommunityMemberFamilies
-  );
-
-  function canViewContactInfo(family: CombinedFamilyInfo) {
-    return (
-      permissions(Permission.ViewPersonContactInfo) ||
-      (family.userPermissions || []).includes(Permission.ViewPersonContactInfo)
-    );
-  }
-
-  function renderPhoneNumbers(person: Person | undefined, canView: boolean) {
+  function renderPhoneNumbers(phoneNumbers: PhoneNumber[], canView: boolean) {
     if (!canView) {
       return contactUnavailableText('Restricted');
     }
-
-    const phoneNumbers = phoneNumbersFor(person);
 
     if (phoneNumbers.length === 0) {
       return contactUnavailableText('No phone');
@@ -248,12 +166,13 @@ export function CommunityMemberFamilies({
     );
   }
 
-  function renderEmailAddresses(person: Person | undefined, canView: boolean) {
+  function renderEmailAddresses(
+    emailAddresses: EmailAddress[],
+    canView: boolean
+  ) {
     if (!canView) {
       return contactUnavailableText('Restricted');
     }
-
-    const emailAddresses = emailAddressesFor(person);
 
     if (emailAddresses.length === 0) {
       return contactUnavailableText('No email');
@@ -277,34 +196,26 @@ export function CommunityMemberFamilies({
     );
   }
 
-  function renderFamilyApprovals(family: CombinedFamilyInfo) {
-    return Object.entries(
-      family.volunteerFamilyInfo?.familyRoleApprovals || {}
-    ).map(([role, roleApprovalStatus]) => (
+  function renderFamilyApprovals(
+    approvalRows: CommunityMemberFamilyApprovalRow[]
+  ) {
+    return approvalRows.map(({ roleName, status }) => (
       <VolunteerRoleApprovalStatusChip
-        key={role}
-        roleName={role}
-        status={roleApprovalStatus.effectiveRoleApprovalStatus}
+        key={roleName}
+        roleName={roleName}
+        status={status}
       />
     ));
   }
 
   function renderAdultApprovals(
-    family: CombinedFamilyInfo,
-    person: Person | undefined
+    approvalRows: CommunityMemberFamilyApprovalRow[]
   ) {
-    if (!person?.id) {
-      return null;
-    }
-
-    return Object.entries(
-      family.volunteerFamilyInfo?.individualVolunteers?.[person.id]
-        ?.approvalStatusByRole || {}
-    ).map(([role, roleApprovalStatus]) => (
+    return approvalRows.map(({ roleName, status }) => (
       <VolunteerRoleApprovalStatusChip
-        key={role}
-        roleName={role}
-        status={roleApprovalStatus.effectiveRoleApprovalStatus}
+        key={roleName}
+        roleName={roleName}
+        status={status}
       />
     ));
   }
@@ -347,7 +258,7 @@ export function CommunityMemberFamilies({
           </TableRow>
         </TableHead>
         <TableBody>
-          {memberFamilies.length === 0 && (
+          {memberFamilyRows.length === 0 && (
             <TableRow>
               <TableCell colSpan={canEditMemberFamilies ? 4 : 3}>
                 <Typography variant="body2" color="text.secondary">
@@ -356,12 +267,10 @@ export function CommunityMemberFamilies({
               </TableCell>
             </TableRow>
           )}
-          {memberFamilies.flatMap((family) => {
-            const adults = adultsFor(family);
-            const familyCanViewContactInfo = canViewContactInfo(family);
-            const familyId = family.family!.id!;
+          {memberFamilyRows.flatMap((familyRow) => {
+            const family = familyRow.family;
             const familyHeaderRow = (
-              <TableRow key={familyId}>
+              <TableRow key={familyRow.familyId}>
                 <TableCell
                   colSpan={canEditMemberFamilies ? 4 : 3}
                   sx={{
@@ -392,7 +301,7 @@ export function CommunityMemberFamilies({
                         variant="text"
                         size="small"
                         startIcon={<PeopleIcon />}
-                        onClick={() => appNavigate.family(familyId)}
+                        onClick={() => appNavigate.family(familyRow.familyId)}
                         sx={{
                           justifyContent: 'flex-start',
                           minWidth: 0,
@@ -407,7 +316,7 @@ export function CommunityMemberFamilies({
                       >
                         <FamilyName family={family} />
                       </Button>
-                      {renderFamilyApprovals(family)}
+                      {renderFamilyApprovals(familyRow.approvalRows)}
                     </Stack>
                     {canEditMemberFamilies && (
                       <Tooltip title="Remove family from community">
@@ -426,12 +335,11 @@ export function CommunityMemberFamilies({
               </TableRow>
             );
 
-            const adultRows = adults.map((adult) => {
-              const person = adult?.item1;
-              const rowKey = `${familyId}-${person?.id || 'no-adults'}`;
+            const adultRows = familyRow.adultRows.map((adultRow) => {
+              const person = adultRow.person;
 
               return (
-                <TableRow key={rowKey} className="member-row">
+                <TableRow key={adultRow.rowKey} className="member-row">
                   <TableCell sx={{ paddingLeft: 4, verticalAlign: 'top' }}>
                     {person ? (
                       <Stack spacing={0.5}>
@@ -444,8 +352,7 @@ export function CommunityMemberFamilies({
                           }}
                         >
                           <PersonName person={person} />
-                          {family.family?.primaryFamilyContactPersonId ===
-                            person.id && (
+                          {adultRow.isPrimaryContact && (
                             <Chip
                               label="Primary"
                               size="small"
@@ -463,7 +370,7 @@ export function CommunityMemberFamilies({
                           direction="row"
                           sx={{ flexWrap: 'wrap', gap: 0.5 }}
                         >
-                          {renderAdultApprovals(family, person)}
+                          {renderAdultApprovals(adultRow.approvalRows)}
                         </Stack>
                       </Stack>
                     ) : (
@@ -471,10 +378,16 @@ export function CommunityMemberFamilies({
                     )}
                   </TableCell>
                   <TableCell sx={{ maxWidth: 180, verticalAlign: 'top' }}>
-                    {renderPhoneNumbers(person, familyCanViewContactInfo)}
+                    {renderPhoneNumbers(
+                      adultRow.phoneNumbers,
+                      familyRow.canViewContactInfo
+                    )}
                   </TableCell>
                   <TableCell sx={{ maxWidth: 240, verticalAlign: 'top' }}>
-                    {renderEmailAddresses(person, familyCanViewContactInfo)}
+                    {renderEmailAddresses(
+                      adultRow.emailAddresses,
+                      familyRow.canViewContactInfo
+                    )}
                   </TableCell>
                   {canEditMemberFamilies && <TableCell />}
                 </TableRow>
