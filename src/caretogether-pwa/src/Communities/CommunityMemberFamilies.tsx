@@ -16,17 +16,14 @@ import {
 import {
   CombinedFamilyInfo,
   CommunityInfo,
-  RemoveCommunityMemberFamily,
 } from '../GeneratedClient';
 import type { EmailAddress, PhoneNumber } from '../GeneratedClient';
-import { useCommunityCommand } from '../Model/DirectoryModel';
 import {
   Email as EmailIcon,
   GroupRemove as GroupRemoveIcon,
   People as PeopleIcon,
   Phone as PhoneIcon,
 } from '@mui/icons-material';
-import { useBackdrop } from '../Hooks/useBackdrop';
 import { FamilyName, familyNameString } from '../Families/FamilyName';
 import { useAppNavigate } from '../Hooks/useAppNavigate';
 import { VolunteerRoleApprovalStatusChip } from '../Volunteers/VolunteerRoleApprovalStatusChip';
@@ -34,6 +31,7 @@ import { PersonName } from '../Families/PersonName';
 import { useGlobalSnackBar } from '../Hooks/useGlobalSnackBar';
 import type { ReactNode } from 'react';
 import type { CommunityMemberFamilyApprovalRow } from './communityMemberFamiliesModel';
+import { useCommunityMemberFamilyCommands } from './useCommunityMemberFamilyCommands';
 import { useCommunityMemberFamiliesViewModel } from './useCommunityMemberFamiliesViewModel';
 
 interface CommunityMemberFamiliesProps {
@@ -102,17 +100,9 @@ export function CommunityMemberFamilies({
 }: CommunityMemberFamiliesProps) {
   const { canEditMemberFamilies, community, memberFamilyRows } =
     useCommunityMemberFamiliesViewModel(communityInfo);
+  const { removeMemberFamilyFromCommunity } =
+    useCommunityMemberFamilyCommands();
 
-  const removeMemberFamily = useCommunityCommand(
-    (communityId, familyId: string) => {
-      const command = new RemoveCommunityMemberFamily();
-      command.communityId = communityId;
-      command.familyId = familyId;
-      return command;
-    }
-  );
-
-  const withBackdrop = useBackdrop();
   async function remove(family: CombinedFamilyInfo) {
     //TODO: Use the DeleteDocumentDialog approach - potentially making it reusable?
     if (
@@ -121,9 +111,7 @@ export function CommunityMemberFamilies({
           familyNameString(family)
       )
     ) {
-      await withBackdrop(async () => {
-        await removeMemberFamily(community.id!, family.family!.id!);
-      });
+      await removeMemberFamilyFromCommunity(community.id!, family.family!.id!);
     }
   }
 
