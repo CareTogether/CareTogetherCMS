@@ -3,14 +3,10 @@ import { Add as AddIcon } from '@mui/icons-material';
 import { Box, Button, Paper, Stack, Typography } from '@mui/material';
 import { useScreenTitle } from '../Shell/ShellScreenTitle';
 import { AddNewReferralDrawer } from './AddNewReferralDrawer';
-import { useVisibleReferrals } from '../Model/Data';
 import { Permission } from '../GeneratedClient';
 import { useAppNavigate } from '../Hooks/useAppNavigate';
 import { ProgressBackdrop } from '../Shell/ProgressBackdrop';
 import { useGlobalPermissions } from '../Model/SessionModel';
-import { useFeatureFlagEnabled } from 'posthog-js/react';
-import { REFERRALS_FEATURE_FLAG } from '../featureFlags';
-import { useFeatureFlagsLoaded } from '../Utilities/Instrumentation/useFeatureFlagsLoaded';
 import { wideTablePageSx } from '../Utilities/wideTablePageSx';
 import { useReferralsBrowserViewModel } from './useReferralsBrowserViewModel';
 import { ReferralsDataGridV2 } from './ReferralsDataGridV2';
@@ -23,37 +19,25 @@ import {
   type ReferralAssignmentGridFilter,
   type ReferralsGridFilterLogicOperator,
 } from './referralsGridFilterAdapter';
+import { useReferralsAccessGate } from './useReferralsAccessGate';
 
 export function ReferralsScreenV2() {
   useScreenTitle('Referrals');
 
-  const referralsEnabled = useFeatureFlagEnabled(REFERRALS_FEATURE_FLAG);
-  const featureFlagsLoaded = useFeatureFlagsLoaded();
   const appNavigate = useAppNavigate();
-  const permissions = useGlobalPermissions();
-  const referralRecords = useVisibleReferrals();
-
-  const canCreateReferrals = permissions(Permission.CreateV1Referral);
-  const canViewGlobalReferrals = permissions(Permission.ViewV1Referral);
-  const canViewContextualReferrals = referralRecords.length > 0;
-  const canAccessReferrals =
-    canCreateReferrals || canViewGlobalReferrals || canViewContextualReferrals;
+  const {
+    shouldRedirect,
+    shouldShowLoading,
+    shouldShowReferrals,
+  } = useReferralsAccessGate();
 
   useEffect(() => {
-    if (
-      !canAccessReferrals ||
-      (featureFlagsLoaded && referralsEnabled !== true)
-    ) {
+    if (shouldRedirect) {
       appNavigate.dashboard();
     }
-  }, [
-    canAccessReferrals,
-    featureFlagsLoaded,
-    referralsEnabled,
-    appNavigate,
-  ]);
+  }, [appNavigate, shouldRedirect]);
 
-  if (!featureFlagsLoaded) {
+  if (shouldShowLoading) {
     return (
       <ProgressBackdrop opaque>
         <p>Loading...</p>
@@ -61,11 +45,7 @@ export function ReferralsScreenV2() {
     );
   }
 
-  if (!canAccessReferrals) {
-    return null;
-  }
-
-  if (referralsEnabled !== true) {
+  if (!shouldShowReferrals) {
     return null;
   }
 
