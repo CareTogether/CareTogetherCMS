@@ -19,7 +19,6 @@ import {
 import { familyNameString } from '../Families/FamilyName';
 import { useScreenTitle } from '../Shell/ShellScreenTitle';
 import { useRequiredSelectedLocationContext } from '../Model/Data';
-import { useV1ReferralsModel } from '../Model/V1ReferralsModel';
 
 import { MissingRequirementRow } from '../Requirements/MissingRequirementRow';
 import { CompletedRequirementRow } from '../Requirements/CompletedRequirementRow';
@@ -39,6 +38,7 @@ import { UploadV1ReferralDocumentsDialog } from './UploadV1ReferralDocumentsDial
 import { LinkReferralToExistingCaseDialog } from './LinkReferralToExistingCaseDialog';
 import { formatStatusWithDate } from './formatStatusWithDate';
 import { FunctionAssignmentsSection } from '../FunctionAssignments/FunctionAssignmentsSection';
+import { useReferralDetailsCommands } from './useReferralDetailsCommands';
 import { useReferralFamilyCaseWorkflow } from './useReferralFamilyCaseWorkflow';
 import { useReferralDetailsViewModel } from './useReferralDetailsViewModel';
 
@@ -48,17 +48,8 @@ export function ReferralDetailsPage() {
   const { referralId } = useParams<{ referralId: string }>();
   const appNavigate = useAppNavigate();
 
-  const {
-    reopenReferral,
-    updateReferralFamily,
-    linkReferralToCaseAndAccept,
-    assignIndividualVolunteerToReferral,
-    unassignIndividualVolunteerFromReferral,
-  } = useV1ReferralsModel();
-
   const { organizationId, locationId } = useRequiredSelectedLocationContext();
 
-  const [working, setWorking] = useState(false);
   const [openEditReferral, setOpenEditReferral] = useState(false);
   const [openOpenCaseDialog, setOpenOpenCaseDialog] = useState(false);
   const [showAcceptedMessage, setShowAcceptedMessage] = useState(false);
@@ -111,6 +102,22 @@ export function ReferralDetailsPage() {
     family,
     referralAlreadyLinkedToCase,
   });
+  const {
+    assignIndividualVolunteerToReferral,
+    linkReferralToSelectedCase,
+    reopenCurrentReferral,
+    saveNewFamily,
+    saveSelectedExistingFamily,
+    unassignIndividualVolunteerFromReferral,
+    working,
+  } = useReferralDetailsCommands({
+    onNewFamilySaved: closeCreateFamilyWorkflow,
+    onReferralLinkedToCase: () => {
+      resetLinkCaseDialogState();
+      setShowAcceptedMessage(true);
+    },
+    onSelectedExistingFamilySaved: continueAfterFamilySelected,
+  });
 
   if (!referralId) {
     return <Typography sx={{ p: 3 }}>Invalid referral.</Typography>;
@@ -140,54 +147,6 @@ export function ReferralDetailsPage() {
     lineHeight: 'inherit',
     verticalAlign: 'baseline',
   };
-
-  async function handleSaveSelectedExistingFamily(
-    currentReferralId: string,
-    familyId: string
-  ) {
-    if (working) return;
-
-    try {
-      setWorking(true);
-      await updateReferralFamily(currentReferralId, familyId);
-      continueAfterFamilySelected(familyId);
-    } finally {
-      setWorking(false);
-    }
-  }
-
-  async function handleSaveNewFamily(
-    currentReferralId: string,
-    familyId: string
-  ) {
-    if (working) return;
-
-    try {
-      setWorking(true);
-      await updateReferralFamily(currentReferralId, familyId);
-      closeCreateFamilyWorkflow();
-    } finally {
-      setWorking(false);
-    }
-  }
-
-  async function handleLinkReferralToSelectedCase() {
-    if (!currentReferral.familyId || !selectedCaseIdToLink || working) return;
-
-    try {
-      setWorking(true);
-      await linkReferralToCaseAndAccept(
-        currentReferral.familyId,
-        selectedCaseIdToLink,
-        currentReferral.referralId,
-        new Date()
-      );
-      resetLinkCaseDialogState();
-      setShowAcceptedMessage(true);
-    } finally {
-      setWorking(false);
-    }
-  }
 
   return (
     <Grid container sx={{ p: 3 }} spacing={0}>
@@ -230,13 +189,8 @@ export function ReferralDetailsPage() {
             <Button
               variant="contained"
               disabled={working}
-              onClick={async () => {
-                setWorking(true);
-                try {
-                  await reopenReferral(currentReferral.referralId);
-                } finally {
-                  setWorking(false);
-                }
+              onClick={() => {
+                void reopenCurrentReferral(currentReferral.referralId);
               }}
             >
               Reopen Referral
@@ -504,7 +458,7 @@ export function ReferralDetailsPage() {
           onClose={async (familyId?: string) => {
             closeCreateFamilyWorkflow();
             if (!familyId) return;
-            await handleSaveNewFamily(currentReferral.referralId, familyId);
+            await saveNewFamily(currentReferral.referralId, familyId);
           }}
         />
       )}
@@ -551,7 +505,7 @@ export function ReferralDetailsPage() {
         familyOptions={familyOptions}
         onCancel={closeSelectFamilyWorkflow}
         onSave={(familyId) =>
-          handleSaveSelectedExistingFamily(currentReferral.referralId, familyId)
+          saveSelectedExistingFamily(currentReferral.referralId, familyId)
         }
       />
 
@@ -562,7 +516,13 @@ export function ReferralDetailsPage() {
         selectedCaseId={selectedCaseIdToLink}
         onSelectedCaseIdChange={setSelectedCaseIdToLink}
         onClose={resetLinkCaseDialogState}
-        onLink={handleLinkReferralToSelectedCase}
+        onLink={() =>
+          linkReferralToSelectedCase({
+            familyId: currentReferral.familyId,
+            referralId: currentReferral.referralId,
+            selectedCaseId: selectedCaseIdToLink,
+          })
+        }
       />
 
       <Snackbar
