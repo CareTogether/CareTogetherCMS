@@ -11,7 +11,11 @@ import {
   Delete as DeleteIcon,
   Download as DownloadIcon,
 } from '@mui/icons-material';
-import { DataGrid, GridColDef, GridToolbar } from '@mui/x-data-grid';
+import {
+  DataGridPremium,
+  GridColDef,
+  GridToolbar,
+} from '@mui/x-data-grid-premium';
 import { useMemo } from 'react';
 import { FamilyDocumentRowV2 } from './familyDocumentsViewModelV2';
 import { v2DataGridStyles } from './v2DataGridStyles';
@@ -185,7 +189,7 @@ export function FamilyDocumentsDataGridV2({
 
   return (
     <Box sx={v2DataGridStyles(theme)}>
-      <DataGrid
+      <DataGridPremium
         autoHeight
         rows={rows}
         columns={columns}
