@@ -10,7 +10,10 @@ import {
 import { useState, useEffect, useMemo } from 'react';
 import { useBackdrop } from '../../Hooks/useBackdrop';
 import { useOrganizationConfiguration } from '../../Model/ConfigurationModel';
-import { usePolicy, useRefreshPolicy } from '../../Model/PolicyModel';
+import {
+  usePolicyForLocation,
+  useRefreshPolicyForLocation,
+} from '../../Model/PolicyModel';
 import { ProgressBackdrop } from '../../Shell/ProgressBackdrop';
 import { useScreenTitle } from '../../Shell/ShellScreenTitle';
 import { useRequiredSelectedLocationContext } from '../../Model/Data';
@@ -42,17 +45,20 @@ import { useFeatureFlagEnabled, usePostHog } from 'posthog-js/react';
 import { SELF_SERVICE_POLICY_FEATURE_FLAG } from '../../featureFlags';
 
 export function LocationEdit() {
-  const { locationId, editingLocationId } = useParams<{
-    locationId: string;
+  const { editingLocationId } = useParams<{
     editingLocationId: string;
   }>();
 
   const configuration = useOrganizationConfiguration();
-  const { organizationId } = useRequiredSelectedLocationContext();
+  const { organizationId, locationId } = useRequiredSelectedLocationContext();
   const targetLocationId = editingLocationId ?? locationId;
+  const targetLocationContext = {
+    organizationId,
+    locationId: targetLocationId,
+  };
 
   const location = configuration?.locations?.find(
-    (location) => location.id === editingLocationId
+    (location) => location.id === targetLocationId
   );
 
   useScreenTitle(`Editing ${location?.name} configuration`);
@@ -69,7 +75,7 @@ export function LocationEdit() {
       setIsSidebarCollapsed(false);
     }
   }, [isMobile]);
-  const policy = usePolicy();
+  const policy = usePolicyForLocation(targetLocationContext);
   const posthog = usePostHog();
   const showPolicySelfService = useFeatureFlagEnabled(
     SELF_SERVICE_POLICY_FEATURE_FLAG
@@ -162,7 +168,7 @@ export function LocationEdit() {
 
   const appNavigate = useAppNavigate();
   const withBackdrop = useBackdrop();
-  const refreshPolicy = useRefreshPolicy();
+  const refreshPolicy = useRefreshPolicyForLocation(targetLocationContext);
 
   const policyTabIds = [
     'actionDefinitions',
