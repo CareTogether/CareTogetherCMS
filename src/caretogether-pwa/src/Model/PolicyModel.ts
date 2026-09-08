@@ -132,18 +132,26 @@ function usePolicyStringListAtom(
     : noStringList;
 }
 
+export function usePolicyForLocation(locationContext: LocationContext) {
+  return useAtomValue(policyAtomFamily(locationContext));
+}
+
 export function usePolicy() {
   const selectedLocationContext = useRequiredSelectedLocationContext();
-  return useAtomValue(policyAtomFamily(selectedLocationContext));
+  return usePolicyForLocation(selectedLocationContext);
+}
+
+export function useRefreshPolicyForLocation(locationContext: LocationContext) {
+  const refreshPolicy = useSetAtom(
+    policyRefreshTokenAtomFamily(locationContext)
+  );
+
+  return () => refreshPolicy((previous) => previous + 1);
 }
 
 export function useRefreshPolicy() {
   const selectedLocationContext = useRequiredSelectedLocationContext();
-  const refreshPolicy = useSetAtom(
-    policyRefreshTokenAtomFamily(selectedLocationContext)
-  );
-
-  return () => refreshPolicy((previous) => previous + 1);
+  return useRefreshPolicyForLocation(selectedLocationContext);
 }
 
 export function useAllApprovalAndOnboardingRequirements() {
