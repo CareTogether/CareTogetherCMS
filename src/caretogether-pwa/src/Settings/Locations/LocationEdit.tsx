@@ -127,6 +127,12 @@ export function LocationEdit() {
         shouldShow: showPolicySelfService === true,
       },
       {
+        id: 'organizationPolicy' as const,
+        label: 'Organization Approval Policies',
+        component: PolicyConfiguration,
+        shouldShow: showPolicySelfService === true,
+      },
+      {
         id: 'accessLevels' as const,
         label: 'Access Levels',
         component: AccessLevels,
@@ -176,6 +182,7 @@ export function LocationEdit() {
     'casePolicy',
     'v1ReferralPolicy',
     'volunteerPolicy',
+    'organizationPolicy',
   ] as const;
   const isPolicyTabActive = policyTabIds.some((tabId) => tabId === activeTab);
   function savePolicy(nextPolicy: EffectiveLocationPolicy) {
@@ -392,6 +399,19 @@ export function LocationEdit() {
                   locationRoles={locationRoles}
                   onPolicyChange={savePolicy}
                   section="volunteerPolicy"
+                />
+              </Box>
+            )}
+
+          {showPolicySelfService === true &&
+            policyDraft &&
+            activeTab === 'organizationPolicy' && (
+              <Box key="organizationPolicy">
+                <PolicyConfiguration
+                  policy={policyDraft}
+                  locationRoles={locationRoles}
+                  onPolicyChange={savePolicy}
+                  section="organizationPolicy"
                 />
               </Box>
             )}

@@ -365,10 +365,7 @@ export function MissingRequirementDialog({
                             ? ` (${personLookup ? personNameString(personLookup(context.assignment.personId)) : ''})`
                             : '') +
                           ` - ` +
-                           getArrangementRequirementStatusLabel(
-                             arrangement,
-                             now
-                           )
+                          getArrangementRequirementStatusLabel(arrangement, now)
                         }
                       />
                     ))}
@@ -521,10 +518,7 @@ export function MissingRequirementDialog({
                                 )
                               : ''
                           } - ` +
-                           getArrangementRequirementStatusLabel(
-                             arrangement,
-                             now
-                           )
+                          getArrangementRequirementStatusLabel(arrangement, now)
                         }
                       />
                     ))}

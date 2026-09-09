@@ -1,4 +1,4 @@
-import { GridValidRowModel } from '@mui/x-data-grid-premium';
+import type { GridValidRowModel } from '@mui/x-data-grid-premium';
 import { formatUtcDateOnly } from '../Utilities/dateUtils';
 import {
   ApprovalLedgerRow,
@@ -64,5 +64,4 @@ export function approvalLedgerSearchText(row: ApprovalLedgerRow) {
   ].join(' ');
 }
 
-export type ApprovalLedgerDataGridRowV2 = ApprovalLedgerRow &
-  GridValidRowModel;
+export type ApprovalLedgerDataGridRowV2 = ApprovalLedgerRow & GridValidRowModel;

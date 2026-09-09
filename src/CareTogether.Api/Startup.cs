@@ -18,6 +18,7 @@ using CareTogether.Resources.Communities;
 using CareTogether.Resources.Directory;
 using CareTogether.Resources.Goals;
 using CareTogether.Resources.Notes;
+using CareTogether.Resources.OrganizationApprovals;
 using CareTogether.Resources.Policies;
 using CareTogether.Resources.V1Cases;
 using CareTogether.Resources.V1ReferralNotes;
@@ -152,6 +153,11 @@ namespace CareTogether.Api
                 immutableBlobServiceClient,
                 "ApprovalsEventLog"
             );
+            var organizationApprovalsEventLog =
+                new AppendBlobEventLog<OrganizationApprovalEvent>(
+                    immutableBlobServiceClient,
+                    "OrganizationApprovalsEventLog"
+                );
             var notesEventLog = new AppendBlobEventLog<NotesEvent>(
                 immutableBlobServiceClient,
                 "NotesEventLog"
@@ -236,6 +242,9 @@ namespace CareTogether.Api
 
             // Resource services
             var approvalsResource = new ApprovalsResource(approvalsEventLog);
+            var organizationApprovalsResource = new OrganizationApprovalsResource(
+                organizationApprovalsEventLog
+            );
             var directoryResource = new DirectoryResource(directoryEventLog, uploadsStore);
             var goalsResource = new GoalsResource(goalsEventLog);
             var policiesResource = new PoliciesResource(
@@ -253,13 +262,19 @@ namespace CareTogether.Api
                 v1ReferralNotesEventLog,
                 v1ReferralDraftNotesStore
             );
-            var communitiesResource = new CommunitiesResource(communitiesEventLog, uploadsStore);
+            var communitiesResource = new CommunitiesResource(
+                communitiesEventLog,
+                uploadsStore,
+                policiesResource
+            );
 
             //TODO: If we want to be strict about conventions, this should have a manager intermediary for authz.
             services.AddSingleton<IPoliciesResource>(policiesResource);
             services.AddSingleton<IAccountsResource>(accountsResource);
             services.AddSingleton<IDirectoryResource>(directoryResource);
             services.AddSingleton<IApprovalsResource>(approvalsResource);
+            services.AddSingleton<ICommunitiesResource>(communitiesResource);
+            services.AddSingleton<IOrganizationApprovalsResource>(organizationApprovalsResource);
             services.AddSingleton<IV1ReferralsResource>(v1ReferralsResource);
             services.AddSingleton<IV1ReferralNotesResource>(v1ReferralNotesResource);
 
@@ -315,6 +330,7 @@ namespace CareTogether.Api
                     directoryResource,
                     accountsResource,
                     approvalsResource,
+                    organizationApprovalsResource,
                     v1CasesResource,
                     v1ReferralsResource,
                     v1ReferralNotesResource,

@@ -7,6 +7,7 @@ using CareTogether.Resources.Approvals;
 using CareTogether.Resources.Communities;
 using CareTogether.Resources.Directory;
 using CareTogether.Resources.Notes;
+using CareTogether.Resources.OrganizationApprovals;
 using CareTogether.Resources.V1Cases;
 using CareTogether.Resources.V1ReferralNotes;
 using CareTogether.Resources.V1Referrals;
@@ -122,6 +123,9 @@ namespace CareTogether.Managers.Records
     public sealed record NoteRecordsCommand(NoteCommand Command) : AtomicRecordsCommand();
 
     public sealed record CommunityRecordsCommand(CommunityCommand Command) : AtomicRecordsCommand();
+
+    public sealed record OrganizationApprovalRecordsCommand(OrganizationApprovalCommand Command)
+        : AtomicRecordsCommand();
 
     [JsonHierarchyBase]
     public abstract partial record RecordsAggregate(Guid Id);

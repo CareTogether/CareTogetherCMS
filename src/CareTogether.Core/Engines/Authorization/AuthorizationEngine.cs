@@ -11,6 +11,7 @@ using CareTogether.Resources.Approvals;
 using CareTogether.Resources.Communities;
 using CareTogether.Resources.Directory;
 using CareTogether.Resources.Notes;
+using CareTogether.Resources.OrganizationApprovals;
 using CareTogether.Resources.Policies;
 using CareTogether.Resources.V1Cases;
 using CareTogether.Resources.V1Referrals;
@@ -774,15 +775,47 @@ namespace CareTogether.Engines.Authorization
             return permissions.Contains(
                 command switch
                 {
-                    CreateCommunity => Permission.CreateCommunity,
-                    RenameCommunity => Permission.EditCommunity,
-                    EditCommunityDescription => Permission.EditCommunity,
-                    AddCommunityMemberFamily => Permission.EditCommunityMemberFamilies,
-                    RemoveCommunityMemberFamily => Permission.EditCommunityMemberFamilies,
-                    AddCommunityRoleAssignment => Permission.EditCommunityRoleAssignments,
-                    RemoveCommunityRoleAssignment => Permission.EditCommunityRoleAssignments,
-                    UploadCommunityDocument => Permission.UploadCommunityDocuments,
-                    DeleteUploadedCommunityDocument => Permission.DeleteCommunityDocuments,
+                    CreateCommunity => Permission.CreateOrganization,
+                    RenameCommunity => Permission.EditOrganization,
+                    EditCommunityDescription => Permission.EditOrganization,
+                    SetOrganizationCategories => Permission.EditOrganization,
+                    AddCommunityMemberFamily => Permission.EditOrganizationMemberFamilies,
+                    RemoveCommunityMemberFamily => Permission.EditOrganizationMemberFamilies,
+                    AddCommunityRoleAssignment => Permission.EditOrganizationRoleAssignments,
+                    RemoveCommunityRoleAssignment => Permission.EditOrganizationRoleAssignments,
+                    UploadCommunityDocument => Permission.UploadOrganizationDocuments,
+                    DeleteUploadedCommunityDocument => Permission.DeleteOrganizationDocuments,
+                    _ => throw new NotImplementedException(
+                        $"The command type '{command.GetType().FullName}' has not been implemented."
+                    ),
+                }
+            );
+        }
+
+        public async Task<bool> AuthorizeOrganizationApprovalCommandAsync(
+            Guid tenantId,
+            Guid locationId,
+            SessionUserContext userContext,
+            OrganizationApprovalCommand command
+        )
+        {
+            var permissions = await userAccessCalculation.AuthorizeUserAccessAsync(
+                tenantId,
+                locationId,
+                userContext,
+                new CommunityAuthorizationContext(command.OrganizationId)
+            );
+            return permissions.Contains(
+                command switch
+                {
+                    ActivateOrganizationApprovals => Permission.ActivateOrganizationApprovals,
+                    CompleteOrganizationRequirement => Permission.EditApprovalRequirementCompletion,
+                    MarkOrganizationRequirementIncomplete =>
+                        Permission.EditApprovalRequirementCompletion,
+                    ExemptOrganizationRequirement => Permission.EditApprovalRequirementExemption,
+                    UnexemptOrganizationRequirement => Permission.EditApprovalRequirementExemption,
+                    RemoveOrganizationRole => Permission.EditOrganizationRoleParticipation,
+                    ResetOrganizationRole => Permission.EditOrganizationRoleParticipation,
                     _ => throw new NotImplementedException(
                         $"The command type '{command.GetType().FullName}' has not been implemented."
                     ),
@@ -969,11 +1002,44 @@ namespace CareTogether.Engines.Authorization
                     Community = community.Community with
                     {
                         UploadedDocuments = contextPermissions.Contains(
-                            Permission.ViewCommunityDocumentMetadata
+                            Permission.ViewOrganizationDocumentMetadata
                         )
                             ? community.Community.UploadedDocuments
                             : ImmutableList<UploadedDocumentInfo>.Empty,
                     },
+                    ApprovalInfo = community.ApprovalInfo == null
+                        ? null
+                        : community.ApprovalInfo with
+                        {
+                            ApprovalStatusByRole = contextPermissions.Contains(
+                                Permission.ViewApprovalStatus
+                            )
+                                ? community.ApprovalInfo.ApprovalStatusByRole
+                                : ImmutableDictionary<string, OrganizationRoleApprovalStatus>.Empty,
+                            RoleRemovals = contextPermissions.Contains(Permission.ViewApprovalStatus)
+                                ? community.ApprovalInfo.RoleRemovals
+                                : ImmutableList<RoleRemoval>.Empty,
+                            CompletedRequirements = contextPermissions.Contains(
+                                Permission.ViewApprovalProgress
+                            )
+                                ? community.ApprovalInfo.CompletedRequirements
+                                : ImmutableList<Resources.CompletedRequirementInfo>.Empty,
+                            ExemptedRequirements = contextPermissions.Contains(
+                                Permission.ViewApprovalProgress
+                            )
+                                ? community.ApprovalInfo.ExemptedRequirements
+                                : ImmutableList<Resources.ExemptedRequirementInfo>.Empty,
+                            AvailableApplications = contextPermissions.Contains(
+                                Permission.ViewApprovalProgress
+                            )
+                                ? community.ApprovalInfo.AvailableApplications
+                                : ImmutableList<string>.Empty,
+                            MissingRequirements = contextPermissions.Contains(
+                                Permission.ViewApprovalProgress
+                            )
+                                ? community.ApprovalInfo.MissingRequirements
+                                : ImmutableList<string>.Empty,
+                        },
                     UserPermissions = contextPermissions,
                 }
             );

@@ -9,7 +9,7 @@ import {
 } from '@mui/x-data-grid-premium';
 import { useCallback, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { useUserLookup } from '../Model/DirectoryModel';
-import { PersonName } from './PersonName';
+import { PersonName } from '../Families/PersonName';
 import type { ApprovalLedgerRow } from './approvalLedgerViewModel';
 import {
   ApprovalLedgerDataGridRowV2,
@@ -20,8 +20,8 @@ import {
   formatApprovalLedgerDate,
   subjectKey,
 } from './approvalLedgerDataGridViewModel';
-import { v2DataGridStyles } from './v2DataGridStyles';
-import { v2Typography } from './v2Typography';
+import { v2DataGridStyles } from '../Families/v2DataGridStyles';
+import { v2Typography } from '../Families/v2Typography';
 
 type ApprovalsDataGridV2Props = {
   onRowClick: (row: ApprovalLedgerRow) => void;
@@ -405,11 +405,7 @@ function buildColumns(
       valueGetter: (_value, row) => row.noteIds.length + row.notes.length,
       renderCell: ({ row }) => (
         <Typography {...v2Typography.browserSecondary}>
-          {countLabel(
-            row.noteIds.length + row.notes.length,
-            'note',
-            'notes'
-          )}
+          {countLabel(row.noteIds.length + row.notes.length, 'note', 'notes')}
         </Typography>
       ),
     },
@@ -422,9 +418,7 @@ function buildColumns(
       renderCell: ({ row }) =>
         row.completedOrExemptedByUserId ? (
           <Typography {...v2Typography.browserCell} noWrap>
-            <PersonName
-              person={userLookup(row.completedOrExemptedByUserId)}
-            />
+            <PersonName person={userLookup(row.completedOrExemptedByUserId)} />
           </Typography>
         ) : (
           <Typography {...v2Typography.browserSecondary}>-</Typography>

@@ -7,11 +7,14 @@ export function useDrawer() {
   return {
     openDrawer: () => setOpen(true),
     closeDrawer: () => setOpen(false),
-    drawerFor: (children: React.ReactNode) => (
+    drawerFor: (
+      children: React.ReactNode,
+      requestClose: () => void = () => setOpen(false)
+    ) => (
       <Drawer
         anchor="right"
         open={open}
-        onClose={() => setOpen(false)}
+        onClose={requestClose}
         slotProps={{
           paper: {
             sx: {
