@@ -285,8 +285,8 @@ function familyOrFamilyMembersHaveSelectedRole(
     (roleName) =>
       roleName === notAppliedLabel
         ? familyHasNotAppliedForAnyRoles(family)
-        : family.volunteerFamilyInfo?.familyRoleApprovals?.[roleName] !==
-          undefined
+        : family.volunteerFamilyInfo?.familyRoleApprovals?.[roleName]
+            ?.currentStatus != null
   );
 
   if (familyHasSelectedRole) {
@@ -298,7 +298,7 @@ function familyOrFamilyMembersHaveSelectedRole(
       ? familyHasNotAppliedForAnyRoles(family)
       : getFamilyMembers(family).some(
           ([, volunteer]) =>
-            volunteer.approvalStatusByRole?.[roleName] !== undefined
+            volunteer.approvalStatusByRole?.[roleName]?.currentStatus != null
         )
   );
 }

@@ -190,3 +190,70 @@ test('Roles is-not excludes Host Family and retains families with other roles', 
     )
   ).toBe(false);
 });
+
+test('Roles is-not retains seeded families with an un-applied Host Family entry', () => {
+  const familyCoachRoleFilter: filterOption = {
+    key: 'Family Coach',
+    value: '3',
+    selected: false,
+    type: filterType.Individual,
+  };
+  const familyFriendRoleFilter: filterOption = {
+    key: 'Family Friend',
+    value: '4',
+    selected: false,
+    type: filterType.Individual,
+  };
+  const coachworthyFamily = {
+    volunteerFamilyInfo: {
+      familyRoleApprovals: {
+        'Host Family': { currentStatus: null },
+      },
+      individualVolunteers: {
+        emily: {
+          approvalStatusByRole: {
+            'Family Coach': { currentStatus: RoleApprovalStatus.Approved },
+          },
+        },
+      },
+    },
+  } as CombinedFamilyInfo;
+  const skywalkerFamily = {
+    volunteerFamilyInfo: {
+      familyRoleApprovals: {
+        'Host Family': { currentStatus: null },
+      },
+      individualVolunteers: {
+        leia: {
+          approvalStatusByRole: {
+            'Family Friend': { currentStatus: RoleApprovalStatus.Prospective },
+          },
+        },
+      },
+    },
+  } as CombinedFamilyInfo;
+  const roleFilters = [
+    hostFamilyRoleFilter,
+    familyCoachRoleFilter,
+    familyFriendRoleFilter,
+  ];
+
+  expect(
+    familyOrFamilyMembersMeetRoleStatusFilterCriteria(
+      coachworthyFamily,
+      roleFilters,
+      unselectedStatusFilters,
+      'isAnyOf',
+      'not'
+    )
+  ).toBe(true);
+  expect(
+    familyOrFamilyMembersMeetRoleStatusFilterCriteria(
+      skywalkerFamily,
+      roleFilters,
+      unselectedStatusFilters,
+      'isAnyOf',
+      'not'
+    )
+  ).toBe(true);
+});
