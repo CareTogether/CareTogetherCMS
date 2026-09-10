@@ -2,6 +2,10 @@ import {
   GridLogicOperator,
   type GridFilterModel,
 } from '@mui/x-data-grid-premium';
+import {
+  defaultVolunteerGridFilterOperator,
+  type VolunteerGridFilterOperator,
+} from './volunteerGridFilterOperator';
 
 export const VOLUNTEER_ROLES_FILTER_FIELD = 'roles';
 export const VOLUNTEER_STATUS_FILTER_FIELD = 'status';
@@ -12,7 +16,9 @@ export type VolunteersGridFilterLogicOperator = 'and' | 'or';
 export type VolunteersGridFilters = {
   logicOperator: VolunteersGridFilterLogicOperator;
   requirementFilter: string | undefined;
+  roleFilterOperator: VolunteerGridFilterOperator;
   roleFilters: string[];
+  statusFilterOperator: VolunteerGridFilterOperator;
   statusFilters: string[];
 };
 
@@ -38,6 +44,26 @@ function filterValueForField(
   return filterModel.items.find((item) => item.field === field)?.value;
 }
 
+function filterOperatorForField(
+  filterModel: GridFilterModel,
+  field: string
+): VolunteerGridFilterOperator {
+  const operator = filterModel.items.find(
+    (item) => item.field === field
+  )?.operator;
+
+  switch (operator) {
+    case 'is':
+      return 'is';
+    case 'not':
+      return 'not';
+    case 'isAnyOf':
+      return 'isAnyOf';
+    default:
+      return defaultVolunteerGridFilterOperator;
+  }
+}
+
 function logicOperatorFromGridFilterModel(
   filterModel: GridFilterModel
 ): VolunteersGridFilterLogicOperator {
@@ -58,8 +84,16 @@ export function volunteerFiltersFromGridFilterModel(
     requirementFilter: stringValueFromFilterValue(
       filterValueForField(filterModel, VOLUNTEER_REQUIREMENTS_FILTER_FIELD)
     ),
+    roleFilterOperator: filterOperatorForField(
+      filterModel,
+      VOLUNTEER_ROLES_FILTER_FIELD
+    ),
     roleFilters: stringValuesFromFilterValue(
       filterValueForField(filterModel, VOLUNTEER_ROLES_FILTER_FIELD)
+    ),
+    statusFilterOperator: filterOperatorForField(
+      filterModel,
+      VOLUNTEER_STATUS_FILTER_FIELD
     ),
     statusFilters: stringValuesFromFilterValue(
       filterValueForField(filterModel, VOLUNTEER_STATUS_FILTER_FIELD)
@@ -70,7 +104,9 @@ export function volunteerFiltersFromGridFilterModel(
 export function gridFilterModelFromVolunteerFilters({
   logicOperator,
   requirementFilter,
+  roleFilterOperator,
   roleFilters,
+  statusFilterOperator,
   statusFilters,
 }: VolunteersGridFilters): GridFilterModel {
   const items: GridFilterModel['items'] = [];
@@ -79,8 +115,11 @@ export function gridFilterModelFromVolunteerFilters({
     items.push({
       field: VOLUNTEER_ROLES_FILTER_FIELD,
       id: VOLUNTEER_ROLES_FILTER_FIELD,
-      operator: MULTI_VALUE_FILTER_OPERATOR,
-      value: roleFilters,
+      operator: roleFilterOperator,
+      value:
+        roleFilterOperator === MULTI_VALUE_FILTER_OPERATOR
+          ? roleFilters
+          : roleFilters[0],
     });
   }
 
@@ -88,8 +127,11 @@ export function gridFilterModelFromVolunteerFilters({
     items.push({
       field: VOLUNTEER_STATUS_FILTER_FIELD,
       id: VOLUNTEER_STATUS_FILTER_FIELD,
-      operator: MULTI_VALUE_FILTER_OPERATOR,
-      value: statusFilters,
+      operator: statusFilterOperator,
+      value:
+        statusFilterOperator === MULTI_VALUE_FILTER_OPERATOR
+          ? statusFilters
+          : statusFilters[0],
     });
   }
 
