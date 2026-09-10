@@ -133,6 +133,7 @@ export function RoleSummaryCardV2({ card, onClick }: RoleSummaryCardV2Props) {
     >
       {onClick ? (
         <CardActionArea
+          data-ph-capture-attribute-component="role-summary-card"
           onClick={onClick}
           sx={{ height: '100%', p: 1.5, cursor: 'pointer' }}
         >
