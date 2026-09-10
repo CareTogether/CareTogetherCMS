@@ -2,6 +2,10 @@ import {
   GridLogicOperator,
   type GridFilterModel,
 } from '@mui/x-data-grid-premium';
+import {
+  defaultVolunteerStatusFilterOperator,
+  type VolunteerStatusFilterOperator,
+} from './volunteerStatusFilterOperator';
 
 export const VOLUNTEER_ROLES_FILTER_FIELD = 'roles';
 export const VOLUNTEER_STATUS_FILTER_FIELD = 'status';
@@ -13,6 +17,7 @@ export type VolunteersGridFilters = {
   logicOperator: VolunteersGridFilterLogicOperator;
   requirementFilter: string | undefined;
   roleFilters: string[];
+  statusFilterOperator: VolunteerStatusFilterOperator;
   statusFilters: string[];
 };
 
@@ -38,6 +43,25 @@ function filterValueForField(
   return filterModel.items.find((item) => item.field === field)?.value;
 }
 
+function statusFilterOperatorFromGridFilterModel(
+  filterModel: GridFilterModel
+): VolunteerStatusFilterOperator {
+  const operator = filterModel.items.find(
+    (item) => item.field === VOLUNTEER_STATUS_FILTER_FIELD
+  )?.operator;
+
+  switch (operator) {
+    case 'is':
+      return 'is';
+    case 'not':
+      return 'not';
+    case 'isAnyOf':
+      return 'isAnyOf';
+    default:
+      return defaultVolunteerStatusFilterOperator;
+  }
+}
+
 function logicOperatorFromGridFilterModel(
   filterModel: GridFilterModel
 ): VolunteersGridFilterLogicOperator {
@@ -61,6 +85,7 @@ export function volunteerFiltersFromGridFilterModel(
     roleFilters: stringValuesFromFilterValue(
       filterValueForField(filterModel, VOLUNTEER_ROLES_FILTER_FIELD)
     ),
+    statusFilterOperator: statusFilterOperatorFromGridFilterModel(filterModel),
     statusFilters: stringValuesFromFilterValue(
       filterValueForField(filterModel, VOLUNTEER_STATUS_FILTER_FIELD)
     ),
@@ -71,6 +96,7 @@ export function gridFilterModelFromVolunteerFilters({
   logicOperator,
   requirementFilter,
   roleFilters,
+  statusFilterOperator,
   statusFilters,
 }: VolunteersGridFilters): GridFilterModel {
   const items: GridFilterModel['items'] = [];
@@ -88,8 +114,11 @@ export function gridFilterModelFromVolunteerFilters({
     items.push({
       field: VOLUNTEER_STATUS_FILTER_FIELD,
       id: VOLUNTEER_STATUS_FILTER_FIELD,
-      operator: MULTI_VALUE_FILTER_OPERATOR,
-      value: statusFilters,
+      operator: statusFilterOperator,
+      value:
+        statusFilterOperator === MULTI_VALUE_FILTER_OPERATOR
+          ? statusFilters
+          : statusFilters[0],
     });
   }
 

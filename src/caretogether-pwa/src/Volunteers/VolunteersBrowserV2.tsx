@@ -26,6 +26,10 @@ import {
   volunteerFiltersFromGridFilterModel,
 } from './volunteersGridFilterAdapter';
 import { UPDATE_TEST_FAMILY_FEATURE_FLAG } from '../featureFlags';
+import {
+  defaultVolunteerStatusFilterOperator,
+  type VolunteerStatusFilterOperator,
+} from './volunteerStatusFilterOperator';
 
 function selectedFilterValues(filters: filterOption[]) {
   return filters
@@ -56,6 +60,10 @@ export function VolunteersBrowserV2() {
     useState(false);
   const [smsMode, setSmsMode] = useState(false);
   const [selectedFamilyIds, setSelectedFamilyIds] = useState<string[]>([]);
+  const [statusFilterOperator, setStatusFilterOperator] =
+    useState<VolunteerStatusFilterOperator>(
+      defaultVolunteerStatusFilterOperator
+    );
 
   const {
     activeAssignmentFilterCount,
@@ -79,7 +87,7 @@ export function VolunteersBrowserV2() {
     setStatusFilterValues,
     statusFilters,
     visibleVolunteerFamilies,
-  } = useVolunteersBrowserViewModel();
+  } = useVolunteersBrowserViewModel(statusFilterOperator);
   const {
     SidePanel: AssignmentFiltersSidePanel,
     openSidePanel: openAssignmentFiltersSidePanel,
@@ -124,9 +132,10 @@ export function VolunteersBrowserV2() {
         logicOperator: 'and',
         requirementFilter,
         roleFilters: selectedFilterValues(roleFilters),
+        statusFilterOperator,
         statusFilters: selectedFilterValues(statusFilters),
       }),
-    [requirementFilter, roleFilters, statusFilters]
+    [requirementFilter, roleFilters, statusFilterOperator, statusFilters]
   );
   const [pendingFilterModel, setPendingFilterModel] =
     useState<GridFilterModel | null>(null);
@@ -203,6 +212,7 @@ export function VolunteersBrowserV2() {
     const filters = volunteerFiltersFromGridFilterModel(model);
 
     setPendingFilterModel(hasIncompleteFilter(model) ? model : null);
+    setStatusFilterOperator(filters.statusFilterOperator);
     clearSelection();
     setRoleFilterValues(filters.roleFilters);
     setStatusFilterValues(filters.statusFilters);

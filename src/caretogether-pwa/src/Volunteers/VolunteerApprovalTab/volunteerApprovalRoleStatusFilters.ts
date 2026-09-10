@@ -3,6 +3,7 @@ import { checkStatusEquivalence } from './checkStatusEquivalence';
 import { notAppliedLabel } from './catchAllLabel';
 import { filterOption } from './filterOption';
 import { filterType } from './filterType';
+import type { VolunteerStatusFilterOperator } from '../volunteerStatusFilterOperator';
 
 function selectedFamilyRoleKeys(roleFilters: filterOption[]) {
   return roleFilters
@@ -230,7 +231,7 @@ function familyMembersMeetFilterCriteria(
   });
 }
 
-export function familyOrFamilyMembersMeetRoleStatusFilterCriteria(
+function familyOrFamilyMembersMeetSelectedRoleStatusCriteria(
   family: CombinedFamilyInfo,
   roleFilters: filterOption[],
   statusFilters: filterOption[]
@@ -260,4 +261,41 @@ export function familyOrFamilyMembersMeetRoleStatusFilterCriteria(
     result = familyMeetsRoleCriteria || familyMembersMeetRoleCriteria;
   }
   return result;
+}
+
+function withoutSelectedStatuses(statusFilters: filterOption[]) {
+  return statusFilters.map((statusFilter) => ({
+    ...statusFilter,
+    selected: false,
+  }));
+}
+
+export function familyOrFamilyMembersMeetRoleStatusFilterCriteria(
+  family: CombinedFamilyInfo,
+  roleFilters: filterOption[],
+  statusFilters: filterOption[],
+  statusFilterOperator: VolunteerStatusFilterOperator = 'isAnyOf'
+) {
+  const matchesSelectedRoleStatuses =
+    familyOrFamilyMembersMeetSelectedRoleStatusCriteria(
+      family,
+      roleFilters,
+      statusFilters
+    );
+
+  if (
+    statusFilterOperator !== 'not' ||
+    selectedStatusKeys(statusFilters).length === 0
+  ) {
+    return matchesSelectedRoleStatuses;
+  }
+
+  const matchesSelectedRoles =
+    familyOrFamilyMembersMeetSelectedRoleStatusCriteria(
+      family,
+      roleFilters,
+      withoutSelectedStatuses(statusFilters)
+    );
+
+  return matchesSelectedRoles && !matchesSelectedRoleStatuses;
 }
