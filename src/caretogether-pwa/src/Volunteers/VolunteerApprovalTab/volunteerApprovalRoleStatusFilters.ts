@@ -3,7 +3,7 @@ import { checkStatusEquivalence } from './checkStatusEquivalence';
 import { notAppliedLabel } from './catchAllLabel';
 import { filterOption } from './filterOption';
 import { filterType } from './filterType';
-import type { VolunteerStatusFilterOperator } from '../volunteerStatusFilterOperator';
+import type { VolunteerGridFilterOperator } from '../volunteerGridFilterOperator';
 
 function selectedFamilyRoleKeys(roleFilters: filterOption[]) {
   return roleFilters
@@ -270,11 +270,45 @@ function withoutSelectedStatuses(statusFilters: filterOption[]) {
   }));
 }
 
+function withoutSelectedRoles(roleFilters: filterOption[]) {
+  return roleFilters.map((roleFilter) => ({
+    ...roleFilter,
+    selected: false,
+  }));
+}
+
+function familyOrFamilyMembersHaveSelectedRole(
+  family: CombinedFamilyInfo,
+  roleFilters: filterOption[]
+) {
+  const familyHasSelectedRole = selectedFamilyRoleKeys(roleFilters).some(
+    (roleName) =>
+      roleName === notAppliedLabel
+        ? familyHasNotAppliedForAnyRoles(family)
+        : family.volunteerFamilyInfo?.familyRoleApprovals?.[roleName] !==
+          undefined
+  );
+
+  if (familyHasSelectedRole) {
+    return true;
+  }
+
+  return selectedIndividualRoleKeys(roleFilters).some((roleName) =>
+    roleName === notAppliedLabel
+      ? familyHasNotAppliedForAnyRoles(family)
+      : getFamilyMembers(family).some(
+          ([, volunteer]) =>
+            volunteer.approvalStatusByRole?.[roleName] !== undefined
+        )
+  );
+}
+
 export function familyOrFamilyMembersMeetRoleStatusFilterCriteria(
   family: CombinedFamilyInfo,
   roleFilters: filterOption[],
   statusFilters: filterOption[],
-  statusFilterOperator: VolunteerStatusFilterOperator = 'isAnyOf'
+  statusFilterOperator: VolunteerGridFilterOperator = 'isAnyOf',
+  roleFilterOperator: VolunteerGridFilterOperator = 'isAnyOf'
 ) {
   const matchesSelectedRoleStatuses =
     familyOrFamilyMembersMeetSelectedRoleStatusCriteria(
@@ -282,6 +316,31 @@ export function familyOrFamilyMembersMeetRoleStatusFilterCriteria(
       roleFilters,
       statusFilters
     );
+
+  if (
+    roleFilterOperator === 'not' &&
+    (selectedFamilyRoleKeys(roleFilters).length > 0 ||
+      selectedIndividualRoleKeys(roleFilters).length > 0)
+  ) {
+    const matchesExcludedRoles = familyOrFamilyMembersHaveSelectedRole(
+      family,
+      roleFilters
+    );
+    const matchesSelectedStatuses =
+      familyOrFamilyMembersMeetSelectedRoleStatusCriteria(
+        family,
+        withoutSelectedRoles(roleFilters),
+        statusFilters
+      );
+    const statusesSelected = selectedStatusKeys(statusFilters).length > 0;
+    const matchesStatusFilter = statusesSelected
+      ? statusFilterOperator === 'not'
+        ? !matchesSelectedStatuses
+        : matchesSelectedStatuses
+      : true;
+
+    return !matchesExcludedRoles && matchesStatusFilter;
+  }
 
   if (
     statusFilterOperator !== 'not' ||

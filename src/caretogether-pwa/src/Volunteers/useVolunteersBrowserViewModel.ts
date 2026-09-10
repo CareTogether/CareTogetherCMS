@@ -27,7 +27,7 @@ import {
   matchesAssignmentFilters,
 } from './VolunteerApprovalTab/assignmentFilters';
 import { filterOption } from './VolunteerApprovalTab/filterOption';
-import type { VolunteerStatusFilterOperator } from './volunteerStatusFilterOperator';
+import type { VolunteerGridFilterOperator } from './volunteerGridFilterOperator';
 import {
   buildVolunteerApprovalRolesPresentation,
   VolunteerApprovalRolesPresentation,
@@ -282,7 +282,8 @@ function applyFilterStage(
   customFieldFilters: CustomFieldFilterSelectionsByField,
   customFieldValuesByFamily: CustomFieldValuesByFamily,
   requirementFilter: RequirementFilterValue | undefined,
-  statusFilterOperator: VolunteerStatusFilterOperator
+  roleFilterOperator: VolunteerGridFilterOperator,
+  statusFilterOperator: VolunteerGridFilterOperator
 ) {
   return volunteerFamilies.filter(
     (family) =>
@@ -290,7 +291,8 @@ function applyFilterStage(
         family,
         roleFilters,
         statusFilters,
-        statusFilterOperator
+        statusFilterOperator,
+        roleFilterOperator
       ) &&
       familyHasMissingRequirements(
         family,
@@ -352,7 +354,8 @@ function withSelectedFilterValues(
 }
 
 export function useVolunteersBrowserViewModel(
-  statusFilterOperator: VolunteerStatusFilterOperator
+  roleFilterOperator: VolunteerGridFilterOperator,
+  statusFilterOperator: VolunteerGridFilterOperator
 ): VolunteersBrowserViewModel {
   const volunteerFamilies = useVolunteerFamilies();
   const requirementNames = useAllApprovalAndOnboardingRequirements();
@@ -462,6 +465,7 @@ export function useVolunteersBrowserViewModel(
       customFieldFilters,
       customFieldValuesByFamily,
       requirementFilter,
+      roleFilterOperator,
       statusFilterOperator
     );
 
@@ -472,6 +476,7 @@ export function useVolunteersBrowserViewModel(
     customFieldValuesByFamily,
     customFields,
     requirementFilter,
+    roleFilterOperator,
     roleFilters,
     searchValue,
     sourceFamilies,
