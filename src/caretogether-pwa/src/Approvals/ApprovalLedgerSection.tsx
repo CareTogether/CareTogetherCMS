@@ -16,6 +16,7 @@ import { subjectKey } from './approvalLedgerDataGridViewModel';
 import { ApprovalsDataGridV2 } from './ApprovalsDataGridV2';
 
 type ApprovalLedgerSectionProps = {
+  groupByMember?: boolean;
   rows: ApprovalLedgerRow[];
   renderDetailsDrawer: (
     row: ApprovalLedgerRow | null,
@@ -45,6 +46,7 @@ function sortStrings(a: string, b: string) {
 }
 
 export function ApprovalLedgerSection({
+  groupByMember = false,
   rows,
   renderDetailsDrawer,
 }: ApprovalLedgerSectionProps) {
@@ -211,6 +213,7 @@ export function ApprovalLedgerSection({
         </FormControl>
       </Box>
       <ApprovalsDataGridV2
+        groupByMember={groupByMember}
         rows={visibleRows}
         onRowClick={(row) => openDetailsDrawer(row.id)}
       />
