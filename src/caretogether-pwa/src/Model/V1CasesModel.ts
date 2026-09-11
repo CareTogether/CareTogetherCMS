@@ -557,7 +557,7 @@ export function useV1CasesModel() {
         familyId: partneringFamilyId,
         referralId: v1CaseId,
         arrangementIds: [arrangementId],
-        plannedStartUtc: plannedStartLocal || undefined,
+        plannedStartUtc: plannedStartLocal ?? undefined,
       });
       return command;
     }
@@ -654,7 +654,7 @@ export function useV1CasesModel() {
         referralId: v1CaseId,
         arrangementIds: [arrangementId],
 
-        plannedEndUtc: plannedEndLocal || undefined,
+        plannedEndUtc: plannedEndLocal ?? undefined,
       });
       return command;
     }
