@@ -3178,6 +3178,10 @@
           },
           "actionName": {
             "type": "string"
+          },
+          "isRequired": {
+            "type": "boolean",
+            "nullable": true
           }
         }
       },
@@ -3255,6 +3259,10 @@
           },
           "scope": {
             "$ref": "#/components/schemas/VolunteerFamilyRequirementScope"
+          },
+          "isRequired": {
+            "type": "boolean",
+            "nullable": true
           }
         }
       },
@@ -5377,6 +5385,7 @@
           "exemptedRequirements",
           "availableApplications",
           "missingRequirements",
+          "missingOptionalRequirements",
           "roleRemovals",
           "individualVolunteers",
           "history",
@@ -5408,6 +5417,12 @@
             }
           },
           "missingRequirements": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ValueTupleOfStringAndValueTuple_2Of"
+            }
+          },
+          "missingOptionalRequirements": {
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/ValueTupleOfStringAndValueTuple_2Of"
@@ -5459,6 +5474,7 @@
         "required": [
           "roleVersionApprovals",
           "currentMissingFamilyRequirements",
+          "currentMissingOptionalFamilyRequirements",
           "currentAvailableFamilyApplications",
           "currentMissingIndividualRequirements"
         ],
@@ -5486,6 +5502,12 @@
             ]
           },
           "currentMissingFamilyRequirements": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ValueTupleOfStringAndValueTuple_2Of"
+            }
+          },
+          "currentMissingOptionalFamilyRequirements": {
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/ValueTupleOfStringAndValueTuple_2Of"
@@ -5573,6 +5595,10 @@
             "items": {
               "$ref": "#/components/schemas/FamilyRequirementStatusDetail"
             }
+          },
+          "isRequired": {
+            "type": "boolean",
+            "nullable": true
           }
         }
       },
@@ -5659,6 +5685,7 @@
           "exemptedRequirements",
           "availableApplications",
           "missingRequirements",
+          "missingOptionalRequirements",
           "roleRemovals"
         ],
         "properties": {
@@ -5692,6 +5719,12 @@
               "$ref": "#/components/schemas/ValueTupleOfStringAndValueTuple_2Of"
             }
           },
+          "missingOptionalRequirements": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ValueTupleOfStringAndValueTuple_2Of"
+            }
+          },
           "roleRemovals": {
             "type": "array",
             "items": {
@@ -5706,6 +5739,7 @@
         "required": [
           "roleVersionApprovals",
           "currentMissingRequirements",
+          "currentMissingOptionalRequirements",
           "currentAvailableApplications"
         ],
         "properties": {
@@ -5732,6 +5766,12 @@
             ]
           },
           "currentMissingRequirements": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ValueTupleOfStringAndValueTuple_2Of"
+            }
+          },
+          "currentMissingOptionalRequirements": {
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/ValueTupleOfStringAndValueTuple_2Of"
@@ -5802,6 +5842,10 @@
                 "$ref": "#/components/schemas/DateOnlyTimeline"
               }
             ]
+          },
+          "isRequired": {
+            "type": "boolean",
+            "nullable": true
           }
         }
       },

@@ -3317,6 +3317,11 @@ namespace CareTogether.TestData
                                             RequirementStage.Approval,
                                             "Bg check"
                                         ),
+                                        new VolunteerApprovalRequirement(
+                                            RequirementStage.Approval,
+                                            "Some optional action",
+                                            IsRequired: false
+                                        ),
                                     ]
                                 ),
                             ]
@@ -3340,6 +3345,11 @@ namespace CareTogether.TestData
                                         new VolunteerApprovalRequirement(
                                             RequirementStage.Approval,
                                             "Interview with Family Coach Supervisor"
+                                        ),
+                                        new VolunteerApprovalRequirement(
+                                            RequirementStage.Onboarding,
+                                            "Some optional action",
+                                            IsRequired: false
                                         ),
                                     ]
                                 ),
@@ -3403,6 +3413,12 @@ namespace CareTogether.TestData
                                             RequirementStage.Onboarding,
                                             "Meet & Greet",
                                             VolunteerFamilyRequirementScope.OncePerFamily
+                                        ),
+                                        new VolunteerFamilyApprovalRequirement(
+                                            RequirementStage.Onboarding,
+                                            "Some optional action",
+                                            VolunteerFamilyRequirementScope.OncePerFamily,
+                                            IsRequired: false
                                         ),
                                     ]
                                 ),

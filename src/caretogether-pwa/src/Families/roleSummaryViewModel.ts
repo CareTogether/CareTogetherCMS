@@ -73,6 +73,7 @@ type ApprovalRequirementSource = {
   completedRequirements?: CompletedRequirementInfo[];
   exemptedRequirements?: ExemptedRequirementInfo[];
   missingRequirements?: ValueTupleOfStringAndValueTuple_2Of[];
+  missingOptionalRequirements?: ValueTupleOfStringAndValueTuple_2Of[];
   availableApplications?: string[];
 };
 
@@ -277,6 +278,7 @@ function subjectMatches(
 function requirementStatusPriority(status: ApprovalLedgerStatus) {
   const priority: ApprovalLedgerStatus[] = [
     'missing',
+    'optional',
     'expired',
     'expiring',
     'completed',

@@ -29,6 +29,7 @@ type StatusFilter = ApprovalLedgerStatus | 'all';
 const statusFilterOptions: { value: StatusFilter; label: string }[] = [
   { value: 'all', label: 'All' },
   { value: 'missing', label: 'Missing' },
+  { value: 'optional', label: 'Optional' },
   { value: 'completed', label: 'Completed' },
   { value: 'exempted', label: 'Exempted' },
   { value: 'expiring', label: 'Expiring' },

@@ -64,6 +64,7 @@ const participantStateLabels: Record<ParticipantState, string> = {
 
 const requirementStatusLabels: Record<ApprovalLedgerStatus, string> = {
   missing: 'Missing',
+  optional: 'Optional',
   completed: 'Completed',
   exempted: 'Exempted',
   expiring: 'Expiring',
@@ -76,6 +77,8 @@ function requirementStatusColor(status: ApprovalLedgerStatus) {
     case 'missing':
     case 'expired':
       return 'error';
+    case 'optional':
+      return 'info';
     case 'expiring':
       return 'warning';
     case 'availableApplication':
