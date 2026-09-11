@@ -57,13 +57,17 @@ namespace CareTogether.Resources.Communities
             {
                 if (!communities.TryGetValue(command.CommunityId, out community))
                     throw new KeyNotFoundException(
-                        "A community with the specified ID does not exist."
+                        "An organization with the specified ID does not exist."
                     );
 
                 community = command switch
                 {
                     RenameCommunity c => community with { Name = c.Name },
                     EditCommunityDescription c => community with { Description = c.Description },
+                    SetOrganizationCategories c => community with
+                    {
+                        CategoryIds = c.CategoryIds.Distinct().ToImmutableList(),
+                    },
                     AddCommunityMemberFamily c => community with
                     {
                         MemberFamilies = community.MemberFamilies.Add(c.FamilyId),

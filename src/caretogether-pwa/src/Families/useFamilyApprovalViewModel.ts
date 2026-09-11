@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 import { CombinedFamilyInfo } from '../GeneratedClient';
 import { IndividualVolunteerContext } from '../Requirements/RequirementContext';
-import { buildApprovalLedgerRows } from './approvalLedgerViewModel';
+import { buildApprovalLedgerRows } from '../Approvals/approvalLedgerViewModel';
 import {
   buildRemovedRoleSummaries,
   buildRoleSummaryCards,

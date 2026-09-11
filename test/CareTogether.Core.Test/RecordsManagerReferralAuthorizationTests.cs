@@ -11,6 +11,7 @@ using CareTogether.Resources.Approvals;
 using CareTogether.Resources.Communities;
 using CareTogether.Resources.Directory;
 using CareTogether.Resources.Notes;
+using CareTogether.Resources.OrganizationApprovals;
 using CareTogether.Resources.Policies;
 using CareTogether.Resources.V1Cases;
 using CareTogether.Resources.V1ReferralNotes;
@@ -202,6 +203,7 @@ namespace CareTogether.Core.Test
 
             var authorizationEngine = Mock.Of<IAuthorizationEngine>();
             var approvalsResource = Mock.Of<IApprovalsResource>();
+            var organizationApprovalsResource = Mock.Of<IOrganizationApprovalsResource>();
             var v1CasesResource = Mock.Of<IV1CasesResource>();
             var directoryResource = Mock.Of<IDirectoryResource>();
             var notesResource = Mock.Of<INotesResource>();
@@ -228,6 +230,7 @@ namespace CareTogether.Core.Test
                 directoryResource,
                 accountsResource,
                 approvalsResource,
+                organizationApprovalsResource,
                 v1CasesResource,
                 referralsResource.Object,
                 referralNotesResource.Object,

@@ -8,11 +8,11 @@ import {
 } from '@mui/material';
 import { Check as CheckIcon } from '@mui/icons-material';
 import {
-  DataGrid,
+  DataGridPremium,
   GridColDef,
   GridFilterModel,
   GridRowSelectionModel,
-} from '@mui/x-data-grid';
+} from '@mui/x-data-grid-premium';
 import { useMemo } from 'react';
 import { CustomField } from '../GeneratedClient';
 import { familyLastName } from '../Families/FamilyUtils';
@@ -285,7 +285,7 @@ export function VolunteersDataGridV2({
 
   return (
     <Box sx={v2DataGridStyles(theme, { height: '100%' })}>
-      <DataGrid
+      <DataGridPremium
         rows={rows}
         columns={columns}
         loading={loading}

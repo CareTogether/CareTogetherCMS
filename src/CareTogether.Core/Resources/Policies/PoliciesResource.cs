@@ -176,6 +176,67 @@ namespace CareTogether.Resources.Policies
             return Render(newConfig);
         }
 
+        public async Task<OrganizationConfiguration> UpsertOrganizationCategoryAsync(
+            Guid organizationId,
+            OrganizationCategory category
+        )
+        {
+            if (category.Id == Guid.Empty)
+                throw new InvalidOperationException("An organization category ID is required.");
+
+            if (string.IsNullOrWhiteSpace(category.Name))
+                throw new InvalidOperationException("An organization category name is required.");
+            var normalizedName = category.Name.Trim();
+
+            var config = await configurationStore.GetAsync(organizationId, Guid.Empty, CONFIG);
+            var categories = config.OrganizationCategories ?? [];
+            if (
+                categories.Any(existingCategory =>
+                    existingCategory.Id != category.Id
+                    && string.Equals(
+                        existingCategory.Name,
+                        normalizedName,
+                        StringComparison.OrdinalIgnoreCase
+                    )
+                )
+            )
+                throw new InvalidOperationException(
+                    $"An organization category named '{normalizedName}' already exists."
+                );
+
+            var normalizedCategory = category with { Name = normalizedName };
+            var newConfig = config with
+            {
+                OrganizationCategories = categories.AddOrReplace(
+                    existingCategory => existingCategory.Id == category.Id,
+                    _ => normalizedCategory
+                ),
+            };
+            await configurationStore.UpsertAsync(organizationId, Guid.Empty, CONFIG, newConfig);
+            return Render(newConfig);
+        }
+
+        public async Task<OrganizationConfiguration> DeleteOrganizationCategoryAsync(
+            Guid organizationId,
+            Guid categoryId
+        )
+        {
+            var config = await configurationStore.GetAsync(organizationId, Guid.Empty, CONFIG);
+            var categories = config.OrganizationCategories ?? [];
+            var category = categories.SingleOrDefault(category => category.Id == categoryId);
+            if (category == null)
+                throw new InvalidOperationException(
+                    "The specified organization category does not exist."
+                );
+
+            var newConfig = config with
+            {
+                OrganizationCategories = categories.Remove(category),
+            };
+            await configurationStore.UpsertAsync(organizationId, Guid.Empty, CONFIG, newConfig);
+            return Render(newConfig);
+        }
+
         public async Task<EffectiveLocationPolicy> UpsertEffectiveLocationPolicyAsync(
             Guid organizationId,
             Guid locationId,
@@ -288,6 +349,7 @@ namespace CareTogether.Resources.Policies
         private OrganizationConfiguration Render(OrganizationConfiguration config) =>
             config with
             {
+                OrganizationCategories = config.OrganizationCategories ?? [],
                 // The 'OrganizationAdministrator' role for each organization is a specially-defined role
                 // that always has *all* permissions granted to it. This ensures that administrators never
                 // miss out on a newly defined permission that may not have been explicitly granted to

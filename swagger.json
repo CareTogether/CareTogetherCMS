@@ -284,6 +284,100 @@
         }
       }
     },
+    "/api/{organizationId}/Configuration/organization-categories/{categoryId}": {
+      "put": {
+        "tags": [
+          "Configuration"
+        ],
+        "operationId": "Configuration_PutOrganizationCategory",
+        "parameters": [
+          {
+            "name": "organizationId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "guid"
+            },
+            "x-position": 1
+          },
+          {
+            "name": "categoryId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "guid"
+            },
+            "x-position": 2
+          }
+        ],
+        "requestBody": {
+          "x-name": "payload",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PutOrganizationCategoryPayload"
+              }
+            }
+          },
+          "required": true,
+          "x-position": 3
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OrganizationConfiguration"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Configuration"
+        ],
+        "operationId": "Configuration_DeleteOrganizationCategory",
+        "parameters": [
+          {
+            "name": "organizationId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "guid"
+            },
+            "x-position": 1
+          },
+          {
+            "name": "categoryId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "guid"
+            },
+            "x-position": 2
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OrganizationConfiguration"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/{organizationId}/{locationId}/Configuration/policy": {
       "get": {
         "tags": [
@@ -1391,7 +1485,8 @@
           "organizationName",
           "locations",
           "roles",
-          "communityRoles"
+          "communityRoles",
+          "organizationCategories"
         ],
         "properties": {
           "organizationName": {
@@ -1427,6 +1522,12 @@
             "nullable": true,
             "items": {
               "type": "string"
+            }
+          },
+          "organizationCategories": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/OrganizationCategory"
             }
           }
         }
@@ -1915,7 +2016,7 @@
           "AccessPartneringFamiliesScreen",
           "AccessSettingsScreen",
           "AddEditRoles",
-          "AccessCommunitiesScreen",
+          "AccessOrganizationsScreen",
           "AccessReportsScreen",
           "AccessSupportScreen",
           "ViewFamilyCustomFields",
@@ -1975,15 +2076,17 @@
           "ViewChildLocationHistory",
           "TrackChildLocationChange",
           "SendBulkSms",
-          "CreateCommunity",
-          "EditCommunity",
-          "DeleteCommunity",
-          "EditCommunityMemberFamilies",
-          "EditCommunityRoleAssignments",
-          "ViewCommunityDocumentMetadata",
-          "ReadCommunityDocuments",
-          "UploadCommunityDocuments",
-          "DeleteCommunityDocuments"
+          "CreateOrganization",
+          "EditOrganization",
+          "DeleteOrganization",
+          "EditOrganizationMemberFamilies",
+          "EditOrganizationRoleAssignments",
+          "ViewOrganizationDocumentMetadata",
+          "ReadOrganizationDocuments",
+          "UploadOrganizationDocuments",
+          "DeleteOrganizationDocuments",
+          "ActivateOrganizationApprovals",
+          "EditOrganizationRoleParticipation"
         ],
         "enum": [
           1,
@@ -2066,8 +2169,27 @@
           505,
           506,
           507,
-          508
+          508,
+          509,
+          510
         ]
+      },
+      "OrganizationCategory": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "name"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "guid"
+          },
+          "name": {
+            "type": "string"
+          }
+        }
       },
       "PutLocationPayload": {
         "type": "object",
@@ -2106,6 +2228,18 @@
           }
         }
       },
+      "PutOrganizationCategoryPayload": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name"
+        ],
+        "properties": {
+          "name": {
+            "type": "string"
+          }
+        }
+      },
       "EffectiveLocationPolicy": {
         "type": "object",
         "additionalProperties": false,
@@ -2114,6 +2248,7 @@
           "customFamilyFields",
           "referralPolicy",
           "volunteerPolicy",
+          "organizationApprovalPolicy",
           "customFields",
           "v1ReferralPolicy"
         ],
@@ -2135,6 +2270,9 @@
           },
           "volunteerPolicy": {
             "$ref": "#/components/schemas/VolunteerPolicy"
+          },
+          "organizationApprovalPolicy": {
+            "$ref": "#/components/schemas/OrganizationApprovalPolicy"
           },
           "customFields": {
             "$ref": "#/components/schemas/FamilyMemberCustomFieldPolicy"
@@ -3142,6 +3280,80 @@
           2
         ]
       },
+      "OrganizationApprovalPolicy": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "organizationRoles"
+        ],
+        "properties": {
+          "organizationRoles": {
+            "type": "object",
+            "additionalProperties": {
+              "$ref": "#/components/schemas/OrganizationRolePolicy"
+            }
+          }
+        }
+      },
+      "OrganizationRolePolicy": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "organizationRoleType",
+          "policyVersions"
+        ],
+        "properties": {
+          "organizationRoleType": {
+            "type": "string"
+          },
+          "policyVersions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/OrganizationRolePolicyVersion"
+            }
+          }
+        }
+      },
+      "OrganizationRolePolicyVersion": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "version",
+          "requirements"
+        ],
+        "properties": {
+          "version": {
+            "type": "string"
+          },
+          "supersededAtUtc": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "requirements": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/OrganizationApprovalRequirement"
+            }
+          }
+        }
+      },
+      "OrganizationApprovalRequirement": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "stage",
+          "actionName"
+        ],
+        "properties": {
+          "stage": {
+            "$ref": "#/components/schemas/RequirementStage"
+          },
+          "actionName": {
+            "type": "string"
+          }
+        }
+      },
       "FamilyMemberCustomFieldPolicy": {
         "type": "object",
         "additionalProperties": false,
@@ -3294,6 +3506,14 @@
             "items": {
               "$ref": "#/components/schemas/Permission"
             }
+          },
+          "approvalInfo": {
+            "nullable": true,
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/OrganizationApprovalInfo"
+              }
+            ]
           }
         }
       },
@@ -3306,7 +3526,8 @@
           "description",
           "memberFamilies",
           "communityRoleAssignments",
-          "uploadedDocuments"
+          "uploadedDocuments",
+          "categoryIds"
         ],
         "properties": {
           "id": {
@@ -3336,6 +3557,13 @@
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/UploadedDocumentInfo"
+            }
+          },
+          "categoryIds": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "guid"
             }
           }
         }
@@ -3383,6 +3611,393 @@
             "type": "string"
           }
         }
+      },
+      "OrganizationApprovalInfo": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "approvalStatusByRole",
+          "completedRequirements",
+          "exemptedRequirements",
+          "availableApplications",
+          "missingRequirements",
+          "roleRemovals"
+        ],
+        "properties": {
+          "approvalStatusByRole": {
+            "type": "object",
+            "additionalProperties": {
+              "$ref": "#/components/schemas/OrganizationRoleApprovalStatus"
+            }
+          },
+          "completedRequirements": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CompletedRequirementInfo"
+            }
+          },
+          "exemptedRequirements": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ExemptedRequirementInfo"
+            }
+          },
+          "availableApplications": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "missingRequirements": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "roleRemovals": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RoleRemoval"
+            }
+          }
+        }
+      },
+      "OrganizationRoleApprovalStatus": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "roleVersionApprovals"
+        ],
+        "properties": {
+          "effectiveRoleApprovalStatus": {
+            "nullable": true,
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/DateOnlyTimelineOfRoleApprovalStatus"
+              }
+            ]
+          },
+          "roleVersionApprovals": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/OrganizationRoleVersionApprovalStatus"
+            }
+          },
+          "currentStatus": {
+            "nullable": true,
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/RoleApprovalStatus"
+              }
+            ]
+          }
+        }
+      },
+      "DateOnlyTimelineOfRoleApprovalStatus": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "ranges"
+        ],
+        "properties": {
+          "ranges": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DateRangeOfRoleApprovalStatus"
+            }
+          }
+        }
+      },
+      "DateRangeOfRoleApprovalStatus": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "start",
+          "end",
+          "tag"
+        ],
+        "properties": {
+          "start": {
+            "type": "string",
+            "format": "date"
+          },
+          "end": {
+            "type": "string",
+            "format": "date"
+          },
+          "tag": {
+            "$ref": "#/components/schemas/RoleApprovalStatus"
+          }
+        }
+      },
+      "RoleApprovalStatus": {
+        "type": "integer",
+        "description": "",
+        "x-enumNames": [
+          "Prospective",
+          "Expired",
+          "Approved",
+          "Onboarded",
+          "Inactive",
+          "Denied"
+        ],
+        "enum": [
+          1,
+          2,
+          3,
+          4,
+          5,
+          6
+        ]
+      },
+      "OrganizationRoleVersionApprovalStatus": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "roleName",
+          "version",
+          "requirements"
+        ],
+        "properties": {
+          "roleName": {
+            "type": "string"
+          },
+          "version": {
+            "type": "string"
+          },
+          "supersededAtUtc": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "status": {
+            "nullable": true,
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/DateOnlyTimelineOfRoleApprovalStatus"
+              }
+            ]
+          },
+          "requirements": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/OrganizationRoleRequirementCompletionStatus"
+            }
+          }
+        }
+      },
+      "OrganizationRoleRequirementCompletionStatus": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "actionName",
+          "stage"
+        ],
+        "properties": {
+          "actionName": {
+            "type": "string"
+          },
+          "stage": {
+            "$ref": "#/components/schemas/RequirementStage"
+          },
+          "whenMet": {
+            "nullable": true,
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/DateOnlyTimeline"
+              }
+            ]
+          }
+        }
+      },
+      "DateOnlyTimeline": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "ranges",
+          "start",
+          "end"
+        ],
+        "properties": {
+          "ranges": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DateRange"
+            }
+          },
+          "start": {
+            "type": "string",
+            "format": "date"
+          },
+          "end": {
+            "type": "string",
+            "format": "date"
+          }
+        }
+      },
+      "DateRange": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "start",
+          "end",
+          "totalDaysInclusive"
+        ],
+        "properties": {
+          "start": {
+            "type": "string",
+            "format": "date"
+          },
+          "end": {
+            "type": "string",
+            "format": "date"
+          },
+          "totalDaysInclusive": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      },
+      "CompletedRequirementInfo": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "userId",
+          "timestampUtc",
+          "completedRequirementId",
+          "requirementName",
+          "completedAtUtc"
+        ],
+        "properties": {
+          "userId": {
+            "type": "string",
+            "format": "guid"
+          },
+          "timestampUtc": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "completedRequirementId": {
+            "type": "string",
+            "format": "guid"
+          },
+          "requirementName": {
+            "type": "string"
+          },
+          "completedAtUtc": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "expiresAtUtc": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "uploadedDocumentId": {
+            "type": "string",
+            "format": "guid",
+            "nullable": true
+          },
+          "noteId": {
+            "type": "string",
+            "format": "guid",
+            "nullable": true
+          },
+          "roleNames": {
+            "type": "array",
+            "nullable": true,
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "ExemptedRequirementInfo": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "userId",
+          "timestampUtc",
+          "requirementName",
+          "additionalComments"
+        ],
+        "properties": {
+          "userId": {
+            "type": "string",
+            "format": "guid"
+          },
+          "timestampUtc": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "requirementName": {
+            "type": "string"
+          },
+          "dueDate": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "additionalComments": {
+            "type": "string"
+          },
+          "exemptionExpiresAtUtc": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "roleNames": {
+            "type": "array",
+            "nullable": true,
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "RoleRemoval": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "roleName",
+          "reason",
+          "effectiveSince"
+        ],
+        "properties": {
+          "roleName": {
+            "type": "string"
+          },
+          "reason": {
+            "$ref": "#/components/schemas/RoleRemovalReason"
+          },
+          "effectiveSince": {
+            "type": "string",
+            "format": "date"
+          },
+          "effectiveUntil": {
+            "type": "string",
+            "format": "date",
+            "nullable": true
+          },
+          "additionalComments": {
+            "type": "string",
+            "nullable": true
+          }
+        }
+      },
+      "RoleRemovalReason": {
+        "type": "integer",
+        "description": "",
+        "x-enumNames": [
+          "Inactive",
+          "OptOut",
+          "Denied"
+        ],
+        "enum": [
+          0,
+          1,
+          2
+        ]
       },
       "FamilyRecordsAggregate": {
         "allOf": [
@@ -4440,103 +5055,6 @@
           }
         }
       },
-      "CompletedRequirementInfo": {
-        "type": "object",
-        "additionalProperties": false,
-        "required": [
-          "userId",
-          "timestampUtc",
-          "completedRequirementId",
-          "requirementName",
-          "completedAtUtc"
-        ],
-        "properties": {
-          "userId": {
-            "type": "string",
-            "format": "guid"
-          },
-          "timestampUtc": {
-            "type": "string",
-            "format": "date-time"
-          },
-          "completedRequirementId": {
-            "type": "string",
-            "format": "guid"
-          },
-          "requirementName": {
-            "type": "string"
-          },
-          "completedAtUtc": {
-            "type": "string",
-            "format": "date-time"
-          },
-          "expiresAtUtc": {
-            "type": "string",
-            "format": "date-time",
-            "nullable": true
-          },
-          "uploadedDocumentId": {
-            "type": "string",
-            "format": "guid",
-            "nullable": true
-          },
-          "noteId": {
-            "type": "string",
-            "format": "guid",
-            "nullable": true
-          },
-          "roleNames": {
-            "type": "array",
-            "nullable": true,
-            "items": {
-              "type": "string"
-            }
-          }
-        }
-      },
-      "ExemptedRequirementInfo": {
-        "type": "object",
-        "additionalProperties": false,
-        "required": [
-          "userId",
-          "timestampUtc",
-          "requirementName",
-          "additionalComments"
-        ],
-        "properties": {
-          "userId": {
-            "type": "string",
-            "format": "guid"
-          },
-          "timestampUtc": {
-            "type": "string",
-            "format": "date-time"
-          },
-          "requirementName": {
-            "type": "string"
-          },
-          "dueDate": {
-            "type": "string",
-            "format": "date-time",
-            "nullable": true
-          },
-          "additionalComments": {
-            "type": "string"
-          },
-          "exemptionExpiresAtUtc": {
-            "type": "string",
-            "format": "date-time",
-            "nullable": true
-          },
-          "roleNames": {
-            "type": "array",
-            "nullable": true,
-            "items": {
-              "type": "string"
-            }
-          }
-        }
-      },
       "Arrangement": {
         "type": "object",
         "additionalProperties": false,
@@ -4995,63 +5513,6 @@
           }
         }
       },
-      "DateOnlyTimelineOfRoleApprovalStatus": {
-        "type": "object",
-        "additionalProperties": false,
-        "required": [
-          "ranges"
-        ],
-        "properties": {
-          "ranges": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/DateRangeOfRoleApprovalStatus"
-            }
-          }
-        }
-      },
-      "DateRangeOfRoleApprovalStatus": {
-        "type": "object",
-        "additionalProperties": false,
-        "required": [
-          "start",
-          "end",
-          "tag"
-        ],
-        "properties": {
-          "start": {
-            "type": "string",
-            "format": "date"
-          },
-          "end": {
-            "type": "string",
-            "format": "date"
-          },
-          "tag": {
-            "$ref": "#/components/schemas/RoleApprovalStatus"
-          }
-        }
-      },
-      "RoleApprovalStatus": {
-        "type": "integer",
-        "description": "",
-        "x-enumNames": [
-          "Prospective",
-          "Expired",
-          "Approved",
-          "Onboarded",
-          "Inactive",
-          "Denied"
-        ],
-        "enum": [
-          1,
-          2,
-          3,
-          4,
-          5,
-          6
-        ]
-      },
       "FamilyRoleVersionApprovalStatus": {
         "type": "object",
         "additionalProperties": false,
@@ -5124,54 +5585,6 @@
           "isRequired": {
             "type": "boolean",
             "nullable": true
-          }
-        }
-      },
-      "DateOnlyTimeline": {
-        "type": "object",
-        "additionalProperties": false,
-        "required": [
-          "ranges",
-          "start",
-          "end"
-        ],
-        "properties": {
-          "ranges": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/DateRange"
-            }
-          },
-          "start": {
-            "type": "string",
-            "format": "date"
-          },
-          "end": {
-            "type": "string",
-            "format": "date"
-          }
-        }
-      },
-      "DateRange": {
-        "type": "object",
-        "additionalProperties": false,
-        "required": [
-          "start",
-          "end",
-          "totalDaysInclusive"
-        ],
-        "properties": {
-          "start": {
-            "type": "string",
-            "format": "date"
-          },
-          "end": {
-            "type": "string",
-            "format": "date"
-          },
-          "totalDaysInclusive": {
-            "type": "integer",
-            "format": "int32"
           }
         }
       },
@@ -5248,50 +5661,6 @@
             }
           }
         }
-      },
-      "RoleRemoval": {
-        "type": "object",
-        "additionalProperties": false,
-        "required": [
-          "roleName",
-          "reason",
-          "effectiveSince"
-        ],
-        "properties": {
-          "roleName": {
-            "type": "string"
-          },
-          "reason": {
-            "$ref": "#/components/schemas/RoleRemovalReason"
-          },
-          "effectiveSince": {
-            "type": "string",
-            "format": "date"
-          },
-          "effectiveUntil": {
-            "type": "string",
-            "format": "date",
-            "nullable": true
-          },
-          "additionalComments": {
-            "type": "string",
-            "nullable": true
-          }
-        }
-      },
-      "RoleRemovalReason": {
-        "type": "integer",
-        "description": "",
-        "x-enumNames": [
-          "Inactive",
-          "OptOut",
-          "Denied"
-        ],
-        "enum": [
-          0,
-          1,
-          2
-        ]
       },
       "VolunteerInfo": {
         "type": "object",
@@ -5896,6 +6265,7 @@
             "FamilyRecordsCommand": "#/components/schemas/FamilyRecordsCommand",
             "IndividualApprovalRecordsCommand": "#/components/schemas/IndividualApprovalRecordsCommand",
             "NoteRecordsCommand": "#/components/schemas/NoteRecordsCommand",
+            "OrganizationApprovalRecordsCommand": "#/components/schemas/OrganizationApprovalRecordsCommand",
             "PersonRecordsCommand": "#/components/schemas/PersonRecordsCommand",
             "ReferralRecordsCommand": "#/components/schemas/ReferralRecordsCommand",
             "V1ReferralNoteRecordsCommand": "#/components/schemas/V1ReferralNoteRecordsCommand",
@@ -7064,6 +7434,7 @@
             "RemoveCommunityMemberFamily": "#/components/schemas/RemoveCommunityMemberFamily",
             "RemoveCommunityRoleAssignment": "#/components/schemas/RemoveCommunityRoleAssignment",
             "RenameCommunity": "#/components/schemas/RenameCommunity",
+            "SetOrganizationCategories": "#/components/schemas/SetOrganizationCategories",
             "UploadCommunityDocument": "#/components/schemas/UploadCommunityDocument"
           }
         },
@@ -7247,6 +7618,29 @@
             "properties": {
               "name": {
                 "type": "string"
+              }
+            }
+          }
+        ]
+      },
+      "SetOrganizationCategories": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/CommunityCommand"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "categoryIds"
+            ],
+            "properties": {
+              "categoryIds": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "format": "guid"
+                }
               }
             }
           }
@@ -8398,6 +8792,242 @@
               "accessLevel": {
                 "type": "string",
                 "nullable": true
+              }
+            }
+          }
+        ]
+      },
+      "OrganizationApprovalRecordsCommand": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/AtomicRecordsCommand"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "command"
+            ],
+            "properties": {
+              "command": {
+                "$ref": "#/components/schemas/OrganizationApprovalCommand"
+              }
+            }
+          }
+        ]
+      },
+      "OrganizationApprovalCommand": {
+        "type": "object",
+        "discriminator": {
+          "propertyName": "discriminator",
+          "mapping": {
+            "ActivateOrganizationApprovals": "#/components/schemas/ActivateOrganizationApprovals",
+            "CompleteOrganizationRequirement": "#/components/schemas/CompleteOrganizationRequirement",
+            "ExemptOrganizationRequirement": "#/components/schemas/ExemptOrganizationRequirement",
+            "MarkOrganizationRequirementIncomplete": "#/components/schemas/MarkOrganizationRequirementIncomplete",
+            "RemoveOrganizationRole": "#/components/schemas/RemoveOrganizationRole",
+            "ResetOrganizationRole": "#/components/schemas/ResetOrganizationRole",
+            "UnexemptOrganizationRequirement": "#/components/schemas/UnexemptOrganizationRequirement"
+          }
+        },
+        "x-abstract": true,
+        "additionalProperties": false,
+        "required": [
+          "discriminator",
+          "organizationId"
+        ],
+        "properties": {
+          "organizationId": {
+            "type": "string",
+            "format": "guid"
+          },
+          "discriminator": {
+            "type": "string"
+          }
+        }
+      },
+      "ActivateOrganizationApprovals": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/OrganizationApprovalCommand"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false
+          }
+        ]
+      },
+      "CompleteOrganizationRequirement": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/OrganizationApprovalCommand"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "completedRequirementId",
+              "requirementName",
+              "completedAtUtc"
+            ],
+            "properties": {
+              "completedRequirementId": {
+                "type": "string",
+                "format": "guid"
+              },
+              "requirementName": {
+                "type": "string"
+              },
+              "completedAtUtc": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "uploadedDocumentId": {
+                "type": "string",
+                "format": "guid",
+                "nullable": true
+              },
+              "noteId": {
+                "type": "string",
+                "format": "guid",
+                "nullable": true
+              }
+            }
+          }
+        ]
+      },
+      "ExemptOrganizationRequirement": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/OrganizationApprovalCommand"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "requirementName",
+              "additionalComments"
+            ],
+            "properties": {
+              "requirementName": {
+                "type": "string"
+              },
+              "additionalComments": {
+                "type": "string"
+              },
+              "exemptionExpiresAtUtc": {
+                "type": "string",
+                "format": "date-time",
+                "nullable": true
+              }
+            }
+          }
+        ]
+      },
+      "MarkOrganizationRequirementIncomplete": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/OrganizationApprovalCommand"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "completedRequirementId",
+              "requirementName"
+            ],
+            "properties": {
+              "completedRequirementId": {
+                "type": "string",
+                "format": "guid"
+              },
+              "requirementName": {
+                "type": "string"
+              }
+            }
+          }
+        ]
+      },
+      "RemoveOrganizationRole": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/OrganizationApprovalCommand"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "roleName",
+              "reason"
+            ],
+            "properties": {
+              "roleName": {
+                "type": "string"
+              },
+              "reason": {
+                "$ref": "#/components/schemas/RoleRemovalReason"
+              },
+              "additionalComments": {
+                "type": "string",
+                "nullable": true
+              },
+              "effectiveSince": {
+                "type": "string",
+                "format": "date",
+                "nullable": true
+              },
+              "effectiveThrough": {
+                "type": "string",
+                "format": "date",
+                "nullable": true
+              }
+            }
+          }
+        ]
+      },
+      "ResetOrganizationRole": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/OrganizationApprovalCommand"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "roleName"
+            ],
+            "properties": {
+              "roleName": {
+                "type": "string"
+              },
+              "forRemovalEffectiveSince": {
+                "type": "string",
+                "format": "date",
+                "nullable": true
+              },
+              "effectiveThrough": {
+                "type": "string",
+                "format": "date",
+                "nullable": true
+              }
+            }
+          }
+        ]
+      },
+      "UnexemptOrganizationRequirement": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/OrganizationApprovalCommand"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "requirementName"
+            ],
+            "properties": {
+              "requirementName": {
+                "type": "string"
               }
             }
           }

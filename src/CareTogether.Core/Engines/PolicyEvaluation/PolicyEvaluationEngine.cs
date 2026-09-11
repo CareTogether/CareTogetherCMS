@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using CareTogether.Resources;
 using CareTogether.Resources.Approvals;
 using CareTogether.Resources.Directory;
+using CareTogether.Resources.OrganizationApprovals;
 using CareTogether.Resources.Policies;
 using CareTogether.Resources.V1Cases;
 using CareTogether.Resources.V1Referrals;
@@ -164,6 +165,75 @@ namespace CareTogether.Engines.PolicyEvaluation
                 completedIndividualRequirements,
                 exemptedIndividualRequirements
             );
+        }
+
+        public async Task<OrganizationApprovalCalculationResult> CalculateOrganizationApprovalsAsync(
+            Guid tenantId,
+            Guid locationId,
+            OrganizationApprovalEntry organizationApproval
+        )
+        {
+            var policy = await policiesResource.GetCurrentPolicy(tenantId, locationId);
+            var completedRequirements = organizationApproval
+                .CompletedRequirements.Select(completed =>
+                    ApplyValidityPolicyToCompletedRequirement(policy, completed)
+                )
+                .ToImmutableList();
+            var entryWithValidity = organizationApproval with
+            {
+                CompletedRequirements = completedRequirements,
+            };
+            var approvalStatus = OrganizationApprovalCalculations.Calculate(
+                policy,
+                entryWithValidity
+            );
+            var completedWithRoles = completedRequirements
+                .Select(completed => completed with
+                {
+                    RoleNames = GetOrganizationRequirementRoleNames(
+                        policy,
+                        approvalStatus,
+                        completed.RequirementName
+                    ),
+                })
+                .ToImmutableList();
+            var exemptedWithRoles = organizationApproval
+                .ExemptedRequirements.Select(exempted => exempted with
+                {
+                    RoleNames = GetOrganizationRequirementRoleNames(
+                        policy,
+                        approvalStatus,
+                        exempted.RequirementName
+                    ),
+                })
+                .ToImmutableList();
+
+            return new OrganizationApprovalCalculationResult(
+                approvalStatus,
+                completedWithRoles,
+                exemptedWithRoles
+            );
+        }
+
+        private static ImmutableList<string> GetOrganizationRequirementRoleNames(
+            EffectiveLocationPolicy policy,
+            OrganizationApprovalStatus approvalStatus,
+            string requirementName
+        )
+        {
+            var requirementNames = SharedCalculations
+                .GetRequirementNameWithSynonyms(policy, requirementName)
+                .ToImmutableHashSet();
+            return approvalStatus
+                .ApprovalStatusByRole.Values.SelectMany(role => role.RoleVersionApprovals)
+                .Where(version =>
+                    version.Requirements.Any(requirement =>
+                        requirementNames.Contains(requirement.ActionName)
+                    )
+                )
+                .Select(version => version.RoleName)
+                .Distinct()
+                .ToImmutableList();
         }
 
         private static ImmutableList<string> GetIndividualRequirementRoleNames(

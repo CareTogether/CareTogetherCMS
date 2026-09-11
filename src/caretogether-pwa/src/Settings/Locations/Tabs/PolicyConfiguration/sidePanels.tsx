@@ -34,6 +34,8 @@ import {
   MonitoringRequirement,
   NoteEntryRequirement,
   OneTimeRecurrencePolicy,
+  OrganizationApprovalRequirement,
+  OrganizationRolePolicyVersion,
   RequirementDefinition,
   RequirementStage,
   VolunteerApprovalRequirement,
@@ -64,6 +66,7 @@ import {
   functionAssignmentPolicyToDraft,
   monitoringRequirementToDraft,
   normalizeStringList,
+  organizationRequirementDraftToRequirement,
   parseValidityAmount,
   requirementToDraft,
   toTimeSpanString,
@@ -1391,11 +1394,13 @@ function newVolunteerRequirementDraft(
 
 function VolunteerRequirementsEditor({
   family,
+  organization,
   actionNames,
   requirements,
   onChange,
 }: {
   family: boolean;
+  organization: boolean;
   actionNames: string[];
   requirements: VolunteerRequirementDraft[];
   onChange: (requirements: VolunteerRequirementDraft[]) => void;
@@ -1453,7 +1458,9 @@ function VolunteerRequirementsEditor({
                 </TableCell>
                 <TableCell>Action Name</TableCell>
                 {family && <TableCell sx={{ width: '24%' }}>Scope</TableCell>}
-                <TableCell sx={{ width: 112 }}>Required</TableCell>
+                {!organization && (
+                  <TableCell sx={{ width: 112 }}>Required</TableCell>
+                )}
                 <TableCell sx={{ width: 56 }}>Actions</TableCell>
               </TableRow>
             </TableHead>
@@ -1546,23 +1553,25 @@ function VolunteerRequirementsEditor({
                         </TextField>
                       </TableCell>
                     )}
-                    <TableCell>
-                      <Switch
-                        checked={requirement.isRequired}
-                        onChange={(event) =>
-                          updateRequirement(index, {
-                            isRequired: event.target.checked,
-                          })
-                        }
-                        slotProps={{
-                          input: {
-                            'aria-label': `Required requirement ${
-                              actionName || index + 1
-                            }`,
-                          },
-                        }}
-                      />
-                    </TableCell>
+                    {!organization && (
+                      <TableCell>
+                        <Switch
+                          checked={requirement.isRequired}
+                          onChange={(event) =>
+                            updateRequirement(index, {
+                              isRequired: event.target.checked,
+                            })
+                          }
+                          slotProps={{
+                            input: {
+                              'aria-label': `Required requirement ${
+                                actionName || index + 1
+                              }`,
+                            },
+                          }}
+                        />
+                      </TableCell>
+                    )}
                     <TableCell>
                       <Tooltip title="Delete">
                         <IconButton
@@ -1592,27 +1601,35 @@ export function VolunteerRolePolicyVersionSidePanel({
   existingRoleNames,
   existingVersionsForRole,
   family,
+  organization = false,
   actionNames,
   onClose,
   onSave,
 }: {
   title: string;
   roleName?: string;
-  version?: VolunteerRolePolicyVersion | VolunteerFamilyRolePolicyVersion;
+  version?:
+    | VolunteerRolePolicyVersion
+    | VolunteerFamilyRolePolicyVersion
+    | OrganizationRolePolicyVersion;
   existingRoleNames: string[];
   existingVersionsForRole: string[];
   family: boolean;
+  organization?: boolean;
   actionNames: string[];
   onClose: () => void;
   onSave: (
     previousRoleName: string | undefined,
     previousVersion: string | undefined,
     roleName: string,
-    version: VolunteerRolePolicyVersion | VolunteerFamilyRolePolicyVersion
+    version:
+      | VolunteerRolePolicyVersion
+      | VolunteerFamilyRolePolicyVersion
+      | OrganizationRolePolicyVersion
   ) => void;
 }) {
   const [draft, setDraft] = useState<VolunteerRolePolicyVersionDraft>(() =>
-    volunteerRolePolicyVersionToDraft(roleName, version, family)
+    volunteerRolePolicyVersionToDraft(roleName, version, family, organization)
   );
   const trimmedRoleName = draft.roleName.trim();
   const trimmedVersion = draft.version.trim();
@@ -1651,6 +1668,11 @@ export function VolunteerRolePolicyVersionSidePanel({
         (requirement): requirement is VolunteerFamilyApprovalRequirement =>
           Boolean(requirement)
       );
+    const organizationRequirements = draft.requirements
+      .map(organizationRequirementDraftToRequirement)
+      .filter((requirement): requirement is OrganizationApprovalRequirement =>
+        Boolean(requirement)
+      );
 
     onSave(
       roleName,
@@ -1665,14 +1687,23 @@ export function VolunteerRolePolicyVersionSidePanel({
                 : undefined,
             requirements: familyRequirements,
           })
-        : new VolunteerRolePolicyVersion({
-            version: trimmedVersion,
-            supersededAtUtc:
-              draft.superseded && draft.supersededAtUtc
-                ? new Date(draft.supersededAtUtc)
-                : undefined,
-            requirements: individualRequirements,
-          })
+        : organization
+          ? new OrganizationRolePolicyVersion({
+              version: trimmedVersion,
+              supersededAtUtc:
+                draft.superseded && draft.supersededAtUtc
+                  ? new Date(draft.supersededAtUtc)
+                  : undefined,
+              requirements: organizationRequirements,
+            })
+          : new VolunteerRolePolicyVersion({
+              version: trimmedVersion,
+              supersededAtUtc:
+                draft.superseded && draft.supersededAtUtc
+                  ? new Date(draft.supersededAtUtc)
+                  : undefined,
+              requirements: individualRequirements,
+            })
     );
   }
 
@@ -1695,7 +1726,13 @@ export function VolunteerRolePolicyVersionSidePanel({
         <TextField
           fullWidth
           required
-          label={family ? 'Volunteer Family Role Type' : 'Volunteer Role Type'}
+          label={
+            family
+              ? 'Volunteer Family Role Type'
+              : organization
+                ? 'Organization Role Type'
+                : 'Volunteer Role Type'
+          }
           value={draft.roleName}
           helperText={
             existingRoleNames.includes(trimmedRoleName)
@@ -1767,6 +1804,7 @@ export function VolunteerRolePolicyVersionSidePanel({
       <Grid item xs={12}>
         <VolunteerRequirementsEditor
           family={family}
+          organization={organization}
           actionNames={actionNames}
           requirements={draft.requirements}
           onChange={(requirements) =>

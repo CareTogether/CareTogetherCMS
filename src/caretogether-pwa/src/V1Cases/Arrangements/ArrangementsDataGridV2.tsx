@@ -1,7 +1,11 @@
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import { Box, Chip, Stack, Tooltip, Typography, useTheme } from '@mui/material';
-import { DataGrid, GridColDef, GridToolbar } from '@mui/x-data-grid';
-import type { GridComparatorFn } from '@mui/x-data-grid';
+import {
+  DataGridPremium,
+  GridColDef,
+  GridToolbar,
+} from '@mui/x-data-grid-premium';
+import type { GridComparatorFn } from '@mui/x-data-grid-premium';
 import {
   ArrangementPolicy,
   ArrangementPhase,
@@ -321,7 +325,7 @@ export function ArrangementsDataGridV2({
         highlightedRowColor: theme.palette.primary.main,
       })}
     >
-      <DataGrid
+      <DataGridPremium
         autoHeight
         rows={rows}
         columns={columns}

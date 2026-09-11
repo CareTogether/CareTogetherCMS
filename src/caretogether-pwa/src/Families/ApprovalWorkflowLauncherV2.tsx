@@ -2,7 +2,7 @@ import { Autocomplete, Box, Button, TextField } from '@mui/material';
 import { useMemo, useState } from 'react';
 import { usePolicy } from '../Model/PolicyModel';
 import type { RequirementContext } from '../Requirements/RequirementContext';
-import type { ApprovalLedgerSubject } from './approvalLedgerViewModel';
+import type { ApprovalLedgerSubject } from '../Approvals/approvalLedgerViewModel';
 import { createSyntheticApprovalOccurrence } from './approvalOccurrenceFactory';
 import {
   RequirementManagementDrawerV2,

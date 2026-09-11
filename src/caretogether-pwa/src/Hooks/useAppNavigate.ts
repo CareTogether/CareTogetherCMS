@@ -10,12 +10,13 @@ export interface AppNavigate {
     arrangementId?: string,
     options?: { replace?: boolean }
   ) => void;
-  community: (communityId: string) => void;
+  organization: (organizationId: string) => void;
   settings: () => void;
   role: (roleId: string) => void;
   locationEdit: (locationId: string, options?: AppNavigateOptions) => void;
   settingsRoles: () => void;
   settingsLocations: () => void;
+  settingsOrganizationCategories: () => void;
   referral: (referralId: string) => void;
 }
 
@@ -65,14 +66,16 @@ export function useAppNavigate(): AppNavigate {
       });
     },
 
-    community: (communityId: string) =>
-      inContext(`communities/community/${communityId}`),
+    organization: (organizationId: string) =>
+      inContext(`organizations/organization/${organizationId}`),
     settings: () => inContext(`settings`),
     role: (roleId: string) => inContext(`settings/roles/${roleId}`),
     locationEdit: (locationId: string, options?: AppNavigateOptions) =>
       inContext(`settings/locations/${locationId}`, options),
     settingsRoles: () => inContext('settings/roles'),
     settingsLocations: () => inContext('settings/locations'),
+    settingsOrganizationCategories: () =>
+      inContext('settings/organization-categories'),
     referral: (referralId: string) => inContext(`referrals/${referralId}`),
   };
 }

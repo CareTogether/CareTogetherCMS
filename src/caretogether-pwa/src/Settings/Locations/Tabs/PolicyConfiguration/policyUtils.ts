@@ -13,6 +13,10 @@ import {
   FunctionRequirement,
   MonitoringRequirement,
   NoteEntryRequirement,
+  OrganizationApprovalPolicy,
+  OrganizationApprovalRequirement,
+  OrganizationRolePolicy,
+  OrganizationRolePolicyVersion,
   Person,
   RequirementDefinition,
   V1CasePolicy,
@@ -349,14 +353,21 @@ export function volunteerRolePolicyVersionToDraft(
   version:
     | VolunteerRolePolicyVersion
     | VolunteerFamilyRolePolicyVersion
+    | OrganizationRolePolicyVersion
     | undefined,
-  family: boolean
+  family: boolean,
+  organization = false
 ): VolunteerRolePolicyVersionDraft {
   const requirements = family
     ? volunteerFamilyRequirementsToDraft(
         (version as VolunteerFamilyRolePolicyVersion | undefined)
           ?.requirements ?? []
       )
+    : organization
+      ? organizationRequirementsToDraft(
+          (version as OrganizationRolePolicyVersion | undefined)
+            ?.requirements ?? []
+        )
     : volunteerRequirementsToDraft(
         (version as VolunteerRolePolicyVersion | undefined)?.requirements ?? []
       );
@@ -403,6 +414,16 @@ export function volunteerFamilyRequirementsToDraft(
   return requirements.map(volunteerFamilyRequirementToDraft);
 }
 
+export function organizationRequirementsToDraft(
+  requirements: OrganizationApprovalRequirement[]
+): VolunteerRequirementDraft[] {
+  return requirements.map((requirement) => ({
+    stage: requirement.stage,
+    actionName: requirement.actionName ?? '',
+    isRequired: true,
+  }));
+}
+
 export function volunteerRequirementDraftToRequirement(
   draft: VolunteerRequirementDraft
 ) {
@@ -434,6 +455,19 @@ export function volunteerFamilyRequirementDraftToRequirement(
     actionName: draft.actionName.trim(),
     scope: draft.scope,
     isRequired: draft.isRequired,
+  });
+}
+
+export function organizationRequirementDraftToRequirement(
+  draft: VolunteerRequirementDraft
+) {
+  if (draft.stage === '' || draft.actionName.trim().length === 0) {
+    return undefined;
+  }
+
+  return new OrganizationApprovalRequirement({
+    stage: draft.stage,
+    actionName: draft.actionName.trim(),
   });
 }
 
@@ -490,6 +524,16 @@ export function clonePolicyWithVolunteerPolicy(
   volunteerPolicy: VolunteerPolicy
 ) {
   return new EffectiveLocationPolicy({ ...policy, volunteerPolicy });
+}
+
+export function clonePolicyWithOrganizationApprovalPolicy(
+  policy: EffectiveLocationPolicy,
+  organizationApprovalPolicy: OrganizationApprovalPolicy
+) {
+  return new EffectiveLocationPolicy({
+    ...policy,
+    organizationApprovalPolicy,
+  });
 }
 
 export function upsertCustomField(
@@ -696,4 +740,65 @@ export function removeVolunteerFamilyRolePolicyVersion(
     volunteerRoles: volunteerPolicy?.volunteerRoles ?? {},
     volunteerFamilyRoles,
   });
+}
+
+export function upsertOrganizationRolePolicyVersion(
+  policy: OrganizationApprovalPolicy | undefined,
+  previousRoleName: string | undefined,
+  previousVersion: string | undefined,
+  roleName: string,
+  version: OrganizationRolePolicyVersion
+) {
+  const organizationRoles = { ...(policy?.organizationRoles ?? {}) };
+  if (previousRoleName && previousRoleName !== roleName) {
+    const previousRole = organizationRoles[previousRoleName];
+    if (previousRole) {
+      const remainingVersions = previousRole.policyVersions.filter(
+        (item) => item.version !== previousVersion
+      );
+      if (remainingVersions.length === 0) {
+        delete organizationRoles[previousRoleName];
+      } else {
+        organizationRoles[previousRoleName] = new OrganizationRolePolicy({
+          ...previousRole,
+          policyVersions: remainingVersions,
+        });
+      }
+    }
+  }
+
+  const currentRole = organizationRoles[roleName];
+  organizationRoles[roleName] = new OrganizationRolePolicy({
+    organizationRoleType: roleName,
+    policyVersions: upsertByName(
+      currentRole?.policyVersions ?? [],
+      previousRoleName === roleName ? previousVersion : undefined,
+      version,
+      (item) => item.version
+    ),
+  });
+  return new OrganizationApprovalPolicy({ organizationRoles });
+}
+
+export function removeOrganizationRolePolicyVersion(
+  policy: OrganizationApprovalPolicy | undefined,
+  roleName: string,
+  versionName: string
+) {
+  const organizationRoles = { ...(policy?.organizationRoles ?? {}) };
+  const rolePolicy = organizationRoles[roleName];
+  if (!rolePolicy) return new OrganizationApprovalPolicy({ organizationRoles });
+
+  const remainingVersions = rolePolicy.policyVersions.filter(
+    (version) => version.version !== versionName
+  );
+  if (remainingVersions.length === 0) {
+    delete organizationRoles[roleName];
+  } else {
+    organizationRoles[roleName] = new OrganizationRolePolicy({
+      ...rolePolicy,
+      policyVersions: remainingVersions,
+    });
+  }
+  return new OrganizationApprovalPolicy({ organizationRoles });
 }
