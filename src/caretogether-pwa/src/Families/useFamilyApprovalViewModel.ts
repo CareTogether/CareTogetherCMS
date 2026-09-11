@@ -61,6 +61,8 @@ export function useFamilyApprovalViewModel({
           completedRequirements: volunteerInfo.completedRequirements ?? [],
           exemptedRequirements: volunteerInfo.exemptedRequirements ?? [],
           missingRequirements: volunteerInfo.missingRequirements ?? [],
+          missingOptionalRequirements:
+            volunteerInfo.missingOptionalRequirements ?? [],
           availableApplications: volunteerInfo.availableApplications ?? [],
         };
       });
@@ -82,6 +84,8 @@ export function useFamilyApprovalViewModel({
         completedRequirements: volunteerFamilyInfo?.completedRequirements ?? [],
         exemptedRequirements: volunteerFamilyInfo?.exemptedRequirements ?? [],
         missingRequirements: volunteerFamilyInfo?.missingRequirements ?? [],
+        missingOptionalRequirements:
+          volunteerFamilyInfo?.missingOptionalRequirements ?? [],
         availableApplications: volunteerFamilyInfo?.availableApplications ?? [],
         familyRoleApprovals: volunteerFamilyInfo?.familyRoleApprovals ?? {},
         roleRemovals: volunteerFamilyInfo?.roleRemovals ?? [],
@@ -96,6 +100,7 @@ export function useFamilyApprovalViewModel({
     volunteerFamilyInfo?.exemptedRequirements,
     volunteerFamilyInfo?.familyRoleApprovals,
     volunteerFamilyInfo?.missingRequirements,
+    volunteerFamilyInfo?.missingOptionalRequirements,
     volunteerFamilyInfo?.roleRemovals,
   ]);
 
@@ -111,6 +116,8 @@ export function useFamilyApprovalViewModel({
             volunteerFamilyInfo?.completedRequirements ?? [],
           exemptedRequirements: volunteerFamilyInfo?.exemptedRequirements ?? [],
           missingRequirements: volunteerFamilyInfo?.missingRequirements ?? [],
+          missingOptionalRequirements:
+            volunteerFamilyInfo?.missingOptionalRequirements ?? [],
           availableApplications:
             volunteerFamilyInfo?.availableApplications ?? [],
           familyRoleApprovals: volunteerFamilyInfo?.familyRoleApprovals ?? {},
@@ -128,6 +135,7 @@ export function useFamilyApprovalViewModel({
       volunteerFamilyInfo?.exemptedRequirements,
       volunteerFamilyInfo?.familyRoleApprovals,
       volunteerFamilyInfo?.missingRequirements,
+      volunteerFamilyInfo?.missingOptionalRequirements,
       volunteerFamilyInfo?.roleRemovals,
     ]
   );

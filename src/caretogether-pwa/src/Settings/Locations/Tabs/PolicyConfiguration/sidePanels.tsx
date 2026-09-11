@@ -1711,7 +1711,10 @@ export function VolunteerRolePolicyVersionSidePanel({
     <Grid
       container
       spacing={2}
-      maxWidth={580}
+      sx={{
+        width: { xs: 'calc(100vw - 32px)', md: 920 },
+        maxWidth: '100%',
+      }}
       component="form"
       onSubmit={(event) => {
         event.preventDefault();

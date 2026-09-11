@@ -103,6 +103,10 @@ namespace CareTogether.Managers
             string ActionName,
             (string Version, string RoleName)[] Versions
         )> MissingRequirements,
+        ImmutableList<(
+            string ActionName,
+            (string Version, string RoleName)[] Versions
+        )> MissingOptionalRequirements,
         ImmutableList<RoleRemoval> RoleRemovals,
         ImmutableDictionary<Guid, VolunteerInfo> IndividualVolunteers,
         ImmutableList<Activity> History,
@@ -120,6 +124,10 @@ namespace CareTogether.Managers
             string ActionName,
             (string Version, string RoleName)[] Versions
         )> MissingRequirements,
+        ImmutableList<(
+            string ActionName,
+            (string Version, string RoleName)[] Versions
+        )> MissingOptionalRequirements,
         ImmutableList<RoleRemoval> RoleRemovals
     );
 

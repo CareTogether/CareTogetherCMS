@@ -284,6 +284,10 @@ namespace CareTogether.Core.Test.ApprovalCalculationTests
                 result.Status
             );
             Assert.AreEqual(0, result.CurrentAvailableApplications.Count);
+            Assert.AreEqual(
+                "OptionalApplication",
+                result.CurrentMissingOptionalRequirements.Single().ActionName
+            );
         }
 
         [TestMethod]
@@ -308,6 +312,10 @@ namespace CareTogether.Core.Test.ApprovalCalculationTests
                 result.Status
             );
             Assert.AreEqual(0, result.CurrentMissingRequirements.Count);
+            Assert.AreEqual(
+                "OptionalApproval",
+                result.CurrentMissingOptionalRequirements.Single().ActionName
+            );
         }
 
         [TestMethod]
@@ -332,6 +340,10 @@ namespace CareTogether.Core.Test.ApprovalCalculationTests
                 result.Status
             );
             Assert.AreEqual(0, result.CurrentMissingRequirements.Count);
+            Assert.AreEqual(
+                "OptionalOnboarding",
+                result.CurrentMissingOptionalRequirements.Single().ActionName
+            );
         }
 
         [TestMethod]

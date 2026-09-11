@@ -8564,6 +8564,7 @@ export class VolunteerFamilyInfo implements IVolunteerFamilyInfo {
     exemptedRequirements!: ExemptedRequirementInfo[];
     availableApplications!: string[];
     missingRequirements!: ValueTupleOfStringAndValueTuple_2Of[];
+    missingOptionalRequirements!: ValueTupleOfStringAndValueTuple_2Of[];
     roleRemovals!: RoleRemoval[];
     individualVolunteers!: { [key: string]: VolunteerInfo; };
     history!: Activity[];
@@ -8584,6 +8585,7 @@ export class VolunteerFamilyInfo implements IVolunteerFamilyInfo {
             this.exemptedRequirements = [];
             this.availableApplications = [];
             this.missingRequirements = [];
+            this.missingOptionalRequirements = [];
             this.roleRemovals = [];
             this.individualVolunteers = {};
             this.history = [];
@@ -8619,6 +8621,11 @@ export class VolunteerFamilyInfo implements IVolunteerFamilyInfo {
                 this.missingRequirements = [] as any;
                 for (let item of _data["missingRequirements"])
                     this.missingRequirements!.push(ValueTupleOfStringAndValueTuple_2Of.fromJS(item));
+            }
+            if (Array.isArray(_data["missingOptionalRequirements"])) {
+                this.missingOptionalRequirements = [] as any;
+                for (let item of _data["missingOptionalRequirements"])
+                    this.missingOptionalRequirements!.push(ValueTupleOfStringAndValueTuple_2Of.fromJS(item));
             }
             if (Array.isArray(_data["roleRemovals"])) {
                 this.roleRemovals = [] as any;
@@ -8691,6 +8698,11 @@ export class VolunteerFamilyInfo implements IVolunteerFamilyInfo {
             for (let item of this.missingRequirements)
                 data["missingRequirements"].push(item ? item.toJSON() : undefined as any);
         }
+        if (Array.isArray(this.missingOptionalRequirements)) {
+            data["missingOptionalRequirements"] = [];
+            for (let item of this.missingOptionalRequirements)
+                data["missingOptionalRequirements"].push(item ? item.toJSON() : undefined as any);
+        }
         if (Array.isArray(this.roleRemovals)) {
             data["roleRemovals"] = [];
             for (let item of this.roleRemovals)
@@ -8733,6 +8745,7 @@ export interface IVolunteerFamilyInfo {
     exemptedRequirements: ExemptedRequirementInfo[];
     availableApplications: string[];
     missingRequirements: ValueTupleOfStringAndValueTuple_2Of[];
+    missingOptionalRequirements: ValueTupleOfStringAndValueTuple_2Of[];
     roleRemovals: RoleRemoval[];
     individualVolunteers: { [key: string]: VolunteerInfo; };
     history: Activity[];
@@ -8746,6 +8759,7 @@ export class FamilyRoleApprovalStatus implements IFamilyRoleApprovalStatus {
     roleVersionApprovals!: FamilyRoleVersionApprovalStatus[];
     currentStatus?: RoleApprovalStatus | undefined;
     currentMissingFamilyRequirements!: ValueTupleOfStringAndValueTuple_2Of[];
+    currentMissingOptionalFamilyRequirements!: ValueTupleOfStringAndValueTuple_2Of[];
     currentAvailableFamilyApplications!: string[];
     currentMissingIndividualRequirements!: ValueTupleOfGuidAndStringAndValueTuple_2Of[];
 
@@ -8759,6 +8773,7 @@ export class FamilyRoleApprovalStatus implements IFamilyRoleApprovalStatus {
         if (!data) {
             this.roleVersionApprovals = [];
             this.currentMissingFamilyRequirements = [];
+            this.currentMissingOptionalFamilyRequirements = [];
             this.currentAvailableFamilyApplications = [];
             this.currentMissingIndividualRequirements = [];
         }
@@ -8777,6 +8792,11 @@ export class FamilyRoleApprovalStatus implements IFamilyRoleApprovalStatus {
                 this.currentMissingFamilyRequirements = [] as any;
                 for (let item of _data["currentMissingFamilyRequirements"])
                     this.currentMissingFamilyRequirements!.push(ValueTupleOfStringAndValueTuple_2Of.fromJS(item));
+            }
+            if (Array.isArray(_data["currentMissingOptionalFamilyRequirements"])) {
+                this.currentMissingOptionalFamilyRequirements = [] as any;
+                for (let item of _data["currentMissingOptionalFamilyRequirements"])
+                    this.currentMissingOptionalFamilyRequirements!.push(ValueTupleOfStringAndValueTuple_2Of.fromJS(item));
             }
             if (Array.isArray(_data["currentAvailableFamilyApplications"])) {
                 this.currentAvailableFamilyApplications = [] as any;
@@ -8812,6 +8832,11 @@ export class FamilyRoleApprovalStatus implements IFamilyRoleApprovalStatus {
             for (let item of this.currentMissingFamilyRequirements)
                 data["currentMissingFamilyRequirements"].push(item ? item.toJSON() : undefined as any);
         }
+        if (Array.isArray(this.currentMissingOptionalFamilyRequirements)) {
+            data["currentMissingOptionalFamilyRequirements"] = [];
+            for (let item of this.currentMissingOptionalFamilyRequirements)
+                data["currentMissingOptionalFamilyRequirements"].push(item ? item.toJSON() : undefined as any);
+        }
         if (Array.isArray(this.currentAvailableFamilyApplications)) {
             data["currentAvailableFamilyApplications"] = [];
             for (let item of this.currentAvailableFamilyApplications)
@@ -8831,6 +8856,7 @@ export interface IFamilyRoleApprovalStatus {
     roleVersionApprovals: FamilyRoleVersionApprovalStatus[];
     currentStatus?: RoleApprovalStatus | undefined;
     currentMissingFamilyRequirements: ValueTupleOfStringAndValueTuple_2Of[];
+    currentMissingOptionalFamilyRequirements: ValueTupleOfStringAndValueTuple_2Of[];
     currentAvailableFamilyApplications: string[];
     currentMissingIndividualRequirements: ValueTupleOfGuidAndStringAndValueTuple_2Of[];
 }
@@ -9151,6 +9177,7 @@ export class VolunteerInfo implements IVolunteerInfo {
     exemptedRequirements!: ExemptedRequirementInfo[];
     availableApplications!: string[];
     missingRequirements!: ValueTupleOfStringAndValueTuple_2Of[];
+    missingOptionalRequirements!: ValueTupleOfStringAndValueTuple_2Of[];
     roleRemovals!: RoleRemoval[];
 
     constructor(data?: IVolunteerInfo) {
@@ -9166,6 +9193,7 @@ export class VolunteerInfo implements IVolunteerInfo {
             this.exemptedRequirements = [];
             this.availableApplications = [];
             this.missingRequirements = [];
+            this.missingOptionalRequirements = [];
             this.roleRemovals = [];
         }
     }
@@ -9198,6 +9226,11 @@ export class VolunteerInfo implements IVolunteerInfo {
                 this.missingRequirements = [] as any;
                 for (let item of _data["missingRequirements"])
                     this.missingRequirements!.push(ValueTupleOfStringAndValueTuple_2Of.fromJS(item));
+            }
+            if (Array.isArray(_data["missingOptionalRequirements"])) {
+                this.missingOptionalRequirements = [] as any;
+                for (let item of _data["missingOptionalRequirements"])
+                    this.missingOptionalRequirements!.push(ValueTupleOfStringAndValueTuple_2Of.fromJS(item));
             }
             if (Array.isArray(_data["roleRemovals"])) {
                 this.roleRemovals = [] as any;
@@ -9243,6 +9276,11 @@ export class VolunteerInfo implements IVolunteerInfo {
             for (let item of this.missingRequirements)
                 data["missingRequirements"].push(item ? item.toJSON() : undefined as any);
         }
+        if (Array.isArray(this.missingOptionalRequirements)) {
+            data["missingOptionalRequirements"] = [];
+            for (let item of this.missingOptionalRequirements)
+                data["missingOptionalRequirements"].push(item ? item.toJSON() : undefined as any);
+        }
         if (Array.isArray(this.roleRemovals)) {
             data["roleRemovals"] = [];
             for (let item of this.roleRemovals)
@@ -9258,6 +9296,7 @@ export interface IVolunteerInfo {
     exemptedRequirements: ExemptedRequirementInfo[];
     availableApplications: string[];
     missingRequirements: ValueTupleOfStringAndValueTuple_2Of[];
+    missingOptionalRequirements: ValueTupleOfStringAndValueTuple_2Of[];
     roleRemovals: RoleRemoval[];
 }
 
@@ -9266,6 +9305,7 @@ export class IndividualRoleApprovalStatus implements IIndividualRoleApprovalStat
     roleVersionApprovals!: IndividualRoleVersionApprovalStatus[];
     currentStatus?: RoleApprovalStatus | undefined;
     currentMissingRequirements!: ValueTupleOfStringAndValueTuple_2Of[];
+    currentMissingOptionalRequirements!: ValueTupleOfStringAndValueTuple_2Of[];
     currentAvailableApplications!: string[];
 
     constructor(data?: IIndividualRoleApprovalStatus) {
@@ -9278,6 +9318,7 @@ export class IndividualRoleApprovalStatus implements IIndividualRoleApprovalStat
         if (!data) {
             this.roleVersionApprovals = [];
             this.currentMissingRequirements = [];
+            this.currentMissingOptionalRequirements = [];
             this.currentAvailableApplications = [];
         }
     }
@@ -9295,6 +9336,11 @@ export class IndividualRoleApprovalStatus implements IIndividualRoleApprovalStat
                 this.currentMissingRequirements = [] as any;
                 for (let item of _data["currentMissingRequirements"])
                     this.currentMissingRequirements!.push(ValueTupleOfStringAndValueTuple_2Of.fromJS(item));
+            }
+            if (Array.isArray(_data["currentMissingOptionalRequirements"])) {
+                this.currentMissingOptionalRequirements = [] as any;
+                for (let item of _data["currentMissingOptionalRequirements"])
+                    this.currentMissingOptionalRequirements!.push(ValueTupleOfStringAndValueTuple_2Of.fromJS(item));
             }
             if (Array.isArray(_data["currentAvailableApplications"])) {
                 this.currentAvailableApplications = [] as any;
@@ -9325,6 +9371,11 @@ export class IndividualRoleApprovalStatus implements IIndividualRoleApprovalStat
             for (let item of this.currentMissingRequirements)
                 data["currentMissingRequirements"].push(item ? item.toJSON() : undefined as any);
         }
+        if (Array.isArray(this.currentMissingOptionalRequirements)) {
+            data["currentMissingOptionalRequirements"] = [];
+            for (let item of this.currentMissingOptionalRequirements)
+                data["currentMissingOptionalRequirements"].push(item ? item.toJSON() : undefined as any);
+        }
         if (Array.isArray(this.currentAvailableApplications)) {
             data["currentAvailableApplications"] = [];
             for (let item of this.currentAvailableApplications)
@@ -9339,6 +9390,7 @@ export interface IIndividualRoleApprovalStatus {
     roleVersionApprovals: IndividualRoleVersionApprovalStatus[];
     currentStatus?: RoleApprovalStatus | undefined;
     currentMissingRequirements: ValueTupleOfStringAndValueTuple_2Of[];
+    currentMissingOptionalRequirements: ValueTupleOfStringAndValueTuple_2Of[];
     currentAvailableApplications: string[];
 }
 

@@ -68,6 +68,7 @@ export function findActionableApprovalOccurrence(
   return row?.occurrences.find(
     ({ status }) =>
       status === 'missing' ||
+      status === 'optional' ||
       status === 'availableApplication' ||
       status === 'completed' ||
       status === 'exempted'

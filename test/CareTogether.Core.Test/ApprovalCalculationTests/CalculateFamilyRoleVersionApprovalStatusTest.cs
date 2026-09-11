@@ -108,6 +108,10 @@ namespace CareTogether.Core.Test.ApprovalCalculationTests
             );
             Assert.AreEqual(0, result.CurrentMissingRequirements.Count);
             Assert.AreEqual(
+                "OptionalApproval",
+                result.CurrentMissingOptionalRequirements.Single().ActionName
+            );
+            Assert.AreEqual(
                 VolunteerFamilyRequirementScope.AllAdultsInTheFamily,
                 result.Requirements.Single(r => r.ActionName == "OptionalApproval").Scope
             );
@@ -152,6 +156,10 @@ namespace CareTogether.Core.Test.ApprovalCalculationTests
                 result.Status
             );
             Assert.AreEqual(0, result.CurrentMissingRequirements.Count);
+            Assert.AreEqual(
+                "OptionalOnboarding",
+                result.CurrentMissingOptionalRequirements.Single().ActionName
+            );
         }
 
         [TestMethod]

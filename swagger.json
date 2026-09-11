@@ -5385,6 +5385,7 @@
           "exemptedRequirements",
           "availableApplications",
           "missingRequirements",
+          "missingOptionalRequirements",
           "roleRemovals",
           "individualVolunteers",
           "history",
@@ -5416,6 +5417,12 @@
             }
           },
           "missingRequirements": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ValueTupleOfStringAndValueTuple_2Of"
+            }
+          },
+          "missingOptionalRequirements": {
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/ValueTupleOfStringAndValueTuple_2Of"
@@ -5467,6 +5474,7 @@
         "required": [
           "roleVersionApprovals",
           "currentMissingFamilyRequirements",
+          "currentMissingOptionalFamilyRequirements",
           "currentAvailableFamilyApplications",
           "currentMissingIndividualRequirements"
         ],
@@ -5494,6 +5502,12 @@
             ]
           },
           "currentMissingFamilyRequirements": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ValueTupleOfStringAndValueTuple_2Of"
+            }
+          },
+          "currentMissingOptionalFamilyRequirements": {
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/ValueTupleOfStringAndValueTuple_2Of"
@@ -5671,6 +5685,7 @@
           "exemptedRequirements",
           "availableApplications",
           "missingRequirements",
+          "missingOptionalRequirements",
           "roleRemovals"
         ],
         "properties": {
@@ -5704,6 +5719,12 @@
               "$ref": "#/components/schemas/ValueTupleOfStringAndValueTuple_2Of"
             }
           },
+          "missingOptionalRequirements": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ValueTupleOfStringAndValueTuple_2Of"
+            }
+          },
           "roleRemovals": {
             "type": "array",
             "items": {
@@ -5718,6 +5739,7 @@
         "required": [
           "roleVersionApprovals",
           "currentMissingRequirements",
+          "currentMissingOptionalRequirements",
           "currentAvailableApplications"
         ],
         "properties": {
@@ -5744,6 +5766,12 @@
             ]
           },
           "currentMissingRequirements": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ValueTupleOfStringAndValueTuple_2Of"
+            }
+          },
+          "currentMissingOptionalRequirements": {
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/ValueTupleOfStringAndValueTuple_2Of"
