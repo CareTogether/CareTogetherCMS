@@ -963,6 +963,7 @@ export function FamilyScreenV2() {
                 <>
                   <Grid item xs={12}>
                     <ApprovalLedgerSection
+                      groupByMember
                       rows={approvalLedgerRows}
                       renderDetailsDrawer={(row, open, onClose) => (
                         <ApprovalDetailsDrawerV2
