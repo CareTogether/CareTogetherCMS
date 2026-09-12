@@ -1,9 +1,12 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Add as AddIcon } from '@mui/icons-material';
 import { Box, Button, Paper, Stack, Typography } from '@mui/material';
 import { useScreenTitle } from '../Shell/ShellScreenTitle';
 import { AddNewReferralDrawer } from './AddNewReferralDrawer';
-import { useVisibleReferrals } from '../Model/Data';
+import {
+  useRequiredSelectedLocationContext,
+  useVisibleReferrals,
+} from '../Model/Data';
 import { Permission } from '../GeneratedClient';
 import { useAppNavigate } from '../Hooks/useAppNavigate';
 import { ProgressBackdrop } from '../Shell/ProgressBackdrop';
@@ -14,15 +17,8 @@ import { useFeatureFlagsLoaded } from '../Utilities/Instrumentation/useFeatureFl
 import { wideTablePageSx } from '../Utilities/wideTablePageSx';
 import { useReferralsBrowserViewModel } from './useReferralsBrowserViewModel';
 import { ReferralsDataGridV2 } from './ReferralsDataGridV2';
-import type { ReferralRowModel } from './referralBrowserTypes';
-import type { ReferralStatusFilter } from './referralStatusFilter';
+import type { ReferralBrowserRowV2 } from './referralBrowserTypes';
 import { v2Typography } from '../Families/v2Typography';
-import { getFamilyCounty } from '../Utilities/getFamilyCounty';
-import {
-  REFERRAL_COUNTY_BLANK_FILTER_VALUE,
-  type ReferralAssignmentGridFilter,
-  type ReferralsGridFilterLogicOperator,
-} from './referralsGridFilterAdapter';
 
 export function ReferralsScreenV2() {
   useScreenTitle('Referrals');
@@ -46,12 +42,7 @@ export function ReferralsScreenV2() {
     ) {
       appNavigate.dashboard();
     }
-  }, [
-    canAccessReferrals,
-    featureFlagsLoaded,
-    referralsEnabled,
-    appNavigate,
-  ]);
+  }, [canAccessReferrals, featureFlagsLoaded, referralsEnabled, appNavigate]);
 
   if (!featureFlagsLoaded) {
     return (
@@ -74,49 +65,23 @@ export function ReferralsScreenV2() {
 
 function ReferralsScreenV2Content() {
   const permissions = useGlobalPermissions();
+  const { organizationId, locationId } = useRequiredSelectedLocationContext();
 
-  const [filterText, setFilterText] = useState('');
-  const [statusFilter, setStatusFilter] = useState<ReferralStatusFilter>('ALL');
   const [openNewReferral, setOpenNewReferral] = useState(false);
-  const [countyFilter, setCountyFilter] = useState<(string | null)[]>([]);
-  const [assignmentFilters, setAssignmentFilters] = useState<
-    ReferralAssignmentGridFilter[]
-  >([]);
-  const [assignmentFilterLogicOperator, setAssignmentFilterLogicOperator] =
-    useState<ReferralsGridFilterLogicOperator>('and');
 
   const {
     assignmentRoles,
     canViewFunctionAssignments,
-    familiesForCountyFilter,
-    filteredRows,
-  } = useReferralsBrowserViewModel({
-    assignmentFilterLogicOperator,
-    assignmentFilters,
-    countyFilter,
-    filterText,
-    statusFilter,
-  });
+    counties,
+    customFields,
+    rows,
+  } = useReferralsBrowserViewModel();
   const hasFeaturebaseChat = permissions(Permission.AccessSupportScreen);
   const appNavigate = useAppNavigate();
   const handleRowClick = useCallback(
-    (row: ReferralRowModel) => appNavigate.referral(row.id),
+    (row: ReferralBrowserRowV2) => appNavigate.referral(row.id),
     [appNavigate]
   );
-  const countyValueOptions = useMemo(() => {
-    const counties = Array.from(
-      new Set(
-        familiesForCountyFilter
-          .map(getFamilyCounty)
-          .filter((county): county is string => Boolean(county))
-      )
-    ).sort((a, b) => a.localeCompare(b));
-
-    return [
-      { label: 'Unspecified', value: REFERRAL_COUNTY_BLANK_FILTER_VALUE },
-      ...counties.map((county) => ({ label: county, value: county })),
-    ];
-  }, [familiesForCountyFilter]);
 
   return (
     <Box
@@ -176,23 +141,13 @@ function ReferralsScreenV2Content() {
           }}
         >
           <ReferralsDataGridV2
+            key={`${organizationId}:${locationId}`}
             assignmentRoles={canViewFunctionAssignments ? assignmentRoles : []}
-            countyFilter={countyFilter}
-            countyValueOptions={countyValueOptions}
+            counties={counties}
+            customFields={customFields}
             expanded
-            filterText={filterText}
-            rows={filteredRows}
-            statusFilter={statusFilter}
-            assignmentFilters={assignmentFilters}
-            assignmentFilterLogicOperator={assignmentFilterLogicOperator}
-            onAssignmentFiltersChange={setAssignmentFilters}
-            onAssignmentFilterLogicOperatorChange={
-              setAssignmentFilterLogicOperator
-            }
-            onCountyFilterChange={setCountyFilter}
-            onFilterTextChange={setFilterText}
+            rows={rows}
             onRowClick={handleRowClick}
-            onStatusFilterChange={setStatusFilter}
           />
         </Paper>
       </Stack>

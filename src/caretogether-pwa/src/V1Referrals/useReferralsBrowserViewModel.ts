@@ -4,10 +4,12 @@ import {
   assignmentNamesForRole,
   assignmentRolesForColumns,
 } from '../FunctionAssignments/assignmentRoleColumns';
-import { Permission, V1ReferralStatus } from '../GeneratedClient';
-import type {
-  CombinedFamilyInfo,
-  V1Referral,
+import {
+  CustomFieldType,
+  Permission,
+  V1ReferralStatus,
+  type CustomField,
+  type V1Referral,
 } from '../GeneratedClient';
 import {
   useFamilyLookup,
@@ -19,20 +21,12 @@ import { useGlobalPermissions } from '../Model/SessionModel';
 import { FUNCTION_ASSIGNMENTS_FEATURE_FLAG } from '../featureFlags';
 import { familyNameString } from '../Families/FamilyName';
 import { getFamilyCounty } from '../Utilities/getFamilyCounty';
-import type { ReferralRowModel } from './referralBrowserTypes';
+import { personNameString } from '../Families/PersonName';
 import type {
-  ReferralAssignmentGridFilter,
-  ReferralsGridFilterLogicOperator,
-} from './referralsGridFilterAdapter';
-import type { ReferralStatusFilter } from './referralStatusFilter';
-
-type UseReferralsBrowserViewModelParameters = {
-  assignmentFilters: ReferralAssignmentGridFilter[];
-  assignmentFilterLogicOperator: ReferralsGridFilterLogicOperator;
-  countyFilter: (string | null)[];
-  filterText: string;
-  statusFilter: ReferralStatusFilter;
-};
+  ReferralAssignmentRoleV2,
+  ReferralBrowserRowV2,
+  ReferralCustomFieldValue,
+} from './referralBrowserTypes';
 
 function statusToUi(status: V1ReferralStatus): 'OPEN' | 'ACCEPTED' | 'CLOSED' {
   switch (status) {
@@ -45,178 +39,33 @@ function statusToUi(status: V1ReferralStatus): 'OPEN' | 'ACCEPTED' | 'CLOSED' {
   }
 }
 
-function sortReferralsByNewestOpened(
-  rows: ReferralRowModel[]
-) {
-  return [...rows].sort((a, b) => {
-    const aTime = a.openedAtUtc?.getTime() ?? 0;
-    const bTime = b.openedAtUtc?.getTime() ?? 0;
-    return bTime - aTime;
-  });
-}
-
-function matchesSearchText(
-  row: ReferralRowModel,
-  normalizedFilterText: string
-) {
-  return (
-    normalizedFilterText === '' ||
-    row.title.toLowerCase().includes(normalizedFilterText) ||
-    (row.clientFamilyName?.toLowerCase().includes(normalizedFilterText) ??
-      false) ||
-    row.comments?.toLowerCase().includes(normalizedFilterText) === true
-  );
-}
-
-function matchesStatusFilter(
-  row: ReferralRowModel,
-  statusFilter: ReferralStatusFilter
-) {
-  return statusFilter === 'ALL' || row.status === statusFilter;
-}
-
-function matchesCountyFilter(
-  row: ReferralRowModel,
-  countyFilter: (string | null)[]
-) {
-  if (countyFilter.length === 0) return true;
-
-  return row.county === null
-    ? countyFilter.includes(null)
-    : countyFilter.includes(row.county);
-}
-
-function normalizedFilterTextValue(value: unknown) {
-  return String(value ?? '').trim().toLowerCase();
-}
-
-function assignmentDisplayValue(row: ReferralRowModel, assignmentRole: string) {
-  return row.assignmentNamesByRole[assignmentRole] || '-';
-}
-
-function matchesAssignmentGridFilter(
-  row: ReferralRowModel,
-  assignmentFilter: ReferralAssignmentGridFilter
-) {
-  const assignmentValue = assignmentDisplayValue(
-    row,
-    assignmentFilter.assignmentRole
-  );
-  const filterValue = normalizedFilterTextValue(assignmentFilter.value);
-  const normalizedAssignmentValue = assignmentValue.toLowerCase();
-
-  switch (assignmentFilter.operator) {
-    case 'contains':
-      return (
-        filterValue === '' ||
-        normalizedAssignmentValue.includes(filterValue)
-      );
-    case 'doesNotContain':
-      return (
-        filterValue === '' ||
-        !normalizedAssignmentValue.includes(filterValue)
-      );
-    case 'equals':
-      return (
-        filterValue === '' ||
-        normalizedAssignmentValue.localeCompare(filterValue, undefined, {
-          sensitivity: 'base',
-        }) === 0
-      );
-    case 'doesNotEqual':
-      return (
-        filterValue === '' ||
-        normalizedAssignmentValue.localeCompare(filterValue, undefined, {
-          sensitivity: 'base',
-        }) !== 0
-      );
-    case 'startsWith':
-      return (
-        filterValue === '' ||
-        normalizedAssignmentValue.startsWith(filterValue)
-      );
-    case 'endsWith':
-      return (
-        filterValue === '' ||
-        normalizedAssignmentValue.endsWith(filterValue)
-      );
-    case 'isEmpty':
-      return assignmentValue === '';
-    case 'isNotEmpty':
-      return assignmentValue !== '';
-    case 'isAnyOf':
-      return (
-        !Array.isArray(assignmentFilter.value) ||
-        assignmentFilter.value.length === 0 ||
-        assignmentFilter.value.some(
-          (value) =>
-            normalizedAssignmentValue.localeCompare(
-              normalizedFilterTextValue(value),
-              undefined,
-              { sensitivity: 'base' }
-            ) === 0
-        )
-      );
-    default:
-      return true;
+function typedCustomFieldValue(
+  value: unknown,
+  type: CustomFieldType
+): ReferralCustomFieldValue {
+  if (type === CustomFieldType.Boolean)
+    return typeof value === 'boolean' ? value : null;
+  if (type === CustomFieldType.StringArray) {
+    return Array.isArray(value)
+      ? value.filter((item): item is string => typeof item === 'string')
+      : null;
   }
+  return typeof value === 'string' ? value : null;
 }
 
-function isActiveAssignmentGridFilter(
-  assignmentFilter: ReferralAssignmentGridFilter
+function referralCustomFieldValues(
+  fields: CustomField[],
+  completed: V1Referral['completedCustomFields']
 ) {
-  switch (assignmentFilter.operator) {
-    case 'isEmpty':
-    case 'isNotEmpty':
-      return true;
-    case 'isAnyOf':
-      return (
-        Array.isArray(assignmentFilter.value) &&
-        assignmentFilter.value.length > 0
-      );
-    default:
-      return normalizedFilterTextValue(assignmentFilter.value) !== '';
-  }
-}
-
-function matchesAssignmentGridFilters(
-  row: ReferralRowModel,
-  assignmentFilters: ReferralAssignmentGridFilter[],
-  logicOperator: ReferralsGridFilterLogicOperator
-) {
-  const activeAssignmentFilters = assignmentFilters.filter(
-    isActiveAssignmentGridFilter
+  return Object.fromEntries(
+    fields.map((field) => [
+      field.name,
+      typedCustomFieldValue(completed?.[field.name]?.value, field.type),
+    ])
   );
-
-  if (activeAssignmentFilters.length === 0) return true;
-
-  return logicOperator === 'or'
-    ? activeAssignmentFilters.some((assignmentFilter) =>
-        matchesAssignmentGridFilter(row, assignmentFilter)
-      )
-    : activeAssignmentFilters.every((assignmentFilter) =>
-        matchesAssignmentGridFilter(row, assignmentFilter)
-      );
 }
 
-function familiesForReferrals(
-  referrals: V1Referral[],
-  familyLookup: ReturnType<typeof useFamilyLookup>
-) {
-  return referrals
-    .map((referral) =>
-      referral.familyId ? familyLookup(referral.familyId) : null
-    )
-    .filter((family): family is CombinedFamilyInfo => family != null);
-}
-
-export function useReferralsBrowserViewModel({
-  assignmentFilters,
-  assignmentFilterLogicOperator,
-  countyFilter,
-  filterText,
-  statusFilter,
-}: UseReferralsBrowserViewModelParameters) {
+export function useReferralsBrowserViewModel() {
   const referralRecords = useVisibleReferrals();
   const familyLookup = useFamilyLookup();
   const personAndFamilyLookup = usePersonAndFamilyLookup();
@@ -256,83 +105,108 @@ export function useReferralsBrowserViewModel({
       policy.v1ReferralPolicy?.functionAssignmentPolicies,
     ]
   );
-  const rows = useMemo(
+  const assignmentRoleOptions = useMemo<ReferralAssignmentRoleV2[]>(
     () =>
-      sortReferralsByNewestOpened(
-        referrals.map((referral) => {
-          const family = referral.familyId
-            ? familyLookup(referral.familyId)
-            : null;
-          const assignments = referral.assignedIndividualVolunteers ?? [];
+      assignmentRoles.map((role) => ({
+        role,
+        options: Array.from(
+          new Set(
+            assignmentFilterAssignments
+              .filter((assignment) => assignment.assignmentRole === role)
+              .map((assignment) => assignment.personId)
+          )
+        )
+          .map((value) => ({
+            value,
+            label: personNameString(personAndFamilyLookup(value).person),
+          }))
+          .sort(
+            (first, second) =>
+              first.label.localeCompare(second.label) ||
+              first.value.localeCompare(second.value)
+          ),
+      })),
+    [assignmentFilterAssignments, assignmentRoles, personAndFamilyLookup]
+  );
+  const customFields = useMemo(
+    () => policy.referralPolicy?.customFields ?? [],
+    [policy.referralPolicy?.customFields]
+  );
+  const rows = useMemo<ReferralBrowserRowV2[]>(
+    () =>
+      referrals.map((referral) => {
+        const family = referral.familyId
+          ? familyLookup(referral.familyId)
+          : null;
+        const assignments = referral.assignedIndividualVolunteers ?? [];
+        const clientFamilyName = family ? familyNameString(family) : null;
+        const comments = referral.comment ?? '';
 
-          return {
-            id: referral.referralId,
-            title: referral.title,
-            status: statusToUi(referral.status),
-            openedAtUtc: referral.createdAtUtc,
-            acceptedAtUtc: referral.acceptedAtUtc,
-            closedAtUtc: referral.closedAtUtc,
-            clientFamilyName: family ? familyNameString(family) : null,
-            county: family ? getFamilyCounty(family) : null,
-            comments: referral.comment ?? '',
-            assignmentNamesByRole: Object.fromEntries(
-              assignmentRoles.map((assignmentRole) => [
+        return {
+          referralCount: 1,
+          id: referral.referralId,
+          title: referral.title,
+          status: statusToUi(referral.status),
+          openedAtUtc: referral.createdAtUtc ?? null,
+          acceptedAtUtc: referral.acceptedAtUtc ?? null,
+          closedAtUtc: referral.closedAtUtc ?? null,
+          clientFamilyName,
+          county: family ? getFamilyCounty(family) : null,
+          comments,
+          searchableText: [referral.title, clientFamilyName, comments]
+            .filter(Boolean)
+            .join('\n'),
+          assignmentNamesByRole: Object.fromEntries(
+            assignmentRoles.map((assignmentRole) => [
+              assignmentRole,
+              assignmentNamesForRole(
+                assignments,
                 assignmentRole,
-                assignmentNamesForRole(
-                  assignments,
-                  assignmentRole,
-                  (personId) => personAndFamilyLookup(personId).person
-                ),
-              ])
-            ),
-          };
-        })
-      ),
+                (personId) => personAndFamilyLookup(personId).person
+              ),
+            ])
+          ),
+          assignmentPersonIdsByRole: Object.fromEntries(
+            assignmentRoles.map((assignmentRole) => [
+              assignmentRole,
+              assignments
+                .filter(
+                  (assignment) => assignment.assignmentRole === assignmentRole
+                )
+                .map((assignment) => assignment.personId),
+            ])
+          ),
+          customFieldValues: referralCustomFieldValues(
+            customFields,
+            referral.completedCustomFields
+          ),
+        };
+      }),
     [
       assignmentRoles,
       familyLookup,
       personAndFamilyLookup,
       referrals,
+      customFields,
     ]
   );
-  const normalizedFilterText = filterText.trim().toLowerCase();
-  const filteredRows = useMemo(
+  const counties = useMemo(
     () =>
-      rows.filter(
-        (row) =>
-          matchesSearchText(row, normalizedFilterText) &&
-          matchesStatusFilter(row, statusFilter) &&
-          matchesCountyFilter(row, countyFilter) &&
-          (!canViewFunctionAssignments ||
-            matchesAssignmentGridFilters(
-              row,
-              assignmentFilters,
-              assignmentFilterLogicOperator
-            ))
-      ),
-    [
-      assignmentFilterLogicOperator,
-      assignmentFilters,
-      canViewFunctionAssignments,
-      countyFilter,
-      normalizedFilterText,
-      rows,
-      statusFilter,
-    ]
+      Array.from(
+        new Set(
+          rows
+            .map((row) => row.county)
+            .filter((county): county is string => county !== null)
+        )
+      ).sort((first, second) => first.localeCompare(second)),
+    [rows]
   );
-  const familiesForCountyFilter = useMemo(
-    () => familiesForReferrals(referrals, familyLookup),
-    [familyLookup, referrals]
-  );
-  const tableColumnCount = 4 + assignmentRoles.length;
 
   return {
-    assignmentRoles,
+    assignmentRoles: assignmentRoleOptions,
     canViewFunctionAssignments,
-    familiesForCountyFilter,
-    filteredRows,
-    referrals,
-    tableColumnCount,
-    tableMinWidth: Math.max(700, tableColumnCount * 160),
+    counties,
+    customFields,
+    rows,
   };
 }
