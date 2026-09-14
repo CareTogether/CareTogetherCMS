@@ -126,10 +126,9 @@ export function VolunteersDataGridV2({
   );
 
   return (
-    <GridChartsIntegrationContextProvider>
+    <GridChartsIntegrationContextProvider key={gridConfigurationKey}>
       <Box sx={v2DataGridStyles(theme, { height: '100%' })}>
         <DataGridPremium
-          key={gridConfigurationKey}
           showToolbar
           chartsIntegration
           pivotActive={pivotActive}

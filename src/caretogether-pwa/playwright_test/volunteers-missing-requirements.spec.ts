@@ -1,56 +1,35 @@
 import { expect, test } from '@playwright/test';
-import { renderToStaticMarkup } from 'react-dom/server';
 import {
   completeRequirementFilterValue,
   missingRequirementFilterValue,
+  type VolunteerMissingRequirementGroup,
 } from '../src/Volunteers/VolunteerApprovalTab/volunteerMissingRequirementsPresentation';
-import { buildVolunteersGridColumns } from '../src/Volunteers/volunteersGridColumns';
-import type { VolunteerBrowserRowV2 } from '../src/Volunteers/useVolunteersBrowserViewModel';
+import {
+  buildVolunteersGridColumns,
+  formatMissingRequirements,
+  formatRequirementFilterValues,
+  requirementFilterLabel,
+  requirementFilterOptions,
+} from '../src/Volunteers/volunteersGridColumns';
 
-function row(
-  missingRequirementGroups: VolunteerBrowserRowV2['missingRequirementGroups']
-): VolunteerBrowserRowV2 {
-  const requirements = missingRequirementGroups.flatMap(
-    (group) => group.requirements
-  );
-
-  return {
-    arrangementAssignmentValues: {},
-    family: 'Brambleswift Family',
-    familyCustomFieldValues: {},
-    familyLastName: 'Brambleswift',
-    id: 'family-1',
-    missingRequirementGroups,
-    primaryContact: 'Berrin Brambleswift',
-    requirementFilterValues: requirements.length
-      ? [missingRequirementFilterValue, ...requirements]
-      : [completeRequirementFilterValue],
-    roleFilterValues: [],
-    roles: {} as VolunteerBrowserRowV2['roles'],
-    searchableText: 'Berrin Brambleswift Family',
-    sourceFamily: {} as VolunteerBrowserRowV2['sourceFamily'],
-    statusFilterValues: [],
-    statusLabels: [],
-    volunteerFamilyCount: 1,
-    volunteerCustomFieldValues: {},
-  };
-}
-
-function missingRequirementsColumn(rows: VolunteerBrowserRowV2[]) {
+function missingRequirementsColumn() {
   const column = buildVolunteersGridColumns({
     arrangementTypes: [],
     familyCustomFields: [],
     roleNames: [],
-    rows,
+    rows: [],
     volunteerCustomFields: [],
   }).find((item) => item.field === 'missingRequirements');
 
-  if (!column) throw new Error('Missing Requirements column was not found.');
+  if (!column || column.type !== 'multiSelect') {
+    throw new Error('Missing Requirements column was not found.');
+  }
+
   return column;
 }
 
 test('Missing Requirements preserves subject groups and hides filter sentinels', () => {
-  const incompleteRow = row([
+  const incompleteGroups: VolunteerMissingRequirementGroup[] = [
     {
       label: 'Family',
       requirements: ['Meet & Greet'],
@@ -63,54 +42,43 @@ test('Missing Requirements preserves subject groups and hides filter sentinels',
       label: 'Elda Brambleswift',
       requirements: ['Comprehensive Background Check'],
     },
-  ]);
-  const completeRow = row([]);
-  const column = missingRequirementsColumn([incompleteRow, completeRow]);
-  const formatter = column.valueFormatter!;
-  const renderCell = column.renderCell!;
+  ];
+  const completeGroups: VolunteerMissingRequirementGroup[] = [];
+  const column = missingRequirementsColumn();
 
-  expect(
-    formatter(incompleteRow.requirementFilterValues, incompleteRow, column)
-  ).toBe(
+  expect(formatMissingRequirements(incompleteGroups)).toBe(
     'Family: Meet & Greet; Berrin Brambleswift: Comprehensive Background Check, Reference; Elda Brambleswift: Comprehensive Background Check'
   );
-  expect(
-    formatter(completeRow.requirementFilterValues, completeRow, column)
-  ).toBe('Complete');
-  expect(
-    formatter(
-      [missingRequirementFilterValue],
-      {} as VolunteerBrowserRowV2,
-      column
-    )
-  ).toBe('Missing');
-  expect(
-    formatter(
-      [completeRequirementFilterValue],
-      {} as VolunteerBrowserRowV2,
-      column
-    )
-  ).toBe('Complete');
-  expect(column.valueOptions).toContainEqual({
-    label: 'Missing',
-    value: missingRequirementFilterValue,
-  });
-  expect(column.valueOptions).toContainEqual({
-    label: 'Complete',
-    value: completeRequirementFilterValue,
-  });
-
-  const rendered = renderToStaticMarkup(
-    renderCell({
-      row: incompleteRow,
-      value: incompleteRow.requirementFilterValues,
-    } as never)
+  expect(formatMissingRequirements(completeGroups)).toBe('Complete');
+  expect(formatRequirementFilterValues([missingRequirementFilterValue])).toBe(
+    'Missing'
   );
-
-  expect(rendered).toContain('Family');
-  expect(rendered).toContain('Meet &amp; Greet');
-  expect(rendered).toContain('Berrin Brambleswift');
-  expect(rendered).toContain('Elda Brambleswift');
-  expect(rendered).not.toContain(missingRequirementFilterValue);
-  expect(rendered).not.toContain(completeRequirementFilterValue);
+  expect(formatRequirementFilterValues([completeRequirementFilterValue])).toBe(
+    'Complete'
+  );
+  expect(requirementFilterLabel(missingRequirementFilterValue)).toBe('Missing');
+  expect(requirementFilterLabel(completeRequirementFilterValue)).toBe(
+    'Complete'
+  );
+  expect(
+    requirementFilterOptions([
+      missingRequirementFilterValue,
+      completeRequirementFilterValue,
+      'Meet & Greet',
+    ])
+  ).toEqual([
+    { label: 'Missing', value: missingRequirementFilterValue },
+    { label: 'Complete', value: completeRequirementFilterValue },
+    { label: 'Meet & Greet', value: 'Meet & Greet' },
+  ]);
+  expect(formatMissingRequirements(incompleteGroups)).not.toContain(
+    missingRequirementFilterValue
+  );
+  expect(formatMissingRequirements(incompleteGroups)).not.toContain(
+    completeRequirementFilterValue
+  );
+  expect(column.aggregable).toBe(false);
+  expect(column.pivotable).toBe(false);
+  expect(column.chartable).toBe(false);
+  expect(column.filterOperators).not.toHaveLength(0);
 });
