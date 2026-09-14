@@ -39,6 +39,7 @@ export function ApprovalHeaderActions({
 
   if (
     occurrence.status === 'missing' ||
+    occurrence.status === 'optional' ||
     occurrence.status === 'availableApplication'
   ) {
     return (

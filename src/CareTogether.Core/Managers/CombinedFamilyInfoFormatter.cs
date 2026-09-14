@@ -454,6 +454,7 @@ namespace CareTogether.Managers
                 approvalCalculation.ExemptedFamilyRequirements,
                 combinedFamilyApprovals.CurrentAvailableFamilyApplications,
                 combinedFamilyApprovals.CurrentMissingFamilyRequirements,
+                combinedFamilyApprovals.CurrentMissingOptionalFamilyRequirements,
                 entry.RoleRemovals,
                 combinedFamilyApprovals.IndividualApprovals.ToImmutableDictionary(
                     x => x.Key,
@@ -482,6 +483,12 @@ namespace CareTogether.Managers
                                 .ToImmutableList(),
                             combinedFamilyApprovals
                                 .CurrentMissingIndividualRequirements.Where(y =>
+                                    y.PersonId == x.Key
+                                )
+                                .Select(y => (y.ActionName, y.Versions))
+                                .ToImmutableList(),
+                            combinedFamilyApprovals
+                                .CurrentMissingOptionalIndividualRequirements.Where(y =>
                                     y.PersonId == x.Key
                                 )
                                 .Select(y => (y.ActionName, y.Versions))

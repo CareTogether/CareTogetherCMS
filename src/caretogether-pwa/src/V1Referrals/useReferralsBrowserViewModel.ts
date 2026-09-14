@@ -1,13 +1,13 @@
 import { useMemo } from 'react';
 import { useFeatureFlagEnabled } from 'posthog-js/react';
 import {
+  AssignmentFilterSelectionsByRole,
   assignmentNamesForRole,
   assignmentRolesForColumns,
 } from '../FunctionAssignments/assignmentRoleColumns';
 import {
   CustomFieldType,
   Permission,
-  V1ReferralStatus,
   type CustomField,
   type V1Referral,
 } from '../GeneratedClient';
@@ -20,24 +20,39 @@ import { useVisibleReferrals } from '../Model/Data';
 import { useGlobalPermissions } from '../Model/SessionModel';
 import { FUNCTION_ASSIGNMENTS_FEATURE_FLAG } from '../featureFlags';
 import { familyNameString } from '../Families/FamilyName';
-import { getFamilyCounty } from '../Utilities/getFamilyCounty';
 import { personNameString } from '../Families/PersonName';
+import { getFamilyCounty } from '../Utilities/getFamilyCounty';
+import type {
+  ReferralAssignmentGridFilter,
+  ReferralsGridFilterLogicOperator,
+} from './referralsGridFilterAdapter';
+import type { ReferralStatusFilter } from './referralStatusFilter';
 import type {
   ReferralAssignmentRoleV2,
   ReferralBrowserRowV2,
   ReferralCustomFieldValue,
 } from './referralBrowserTypes';
+import {
+  buildLegacyReferralRows,
+  buildReferralRows,
+  familiesForReferrals,
+  filterReferralRows,
+  matchesReferralAssignmentGridFilters,
+  referralAssignmentFilterAssignments,
+  referralStatusToUi,
+} from './referralBrowserModel';
 
-function statusToUi(status: V1ReferralStatus): 'OPEN' | 'ACCEPTED' | 'CLOSED' {
-  switch (status) {
-    case V1ReferralStatus.Open:
-      return 'OPEN';
-    case V1ReferralStatus.Accepted:
-      return 'ACCEPTED';
-    case V1ReferralStatus.Closed:
-      return 'CLOSED';
-  }
-}
+type UseReferralsBrowserViewModelParameters = {
+  assignmentFilters?: ReferralAssignmentGridFilter[];
+  assignmentFilterLogicOperator?: ReferralsGridFilterLogicOperator;
+  countyFilter?: (string | null)[];
+  filterText?: string;
+  legacyAssignmentFilters?: AssignmentFilterSelectionsByRole;
+  statusFilter?: ReferralStatusFilter;
+};
+
+const emptyAssignmentFilters: ReferralAssignmentGridFilter[] = [];
+const emptyCountyFilter: (string | null)[] = [];
 
 function typedCustomFieldValue(
   value: unknown,
@@ -65,7 +80,22 @@ function referralCustomFieldValues(
   );
 }
 
-export function useReferralsBrowserViewModel() {
+function sortPremiumReferralRowsByNewestOpened(rows: ReferralBrowserRowV2[]) {
+  return [...rows].sort((a, b) => {
+    const aTime = a.openedAtUtc?.getTime() ?? 0;
+    const bTime = b.openedAtUtc?.getTime() ?? 0;
+    return bTime - aTime;
+  });
+}
+
+export function useReferralsBrowserViewModel({
+  assignmentFilters = emptyAssignmentFilters,
+  assignmentFilterLogicOperator = 'and',
+  countyFilter = emptyCountyFilter,
+  filterText = '',
+  legacyAssignmentFilters,
+  statusFilter = 'ALL',
+}: UseReferralsBrowserViewModelParameters = {}) {
   const referralRecords = useVisibleReferrals();
   const familyLookup = useFamilyLookup();
   const personAndFamilyLookup = usePersonAndFamilyLookup();
@@ -83,10 +113,7 @@ export function useReferralsBrowserViewModel() {
     functionAssignmentsEnabled === true &&
     permissions(Permission.ViewV1ReferralFunctionAssignments);
   const assignmentFilterAssignments = useMemo(
-    () =>
-      referrals.flatMap(
-        (referral) => referral.assignedIndividualVolunteers ?? []
-      ),
+    () => referralAssignmentFilterAssignments(referrals),
     [referrals]
   );
   const assignmentRoles = useMemo(
@@ -134,60 +161,62 @@ export function useReferralsBrowserViewModel() {
   );
   const rows = useMemo<ReferralBrowserRowV2[]>(
     () =>
-      referrals.map((referral) => {
-        const family = referral.familyId
-          ? familyLookup(referral.familyId)
-          : null;
-        const assignments = referral.assignedIndividualVolunteers ?? [];
-        const clientFamilyName = family ? familyNameString(family) : null;
-        const comments = referral.comment ?? '';
+      sortPremiumReferralRowsByNewestOpened(
+        referrals.map((referral) => {
+          const family = referral.familyId
+            ? familyLookup(referral.familyId)
+            : null;
+          const assignments = referral.assignedIndividualVolunteers ?? [];
+          const clientFamilyName = family ? familyNameString(family) : null;
+          const comments = referral.comment ?? '';
 
-        return {
-          referralCount: 1,
-          id: referral.referralId,
-          title: referral.title,
-          status: statusToUi(referral.status),
-          openedAtUtc: referral.createdAtUtc ?? null,
-          acceptedAtUtc: referral.acceptedAtUtc ?? null,
-          closedAtUtc: referral.closedAtUtc ?? null,
-          clientFamilyName,
-          county: family ? getFamilyCounty(family) : null,
-          comments,
-          searchableText: [referral.title, clientFamilyName, comments]
-            .filter(Boolean)
-            .join('\n'),
-          assignmentNamesByRole: Object.fromEntries(
-            assignmentRoles.map((assignmentRole) => [
-              assignmentRole,
-              assignmentNamesForRole(
-                assignments,
+          return {
+            referralCount: 1,
+            id: referral.referralId,
+            title: referral.title,
+            status: referralStatusToUi(referral.status),
+            openedAtUtc: referral.createdAtUtc ?? null,
+            acceptedAtUtc: referral.acceptedAtUtc ?? null,
+            closedAtUtc: referral.closedAtUtc ?? null,
+            clientFamilyName,
+            county: family ? getFamilyCounty(family) : null,
+            comments,
+            searchableText: [referral.title, clientFamilyName, comments]
+              .filter(Boolean)
+              .join('\n'),
+            assignmentNamesByRole: Object.fromEntries(
+              assignmentRoles.map((assignmentRole) => [
                 assignmentRole,
-                (personId) => personAndFamilyLookup(personId).person
-              ),
-            ])
-          ),
-          assignmentPersonIdsByRole: Object.fromEntries(
-            assignmentRoles.map((assignmentRole) => [
-              assignmentRole,
-              assignments
-                .filter(
-                  (assignment) => assignment.assignmentRole === assignmentRole
-                )
-                .map((assignment) => assignment.personId),
-            ])
-          ),
-          customFieldValues: referralCustomFieldValues(
-            customFields,
-            referral.completedCustomFields
-          ),
-        };
-      }),
+                assignmentNamesForRole(
+                  assignments,
+                  assignmentRole,
+                  (personId) => personAndFamilyLookup(personId).person
+                ),
+              ])
+            ),
+            assignmentPersonIdsByRole: Object.fromEntries(
+              assignmentRoles.map((assignmentRole) => [
+                assignmentRole,
+                assignments
+                  .filter(
+                    (assignment) => assignment.assignmentRole === assignmentRole
+                  )
+                  .map((assignment) => assignment.personId),
+              ])
+            ),
+            customFieldValues: referralCustomFieldValues(
+              customFields,
+              referral.completedCustomFields
+            ),
+          };
+        })
+      ),
     [
       assignmentRoles,
+      customFields,
       familyLookup,
       personAndFamilyLookup,
       referrals,
-      customFields,
     ]
   );
   const counties = useMemo(
@@ -201,12 +230,84 @@ export function useReferralsBrowserViewModel() {
       ).sort((first, second) => first.localeCompare(second)),
     [rows]
   );
+  const legacyRows = useMemo(
+    () => {
+      if (legacyAssignmentFilters) {
+        return buildLegacyReferralRows({
+          assignmentFilters: legacyAssignmentFilters,
+          assignmentRoles,
+          canViewFunctionAssignments,
+          familyLookup,
+          personAndFamilyLookup,
+          referrals,
+        });
+      }
+
+      return buildReferralRows({
+        assignmentRoles,
+        familyLookup,
+        personAndFamilyLookup,
+        referrals,
+      });
+    },
+    [
+      assignmentRoles,
+      canViewFunctionAssignments,
+      familyLookup,
+      legacyAssignmentFilters,
+      personAndFamilyLookup,
+      referrals,
+    ]
+  );
+  const normalizedFilterText = filterText.trim().toLowerCase();
+  const filteredRows = useMemo(
+    () =>
+      filterReferralRows(legacyRows, {
+        countyFilter,
+        normalizedFilterText,
+        statusFilter,
+      }).filter(
+        (row) =>
+          ('matchesAssignmentFilters' in row
+            ? row.matchesAssignmentFilters
+            : true) &&
+          (!canViewFunctionAssignments ||
+            matchesReferralAssignmentGridFilters(
+              row,
+              assignmentFilters,
+              assignmentFilterLogicOperator
+            ))
+      ),
+    [
+      assignmentFilterLogicOperator,
+      assignmentFilters,
+      canViewFunctionAssignments,
+      countyFilter,
+      legacyRows,
+      normalizedFilterText,
+      statusFilter,
+    ]
+  );
+  const familiesForCountyFilter = useMemo(
+    () => familiesForReferrals(referrals, familyLookup),
+    [familyLookup, referrals]
+  );
+  const tableColumnCount = 4 + assignmentRoles.length;
 
   return {
-    assignmentRoles: assignmentRoleOptions,
+    assignmentFilterAssignments,
+    assignmentPersonLookup: (personId: string) =>
+      personAndFamilyLookup(personId).person,
+    assignmentRoleOptions,
+    assignmentRoles,
     canViewFunctionAssignments,
     counties,
     customFields,
+    familiesForCountyFilter,
+    filteredRows,
+    referrals,
     rows,
+    tableColumnCount,
+    tableMinWidth: Math.max(700, tableColumnCount * 160),
   };
 }

@@ -85,6 +85,60 @@ namespace CareTogether.Engines.PolicyEvaluation
                     .ToImmutableList();
         }
 
+        internal static ImmutableList<IndividualRoleVersionApprovalStatus> SelectVersionsWithOptionalRequirements(
+            ImmutableList<IndividualRoleVersionApprovalStatus> versions
+        )
+        {
+            var activeVersions = versions.Where(IsActive).ToImmutableList();
+            var maxActiveStatus = GetMaxRoleStatus(activeVersions);
+
+            return maxActiveStatus == null
+                ? activeVersions
+                : activeVersions
+                    .Where(version => version.CurrentStatus == maxActiveStatus)
+                    .ToImmutableList();
+        }
+
+        internal static ImmutableList<FamilyRoleVersionApprovalStatus> SelectVersionsWithOptionalRequirements(
+            ImmutableList<FamilyRoleVersionApprovalStatus> versions
+        )
+        {
+            var activeVersions = versions.Where(IsActive).ToImmutableList();
+            var maxActiveStatus = GetMaxRoleStatus(activeVersions);
+
+            return maxActiveStatus == null
+                ? activeVersions
+                : activeVersions
+                    .Where(version => version.CurrentStatus == maxActiveStatus)
+                    .ToImmutableList();
+        }
+
+        internal static bool IsOptionalRequirementVisible(
+            RequirementStage stage,
+            RoleApprovalStatus? currentStatus
+        ) =>
+            stage switch
+            {
+                // Optional requirements cannot hold a role at their stage, so keep them
+                // actionable after the role advances beyond that stage.
+                RequirementStage.Application => currentStatus
+                    is null
+                        or RoleApprovalStatus.Prospective
+                        or RoleApprovalStatus.Approved
+                        or RoleApprovalStatus.Onboarded
+                        or RoleApprovalStatus.Expired,
+                RequirementStage.Approval => currentStatus
+                    is RoleApprovalStatus.Prospective
+                        or RoleApprovalStatus.Approved
+                        or RoleApprovalStatus.Onboarded
+                        or RoleApprovalStatus.Expired,
+                RequirementStage.Onboarding => currentStatus
+                    is RoleApprovalStatus.Approved
+                        or RoleApprovalStatus.Onboarded
+                        or RoleApprovalStatus.Expired,
+                _ => false,
+            };
+
         internal static ImmutableList<OrganizationRoleVersionApprovalStatus> SelectPromptableVersions(
             ImmutableList<OrganizationRoleVersionApprovalStatus> versions,
             RoleApprovalStatus? effectiveStatus

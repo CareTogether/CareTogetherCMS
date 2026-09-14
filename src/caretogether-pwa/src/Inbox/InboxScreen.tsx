@@ -30,7 +30,19 @@ function getMessageProps(
     case 'ChildOver18':
       return {
         icon: <EmojiPeople color="error" />,
-        onClick: () => appNavigate.family(item.family.family!.id!),
+        onClick: () => {
+          const familyId = item.family.family?.id;
+          const familyMemberId = item.child.id;
+
+          if (familyId && familyMemberId) {
+            appNavigate.family(familyId, { familyMemberId });
+            return;
+          }
+
+          if (familyId) {
+            appNavigate.family(familyId);
+          }
+        },
         primaryContent: (
           <>
             <Typography
@@ -69,7 +81,7 @@ function getMessageProps(
           const arrangementId = item.arrangementId;
 
           if (familyId && v1CaseId && arrangementId) {
-            appNavigate.family(familyId, v1CaseId, arrangementId);
+            appNavigate.family(familyId, { v1CaseId, arrangementId });
           }
         },
         primaryContent: (

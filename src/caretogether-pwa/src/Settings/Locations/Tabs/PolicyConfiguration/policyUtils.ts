@@ -19,7 +19,6 @@ import {
   OrganizationRolePolicyVersion,
   Person,
   RequirementDefinition,
-  RequirementStage,
   V1CasePolicy,
   V1ReferralPolicy,
   VolunteerApprovalRequirement,
@@ -41,6 +40,7 @@ import type {
   MonitoringRequirementDraft,
   RequirementDraft,
   ValidityUnit,
+  VolunteerRequirementDraft,
   VolunteerRolePolicyVersionDraft,
 } from './types';
 
@@ -355,27 +355,22 @@ export function volunteerRolePolicyVersionToDraft(
     | VolunteerFamilyRolePolicyVersion
     | OrganizationRolePolicyVersion
     | undefined,
-  family: boolean
+  family: boolean,
+  organization = false
 ): VolunteerRolePolicyVersionDraft {
   const requirements = family
-    ? (
+    ? volunteerFamilyRequirementsToDraft(
         (version as VolunteerFamilyRolePolicyVersion | undefined)
           ?.requirements ?? []
       )
-        .map(
-          (requirement) =>
-            `${enumName(RequirementStage, requirement.stage)}|${requirement.actionName}|${enumName(
-              VolunteerFamilyRequirementScope,
-              requirement.scope
-            )}`
+    : organization
+      ? organizationRequirementsToDraft(
+          (version as OrganizationRolePolicyVersion | undefined)
+            ?.requirements ?? []
         )
-        .join('\n')
-    : ((version as VolunteerRolePolicyVersion | undefined)?.requirements ?? [])
-        .map(
-          (requirement) =>
-            `${enumName(RequirementStage, requirement.stage)}|${requirement.actionName}`
-        )
-        .join('\n');
+    : volunteerRequirementsToDraft(
+        (version as VolunteerRolePolicyVersion | undefined)?.requirements ?? []
+      );
 
   return {
     roleName: roleName ?? '',
@@ -386,6 +381,94 @@ export function volunteerRolePolicyVersionToDraft(
       : '',
     requirements,
   };
+}
+
+export function volunteerRequirementToDraft(
+  requirement: VolunteerApprovalRequirement
+): VolunteerRequirementDraft {
+  return {
+    stage: requirement.stage,
+    actionName: requirement.actionName ?? '',
+    isRequired: requirement.isRequired ?? true,
+  };
+}
+
+export function volunteerFamilyRequirementToDraft(
+  requirement: VolunteerFamilyApprovalRequirement
+): VolunteerRequirementDraft {
+  return {
+    ...volunteerRequirementToDraft(requirement),
+    scope: requirement.scope,
+  };
+}
+
+export function volunteerRequirementsToDraft(
+  requirements: VolunteerApprovalRequirement[]
+): VolunteerRequirementDraft[] {
+  return requirements.map(volunteerRequirementToDraft);
+}
+
+export function volunteerFamilyRequirementsToDraft(
+  requirements: VolunteerFamilyApprovalRequirement[]
+): VolunteerRequirementDraft[] {
+  return requirements.map(volunteerFamilyRequirementToDraft);
+}
+
+export function organizationRequirementsToDraft(
+  requirements: OrganizationApprovalRequirement[]
+): VolunteerRequirementDraft[] {
+  return requirements.map((requirement) => ({
+    stage: requirement.stage,
+    actionName: requirement.actionName ?? '',
+    isRequired: true,
+  }));
+}
+
+export function volunteerRequirementDraftToRequirement(
+  draft: VolunteerRequirementDraft
+) {
+  if (draft.stage === '' || draft.actionName.trim().length === 0) {
+    return undefined;
+  }
+
+  return new VolunteerApprovalRequirement({
+    stage: draft.stage,
+    actionName: draft.actionName.trim(),
+    isRequired: draft.isRequired,
+  });
+}
+
+export function volunteerFamilyRequirementDraftToRequirement(
+  draft: VolunteerRequirementDraft
+) {
+  if (
+    draft.stage === '' ||
+    draft.actionName.trim().length === 0 ||
+    typeof draft.scope === 'undefined' ||
+    draft.scope === ''
+  ) {
+    return undefined;
+  }
+
+  return new VolunteerFamilyApprovalRequirement({
+    stage: draft.stage,
+    actionName: draft.actionName.trim(),
+    scope: draft.scope,
+    isRequired: draft.isRequired,
+  });
+}
+
+export function organizationRequirementDraftToRequirement(
+  draft: VolunteerRequirementDraft
+) {
+  if (draft.stage === '' || draft.actionName.trim().length === 0) {
+    return undefined;
+  }
+
+  return new OrganizationApprovalRequirement({
+    stage: draft.stage,
+    actionName: draft.actionName.trim(),
+  });
 }
 
 export function clonePolicyWithActionDefinition(
@@ -507,82 +590,6 @@ export function nextCopyName(baseName: string, existingNames: string[]) {
   }
 
   return `${copyName} ${copyNumber}`;
-}
-
-export function parseRequirementStage(value: string): RequirementStage {
-  if (value in RequirementStage) {
-    return RequirementStage[
-      value as keyof typeof RequirementStage
-    ] as RequirementStage;
-  }
-
-  const numericValue = Number(value);
-  return Number.isFinite(numericValue)
-    ? (numericValue as RequirementStage)
-    : RequirementStage.Application;
-}
-
-export function parseVolunteerFamilyRequirementScope(
-  value: string
-): VolunteerFamilyRequirementScope {
-  if (value in VolunteerFamilyRequirementScope) {
-    return VolunteerFamilyRequirementScope[
-      value as keyof typeof VolunteerFamilyRequirementScope
-    ] as VolunteerFamilyRequirementScope;
-  }
-
-  const numericValue = Number(value);
-  return Number.isFinite(numericValue)
-    ? (numericValue as VolunteerFamilyRequirementScope)
-    : VolunteerFamilyRequirementScope.OncePerFamily;
-}
-
-export function parseVolunteerRequirements(value: string) {
-  return value
-    .split('\n')
-    .map((line) => line.trim())
-    .filter(Boolean)
-    .map((line) => {
-      const [stage, actionName] = line.split('|').map((part) => part.trim());
-      return new VolunteerApprovalRequirement({
-        stage: parseRequirementStage(stage),
-        actionName,
-      });
-    })
-    .filter((requirement) => Boolean(requirement.actionName));
-}
-
-export function parseOrganizationRequirements(value: string) {
-  return value
-    .split('\n')
-    .map((line) => line.trim())
-    .filter(Boolean)
-    .map((line) => {
-      const [stage, actionName] = line.split('|').map((part) => part.trim());
-      return new OrganizationApprovalRequirement({
-        stage: parseRequirementStage(stage),
-        actionName,
-      });
-    })
-    .filter((requirement) => Boolean(requirement.actionName));
-}
-
-export function parseVolunteerFamilyRequirements(value: string) {
-  return value
-    .split('\n')
-    .map((line) => line.trim())
-    .filter(Boolean)
-    .map((line) => {
-      const [stage, actionName, scope] = line
-        .split('|')
-        .map((part) => part.trim());
-      return new VolunteerFamilyApprovalRequirement({
-        stage: parseRequirementStage(stage),
-        actionName,
-        scope: parseVolunteerFamilyRequirementScope(scope),
-      });
-    })
-    .filter((requirement) => Boolean(requirement.actionName));
 }
 
 export function upsertVolunteerRolePolicyVersion(

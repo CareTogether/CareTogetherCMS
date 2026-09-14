@@ -11,6 +11,7 @@ import type { RequirementContext } from '../Requirements/RequirementContext';
 
 export type ApprovalLedgerStatus =
   | 'missing'
+  | 'optional'
   | 'completed'
   | 'exempted'
   | 'expiring'
@@ -25,6 +26,7 @@ export type ApprovalLedgerSubject = {
 
 export type ApprovalLedgerOccurrenceStatus =
   | 'missing'
+  | 'optional'
   | 'completed'
   | 'exempted'
   | 'availableApplication';
@@ -65,6 +67,7 @@ type ApprovalRequirementSource = {
   completedRequirements?: CompletedRequirementInfo[];
   exemptedRequirements?: ExemptedRequirementInfo[];
   missingRequirements?: ValueTupleOfStringAndValueTuple_2Of[];
+  missingOptionalRequirements?: ValueTupleOfStringAndValueTuple_2Of[];
   availableApplications?: string[];
 };
 
@@ -90,6 +93,7 @@ const EXPIRING_APPROVAL_DAYS = 30;
 export const APPROVAL_LEDGER_STATUS_PRIORITY: ApprovalLedgerStatus[] = [
   'expired',
   'missing',
+  'optional',
   'expiring',
   'availableApplication',
   'exempted',
@@ -406,18 +410,20 @@ function addExemptedRows({
   });
 }
 
-function addMissingRows({
+function addIncompleteRows({
   rowsByKey,
   subject,
   context,
   requirements,
   appliedRoleNames,
+  status,
 }: {
   rowsByKey: Map<string, ApprovalLedgerRow>;
   subject: ApprovalLedgerSubject;
   context: RequirementContext;
   requirements: ValueTupleOfStringAndValueTuple_2Of[];
   appliedRoleNames: Set<string>;
+  status: 'missing' | 'optional';
 }) {
   requirements.forEach((requirement, index) => {
     if (!requirement.item1) {
@@ -433,7 +439,7 @@ function addMissingRows({
     }
 
     addRow(rowsByKey, {
-      status: 'missing',
+      status,
       requirementName: requirement.item1,
       appliesTo: [subject],
       neededForRoles,
@@ -446,8 +452,8 @@ function addMissingRows({
       notes: [],
       occurrences: [
         {
-          id: occurrenceId(subject, 'missing', requirement.item1, index),
-          status: 'missing',
+          id: occurrenceId(subject, status, requirement.item1, index),
+          status,
           subject,
           context,
           requirement: requirement.item1,
@@ -541,12 +547,21 @@ function addSourceRows({
   source: ApprovalLedgerFamilySource | ApprovalLedgerIndividualSource;
   appliedRoleNames: Set<string>;
 }) {
-  addMissingRows({
+  addIncompleteRows({
     rowsByKey,
     subject,
     context: source.context,
     requirements: source.missingRequirements ?? [],
     appliedRoleNames,
+    status: 'missing',
+  });
+  addIncompleteRows({
+    rowsByKey,
+    subject,
+    context: source.context,
+    requirements: source.missingOptionalRequirements ?? [],
+    appliedRoleNames,
+    status: 'optional',
   });
   addCompletedRows({
     rowsByKey,

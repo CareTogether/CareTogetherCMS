@@ -58,6 +58,7 @@ export type RoleSummaryCard = RoleSummaryRequirementCounts & {
   roleRemoval?: RoleRemoval;
   context: RequirementContext;
   requirements: RoleSummaryRequirement[];
+  memberRequirements?: RoleSummaryRequirement[];
 };
 
 export type RemovedRoleSummary = {
@@ -73,6 +74,7 @@ type ApprovalRequirementSource = {
   completedRequirements?: CompletedRequirementInfo[];
   exemptedRequirements?: ExemptedRequirementInfo[];
   missingRequirements?: ValueTupleOfStringAndValueTuple_2Of[];
+  missingOptionalRequirements?: ValueTupleOfStringAndValueTuple_2Of[];
   availableApplications?: string[];
 };
 
@@ -277,6 +279,7 @@ function subjectMatches(
 function requirementStatusPriority(status: ApprovalLedgerStatus) {
   const priority: ApprovalLedgerStatus[] = [
     'missing',
+    'optional',
     'expired',
     'expiring',
     'completed',
@@ -467,6 +470,17 @@ export function buildRoleSummaryCards(input: BuildRoleSummaryCardsInput) {
       roleApproval.currentAvailableFamilyApplications,
     approvalLedgerRows: input.approvalLedgerRows,
   });
+  const familyCardsWithMembers = familyCards.map((card) => ({
+    ...card,
+    memberRequirements: (input.individuals ?? []).flatMap((individual) =>
+      roleSummaryRequirements({
+        approvalLedgerRows: input.approvalLedgerRows,
+        roleAvailableApplications: [],
+        roleName: card.roleName,
+        subject: individual.subject,
+      })
+    ),
+  }));
   const individualCards =
     input.individuals?.flatMap((individual) =>
       buildCardsForSubject({
@@ -480,7 +494,7 @@ export function buildRoleSummaryCards(input: BuildRoleSummaryCardsInput) {
       })
     ) ?? [];
 
-  return [...familyCards, ...individualCards].sort((a, b) => {
+  return [...familyCardsWithMembers, ...individualCards].sort((a, b) => {
     const subjectOrder = a.subject.label.localeCompare(b.subject.label);
 
     if (subjectOrder !== 0) {

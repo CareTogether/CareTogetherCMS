@@ -30,6 +30,16 @@ namespace CareTogether.Engines.PolicyEvaluation
                 .Select(g => (g.Key, g.SelectMany(x => x.Versions).ToArray()))
                 .ToImmutableList();
 
+        public ImmutableList<(
+            string ActionName,
+            (string Version, string RoleName)[] Versions
+        )> CurrentMissingOptionalFamilyRequirements =>
+            FamilyRoleApprovals
+                .SelectMany(r => r.Value.CurrentMissingOptionalFamilyRequirements)
+                .GroupBy(r => r.ActionName)
+                .Select(g => (g.Key, g.SelectMany(x => x.Versions).ToArray()))
+                .ToImmutableList();
+
         public ImmutableList<string> CurrentAvailableFamilyApplications =>
             FamilyRoleApprovals
                 .SelectMany(r => r.Value.CurrentAvailableFamilyApplications)
@@ -42,10 +52,32 @@ namespace CareTogether.Engines.PolicyEvaluation
             (string Version, string RoleName)[] Versions
         )> CurrentMissingIndividualRequirements =>
             FamilyRoleApprovals
-                .SelectMany(fra => GetMissingRequirementsFromFamilyRole(fra.Value))
+                .SelectMany(fra => GetMissingRequirementsFromFamilyRole(fra.Value, optional: false))
                 .Concat(
                     IndividualApprovals.SelectMany(ia =>
-                        GetMissingRequirementsFromIndividual(ia.Key, ia.Value)
+                        GetMissingRequirementsFromIndividual(ia.Key, ia.Value, optional: false)
+                    )
+                )
+                .GroupBy(r => (r.PersonId, r.ActionName))
+                .Select(g =>
+                    (
+                        PersonId: g.Key.PersonId,
+                        ActionName: g.Key.ActionName,
+                        Versions: g.Select(x => x.Version).ToArray()
+                    )
+                )
+                .ToImmutableList();
+
+        public ImmutableList<(
+            Guid PersonId,
+            string ActionName,
+            (string Version, string RoleName)[] Versions
+        )> CurrentMissingOptionalIndividualRequirements =>
+            FamilyRoleApprovals
+                .SelectMany(fra => GetMissingRequirementsFromFamilyRole(fra.Value, optional: true))
+                .Concat(
+                    IndividualApprovals.SelectMany(ia =>
+                        GetMissingRequirementsFromIndividual(ia.Key, ia.Value, optional: true)
                     )
                 )
                 .GroupBy(r => (r.PersonId, r.ActionName))
@@ -63,19 +95,27 @@ namespace CareTogether.Engines.PolicyEvaluation
             string ActionName,
             (string Version, string RoleName) Version
         )> GetMissingRequirementsFromFamilyRole(
-            FamilyRoleApprovalStatus familyRoleStatus
+            FamilyRoleApprovalStatus familyRoleStatus,
+            bool optional
         )
         {
             // Older policy versions can prove the role is already approved/onboarded.
             // Only active policy versions can ask for missing requirements.
-            var promptableVersions = PolicyEvaluationHelpers.SelectPromptableVersions(
-                familyRoleStatus.RoleVersionApprovals,
-                familyRoleStatus.CurrentStatus
-            );
+            var promptableVersions = optional
+                ? PolicyEvaluationHelpers.SelectVersionsWithOptionalRequirements(
+                    familyRoleStatus.RoleVersionApprovals
+                )
+                : PolicyEvaluationHelpers.SelectPromptableVersions(
+                    familyRoleStatus.RoleVersionApprovals,
+                    familyRoleStatus.CurrentStatus
+                );
 
             return promptableVersions
                 .SelectMany(r =>
-                    r.CurrentMissingRequirements.Where(cmr =>
+                    (optional
+                            ? r.CurrentMissingOptionalRequirements
+                            : r.CurrentMissingRequirements
+                        ).Where(cmr =>
                             cmr.Scope == VolunteerFamilyRequirementScope.AllAdultsInTheFamily
                             || cmr.Scope
                                 == VolunteerFamilyRequirementScope.AllParticipatingAdultsInTheFamily
@@ -102,21 +142,29 @@ namespace CareTogether.Engines.PolicyEvaluation
             (string Version, string RoleName) Version
         )> GetMissingRequirementsFromIndividual(
             Guid personId,
-            IndividualApprovalStatus individualStatus
+            IndividualApprovalStatus individualStatus,
+            bool optional
         )
         {
             return individualStatus.ApprovalStatusByRole.SelectMany(kv =>
             {
                 // Older policy versions can prove the role is already approved/onboarded.
                 // Only active policy versions can ask for missing requirements.
-                var promptableVersions = PolicyEvaluationHelpers.SelectPromptableVersions(
-                    kv.Value.RoleVersionApprovals,
-                    kv.Value.CurrentStatus
-                );
+                var promptableVersions = optional
+                    ? PolicyEvaluationHelpers.SelectVersionsWithOptionalRequirements(
+                        kv.Value.RoleVersionApprovals
+                    )
+                    : PolicyEvaluationHelpers.SelectPromptableVersions(
+                        kv.Value.RoleVersionApprovals,
+                        kv.Value.CurrentStatus
+                    );
 
                 return promptableVersions
                     .SelectMany(r =>
-                        r.CurrentMissingRequirements.Where(cmr =>
+                        (optional
+                                ? r.CurrentMissingOptionalRequirements
+                                : r.CurrentMissingRequirements
+                            ).Where(cmr =>
                                 cmr.WhenMet?.Contains(DateOnly.FromDateTime(DateTime.UtcNow))
                                 != true
                             )
@@ -170,6 +218,17 @@ namespace CareTogether.Engines.PolicyEvaluation
 
         [JsonIgnore]
         [Newtonsoft.Json.JsonIgnore]
+        public ImmutableList<(
+            string ActionName,
+            (string Version, string RoleName)[] Versions
+        )> CurrentMissingOptionalRequirements =>
+            ApprovalStatusByRole
+                .SelectMany(r => r.Value.CurrentMissingOptionalRequirements)
+                .Distinct()
+                .ToImmutableList();
+
+        [JsonIgnore]
+        [Newtonsoft.Json.JsonIgnore]
         public ImmutableList<string> CurrentAvailableApplications =>
             ApprovalStatusByRole
                 .SelectMany(r => r.Value.CurrentAvailableApplications)
@@ -213,6 +272,30 @@ namespace CareTogether.Engines.PolicyEvaluation
             }
         }
 
+        public ImmutableList<(
+            string ActionName,
+            (string Version, string RoleName)[] Versions
+        )> CurrentMissingOptionalRequirements
+        {
+            get
+            {
+                var promptableVersions =
+                    PolicyEvaluationHelpers.SelectVersionsWithOptionalRequirements(
+                        RoleVersionApprovals
+                    );
+
+                return promptableVersions
+                    .SelectMany(r =>
+                        r.CurrentMissingOptionalRequirements.Select(cmr =>
+                            (cmr.ActionName, (r.Version, r.RoleName))
+                        )
+                    )
+                    .GroupBy(r => r.ActionName)
+                    .Select(g => (g.Key, g.Select(x => x.Item2).ToArray()))
+                    .ToImmutableList();
+            }
+        }
+
         public ImmutableList<string> CurrentAvailableApplications
         {
             get
@@ -242,6 +325,7 @@ namespace CareTogether.Engines.PolicyEvaluation
         [Newtonsoft.Json.JsonIgnore]
         public ImmutableList<IndividualRoleRequirementCompletionStatus> CurrentMissingRequirements =>
             Requirements
+                .Where(r => r.IsRequired != false)
                 .Where(r =>
                     (
                         r.Stage == RequirementStage.Approval
@@ -263,8 +347,20 @@ namespace CareTogether.Engines.PolicyEvaluation
 
         [JsonIgnore]
         [Newtonsoft.Json.JsonIgnore]
+        public ImmutableList<IndividualRoleRequirementCompletionStatus> CurrentMissingOptionalRequirements =>
+            Requirements
+                .Where(r => r.IsRequired == false)
+                .Where(r =>
+                    PolicyEvaluationHelpers.IsOptionalRequirementVisible(r.Stage, CurrentStatus)
+                )
+                .Where(r => r.WhenMet?.Contains(DateOnly.FromDateTime(DateTime.UtcNow)) != true)
+                .ToImmutableList();
+
+        [JsonIgnore]
+        [Newtonsoft.Json.JsonIgnore]
         public ImmutableList<IndividualRoleRequirementCompletionStatus> CurrentAvailableApplications =>
             Requirements
+                .Where(r => r.IsRequired != false)
                 .Where(r =>
                     r.Stage == RequirementStage.Application
                     && (CurrentStatus == null || CurrentStatus == RoleApprovalStatus.Expired)
@@ -276,7 +372,8 @@ namespace CareTogether.Engines.PolicyEvaluation
     public sealed record IndividualRoleRequirementCompletionStatus(
         string ActionName,
         RequirementStage Stage,
-        DateOnlyTimeline? WhenMet
+        DateOnlyTimeline? WhenMet,
+        bool? IsRequired = null
     );
 
     public sealed record FamilyRoleApprovalStatus(
@@ -304,6 +401,34 @@ namespace CareTogether.Engines.PolicyEvaluation
                 return promptableVersions
                     .SelectMany(r =>
                         r.CurrentMissingRequirements.Select(cmr =>
+                            (CurrentMissingRequirement: cmr, Version: (r.Version, r.RoleName))
+                        )
+                    )
+                    .Where(r =>
+                        r.CurrentMissingRequirement.Scope
+                        == VolunteerFamilyRequirementScope.OncePerFamily
+                    )
+                    .GroupBy(r => r.CurrentMissingRequirement.ActionName)
+                    .Select(g => (g.Key, g.Select(x => x.Version).ToArray()))
+                    .ToImmutableList();
+            }
+        }
+
+        public ImmutableList<(
+            string ActionName,
+            (string Version, string RoleName)[] Versions
+        )> CurrentMissingOptionalFamilyRequirements
+        {
+            get
+            {
+                var promptableVersions =
+                    PolicyEvaluationHelpers.SelectVersionsWithOptionalRequirements(
+                        RoleVersionApprovals
+                    );
+
+                return promptableVersions
+                    .SelectMany(r =>
+                        r.CurrentMissingOptionalRequirements.Select(cmr =>
                             (CurrentMissingRequirement: cmr, Version: (r.Version, r.RoleName))
                         )
                     )
@@ -491,6 +616,7 @@ namespace CareTogether.Engines.PolicyEvaluation
         [Newtonsoft.Json.JsonIgnore]
         public ImmutableList<FamilyRoleRequirementCompletionStatus> CurrentMissingRequirements =>
             Requirements
+                .Where(r => r.IsRequired != false)
                 .Where(r =>
                     (
                         r.Stage == RequirementStage.Approval
@@ -512,8 +638,20 @@ namespace CareTogether.Engines.PolicyEvaluation
 
         [JsonIgnore]
         [Newtonsoft.Json.JsonIgnore]
+        public ImmutableList<FamilyRoleRequirementCompletionStatus> CurrentMissingOptionalRequirements =>
+            Requirements
+                .Where(r => r.IsRequired == false)
+                .Where(r =>
+                    PolicyEvaluationHelpers.IsOptionalRequirementVisible(r.Stage, CurrentStatus)
+                )
+                .Where(r => r.WhenMet?.Contains(DateOnly.FromDateTime(DateTime.UtcNow)) != true)
+                .ToImmutableList();
+
+        [JsonIgnore]
+        [Newtonsoft.Json.JsonIgnore]
         public ImmutableList<FamilyRoleRequirementCompletionStatus> CurrentAvailableApplications =>
             Requirements
+                .Where(r => r.IsRequired != false)
                 .Where(r =>
                     r.Stage == RequirementStage.Application
                     && (CurrentStatus == null || CurrentStatus == RoleApprovalStatus.Expired)
@@ -527,7 +665,8 @@ namespace CareTogether.Engines.PolicyEvaluation
         RequirementStage Stage,
         VolunteerFamilyRequirementScope Scope,
         DateOnlyTimeline? WhenMet,
-        ImmutableList<FamilyRequirementStatusDetail> StatusDetails
+        ImmutableList<FamilyRequirementStatusDetail> StatusDetails,
+        bool? IsRequired = null
     );
 
     public sealed record FamilyRequirementStatusDetail(Guid? PersonId, DateOnlyTimeline? WhenMet);
