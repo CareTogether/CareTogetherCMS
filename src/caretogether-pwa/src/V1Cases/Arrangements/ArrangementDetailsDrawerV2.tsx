@@ -6,11 +6,10 @@ import {
   Tooltip,
   Typography,
 } from '@mui/material';
-import { type ReactNode, useState } from 'react';
+import { type ReactNode } from 'react';
 import {
   CompletedRequirementInfo,
   ExemptedRequirementInfo,
-  FunctionRequirement,
   MissingArrangementRequirement,
   Permission,
 } from '../../GeneratedClient';
@@ -25,35 +24,32 @@ import {
 } from '../../Model/DirectoryModel';
 import { useFamilyIdPermissions } from '../../Model/SessionModel';
 import { ArrangementParticipantManagementDrawerV2 } from './ArrangementParticipantManagementDrawerV2';
-import {
-  ArrangementRequirementManagementDrawerV2,
-  ArrangementRequirementWorkflowV2,
-} from './ArrangementRequirementManagementDrawerV2';
+import { ArrangementRequirementManagementDrawerV2 } from './ArrangementRequirementManagementDrawerV2';
 import { ArrangementOverviewSectionV2 } from './ArrangementOverviewSectionV2';
 import { ArrangementTimelineSectionV2 } from './ArrangementTimelineSectionV2';
 import { ArrangementWorkspaceHeaderV2 } from './ArrangementWorkspaceHeaderV2';
-import {
-  ArrangementFunctionSummaryV2,
-  ArrangementRowV2,
-} from './arrangementViewModel';
+import { ArrangementRowV2 } from './arrangementViewModel';
 import { format } from 'date-fns';
-import { useRequirementContextData } from './useRequirementContextData';
-import {
-  ArrangementManagementDrawerV2,
-  ArrangementManagementMode,
-} from './ArrangementManagementDrawerV2';
+import { ArrangementManagementDrawerV2 } from './ArrangementManagementDrawerV2';
 import { RequirementContext } from '../../Requirements/RequirementContext';
 import { formatUtcDateOnly } from '../../Utilities/dateUtils';
 import { IconRow } from '../../Generic/IconRow';
-import { resolveArrangementWorkspaceModuleV2 } from './ArrangementWorkspaceModuleV2';
+import {
+  isArrangementMonitoringRequirement,
+  requirementContextFamilyId,
+} from './arrangementDetailsModel';
+import {
+  useArrangementAssignmentsViewModel,
+  useArrangementRequirementsViewModel,
+  useArrangementWorkspaceViewModel,
+} from './useArrangementDetailsViewModel';
+import { useArrangementDetailsWorkflow } from './useArrangementDetailsWorkflow';
 
 type ArrangementDetailsDrawerV2Props = {
   row: ArrangementRowV2 | null;
   open: boolean;
   onClose: () => void;
 };
-
-const EXPIRING_REQUIREMENT_DAYS = 30;
 
 function EmptyText({ children }: { children: ReactNode }) {
   return (
@@ -70,20 +66,15 @@ function ArrangementAssignmentsSectionV2({
   onManage: () => void;
   row: ArrangementRowV2;
 }) {
+  const {
+    hasAssignmentIssues,
+    missingRequiredSummaries,
+    missingVariantSummaries,
+  } = useArrangementAssignmentsViewModel(row);
+
   if (row.functionSummaries.length === 0) {
     return <EmptyText>No functions configured for this arrangement.</EmptyText>;
   }
-
-  const missingRequiredSummaries = row.functionSummaries.filter(
-    (summary) =>
-      summary.functionPolicy.requirement !== FunctionRequirement.ZeroOrMore &&
-      summary.assignments.length === 0
-  );
-  const missingVariantSummaries = row.functionSummaries.filter(
-    (summary) => summary.missingVariantLabels.length > 0
-  );
-  const hasAssignmentIssues =
-    missingRequiredSummaries.length > 0 || missingVariantSummaries.length > 0;
 
   return (
     <Stack spacing={1.5}>
@@ -143,42 +134,6 @@ function AssignmentIssueRowV2({
   );
 }
 
-function isExpired(date?: Date, now = new Date()) {
-  return date !== undefined && date < now;
-}
-
-function isExpiring(date?: Date, now = new Date()) {
-  if (!date || isExpired(date, now)) {
-    return false;
-  }
-
-  const cutoff = new Date(now);
-  cutoff.setDate(cutoff.getDate() + EXPIRING_REQUIREMENT_DAYS);
-
-  return date <= cutoff;
-}
-
-function requiresAttention(requirement: CompletedRequirementInfo): boolean;
-function requiresAttention(requirement: ExemptedRequirementInfo): boolean;
-function requiresAttention(
-  requirement: CompletedRequirementInfo | ExemptedRequirementInfo
-) {
-  const expirationDate =
-    requirement instanceof CompletedRequirementInfo
-      ? requirement.expiresAtUtc
-      : requirement.exemptionExpiresAtUtc;
-
-  return isExpired(expirationDate) || isExpiring(expirationDate);
-}
-
-function isUpcomingRequirement(requirement: MissingArrangementRequirement) {
-  if (!requirement.action?.isRequired) {
-    return true;
-  }
-
-  return requirement.dueBy !== undefined && requirement.pastDueSince === undefined;
-}
-
 function RequirementGroupV2({
   children,
   count,
@@ -214,25 +169,6 @@ function RequirementGroupV2({
   );
 }
 
-function contextFamilyId(context: RequirementContext) {
-  if (
-    context.kind === 'Arrangement' ||
-    context.kind === 'Family Volunteer Assignment' ||
-    context.kind === 'Individual Volunteer Assignment'
-  ) {
-    return context.partneringFamilyId;
-  }
-
-  if (
-    context.kind === 'Volunteer Family' ||
-    context.kind === 'Individual Volunteer'
-  ) {
-    return context.volunteerFamilyId;
-  }
-
-  return '';
-}
-
 function MissingRequirementActionRowV2({
   context,
   missing,
@@ -242,7 +178,9 @@ function MissingRequirementActionRowV2({
   missing: MissingArrangementRequirement;
   onOpen: () => void;
 }) {
-  const permissions = useFamilyIdPermissions(contextFamilyId(context));
+  const permissions = useFamilyIdPermissions(
+    requirementContextFamilyId(context)
+  );
   const canManage =
     permissions(Permission.EditArrangementRequirementCompletion) ||
     permissions(Permission.EditArrangementRequirementExemption);
@@ -292,7 +230,9 @@ function CompletedRequirementActionRowV2({
   context: RequirementContext;
   onOpen: () => void;
 }) {
-  const permissions = useFamilyIdPermissions(contextFamilyId(context));
+  const permissions = useFamilyIdPermissions(
+    requirementContextFamilyId(context)
+  );
   const canMarkIncomplete = permissions(
     Permission.EditArrangementRequirementCompletion
   );
@@ -370,24 +310,18 @@ function ExemptedRequirementActionRowV2({
   onOpen: () => void;
   row: ArrangementRowV2;
 }) {
-  const permissions = useFamilyIdPermissions(contextFamilyId(context));
+  const permissions = useFamilyIdPermissions(
+    requirementContextFamilyId(context)
+  );
   const canRemoveExemption = permissions(
     Permission.EditArrangementRequirementExemption
   );
   const userLookup = useUserLookup();
   const familyLookup = useFamilyLookup();
   const personLookup = usePersonLookup();
-  const allMonitoringRequirements =
-    row.arrangementPolicy?.requiredMonitoringActions_PRE_MIGRATION?.concat(
-      row.arrangementPolicy.arrangementFunctions?.flatMap(
-        (arrangementFunction) =>
-          arrangementFunction.variants?.flatMap(
-            (variant) => variant.requiredMonitoringActions_PRE_MIGRATION || []
-          ) || []
-      ) || []
-    );
-  const isArrangementMonitoringRequirement = allMonitoringRequirements?.some(
-    (requirement) => requirement.action?.actionName === exempted.requirementName
+  const isMonitoringRequirement = isArrangementMonitoringRequirement(
+    row,
+    exempted.requirementName
   );
 
   return (
@@ -402,7 +336,7 @@ function ExemptedRequirementActionRowV2({
       >
         <>
           <span>
-            {isArrangementMonitoringRequirement && !exempted.dueDate && (
+            {isMonitoringRequirement && !exempted.dueDate && (
               <span style={{ fontWeight: 'bold' }}>All&nbsp;</span>
             )}
             {exempted.requirementName}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
@@ -455,50 +389,26 @@ function ExemptedRequirementActionRowV2({
   );
 }
 function ArrangementRequirementsSectionV2({ row }: { row: ArrangementRowV2 }) {
-  const [selectedWorkflow, setSelectedWorkflow] =
-    useState<ArrangementRequirementWorkflowV2 | null>(null);
   const {
-    completedRequirementsWithContext,
-    exemptedRequirementsWithContext,
-    mergedArray,
-  } = useRequirementContextData(
-    row.source,
-    row.arrangementPolicy,
-    row.partneringFamily,
-    row.v1Case.id!
-  );
-  const hasRequirements =
-    mergedArray.length > 0 ||
-    completedRequirementsWithContext.length > 0 ||
-    exemptedRequirementsWithContext.length > 0;
+    closeRequirementManagementDrawer,
+    selectedRequirementWorkflow,
+    setSelectedRequirementWorkflow,
+  } = useArrangementDetailsWorkflow();
+  const {
+    completedCount,
+    completedNeedsAttention,
+    completedStable,
+    exemptedNeedsAttention,
+    exemptedStable,
+    hasRequirements,
+    missingNeedsAttention,
+    missingUpcoming,
+    needsAttentionCount,
+  } = useArrangementRequirementsViewModel(row);
 
   if (!hasRequirements) {
     return <EmptyText>No arrangement requirements.</EmptyText>;
   }
-
-  const missingNeedsAttention = mergedArray.filter(
-    ({ missing }) => !isUpcomingRequirement(missing)
-  );
-  const missingUpcoming = mergedArray.filter(({ missing }) =>
-    isUpcomingRequirement(missing)
-  );
-  const completedNeedsAttention = completedRequirementsWithContext.filter(
-    ({ completed }) => requiresAttention(completed)
-  );
-  const completedStable = completedRequirementsWithContext.filter(
-    ({ completed }) => !requiresAttention(completed)
-  );
-  const exemptedNeedsAttention = exemptedRequirementsWithContext.filter(
-    ({ exempted }) => requiresAttention(exempted)
-  );
-  const exemptedStable = exemptedRequirementsWithContext.filter(
-    ({ exempted }) => !requiresAttention(exempted)
-  );
-  const needsAttentionCount =
-    missingNeedsAttention.length +
-    completedNeedsAttention.length +
-    exemptedNeedsAttention.length;
-  const completedCount = completedStable.length + exemptedStable.length;
 
   return (
     <Stack spacing={1.5}>
@@ -509,7 +419,7 @@ function ArrangementRequirementsSectionV2({ row }: { row: ArrangementRowV2 }) {
             context={context}
             missing={missing}
             onOpen={() =>
-              setSelectedWorkflow({
+              setSelectedRequirementWorkflow({
                 context,
                 kind: 'missing',
                 requirement: missing,
@@ -523,7 +433,7 @@ function ArrangementRequirementsSectionV2({ row }: { row: ArrangementRowV2 }) {
             context={context}
             completed={completed}
             onOpen={() =>
-              setSelectedWorkflow({
+              setSelectedRequirementWorkflow({
                 context,
                 kind: 'completed',
                 requirement: completed,
@@ -538,7 +448,7 @@ function ArrangementRequirementsSectionV2({ row }: { row: ArrangementRowV2 }) {
             exempted={exempted}
             row={row}
             onOpen={() =>
-              setSelectedWorkflow({
+              setSelectedRequirementWorkflow({
                 context,
                 kind: 'exempted',
                 requirement: exempted,
@@ -555,7 +465,7 @@ function ArrangementRequirementsSectionV2({ row }: { row: ArrangementRowV2 }) {
             context={context}
             missing={missing}
             onOpen={() =>
-              setSelectedWorkflow({
+              setSelectedRequirementWorkflow({
                 context,
                 kind: 'missing',
                 requirement: missing,
@@ -572,7 +482,7 @@ function ArrangementRequirementsSectionV2({ row }: { row: ArrangementRowV2 }) {
             context={context}
             completed={completed}
             onOpen={() =>
-              setSelectedWorkflow({
+              setSelectedRequirementWorkflow({
                 context,
                 kind: 'completed',
                 requirement: completed,
@@ -587,7 +497,7 @@ function ArrangementRequirementsSectionV2({ row }: { row: ArrangementRowV2 }) {
             exempted={exempted}
             row={row}
             onOpen={() =>
-              setSelectedWorkflow({
+              setSelectedRequirementWorkflow({
                 context,
                 kind: 'exempted',
                 requirement: exempted,
@@ -597,28 +507,25 @@ function ArrangementRequirementsSectionV2({ row }: { row: ArrangementRowV2 }) {
         ))}
       </RequirementGroupV2>
       <ArrangementRequirementManagementDrawerV2
-        onClose={() => setSelectedWorkflow(null)}
-        open={selectedWorkflow !== null}
-        workflow={selectedWorkflow}
+        onClose={closeRequirementManagementDrawer}
+        open={selectedRequirementWorkflow !== null}
+        workflow={selectedRequirementWorkflow}
       />
     </Stack>
   );
 }
 
 function ArrangementWorkspaceLayoutV2({ row }: { row: ArrangementRowV2 }) {
-  const [selectedFunctionSummary, setSelectedFunctionSummary] =
-    useState<ArrangementFunctionSummaryV2 | null>(null);
-  const workspaceModule = resolveArrangementWorkspaceModuleV2(row);
-  const WorkspaceModuleComponent = workspaceModule?.Component;
-  const defaultFunctionSummary =
-    row.functionSummaries.find(
-      (summary) =>
-        summary.functionPolicy.requirement !== FunctionRequirement.ZeroOrMore &&
-        summary.assignments.length === 0
-    ) ??
-    row.functionSummaries.find((summary) => summary.assignments.length === 0) ??
-    row.functionSummaries[0] ??
-    null;
+  const {
+    defaultFunctionSummary,
+    workspaceModule,
+    WorkspaceModuleComponent,
+  } = useArrangementWorkspaceViewModel(row);
+  const {
+    closeParticipantManagementDrawer,
+    openDefaultFunctionSummary,
+    selectedFunctionSummary,
+  } = useArrangementDetailsWorkflow({ defaultFunctionSummary });
 
   return (
     <>
@@ -644,7 +551,7 @@ function ArrangementWorkspaceLayoutV2({ row }: { row: ArrangementRowV2 }) {
 
           <WorkspaceSectionV2 title="Assignments">
             <ArrangementAssignmentsSectionV2
-              onManage={() => setSelectedFunctionSummary(defaultFunctionSummary)}
+              onManage={openDefaultFunctionSummary}
               row={row}
             />
           </WorkspaceSectionV2>
@@ -670,7 +577,7 @@ function ArrangementWorkspaceLayoutV2({ row }: { row: ArrangementRowV2 }) {
         functionSummaries={row.functionSummaries}
         row={row}
         open={selectedFunctionSummary !== null}
-        onClose={() => setSelectedFunctionSummary(null)}
+        onClose={closeParticipantManagementDrawer}
       />
     </>
   );
@@ -681,8 +588,8 @@ export function ArrangementDetailsDrawerV2({
   open,
   onClose,
 }: ArrangementDetailsDrawerV2Props) {
-  const [managementMode, setManagementMode] =
-    useState<ArrangementManagementMode | null>(null);
+  const { closeManagementDrawer, managementMode, setManagementMode } =
+    useArrangementDetailsWorkflow();
 
   return (
     <>
@@ -716,7 +623,7 @@ export function ArrangementDetailsDrawerV2({
         mode={managementMode}
         row={row}
         open={managementMode !== null}
-        onClose={() => setManagementMode(null)}
+        onClose={closeManagementDrawer}
       />
     </>
   );
