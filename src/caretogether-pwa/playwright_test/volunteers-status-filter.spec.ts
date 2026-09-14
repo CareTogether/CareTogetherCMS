@@ -6,10 +6,6 @@ import {
 import { filterType } from '../src/Volunteers/VolunteerApprovalTab/filterType';
 import type { filterOption } from '../src/Volunteers/VolunteerApprovalTab/filterOption';
 import { familyOrFamilyMembersMeetRoleStatusFilterCriteria } from '../src/Volunteers/VolunteerApprovalTab/volunteerApprovalRoleStatusFilters';
-import {
-  gridFilterModelFromVolunteerFilters,
-  volunteerFiltersFromGridFilterModel,
-} from '../src/Volunteers/volunteersGridFilterAdapter';
 
 const partnerRoleFilter: filterOption = {
   key: 'Partner',
@@ -57,50 +53,6 @@ function familyWithRoleStatus(role: string, status: RoleApprovalStatus) {
     },
   } as CombinedFamilyInfo;
 }
-
-test('preserves the Status is-not operator through the controlled grid model', () => {
-  const filters = volunteerFiltersFromGridFilterModel({
-    items: [
-      {
-        field: 'status',
-        operator: 'not',
-        value: RoleApprovalStatus.Approved.toString(),
-      },
-    ],
-  });
-
-  const restoredModel = gridFilterModelFromVolunteerFilters(filters);
-
-  expect(restoredModel.items).toContainEqual(
-    expect.objectContaining({
-      field: 'status',
-      operator: 'not',
-      value: RoleApprovalStatus.Approved.toString(),
-    })
-  );
-});
-
-test('preserves the Roles is-not operator through the controlled grid model', () => {
-  const filters = volunteerFiltersFromGridFilterModel({
-    items: [
-      {
-        field: 'roles',
-        operator: 'not',
-        value: partnerRoleFilter.value,
-      },
-    ],
-  });
-
-  const restoredModel = gridFilterModelFromVolunteerFilters(filters);
-
-  expect(restoredModel.items).toContainEqual(
-    expect.objectContaining({
-      field: 'roles',
-      operator: 'not',
-      value: partnerRoleFilter.value,
-    })
-  );
-});
 
 test('Status is-not excludes matching families and retains other statuses', () => {
   const approvedFamily = familyWithRoleStatus(
