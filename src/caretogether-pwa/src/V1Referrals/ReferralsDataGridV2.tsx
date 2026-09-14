@@ -61,7 +61,6 @@ const referralsGridSlotProps = {
       quickFilterParser: (searchText: string) =>
         searchText.trim() === '' ? [] : [searchText.trim()],
     },
-    printOptions: { disableToolbarButton: true },
   },
   columnsManagement: {
     getTogglableColumns: (columns: GridColDef[]) =>

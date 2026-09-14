@@ -41,6 +41,17 @@ test('native Referrals grid mounts and resets incompatible reporting data', asyn
   await page.setContent('<html><body><div id="root"></div></body></html>');
   await page.addScriptTag({ content: bundle });
   await expect(page.getByRole('grid')).toBeVisible();
+  await page.getByRole('button', { name: 'Export', exact: true }).click();
+  await expect(
+    page.getByRole('menuitem', { name: 'Download as CSV', exact: true })
+  ).toBeVisible();
+  await expect(
+    page.getByRole('menuitem', { name: 'Download as Excel', exact: true })
+  ).toBeVisible();
+  await expect(
+    page.getByRole('menuitem', { name: 'Print', exact: true })
+  ).toBeVisible();
+  await page.keyboard.press('Escape');
   await expect(page.getByText('Referral 0', { exact: true })).toBeVisible();
   await page.getByRole('button', { name: 'Search', exact: true }).click();
   await page.getByRole('searchbox').first().fill(' REFERRAL 0 ');
