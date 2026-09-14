@@ -7,39 +7,34 @@ import {
   Tab,
   Tabs,
 } from '@mui/material';
-import { SelectChangeEvent } from '@mui/material/Select';
-import { ReactNode } from 'react';
+import type { SelectChangeEvent } from '@mui/material/Select';
+import type { ReactNode } from 'react';
 
-export type FamilyScreenTabValue =
-  | 'overview'
-  | 'caseHistory'
-  | 'approvals'
-  | 'arrangementsOrAssignments'
-  | 'documents'
-  | 'timelineAndNotes';
-
-export type FamilyScreenTab = {
-  value: FamilyScreenTabValue;
-  label: string;
+export type ResponsiveScreenTab<TValue extends string> = {
+  value: TValue;
   desktopLabel: ReactNode;
   mobileLabel: string;
 };
 
-type FamilyScreenTabsV2Props = {
-  tabs: FamilyScreenTab[];
-  selectedTab: FamilyScreenTabValue;
+type ResponsiveScreenTabsProps<TValue extends string> = {
+  ariaLabel: string;
+  idPrefix: string;
+  tabs: ResponsiveScreenTab<TValue>[];
+  selectedTab: TValue;
   isDesktop: boolean;
-  onChange: (nextTab: FamilyScreenTabValue) => void;
+  onChange: (nextTab: TValue) => void;
 };
 
-export function FamilyScreenTabsV2({
+export function ResponsiveScreenTabs<TValue extends string>({
+  ariaLabel,
+  idPrefix,
   tabs,
   selectedTab,
   isDesktop,
   onChange,
-}: FamilyScreenTabsV2Props) {
+}: ResponsiveScreenTabsProps<TValue>) {
   function handleSelectedTabChange(event: SelectChangeEvent) {
-    onChange(event.target.value as FamilyScreenTabValue);
+    onChange(event.target.value as TValue);
   }
 
   if (isDesktop) {
@@ -47,8 +42,8 @@ export function FamilyScreenTabsV2({
       <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 1.5 }}>
         <Tabs
           value={selectedTab}
-          onChange={(_, nextTab) => onChange(nextTab)}
-          aria-label="Family screen sections"
+          onChange={(_, nextTab: TValue) => onChange(nextTab)}
+          aria-label={ariaLabel}
         >
           {tabs.map((tab) => (
             <Tab
@@ -63,15 +58,16 @@ export function FamilyScreenTabsV2({
     );
   }
 
+  const labelId = `${idPrefix}-section-label`;
   return (
     <FormControl fullWidth size="small" sx={{ mb: 1.5 }}>
-      <InputLabel className="ph-unmask" id="family-screen-section-label">
+      <InputLabel className="ph-unmask" id={labelId}>
         Section
       </InputLabel>
       <Select
         className="ph-unmask"
-        labelId="family-screen-section-label"
-        id="family-screen-section-select"
+        labelId={labelId}
+        id={`${idPrefix}-section-select`}
         value={selectedTab}
         label="Section"
         onChange={handleSelectedTabChange}

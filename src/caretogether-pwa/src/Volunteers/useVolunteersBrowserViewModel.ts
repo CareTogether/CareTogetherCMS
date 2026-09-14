@@ -27,6 +27,7 @@ import {
   matchesAssignmentFilters,
 } from './VolunteerApprovalTab/assignmentFilters';
 import { filterOption } from './VolunteerApprovalTab/filterOption';
+import type { VolunteerGridFilterOperator } from './volunteerGridFilterOperator';
 import {
   buildVolunteerApprovalRolesPresentation,
   VolunteerApprovalRolesPresentation,
@@ -280,14 +281,18 @@ function applyFilterStage(
   customFields: CustomField[],
   customFieldFilters: CustomFieldFilterSelectionsByField,
   customFieldValuesByFamily: CustomFieldValuesByFamily,
-  requirementFilter: RequirementFilterValue | undefined
+  requirementFilter: RequirementFilterValue | undefined,
+  roleFilterOperator: VolunteerGridFilterOperator,
+  statusFilterOperator: VolunteerGridFilterOperator
 ) {
   return volunteerFamilies.filter(
     (family) =>
       familyOrFamilyMembersMeetRoleStatusFilterCriteria(
         family,
         roleFilters,
-        statusFilters
+        statusFilters,
+        statusFilterOperator,
+        roleFilterOperator
       ) &&
       familyHasMissingRequirements(
         family,
@@ -348,7 +353,10 @@ function withSelectedFilterValues(
   }));
 }
 
-export function useVolunteersBrowserViewModel(): VolunteersBrowserViewModel {
+export function useVolunteersBrowserViewModel(
+  roleFilterOperator: VolunteerGridFilterOperator,
+  statusFilterOperator: VolunteerGridFilterOperator
+): VolunteersBrowserViewModel {
   const volunteerFamilies = useVolunteerFamilies();
   const requirementNames = useAllApprovalAndOnboardingRequirements();
   const policy = usePolicy();
@@ -456,7 +464,9 @@ export function useVolunteersBrowserViewModel(): VolunteersBrowserViewModel {
       customFields,
       customFieldFilters,
       customFieldValuesByFamily,
-      requirementFilter
+      requirementFilter,
+      roleFilterOperator,
+      statusFilterOperator
     );
 
     return filteredFamilies;
@@ -466,9 +476,11 @@ export function useVolunteersBrowserViewModel(): VolunteersBrowserViewModel {
     customFieldValuesByFamily,
     customFields,
     requirementFilter,
+    roleFilterOperator,
     roleFilters,
     searchValue,
     sourceFamilies,
+    statusFilterOperator,
     statusFilters,
   ]);
   const rows = useMemo(

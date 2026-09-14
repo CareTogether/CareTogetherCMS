@@ -1,12 +1,12 @@
 import { Box, Stack, Typography, useTheme } from '@mui/material';
 import {
-  DataGrid,
+  DataGridPremium,
   GridColDef,
   GridFilterModel,
   GridRowParams,
   GridToolbar,
-} from '@mui/x-data-grid';
-import { getGridSingleSelectOperators } from '@mui/x-data-grid/colDef';
+  getGridSingleSelectOperators,
+} from '@mui/x-data-grid-premium';
 import { useCallback, useMemo } from 'react';
 import type { ReactNode } from 'react';
 import { v2DataGridStyles } from '../Families/v2DataGridStyles';
@@ -348,7 +348,7 @@ export function ReferralsDataGridV2({
 
   return (
     <Box sx={v2DataGridStyles(theme, { height: '100%' })}>
-      <DataGrid
+      <DataGridPremium
         rows={rows}
         columns={columns}
         columnHeaderHeight={42}

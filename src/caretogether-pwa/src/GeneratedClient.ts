@@ -282,6 +282,90 @@ export class ConfigurationClient {
         return Promise.resolve<OrganizationConfiguration>(null as any);
     }
 
+    putOrganizationCategory(organizationId: string, categoryId: string, payload: PutOrganizationCategoryPayload): Promise<OrganizationConfiguration> {
+        let url_ = this.baseUrl + "/api/{organizationId}/Configuration/organization-categories/{categoryId}";
+        if (organizationId === undefined || organizationId === null)
+            throw new globalThis.Error("The parameter 'organizationId' must be defined.");
+        url_ = url_.replace("{organizationId}", encodeURIComponent("" + organizationId));
+        if (categoryId === undefined || categoryId === null)
+            throw new globalThis.Error("The parameter 'categoryId' must be defined.");
+        url_ = url_.replace("{categoryId}", encodeURIComponent("" + categoryId));
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(payload);
+
+        let options_: RequestInit = {
+            body: content_,
+            method: "PUT",
+            headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processPutOrganizationCategory(_response);
+        });
+    }
+
+    protected processPutOrganizationCategory(response: Response): Promise<OrganizationConfiguration> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result200 = OrganizationConfiguration.fromJS(resultData200);
+            return result200;
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<OrganizationConfiguration>(null as any);
+    }
+
+    deleteOrganizationCategory(organizationId: string, categoryId: string): Promise<OrganizationConfiguration> {
+        let url_ = this.baseUrl + "/api/{organizationId}/Configuration/organization-categories/{categoryId}";
+        if (organizationId === undefined || organizationId === null)
+            throw new globalThis.Error("The parameter 'organizationId' must be defined.");
+        url_ = url_.replace("{organizationId}", encodeURIComponent("" + organizationId));
+        if (categoryId === undefined || categoryId === null)
+            throw new globalThis.Error("The parameter 'categoryId' must be defined.");
+        url_ = url_.replace("{categoryId}", encodeURIComponent("" + categoryId));
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "DELETE",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processDeleteOrganizationCategory(_response);
+        });
+    }
+
+    protected processDeleteOrganizationCategory(response: Response): Promise<OrganizationConfiguration> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result200 = OrganizationConfiguration.fromJS(resultData200);
+            return result200;
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<OrganizationConfiguration>(null as any);
+    }
+
     getEffectiveLocationPolicy(organizationId: string, locationId: string): Promise<EffectiveLocationPolicy> {
         let url_ = this.baseUrl + "/api/{organizationId}/{locationId}/Configuration/policy";
         if (organizationId === undefined || organizationId === null)
@@ -1395,6 +1479,7 @@ export class OrganizationConfiguration implements IOrganizationConfiguration {
     communityRoles!: string[];
     referralCloseReasons?: string[] | undefined;
     caseCloseReasons?: string[] | undefined;
+    organizationCategories!: OrganizationCategory[];
 
     constructor(data?: IOrganizationConfiguration) {
         if (data) {
@@ -1407,6 +1492,7 @@ export class OrganizationConfiguration implements IOrganizationConfiguration {
             this.locations = [];
             this.roles = [];
             this.communityRoles = [];
+            this.organizationCategories = [];
         }
     }
 
@@ -1437,6 +1523,11 @@ export class OrganizationConfiguration implements IOrganizationConfiguration {
                 this.caseCloseReasons = [] as any;
                 for (let item of _data["caseCloseReasons"])
                     this.caseCloseReasons!.push(item);
+            }
+            if (Array.isArray(_data["organizationCategories"])) {
+                this.organizationCategories = [] as any;
+                for (let item of _data["organizationCategories"])
+                    this.organizationCategories!.push(OrganizationCategory.fromJS(item));
             }
         }
     }
@@ -1476,6 +1567,11 @@ export class OrganizationConfiguration implements IOrganizationConfiguration {
             for (let item of this.caseCloseReasons)
                 data["caseCloseReasons"].push(item);
         }
+        if (Array.isArray(this.organizationCategories)) {
+            data["organizationCategories"] = [];
+            for (let item of this.organizationCategories)
+                data["organizationCategories"].push(item ? item.toJSON() : undefined as any);
+        }
         return data;
     }
 }
@@ -1487,6 +1583,7 @@ export interface IOrganizationConfiguration {
     communityRoles: string[];
     referralCloseReasons?: string[] | undefined;
     caseCloseReasons?: string[] | undefined;
+    organizationCategories: OrganizationCategory[];
 }
 
 export class LocationConfiguration implements ILocationConfiguration {
@@ -2504,7 +2601,7 @@ export enum Permission {
     AccessPartneringFamiliesScreen = 101,
     AccessSettingsScreen = 102,
     AddEditRoles = 103,
-    AccessCommunitiesScreen = 104,
+    AccessOrganizationsScreen = 104,
     AccessReportsScreen = 105,
     AccessSupportScreen = 106,
     ViewFamilyCustomFields = 150,
@@ -2564,15 +2661,57 @@ export enum Permission {
     ViewChildLocationHistory = 380,
     TrackChildLocationChange = 381,
     SendBulkSms = 400,
-    CreateCommunity = 500,
-    EditCommunity = 501,
-    DeleteCommunity = 502,
-    EditCommunityMemberFamilies = 503,
-    EditCommunityRoleAssignments = 504,
-    ViewCommunityDocumentMetadata = 505,
-    ReadCommunityDocuments = 506,
-    UploadCommunityDocuments = 507,
-    DeleteCommunityDocuments = 508,
+    CreateOrganization = 500,
+    EditOrganization = 501,
+    DeleteOrganization = 502,
+    EditOrganizationMemberFamilies = 503,
+    EditOrganizationRoleAssignments = 504,
+    ViewOrganizationDocumentMetadata = 505,
+    ReadOrganizationDocuments = 506,
+    UploadOrganizationDocuments = 507,
+    DeleteOrganizationDocuments = 508,
+    ActivateOrganizationApprovals = 509,
+    EditOrganizationRoleParticipation = 510,
+}
+
+export class OrganizationCategory implements IOrganizationCategory {
+    id!: string;
+    name!: string;
+
+    constructor(data?: IOrganizationCategory) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.id = _data["id"];
+            this.name = _data["name"];
+        }
+    }
+
+    static fromJS(data: any): OrganizationCategory {
+        data = typeof data === 'object' ? data : {};
+        let result = new OrganizationCategory();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["id"] = this.id;
+        data["name"] = this.name;
+        return data;
+    }
+}
+
+export interface IOrganizationCategory {
+    id: string;
+    name: string;
 }
 
 export class PutLocationPayload implements IPutLocationPayload {
@@ -2674,11 +2813,48 @@ export interface IPutOrganizationConfigurationPayload {
     caseCloseReasons?: string[] | undefined;
 }
 
+export class PutOrganizationCategoryPayload implements IPutOrganizationCategoryPayload {
+    name!: string;
+
+    constructor(data?: IPutOrganizationCategoryPayload) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.name = _data["name"];
+        }
+    }
+
+    static fromJS(data: any): PutOrganizationCategoryPayload {
+        data = typeof data === 'object' ? data : {};
+        let result = new PutOrganizationCategoryPayload();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["name"] = this.name;
+        return data;
+    }
+}
+
+export interface IPutOrganizationCategoryPayload {
+    name: string;
+}
+
 export class EffectiveLocationPolicy implements IEffectiveLocationPolicy {
     actionDefinitions!: { [key: string]: ActionRequirement; };
     customFamilyFields!: CustomField[];
     referralPolicy!: V1CasePolicy;
     volunteerPolicy!: VolunteerPolicy;
+    organizationApprovalPolicy!: OrganizationApprovalPolicy;
     customFields!: FamilyMemberCustomFieldPolicy;
     v1ReferralPolicy!: V1ReferralPolicy;
 
@@ -2694,6 +2870,7 @@ export class EffectiveLocationPolicy implements IEffectiveLocationPolicy {
             this.customFamilyFields = [];
             this.referralPolicy = new V1CasePolicy();
             this.volunteerPolicy = new VolunteerPolicy();
+            this.organizationApprovalPolicy = new OrganizationApprovalPolicy();
             this.customFields = new FamilyMemberCustomFieldPolicy();
             this.v1ReferralPolicy = new V1ReferralPolicy();
         }
@@ -2715,6 +2892,7 @@ export class EffectiveLocationPolicy implements IEffectiveLocationPolicy {
             }
             this.referralPolicy = _data["referralPolicy"] ? V1CasePolicy.fromJS(_data["referralPolicy"]) : new V1CasePolicy();
             this.volunteerPolicy = _data["volunteerPolicy"] ? VolunteerPolicy.fromJS(_data["volunteerPolicy"]) : new VolunteerPolicy();
+            this.organizationApprovalPolicy = _data["organizationApprovalPolicy"] ? OrganizationApprovalPolicy.fromJS(_data["organizationApprovalPolicy"]) : new OrganizationApprovalPolicy();
             this.customFields = _data["customFields"] ? FamilyMemberCustomFieldPolicy.fromJS(_data["customFields"]) : new FamilyMemberCustomFieldPolicy();
             this.v1ReferralPolicy = _data["v1ReferralPolicy"] ? V1ReferralPolicy.fromJS(_data["v1ReferralPolicy"]) : new V1ReferralPolicy();
         }
@@ -2743,6 +2921,7 @@ export class EffectiveLocationPolicy implements IEffectiveLocationPolicy {
         }
         data["referralPolicy"] = this.referralPolicy ? this.referralPolicy.toJSON() : undefined as any;
         data["volunteerPolicy"] = this.volunteerPolicy ? this.volunteerPolicy.toJSON() : undefined as any;
+        data["organizationApprovalPolicy"] = this.organizationApprovalPolicy ? this.organizationApprovalPolicy.toJSON() : undefined as any;
         data["customFields"] = this.customFields ? this.customFields.toJSON() : undefined as any;
         data["v1ReferralPolicy"] = this.v1ReferralPolicy ? this.v1ReferralPolicy.toJSON() : undefined as any;
         return data;
@@ -2754,6 +2933,7 @@ export interface IEffectiveLocationPolicy {
     customFamilyFields: CustomField[];
     referralPolicy: V1CasePolicy;
     volunteerPolicy: VolunteerPolicy;
+    organizationApprovalPolicy: OrganizationApprovalPolicy;
     customFields: FamilyMemberCustomFieldPolicy;
     v1ReferralPolicy: V1ReferralPolicy;
 }
@@ -4468,6 +4648,7 @@ export interface IVolunteerRolePolicyVersion {
 export class VolunteerApprovalRequirement implements IVolunteerApprovalRequirement {
     stage!: RequirementStage;
     actionName!: string;
+    isRequired?: boolean | undefined;
 
     constructor(data?: IVolunteerApprovalRequirement) {
         if (data) {
@@ -4482,6 +4663,7 @@ export class VolunteerApprovalRequirement implements IVolunteerApprovalRequireme
         if (_data) {
             this.stage = _data["stage"];
             this.actionName = _data["actionName"];
+            this.isRequired = _data["isRequired"];
         }
     }
 
@@ -4496,6 +4678,7 @@ export class VolunteerApprovalRequirement implements IVolunteerApprovalRequireme
         data = typeof data === 'object' ? data : {};
         data["stage"] = this.stage;
         data["actionName"] = this.actionName;
+        data["isRequired"] = this.isRequired;
         return data;
     }
 }
@@ -4503,6 +4686,7 @@ export class VolunteerApprovalRequirement implements IVolunteerApprovalRequireme
 export interface IVolunteerApprovalRequirement {
     stage: RequirementStage;
     actionName: string;
+    isRequired?: boolean | undefined;
 }
 
 export enum RequirementStage {
@@ -4621,6 +4805,7 @@ export class VolunteerFamilyApprovalRequirement implements IVolunteerFamilyAppro
     stage!: RequirementStage;
     actionName!: string;
     scope!: VolunteerFamilyRequirementScope;
+    isRequired?: boolean | undefined;
 
     constructor(data?: IVolunteerFamilyApprovalRequirement) {
         if (data) {
@@ -4636,6 +4821,7 @@ export class VolunteerFamilyApprovalRequirement implements IVolunteerFamilyAppro
             this.stage = _data["stage"];
             this.actionName = _data["actionName"];
             this.scope = _data["scope"];
+            this.isRequired = _data["isRequired"];
         }
     }
 
@@ -4651,6 +4837,7 @@ export class VolunteerFamilyApprovalRequirement implements IVolunteerFamilyAppro
         data["stage"] = this.stage;
         data["actionName"] = this.actionName;
         data["scope"] = this.scope;
+        data["isRequired"] = this.isRequired;
         return data;
     }
 }
@@ -4659,12 +4846,210 @@ export interface IVolunteerFamilyApprovalRequirement {
     stage: RequirementStage;
     actionName: string;
     scope: VolunteerFamilyRequirementScope;
+    isRequired?: boolean | undefined;
 }
 
 export enum VolunteerFamilyRequirementScope {
     OncePerFamily = 0,
     AllAdultsInTheFamily = 1,
     AllParticipatingAdultsInTheFamily = 2,
+}
+
+export class OrganizationApprovalPolicy implements IOrganizationApprovalPolicy {
+    organizationRoles!: { [key: string]: OrganizationRolePolicy; };
+
+    constructor(data?: IOrganizationApprovalPolicy) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+        if (!data) {
+            this.organizationRoles = {};
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            if (_data["organizationRoles"]) {
+                this.organizationRoles = {} as any;
+                for (let key in _data["organizationRoles"]) {
+                    if (_data["organizationRoles"].hasOwnProperty(key))
+                        (this.organizationRoles as any)![key] = _data["organizationRoles"][key] ? OrganizationRolePolicy.fromJS(_data["organizationRoles"][key]) : new OrganizationRolePolicy();
+                }
+            }
+        }
+    }
+
+    static fromJS(data: any): OrganizationApprovalPolicy {
+        data = typeof data === 'object' ? data : {};
+        let result = new OrganizationApprovalPolicy();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        if (this.organizationRoles) {
+            data["organizationRoles"] = {};
+            for (let key in this.organizationRoles) {
+                if (this.organizationRoles.hasOwnProperty(key))
+                    (data["organizationRoles"] as any)[key] = this.organizationRoles[key] ? this.organizationRoles[key].toJSON() : undefined as any;
+            }
+        }
+        return data;
+    }
+}
+
+export interface IOrganizationApprovalPolicy {
+    organizationRoles: { [key: string]: OrganizationRolePolicy; };
+}
+
+export class OrganizationRolePolicy implements IOrganizationRolePolicy {
+    organizationRoleType!: string;
+    policyVersions!: OrganizationRolePolicyVersion[];
+
+    constructor(data?: IOrganizationRolePolicy) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+        if (!data) {
+            this.policyVersions = [];
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.organizationRoleType = _data["organizationRoleType"];
+            if (Array.isArray(_data["policyVersions"])) {
+                this.policyVersions = [] as any;
+                for (let item of _data["policyVersions"])
+                    this.policyVersions!.push(OrganizationRolePolicyVersion.fromJS(item));
+            }
+        }
+    }
+
+    static fromJS(data: any): OrganizationRolePolicy {
+        data = typeof data === 'object' ? data : {};
+        let result = new OrganizationRolePolicy();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["organizationRoleType"] = this.organizationRoleType;
+        if (Array.isArray(this.policyVersions)) {
+            data["policyVersions"] = [];
+            for (let item of this.policyVersions)
+                data["policyVersions"].push(item ? item.toJSON() : undefined as any);
+        }
+        return data;
+    }
+}
+
+export interface IOrganizationRolePolicy {
+    organizationRoleType: string;
+    policyVersions: OrganizationRolePolicyVersion[];
+}
+
+export class OrganizationRolePolicyVersion implements IOrganizationRolePolicyVersion {
+    version!: string;
+    supersededAtUtc?: Date | undefined;
+    requirements!: OrganizationApprovalRequirement[];
+
+    constructor(data?: IOrganizationRolePolicyVersion) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+        if (!data) {
+            this.requirements = [];
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.version = _data["version"];
+            this.supersededAtUtc = _data["supersededAtUtc"] ? new Date(_data["supersededAtUtc"].toString()) : undefined as any;
+            if (Array.isArray(_data["requirements"])) {
+                this.requirements = [] as any;
+                for (let item of _data["requirements"])
+                    this.requirements!.push(OrganizationApprovalRequirement.fromJS(item));
+            }
+        }
+    }
+
+    static fromJS(data: any): OrganizationRolePolicyVersion {
+        data = typeof data === 'object' ? data : {};
+        let result = new OrganizationRolePolicyVersion();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["version"] = this.version;
+        data["supersededAtUtc"] = this.supersededAtUtc ? this.supersededAtUtc.toISOString() : undefined as any;
+        if (Array.isArray(this.requirements)) {
+            data["requirements"] = [];
+            for (let item of this.requirements)
+                data["requirements"].push(item ? item.toJSON() : undefined as any);
+        }
+        return data;
+    }
+}
+
+export interface IOrganizationRolePolicyVersion {
+    version: string;
+    supersededAtUtc?: Date | undefined;
+    requirements: OrganizationApprovalRequirement[];
+}
+
+export class OrganizationApprovalRequirement implements IOrganizationApprovalRequirement {
+    stage!: RequirementStage;
+    actionName!: string;
+
+    constructor(data?: IOrganizationApprovalRequirement) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.stage = _data["stage"];
+            this.actionName = _data["actionName"];
+        }
+    }
+
+    static fromJS(data: any): OrganizationApprovalRequirement {
+        data = typeof data === 'object' ? data : {};
+        let result = new OrganizationApprovalRequirement();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["stage"] = this.stage;
+        data["actionName"] = this.actionName;
+        return data;
+    }
+}
+
+export interface IOrganizationApprovalRequirement {
+    stage: RequirementStage;
+    actionName: string;
 }
 
 export class FamilyMemberCustomFieldPolicy implements IFamilyMemberCustomFieldPolicy {
@@ -4995,6 +5380,7 @@ export interface ICommunityRecordsAggregate extends IRecordsAggregate {
 export class CommunityInfo implements ICommunityInfo {
     community!: Community;
     userPermissions!: Permission[];
+    approvalInfo?: OrganizationApprovalInfo | undefined;
 
     constructor(data?: ICommunityInfo) {
         if (data) {
@@ -5017,6 +5403,7 @@ export class CommunityInfo implements ICommunityInfo {
                 for (let item of _data["userPermissions"])
                     this.userPermissions!.push(item);
             }
+            this.approvalInfo = _data["approvalInfo"] ? OrganizationApprovalInfo.fromJS(_data["approvalInfo"]) : undefined as any;
         }
     }
 
@@ -5035,6 +5422,7 @@ export class CommunityInfo implements ICommunityInfo {
             for (let item of this.userPermissions)
                 data["userPermissions"].push(item);
         }
+        data["approvalInfo"] = this.approvalInfo ? this.approvalInfo.toJSON() : undefined as any;
         return data;
     }
 }
@@ -5042,6 +5430,7 @@ export class CommunityInfo implements ICommunityInfo {
 export interface ICommunityInfo {
     community: Community;
     userPermissions: Permission[];
+    approvalInfo?: OrganizationApprovalInfo | undefined;
 }
 
 export class Community implements ICommunity {
@@ -5051,6 +5440,7 @@ export class Community implements ICommunity {
     memberFamilies!: string[];
     communityRoleAssignments!: CommunityRoleAssignment[];
     uploadedDocuments!: UploadedDocumentInfo[];
+    categoryIds!: string[];
 
     constructor(data?: ICommunity) {
         if (data) {
@@ -5063,6 +5453,7 @@ export class Community implements ICommunity {
             this.memberFamilies = [];
             this.communityRoleAssignments = [];
             this.uploadedDocuments = [];
+            this.categoryIds = [];
         }
     }
 
@@ -5085,6 +5476,11 @@ export class Community implements ICommunity {
                 this.uploadedDocuments = [] as any;
                 for (let item of _data["uploadedDocuments"])
                     this.uploadedDocuments!.push(UploadedDocumentInfo.fromJS(item));
+            }
+            if (Array.isArray(_data["categoryIds"])) {
+                this.categoryIds = [] as any;
+                for (let item of _data["categoryIds"])
+                    this.categoryIds!.push(item);
             }
         }
     }
@@ -5116,6 +5512,11 @@ export class Community implements ICommunity {
             for (let item of this.uploadedDocuments)
                 data["uploadedDocuments"].push(item ? item.toJSON() : undefined as any);
         }
+        if (Array.isArray(this.categoryIds)) {
+            data["categoryIds"] = [];
+            for (let item of this.categoryIds)
+                data["categoryIds"].push(item);
+        }
         return data;
     }
 }
@@ -5127,6 +5528,7 @@ export interface ICommunity {
     memberFamilies: string[];
     communityRoleAssignments: CommunityRoleAssignment[];
     uploadedDocuments: UploadedDocumentInfo[];
+    categoryIds: string[];
 }
 
 export class CommunityRoleAssignment implements ICommunityRoleAssignment {
@@ -5215,6 +5617,685 @@ export interface IUploadedDocumentInfo {
     timestampUtc: Date;
     uploadedDocumentId: string;
     uploadedFileName: string;
+}
+
+export class OrganizationApprovalInfo implements IOrganizationApprovalInfo {
+    approvalStatusByRole!: { [key: string]: OrganizationRoleApprovalStatus; };
+    completedRequirements!: CompletedRequirementInfo[];
+    exemptedRequirements!: ExemptedRequirementInfo[];
+    availableApplications!: string[];
+    missingRequirements!: string[];
+    roleRemovals!: RoleRemoval[];
+
+    constructor(data?: IOrganizationApprovalInfo) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+        if (!data) {
+            this.approvalStatusByRole = {};
+            this.completedRequirements = [];
+            this.exemptedRequirements = [];
+            this.availableApplications = [];
+            this.missingRequirements = [];
+            this.roleRemovals = [];
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            if (_data["approvalStatusByRole"]) {
+                this.approvalStatusByRole = {} as any;
+                for (let key in _data["approvalStatusByRole"]) {
+                    if (_data["approvalStatusByRole"].hasOwnProperty(key))
+                        (this.approvalStatusByRole as any)![key] = _data["approvalStatusByRole"][key] ? OrganizationRoleApprovalStatus.fromJS(_data["approvalStatusByRole"][key]) : new OrganizationRoleApprovalStatus();
+                }
+            }
+            if (Array.isArray(_data["completedRequirements"])) {
+                this.completedRequirements = [] as any;
+                for (let item of _data["completedRequirements"])
+                    this.completedRequirements!.push(CompletedRequirementInfo.fromJS(item));
+            }
+            if (Array.isArray(_data["exemptedRequirements"])) {
+                this.exemptedRequirements = [] as any;
+                for (let item of _data["exemptedRequirements"])
+                    this.exemptedRequirements!.push(ExemptedRequirementInfo.fromJS(item));
+            }
+            if (Array.isArray(_data["availableApplications"])) {
+                this.availableApplications = [] as any;
+                for (let item of _data["availableApplications"])
+                    this.availableApplications!.push(item);
+            }
+            if (Array.isArray(_data["missingRequirements"])) {
+                this.missingRequirements = [] as any;
+                for (let item of _data["missingRequirements"])
+                    this.missingRequirements!.push(item);
+            }
+            if (Array.isArray(_data["roleRemovals"])) {
+                this.roleRemovals = [] as any;
+                for (let item of _data["roleRemovals"])
+                    this.roleRemovals!.push(RoleRemoval.fromJS(item));
+            }
+        }
+    }
+
+    static fromJS(data: any): OrganizationApprovalInfo {
+        data = typeof data === 'object' ? data : {};
+        let result = new OrganizationApprovalInfo();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        if (this.approvalStatusByRole) {
+            data["approvalStatusByRole"] = {};
+            for (let key in this.approvalStatusByRole) {
+                if (this.approvalStatusByRole.hasOwnProperty(key))
+                    (data["approvalStatusByRole"] as any)[key] = this.approvalStatusByRole[key] ? this.approvalStatusByRole[key].toJSON() : undefined as any;
+            }
+        }
+        if (Array.isArray(this.completedRequirements)) {
+            data["completedRequirements"] = [];
+            for (let item of this.completedRequirements)
+                data["completedRequirements"].push(item ? item.toJSON() : undefined as any);
+        }
+        if (Array.isArray(this.exemptedRequirements)) {
+            data["exemptedRequirements"] = [];
+            for (let item of this.exemptedRequirements)
+                data["exemptedRequirements"].push(item ? item.toJSON() : undefined as any);
+        }
+        if (Array.isArray(this.availableApplications)) {
+            data["availableApplications"] = [];
+            for (let item of this.availableApplications)
+                data["availableApplications"].push(item);
+        }
+        if (Array.isArray(this.missingRequirements)) {
+            data["missingRequirements"] = [];
+            for (let item of this.missingRequirements)
+                data["missingRequirements"].push(item);
+        }
+        if (Array.isArray(this.roleRemovals)) {
+            data["roleRemovals"] = [];
+            for (let item of this.roleRemovals)
+                data["roleRemovals"].push(item ? item.toJSON() : undefined as any);
+        }
+        return data;
+    }
+}
+
+export interface IOrganizationApprovalInfo {
+    approvalStatusByRole: { [key: string]: OrganizationRoleApprovalStatus; };
+    completedRequirements: CompletedRequirementInfo[];
+    exemptedRequirements: ExemptedRequirementInfo[];
+    availableApplications: string[];
+    missingRequirements: string[];
+    roleRemovals: RoleRemoval[];
+}
+
+export class OrganizationRoleApprovalStatus implements IOrganizationRoleApprovalStatus {
+    effectiveRoleApprovalStatus?: DateOnlyTimelineOfRoleApprovalStatus | undefined;
+    roleVersionApprovals!: OrganizationRoleVersionApprovalStatus[];
+    currentStatus?: RoleApprovalStatus | undefined;
+
+    constructor(data?: IOrganizationRoleApprovalStatus) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+        if (!data) {
+            this.roleVersionApprovals = [];
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.effectiveRoleApprovalStatus = _data["effectiveRoleApprovalStatus"] ? DateOnlyTimelineOfRoleApprovalStatus.fromJS(_data["effectiveRoleApprovalStatus"]) : undefined as any;
+            if (Array.isArray(_data["roleVersionApprovals"])) {
+                this.roleVersionApprovals = [] as any;
+                for (let item of _data["roleVersionApprovals"])
+                    this.roleVersionApprovals!.push(OrganizationRoleVersionApprovalStatus.fromJS(item));
+            }
+            this.currentStatus = _data["currentStatus"];
+        }
+    }
+
+    static fromJS(data: any): OrganizationRoleApprovalStatus {
+        data = typeof data === 'object' ? data : {};
+        let result = new OrganizationRoleApprovalStatus();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["effectiveRoleApprovalStatus"] = this.effectiveRoleApprovalStatus ? this.effectiveRoleApprovalStatus.toJSON() : undefined as any;
+        if (Array.isArray(this.roleVersionApprovals)) {
+            data["roleVersionApprovals"] = [];
+            for (let item of this.roleVersionApprovals)
+                data["roleVersionApprovals"].push(item ? item.toJSON() : undefined as any);
+        }
+        data["currentStatus"] = this.currentStatus;
+        return data;
+    }
+}
+
+export interface IOrganizationRoleApprovalStatus {
+    effectiveRoleApprovalStatus?: DateOnlyTimelineOfRoleApprovalStatus | undefined;
+    roleVersionApprovals: OrganizationRoleVersionApprovalStatus[];
+    currentStatus?: RoleApprovalStatus | undefined;
+}
+
+export class DateOnlyTimelineOfRoleApprovalStatus implements IDateOnlyTimelineOfRoleApprovalStatus {
+    ranges!: DateRangeOfRoleApprovalStatus[];
+
+    constructor(data?: IDateOnlyTimelineOfRoleApprovalStatus) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+        if (!data) {
+            this.ranges = [];
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            if (Array.isArray(_data["ranges"])) {
+                this.ranges = [] as any;
+                for (let item of _data["ranges"])
+                    this.ranges!.push(DateRangeOfRoleApprovalStatus.fromJS(item));
+            }
+        }
+    }
+
+    static fromJS(data: any): DateOnlyTimelineOfRoleApprovalStatus {
+        data = typeof data === 'object' ? data : {};
+        let result = new DateOnlyTimelineOfRoleApprovalStatus();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        if (Array.isArray(this.ranges)) {
+            data["ranges"] = [];
+            for (let item of this.ranges)
+                data["ranges"].push(item ? item.toJSON() : undefined as any);
+        }
+        return data;
+    }
+}
+
+export interface IDateOnlyTimelineOfRoleApprovalStatus {
+    ranges: DateRangeOfRoleApprovalStatus[];
+}
+
+export class DateRangeOfRoleApprovalStatus implements IDateRangeOfRoleApprovalStatus {
+    start!: Date;
+    end!: Date;
+    tag!: RoleApprovalStatus;
+
+    constructor(data?: IDateRangeOfRoleApprovalStatus) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.start = _data["start"] ? new Date(_data["start"].toString()) : undefined as any;
+            this.end = _data["end"] ? new Date(_data["end"].toString()) : undefined as any;
+            this.tag = _data["tag"];
+        }
+    }
+
+    static fromJS(data: any): DateRangeOfRoleApprovalStatus {
+        data = typeof data === 'object' ? data : {};
+        let result = new DateRangeOfRoleApprovalStatus();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["start"] = this.start ? formatDate(this.start) : undefined as any;
+        data["end"] = this.end ? formatDate(this.end) : undefined as any;
+        data["tag"] = this.tag;
+        return data;
+    }
+}
+
+export interface IDateRangeOfRoleApprovalStatus {
+    start: Date;
+    end: Date;
+    tag: RoleApprovalStatus;
+}
+
+export enum RoleApprovalStatus {
+    Prospective = 1,
+    Expired = 2,
+    Approved = 3,
+    Onboarded = 4,
+    Inactive = 5,
+    Denied = 6,
+}
+
+export class OrganizationRoleVersionApprovalStatus implements IOrganizationRoleVersionApprovalStatus {
+    roleName!: string;
+    version!: string;
+    supersededAtUtc?: Date | undefined;
+    status?: DateOnlyTimelineOfRoleApprovalStatus | undefined;
+    requirements!: OrganizationRoleRequirementCompletionStatus[];
+
+    constructor(data?: IOrganizationRoleVersionApprovalStatus) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+        if (!data) {
+            this.requirements = [];
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.roleName = _data["roleName"];
+            this.version = _data["version"];
+            this.supersededAtUtc = _data["supersededAtUtc"] ? new Date(_data["supersededAtUtc"].toString()) : undefined as any;
+            this.status = _data["status"] ? DateOnlyTimelineOfRoleApprovalStatus.fromJS(_data["status"]) : undefined as any;
+            if (Array.isArray(_data["requirements"])) {
+                this.requirements = [] as any;
+                for (let item of _data["requirements"])
+                    this.requirements!.push(OrganizationRoleRequirementCompletionStatus.fromJS(item));
+            }
+        }
+    }
+
+    static fromJS(data: any): OrganizationRoleVersionApprovalStatus {
+        data = typeof data === 'object' ? data : {};
+        let result = new OrganizationRoleVersionApprovalStatus();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["roleName"] = this.roleName;
+        data["version"] = this.version;
+        data["supersededAtUtc"] = this.supersededAtUtc ? this.supersededAtUtc.toISOString() : undefined as any;
+        data["status"] = this.status ? this.status.toJSON() : undefined as any;
+        if (Array.isArray(this.requirements)) {
+            data["requirements"] = [];
+            for (let item of this.requirements)
+                data["requirements"].push(item ? item.toJSON() : undefined as any);
+        }
+        return data;
+    }
+}
+
+export interface IOrganizationRoleVersionApprovalStatus {
+    roleName: string;
+    version: string;
+    supersededAtUtc?: Date | undefined;
+    status?: DateOnlyTimelineOfRoleApprovalStatus | undefined;
+    requirements: OrganizationRoleRequirementCompletionStatus[];
+}
+
+export class OrganizationRoleRequirementCompletionStatus implements IOrganizationRoleRequirementCompletionStatus {
+    actionName!: string;
+    stage!: RequirementStage;
+    whenMet?: DateOnlyTimeline | undefined;
+
+    constructor(data?: IOrganizationRoleRequirementCompletionStatus) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.actionName = _data["actionName"];
+            this.stage = _data["stage"];
+            this.whenMet = _data["whenMet"] ? DateOnlyTimeline.fromJS(_data["whenMet"]) : undefined as any;
+        }
+    }
+
+    static fromJS(data: any): OrganizationRoleRequirementCompletionStatus {
+        data = typeof data === 'object' ? data : {};
+        let result = new OrganizationRoleRequirementCompletionStatus();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["actionName"] = this.actionName;
+        data["stage"] = this.stage;
+        data["whenMet"] = this.whenMet ? this.whenMet.toJSON() : undefined as any;
+        return data;
+    }
+}
+
+export interface IOrganizationRoleRequirementCompletionStatus {
+    actionName: string;
+    stage: RequirementStage;
+    whenMet?: DateOnlyTimeline | undefined;
+}
+
+export class DateOnlyTimeline implements IDateOnlyTimeline {
+    ranges!: DateRange[];
+    start!: Date;
+    end!: Date;
+
+    constructor(data?: IDateOnlyTimeline) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+        if (!data) {
+            this.ranges = [];
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            if (Array.isArray(_data["ranges"])) {
+                this.ranges = [] as any;
+                for (let item of _data["ranges"])
+                    this.ranges!.push(DateRange.fromJS(item));
+            }
+            this.start = _data["start"] ? new Date(_data["start"].toString()) : undefined as any;
+            this.end = _data["end"] ? new Date(_data["end"].toString()) : undefined as any;
+        }
+    }
+
+    static fromJS(data: any): DateOnlyTimeline {
+        data = typeof data === 'object' ? data : {};
+        let result = new DateOnlyTimeline();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        if (Array.isArray(this.ranges)) {
+            data["ranges"] = [];
+            for (let item of this.ranges)
+                data["ranges"].push(item ? item.toJSON() : undefined as any);
+        }
+        data["start"] = this.start ? formatDate(this.start) : undefined as any;
+        data["end"] = this.end ? formatDate(this.end) : undefined as any;
+        return data;
+    }
+}
+
+export interface IDateOnlyTimeline {
+    ranges: DateRange[];
+    start: Date;
+    end: Date;
+}
+
+export class DateRange implements IDateRange {
+    start!: Date;
+    end!: Date;
+    totalDaysInclusive!: number;
+
+    constructor(data?: IDateRange) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.start = _data["start"] ? new Date(_data["start"].toString()) : undefined as any;
+            this.end = _data["end"] ? new Date(_data["end"].toString()) : undefined as any;
+            this.totalDaysInclusive = _data["totalDaysInclusive"];
+        }
+    }
+
+    static fromJS(data: any): DateRange {
+        data = typeof data === 'object' ? data : {};
+        let result = new DateRange();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["start"] = this.start ? formatDate(this.start) : undefined as any;
+        data["end"] = this.end ? formatDate(this.end) : undefined as any;
+        data["totalDaysInclusive"] = this.totalDaysInclusive;
+        return data;
+    }
+}
+
+export interface IDateRange {
+    start: Date;
+    end: Date;
+    totalDaysInclusive: number;
+}
+
+export class CompletedRequirementInfo implements ICompletedRequirementInfo {
+    userId!: string;
+    timestampUtc!: Date;
+    completedRequirementId!: string;
+    requirementName!: string;
+    completedAtUtc!: Date;
+    expiresAtUtc?: Date | undefined;
+    uploadedDocumentId?: string | undefined;
+    noteId?: string | undefined;
+    roleNames?: string[] | undefined;
+
+    constructor(data?: ICompletedRequirementInfo) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.userId = _data["userId"];
+            this.timestampUtc = _data["timestampUtc"] ? new Date(_data["timestampUtc"].toString()) : undefined as any;
+            this.completedRequirementId = _data["completedRequirementId"];
+            this.requirementName = _data["requirementName"];
+            this.completedAtUtc = _data["completedAtUtc"] ? new Date(_data["completedAtUtc"].toString()) : undefined as any;
+            this.expiresAtUtc = _data["expiresAtUtc"] ? new Date(_data["expiresAtUtc"].toString()) : undefined as any;
+            this.uploadedDocumentId = _data["uploadedDocumentId"];
+            this.noteId = _data["noteId"];
+            if (Array.isArray(_data["roleNames"])) {
+                this.roleNames = [] as any;
+                for (let item of _data["roleNames"])
+                    this.roleNames!.push(item);
+            }
+        }
+    }
+
+    static fromJS(data: any): CompletedRequirementInfo {
+        data = typeof data === 'object' ? data : {};
+        let result = new CompletedRequirementInfo();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["userId"] = this.userId;
+        data["timestampUtc"] = this.timestampUtc ? this.timestampUtc.toISOString() : undefined as any;
+        data["completedRequirementId"] = this.completedRequirementId;
+        data["requirementName"] = this.requirementName;
+        data["completedAtUtc"] = this.completedAtUtc ? this.completedAtUtc.toISOString() : undefined as any;
+        data["expiresAtUtc"] = this.expiresAtUtc ? this.expiresAtUtc.toISOString() : undefined as any;
+        data["uploadedDocumentId"] = this.uploadedDocumentId;
+        data["noteId"] = this.noteId;
+        if (Array.isArray(this.roleNames)) {
+            data["roleNames"] = [];
+            for (let item of this.roleNames)
+                data["roleNames"].push(item);
+        }
+        return data;
+    }
+}
+
+export interface ICompletedRequirementInfo {
+    userId: string;
+    timestampUtc: Date;
+    completedRequirementId: string;
+    requirementName: string;
+    completedAtUtc: Date;
+    expiresAtUtc?: Date | undefined;
+    uploadedDocumentId?: string | undefined;
+    noteId?: string | undefined;
+    roleNames?: string[] | undefined;
+}
+
+export class ExemptedRequirementInfo implements IExemptedRequirementInfo {
+    userId!: string;
+    timestampUtc!: Date;
+    requirementName!: string;
+    dueDate?: Date | undefined;
+    additionalComments!: string;
+    exemptionExpiresAtUtc?: Date | undefined;
+    roleNames?: string[] | undefined;
+
+    constructor(data?: IExemptedRequirementInfo) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.userId = _data["userId"];
+            this.timestampUtc = _data["timestampUtc"] ? new Date(_data["timestampUtc"].toString()) : undefined as any;
+            this.requirementName = _data["requirementName"];
+            this.dueDate = _data["dueDate"] ? new Date(_data["dueDate"].toString()) : undefined as any;
+            this.additionalComments = _data["additionalComments"];
+            this.exemptionExpiresAtUtc = _data["exemptionExpiresAtUtc"] ? new Date(_data["exemptionExpiresAtUtc"].toString()) : undefined as any;
+            if (Array.isArray(_data["roleNames"])) {
+                this.roleNames = [] as any;
+                for (let item of _data["roleNames"])
+                    this.roleNames!.push(item);
+            }
+        }
+    }
+
+    static fromJS(data: any): ExemptedRequirementInfo {
+        data = typeof data === 'object' ? data : {};
+        let result = new ExemptedRequirementInfo();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["userId"] = this.userId;
+        data["timestampUtc"] = this.timestampUtc ? this.timestampUtc.toISOString() : undefined as any;
+        data["requirementName"] = this.requirementName;
+        data["dueDate"] = this.dueDate ? this.dueDate.toISOString() : undefined as any;
+        data["additionalComments"] = this.additionalComments;
+        data["exemptionExpiresAtUtc"] = this.exemptionExpiresAtUtc ? this.exemptionExpiresAtUtc.toISOString() : undefined as any;
+        if (Array.isArray(this.roleNames)) {
+            data["roleNames"] = [];
+            for (let item of this.roleNames)
+                data["roleNames"].push(item);
+        }
+        return data;
+    }
+}
+
+export interface IExemptedRequirementInfo {
+    userId: string;
+    timestampUtc: Date;
+    requirementName: string;
+    dueDate?: Date | undefined;
+    additionalComments: string;
+    exemptionExpiresAtUtc?: Date | undefined;
+    roleNames?: string[] | undefined;
+}
+
+export class RoleRemoval implements IRoleRemoval {
+    roleName!: string;
+    reason!: RoleRemovalReason;
+    effectiveSince!: Date;
+    effectiveUntil?: Date | undefined;
+    additionalComments?: string | undefined;
+
+    constructor(data?: IRoleRemoval) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.roleName = _data["roleName"];
+            this.reason = _data["reason"];
+            this.effectiveSince = _data["effectiveSince"] ? new Date(_data["effectiveSince"].toString()) : undefined as any;
+            this.effectiveUntil = _data["effectiveUntil"] ? new Date(_data["effectiveUntil"].toString()) : undefined as any;
+            this.additionalComments = _data["additionalComments"];
+        }
+    }
+
+    static fromJS(data: any): RoleRemoval {
+        data = typeof data === 'object' ? data : {};
+        let result = new RoleRemoval();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["roleName"] = this.roleName;
+        data["reason"] = this.reason;
+        data["effectiveSince"] = this.effectiveSince ? formatDate(this.effectiveSince) : undefined as any;
+        data["effectiveUntil"] = this.effectiveUntil ? formatDate(this.effectiveUntil) : undefined as any;
+        data["additionalComments"] = this.additionalComments;
+        return data;
+    }
+}
+
+export interface IRoleRemoval {
+    roleName: string;
+    reason: RoleRemovalReason;
+    effectiveSince: Date;
+    effectiveUntil?: Date | undefined;
+    additionalComments?: string | undefined;
+}
+
+export enum RoleRemovalReason {
+    Inactive = 0,
+    OptOut = 1,
+    Denied = 2,
 }
 
 export class FamilyRecordsAggregate extends RecordsAggregate implements IFamilyRecordsAggregate {
@@ -6964,150 +8045,6 @@ export interface IV1Case {
     linkedV1ReferralIds: string[];
 }
 
-export class CompletedRequirementInfo implements ICompletedRequirementInfo {
-    userId!: string;
-    timestampUtc!: Date;
-    completedRequirementId!: string;
-    requirementName!: string;
-    completedAtUtc!: Date;
-    expiresAtUtc?: Date | undefined;
-    uploadedDocumentId?: string | undefined;
-    noteId?: string | undefined;
-    roleNames?: string[] | undefined;
-
-    constructor(data?: ICompletedRequirementInfo) {
-        if (data) {
-            for (var property in data) {
-                if (data.hasOwnProperty(property))
-                    (this as any)[property] = (data as any)[property];
-            }
-        }
-    }
-
-    init(_data?: any) {
-        if (_data) {
-            this.userId = _data["userId"];
-            this.timestampUtc = _data["timestampUtc"] ? new Date(_data["timestampUtc"].toString()) : undefined as any;
-            this.completedRequirementId = _data["completedRequirementId"];
-            this.requirementName = _data["requirementName"];
-            this.completedAtUtc = _data["completedAtUtc"] ? new Date(_data["completedAtUtc"].toString()) : undefined as any;
-            this.expiresAtUtc = _data["expiresAtUtc"] ? new Date(_data["expiresAtUtc"].toString()) : undefined as any;
-            this.uploadedDocumentId = _data["uploadedDocumentId"];
-            this.noteId = _data["noteId"];
-            if (Array.isArray(_data["roleNames"])) {
-                this.roleNames = [] as any;
-                for (let item of _data["roleNames"])
-                    this.roleNames!.push(item);
-            }
-        }
-    }
-
-    static fromJS(data: any): CompletedRequirementInfo {
-        data = typeof data === 'object' ? data : {};
-        let result = new CompletedRequirementInfo();
-        result.init(data);
-        return result;
-    }
-
-    toJSON(data?: any) {
-        data = typeof data === 'object' ? data : {};
-        data["userId"] = this.userId;
-        data["timestampUtc"] = this.timestampUtc ? this.timestampUtc.toISOString() : undefined as any;
-        data["completedRequirementId"] = this.completedRequirementId;
-        data["requirementName"] = this.requirementName;
-        data["completedAtUtc"] = this.completedAtUtc ? this.completedAtUtc.toISOString() : undefined as any;
-        data["expiresAtUtc"] = this.expiresAtUtc ? this.expiresAtUtc.toISOString() : undefined as any;
-        data["uploadedDocumentId"] = this.uploadedDocumentId;
-        data["noteId"] = this.noteId;
-        if (Array.isArray(this.roleNames)) {
-            data["roleNames"] = [];
-            for (let item of this.roleNames)
-                data["roleNames"].push(item);
-        }
-        return data;
-    }
-}
-
-export interface ICompletedRequirementInfo {
-    userId: string;
-    timestampUtc: Date;
-    completedRequirementId: string;
-    requirementName: string;
-    completedAtUtc: Date;
-    expiresAtUtc?: Date | undefined;
-    uploadedDocumentId?: string | undefined;
-    noteId?: string | undefined;
-    roleNames?: string[] | undefined;
-}
-
-export class ExemptedRequirementInfo implements IExemptedRequirementInfo {
-    userId!: string;
-    timestampUtc!: Date;
-    requirementName!: string;
-    dueDate?: Date | undefined;
-    additionalComments!: string;
-    exemptionExpiresAtUtc?: Date | undefined;
-    roleNames?: string[] | undefined;
-
-    constructor(data?: IExemptedRequirementInfo) {
-        if (data) {
-            for (var property in data) {
-                if (data.hasOwnProperty(property))
-                    (this as any)[property] = (data as any)[property];
-            }
-        }
-    }
-
-    init(_data?: any) {
-        if (_data) {
-            this.userId = _data["userId"];
-            this.timestampUtc = _data["timestampUtc"] ? new Date(_data["timestampUtc"].toString()) : undefined as any;
-            this.requirementName = _data["requirementName"];
-            this.dueDate = _data["dueDate"] ? new Date(_data["dueDate"].toString()) : undefined as any;
-            this.additionalComments = _data["additionalComments"];
-            this.exemptionExpiresAtUtc = _data["exemptionExpiresAtUtc"] ? new Date(_data["exemptionExpiresAtUtc"].toString()) : undefined as any;
-            if (Array.isArray(_data["roleNames"])) {
-                this.roleNames = [] as any;
-                for (let item of _data["roleNames"])
-                    this.roleNames!.push(item);
-            }
-        }
-    }
-
-    static fromJS(data: any): ExemptedRequirementInfo {
-        data = typeof data === 'object' ? data : {};
-        let result = new ExemptedRequirementInfo();
-        result.init(data);
-        return result;
-    }
-
-    toJSON(data?: any) {
-        data = typeof data === 'object' ? data : {};
-        data["userId"] = this.userId;
-        data["timestampUtc"] = this.timestampUtc ? this.timestampUtc.toISOString() : undefined as any;
-        data["requirementName"] = this.requirementName;
-        data["dueDate"] = this.dueDate ? this.dueDate.toISOString() : undefined as any;
-        data["additionalComments"] = this.additionalComments;
-        data["exemptionExpiresAtUtc"] = this.exemptionExpiresAtUtc ? this.exemptionExpiresAtUtc.toISOString() : undefined as any;
-        if (Array.isArray(this.roleNames)) {
-            data["roleNames"] = [];
-            for (let item of this.roleNames)
-                data["roleNames"].push(item);
-        }
-        return data;
-    }
-}
-
-export interface IExemptedRequirementInfo {
-    userId: string;
-    timestampUtc: Date;
-    requirementName: string;
-    dueDate?: Date | undefined;
-    additionalComments: string;
-    exemptionExpiresAtUtc?: Date | undefined;
-    roleNames?: string[] | undefined;
-}
-
 export class Arrangement implements IArrangement {
     id!: string;
     arrangementType!: string;
@@ -7627,6 +8564,7 @@ export class VolunteerFamilyInfo implements IVolunteerFamilyInfo {
     exemptedRequirements!: ExemptedRequirementInfo[];
     availableApplications!: string[];
     missingRequirements!: ValueTupleOfStringAndValueTuple_2Of[];
+    missingOptionalRequirements!: ValueTupleOfStringAndValueTuple_2Of[];
     roleRemovals!: RoleRemoval[];
     individualVolunteers!: { [key: string]: VolunteerInfo; };
     history!: Activity[];
@@ -7647,6 +8585,7 @@ export class VolunteerFamilyInfo implements IVolunteerFamilyInfo {
             this.exemptedRequirements = [];
             this.availableApplications = [];
             this.missingRequirements = [];
+            this.missingOptionalRequirements = [];
             this.roleRemovals = [];
             this.individualVolunteers = {};
             this.history = [];
@@ -7682,6 +8621,11 @@ export class VolunteerFamilyInfo implements IVolunteerFamilyInfo {
                 this.missingRequirements = [] as any;
                 for (let item of _data["missingRequirements"])
                     this.missingRequirements!.push(ValueTupleOfStringAndValueTuple_2Of.fromJS(item));
+            }
+            if (Array.isArray(_data["missingOptionalRequirements"])) {
+                this.missingOptionalRequirements = [] as any;
+                for (let item of _data["missingOptionalRequirements"])
+                    this.missingOptionalRequirements!.push(ValueTupleOfStringAndValueTuple_2Of.fromJS(item));
             }
             if (Array.isArray(_data["roleRemovals"])) {
                 this.roleRemovals = [] as any;
@@ -7754,6 +8698,11 @@ export class VolunteerFamilyInfo implements IVolunteerFamilyInfo {
             for (let item of this.missingRequirements)
                 data["missingRequirements"].push(item ? item.toJSON() : undefined as any);
         }
+        if (Array.isArray(this.missingOptionalRequirements)) {
+            data["missingOptionalRequirements"] = [];
+            for (let item of this.missingOptionalRequirements)
+                data["missingOptionalRequirements"].push(item ? item.toJSON() : undefined as any);
+        }
         if (Array.isArray(this.roleRemovals)) {
             data["roleRemovals"] = [];
             for (let item of this.roleRemovals)
@@ -7796,6 +8745,7 @@ export interface IVolunteerFamilyInfo {
     exemptedRequirements: ExemptedRequirementInfo[];
     availableApplications: string[];
     missingRequirements: ValueTupleOfStringAndValueTuple_2Of[];
+    missingOptionalRequirements: ValueTupleOfStringAndValueTuple_2Of[];
     roleRemovals: RoleRemoval[];
     individualVolunteers: { [key: string]: VolunteerInfo; };
     history: Activity[];
@@ -7809,6 +8759,7 @@ export class FamilyRoleApprovalStatus implements IFamilyRoleApprovalStatus {
     roleVersionApprovals!: FamilyRoleVersionApprovalStatus[];
     currentStatus?: RoleApprovalStatus | undefined;
     currentMissingFamilyRequirements!: ValueTupleOfStringAndValueTuple_2Of[];
+    currentMissingOptionalFamilyRequirements!: ValueTupleOfStringAndValueTuple_2Of[];
     currentAvailableFamilyApplications!: string[];
     currentMissingIndividualRequirements!: ValueTupleOfGuidAndStringAndValueTuple_2Of[];
 
@@ -7822,6 +8773,7 @@ export class FamilyRoleApprovalStatus implements IFamilyRoleApprovalStatus {
         if (!data) {
             this.roleVersionApprovals = [];
             this.currentMissingFamilyRequirements = [];
+            this.currentMissingOptionalFamilyRequirements = [];
             this.currentAvailableFamilyApplications = [];
             this.currentMissingIndividualRequirements = [];
         }
@@ -7840,6 +8792,11 @@ export class FamilyRoleApprovalStatus implements IFamilyRoleApprovalStatus {
                 this.currentMissingFamilyRequirements = [] as any;
                 for (let item of _data["currentMissingFamilyRequirements"])
                     this.currentMissingFamilyRequirements!.push(ValueTupleOfStringAndValueTuple_2Of.fromJS(item));
+            }
+            if (Array.isArray(_data["currentMissingOptionalFamilyRequirements"])) {
+                this.currentMissingOptionalFamilyRequirements = [] as any;
+                for (let item of _data["currentMissingOptionalFamilyRequirements"])
+                    this.currentMissingOptionalFamilyRequirements!.push(ValueTupleOfStringAndValueTuple_2Of.fromJS(item));
             }
             if (Array.isArray(_data["currentAvailableFamilyApplications"])) {
                 this.currentAvailableFamilyApplications = [] as any;
@@ -7875,6 +8832,11 @@ export class FamilyRoleApprovalStatus implements IFamilyRoleApprovalStatus {
             for (let item of this.currentMissingFamilyRequirements)
                 data["currentMissingFamilyRequirements"].push(item ? item.toJSON() : undefined as any);
         }
+        if (Array.isArray(this.currentMissingOptionalFamilyRequirements)) {
+            data["currentMissingOptionalFamilyRequirements"] = [];
+            for (let item of this.currentMissingOptionalFamilyRequirements)
+                data["currentMissingOptionalFamilyRequirements"].push(item ? item.toJSON() : undefined as any);
+        }
         if (Array.isArray(this.currentAvailableFamilyApplications)) {
             data["currentAvailableFamilyApplications"] = [];
             for (let item of this.currentAvailableFamilyApplications)
@@ -7894,108 +8856,9 @@ export interface IFamilyRoleApprovalStatus {
     roleVersionApprovals: FamilyRoleVersionApprovalStatus[];
     currentStatus?: RoleApprovalStatus | undefined;
     currentMissingFamilyRequirements: ValueTupleOfStringAndValueTuple_2Of[];
+    currentMissingOptionalFamilyRequirements: ValueTupleOfStringAndValueTuple_2Of[];
     currentAvailableFamilyApplications: string[];
     currentMissingIndividualRequirements: ValueTupleOfGuidAndStringAndValueTuple_2Of[];
-}
-
-export class DateOnlyTimelineOfRoleApprovalStatus implements IDateOnlyTimelineOfRoleApprovalStatus {
-    ranges!: DateRangeOfRoleApprovalStatus[];
-
-    constructor(data?: IDateOnlyTimelineOfRoleApprovalStatus) {
-        if (data) {
-            for (var property in data) {
-                if (data.hasOwnProperty(property))
-                    (this as any)[property] = (data as any)[property];
-            }
-        }
-        if (!data) {
-            this.ranges = [];
-        }
-    }
-
-    init(_data?: any) {
-        if (_data) {
-            if (Array.isArray(_data["ranges"])) {
-                this.ranges = [] as any;
-                for (let item of _data["ranges"])
-                    this.ranges!.push(DateRangeOfRoleApprovalStatus.fromJS(item));
-            }
-        }
-    }
-
-    static fromJS(data: any): DateOnlyTimelineOfRoleApprovalStatus {
-        data = typeof data === 'object' ? data : {};
-        let result = new DateOnlyTimelineOfRoleApprovalStatus();
-        result.init(data);
-        return result;
-    }
-
-    toJSON(data?: any) {
-        data = typeof data === 'object' ? data : {};
-        if (Array.isArray(this.ranges)) {
-            data["ranges"] = [];
-            for (let item of this.ranges)
-                data["ranges"].push(item ? item.toJSON() : undefined as any);
-        }
-        return data;
-    }
-}
-
-export interface IDateOnlyTimelineOfRoleApprovalStatus {
-    ranges: DateRangeOfRoleApprovalStatus[];
-}
-
-export class DateRangeOfRoleApprovalStatus implements IDateRangeOfRoleApprovalStatus {
-    start!: Date;
-    end!: Date;
-    tag!: RoleApprovalStatus;
-
-    constructor(data?: IDateRangeOfRoleApprovalStatus) {
-        if (data) {
-            for (var property in data) {
-                if (data.hasOwnProperty(property))
-                    (this as any)[property] = (data as any)[property];
-            }
-        }
-    }
-
-    init(_data?: any) {
-        if (_data) {
-            this.start = _data["start"] ? new Date(_data["start"].toString()) : undefined as any;
-            this.end = _data["end"] ? new Date(_data["end"].toString()) : undefined as any;
-            this.tag = _data["tag"];
-        }
-    }
-
-    static fromJS(data: any): DateRangeOfRoleApprovalStatus {
-        data = typeof data === 'object' ? data : {};
-        let result = new DateRangeOfRoleApprovalStatus();
-        result.init(data);
-        return result;
-    }
-
-    toJSON(data?: any) {
-        data = typeof data === 'object' ? data : {};
-        data["start"] = this.start ? formatDate(this.start) : undefined as any;
-        data["end"] = this.end ? formatDate(this.end) : undefined as any;
-        data["tag"] = this.tag;
-        return data;
-    }
-}
-
-export interface IDateRangeOfRoleApprovalStatus {
-    start: Date;
-    end: Date;
-    tag: RoleApprovalStatus;
-}
-
-export enum RoleApprovalStatus {
-    Prospective = 1,
-    Expired = 2,
-    Approved = 3,
-    Onboarded = 4,
-    Inactive = 5,
-    Denied = 6,
 }
 
 export class FamilyRoleVersionApprovalStatus implements IFamilyRoleVersionApprovalStatus {
@@ -8067,6 +8930,7 @@ export class FamilyRoleRequirementCompletionStatus implements IFamilyRoleRequire
     scope!: VolunteerFamilyRequirementScope;
     whenMet?: DateOnlyTimeline | undefined;
     statusDetails!: FamilyRequirementStatusDetail[];
+    isRequired?: boolean | undefined;
 
     constructor(data?: IFamilyRoleRequirementCompletionStatus) {
         if (data) {
@@ -8091,6 +8955,7 @@ export class FamilyRoleRequirementCompletionStatus implements IFamilyRoleRequire
                 for (let item of _data["statusDetails"])
                     this.statusDetails!.push(FamilyRequirementStatusDetail.fromJS(item));
             }
+            this.isRequired = _data["isRequired"];
         }
     }
 
@@ -8112,6 +8977,7 @@ export class FamilyRoleRequirementCompletionStatus implements IFamilyRoleRequire
             for (let item of this.statusDetails)
                 data["statusDetails"].push(item ? item.toJSON() : undefined as any);
         }
+        data["isRequired"] = this.isRequired;
         return data;
     }
 }
@@ -8122,105 +8988,7 @@ export interface IFamilyRoleRequirementCompletionStatus {
     scope: VolunteerFamilyRequirementScope;
     whenMet?: DateOnlyTimeline | undefined;
     statusDetails: FamilyRequirementStatusDetail[];
-}
-
-export class DateOnlyTimeline implements IDateOnlyTimeline {
-    ranges!: DateRange[];
-    start!: Date;
-    end!: Date;
-
-    constructor(data?: IDateOnlyTimeline) {
-        if (data) {
-            for (var property in data) {
-                if (data.hasOwnProperty(property))
-                    (this as any)[property] = (data as any)[property];
-            }
-        }
-        if (!data) {
-            this.ranges = [];
-        }
-    }
-
-    init(_data?: any) {
-        if (_data) {
-            if (Array.isArray(_data["ranges"])) {
-                this.ranges = [] as any;
-                for (let item of _data["ranges"])
-                    this.ranges!.push(DateRange.fromJS(item));
-            }
-            this.start = _data["start"] ? new Date(_data["start"].toString()) : undefined as any;
-            this.end = _data["end"] ? new Date(_data["end"].toString()) : undefined as any;
-        }
-    }
-
-    static fromJS(data: any): DateOnlyTimeline {
-        data = typeof data === 'object' ? data : {};
-        let result = new DateOnlyTimeline();
-        result.init(data);
-        return result;
-    }
-
-    toJSON(data?: any) {
-        data = typeof data === 'object' ? data : {};
-        if (Array.isArray(this.ranges)) {
-            data["ranges"] = [];
-            for (let item of this.ranges)
-                data["ranges"].push(item ? item.toJSON() : undefined as any);
-        }
-        data["start"] = this.start ? formatDate(this.start) : undefined as any;
-        data["end"] = this.end ? formatDate(this.end) : undefined as any;
-        return data;
-    }
-}
-
-export interface IDateOnlyTimeline {
-    ranges: DateRange[];
-    start: Date;
-    end: Date;
-}
-
-export class DateRange implements IDateRange {
-    start!: Date;
-    end!: Date;
-    totalDaysInclusive!: number;
-
-    constructor(data?: IDateRange) {
-        if (data) {
-            for (var property in data) {
-                if (data.hasOwnProperty(property))
-                    (this as any)[property] = (data as any)[property];
-            }
-        }
-    }
-
-    init(_data?: any) {
-        if (_data) {
-            this.start = _data["start"] ? new Date(_data["start"].toString()) : undefined as any;
-            this.end = _data["end"] ? new Date(_data["end"].toString()) : undefined as any;
-            this.totalDaysInclusive = _data["totalDaysInclusive"];
-        }
-    }
-
-    static fromJS(data: any): DateRange {
-        data = typeof data === 'object' ? data : {};
-        let result = new DateRange();
-        result.init(data);
-        return result;
-    }
-
-    toJSON(data?: any) {
-        data = typeof data === 'object' ? data : {};
-        data["start"] = this.start ? formatDate(this.start) : undefined as any;
-        data["end"] = this.end ? formatDate(this.end) : undefined as any;
-        data["totalDaysInclusive"] = this.totalDaysInclusive;
-        return data;
-    }
-}
-
-export interface IDateRange {
-    start: Date;
-    end: Date;
-    totalDaysInclusive: number;
+    isRequired?: boolean | undefined;
 }
 
 export class FamilyRequirementStatusDetail implements IFamilyRequirementStatusDetail {
@@ -8403,70 +9171,13 @@ export interface IValueTupleOfGuidAndStringAndValueTuple_2Of {
     item3?: ValueTupleOfStringAndString[] | undefined;
 }
 
-export class RoleRemoval implements IRoleRemoval {
-    roleName!: string;
-    reason!: RoleRemovalReason;
-    effectiveSince!: Date;
-    effectiveUntil?: Date | undefined;
-    additionalComments?: string | undefined;
-
-    constructor(data?: IRoleRemoval) {
-        if (data) {
-            for (var property in data) {
-                if (data.hasOwnProperty(property))
-                    (this as any)[property] = (data as any)[property];
-            }
-        }
-    }
-
-    init(_data?: any) {
-        if (_data) {
-            this.roleName = _data["roleName"];
-            this.reason = _data["reason"];
-            this.effectiveSince = _data["effectiveSince"] ? new Date(_data["effectiveSince"].toString()) : undefined as any;
-            this.effectiveUntil = _data["effectiveUntil"] ? new Date(_data["effectiveUntil"].toString()) : undefined as any;
-            this.additionalComments = _data["additionalComments"];
-        }
-    }
-
-    static fromJS(data: any): RoleRemoval {
-        data = typeof data === 'object' ? data : {};
-        let result = new RoleRemoval();
-        result.init(data);
-        return result;
-    }
-
-    toJSON(data?: any) {
-        data = typeof data === 'object' ? data : {};
-        data["roleName"] = this.roleName;
-        data["reason"] = this.reason;
-        data["effectiveSince"] = this.effectiveSince ? formatDate(this.effectiveSince) : undefined as any;
-        data["effectiveUntil"] = this.effectiveUntil ? formatDate(this.effectiveUntil) : undefined as any;
-        data["additionalComments"] = this.additionalComments;
-        return data;
-    }
-}
-
-export interface IRoleRemoval {
-    roleName: string;
-    reason: RoleRemovalReason;
-    effectiveSince: Date;
-    effectiveUntil?: Date | undefined;
-    additionalComments?: string | undefined;
-}
-
-export enum RoleRemovalReason {
-    Inactive = 0,
-    OptOut = 1,
-    Denied = 2,
-}
-
 export class VolunteerInfo implements IVolunteerInfo {
     approvalStatusByRole!: { [key: string]: IndividualRoleApprovalStatus; };
     completedRequirements!: CompletedRequirementInfo[];
     exemptedRequirements!: ExemptedRequirementInfo[];
     availableApplications!: string[];
     missingRequirements!: ValueTupleOfStringAndValueTuple_2Of[];
+    missingOptionalRequirements!: ValueTupleOfStringAndValueTuple_2Of[];
     roleRemovals!: RoleRemoval[];
 
     constructor(data?: IVolunteerInfo) {
@@ -8482,6 +9193,7 @@ export class VolunteerInfo implements IVolunteerInfo {
             this.exemptedRequirements = [];
             this.availableApplications = [];
             this.missingRequirements = [];
+            this.missingOptionalRequirements = [];
             this.roleRemovals = [];
         }
     }
@@ -8514,6 +9226,11 @@ export class VolunteerInfo implements IVolunteerInfo {
                 this.missingRequirements = [] as any;
                 for (let item of _data["missingRequirements"])
                     this.missingRequirements!.push(ValueTupleOfStringAndValueTuple_2Of.fromJS(item));
+            }
+            if (Array.isArray(_data["missingOptionalRequirements"])) {
+                this.missingOptionalRequirements = [] as any;
+                for (let item of _data["missingOptionalRequirements"])
+                    this.missingOptionalRequirements!.push(ValueTupleOfStringAndValueTuple_2Of.fromJS(item));
             }
             if (Array.isArray(_data["roleRemovals"])) {
                 this.roleRemovals = [] as any;
@@ -8559,6 +9276,11 @@ export class VolunteerInfo implements IVolunteerInfo {
             for (let item of this.missingRequirements)
                 data["missingRequirements"].push(item ? item.toJSON() : undefined as any);
         }
+        if (Array.isArray(this.missingOptionalRequirements)) {
+            data["missingOptionalRequirements"] = [];
+            for (let item of this.missingOptionalRequirements)
+                data["missingOptionalRequirements"].push(item ? item.toJSON() : undefined as any);
+        }
         if (Array.isArray(this.roleRemovals)) {
             data["roleRemovals"] = [];
             for (let item of this.roleRemovals)
@@ -8574,6 +9296,7 @@ export interface IVolunteerInfo {
     exemptedRequirements: ExemptedRequirementInfo[];
     availableApplications: string[];
     missingRequirements: ValueTupleOfStringAndValueTuple_2Of[];
+    missingOptionalRequirements: ValueTupleOfStringAndValueTuple_2Of[];
     roleRemovals: RoleRemoval[];
 }
 
@@ -8582,6 +9305,7 @@ export class IndividualRoleApprovalStatus implements IIndividualRoleApprovalStat
     roleVersionApprovals!: IndividualRoleVersionApprovalStatus[];
     currentStatus?: RoleApprovalStatus | undefined;
     currentMissingRequirements!: ValueTupleOfStringAndValueTuple_2Of[];
+    currentMissingOptionalRequirements!: ValueTupleOfStringAndValueTuple_2Of[];
     currentAvailableApplications!: string[];
 
     constructor(data?: IIndividualRoleApprovalStatus) {
@@ -8594,6 +9318,7 @@ export class IndividualRoleApprovalStatus implements IIndividualRoleApprovalStat
         if (!data) {
             this.roleVersionApprovals = [];
             this.currentMissingRequirements = [];
+            this.currentMissingOptionalRequirements = [];
             this.currentAvailableApplications = [];
         }
     }
@@ -8611,6 +9336,11 @@ export class IndividualRoleApprovalStatus implements IIndividualRoleApprovalStat
                 this.currentMissingRequirements = [] as any;
                 for (let item of _data["currentMissingRequirements"])
                     this.currentMissingRequirements!.push(ValueTupleOfStringAndValueTuple_2Of.fromJS(item));
+            }
+            if (Array.isArray(_data["currentMissingOptionalRequirements"])) {
+                this.currentMissingOptionalRequirements = [] as any;
+                for (let item of _data["currentMissingOptionalRequirements"])
+                    this.currentMissingOptionalRequirements!.push(ValueTupleOfStringAndValueTuple_2Of.fromJS(item));
             }
             if (Array.isArray(_data["currentAvailableApplications"])) {
                 this.currentAvailableApplications = [] as any;
@@ -8641,6 +9371,11 @@ export class IndividualRoleApprovalStatus implements IIndividualRoleApprovalStat
             for (let item of this.currentMissingRequirements)
                 data["currentMissingRequirements"].push(item ? item.toJSON() : undefined as any);
         }
+        if (Array.isArray(this.currentMissingOptionalRequirements)) {
+            data["currentMissingOptionalRequirements"] = [];
+            for (let item of this.currentMissingOptionalRequirements)
+                data["currentMissingOptionalRequirements"].push(item ? item.toJSON() : undefined as any);
+        }
         if (Array.isArray(this.currentAvailableApplications)) {
             data["currentAvailableApplications"] = [];
             for (let item of this.currentAvailableApplications)
@@ -8655,6 +9390,7 @@ export interface IIndividualRoleApprovalStatus {
     roleVersionApprovals: IndividualRoleVersionApprovalStatus[];
     currentStatus?: RoleApprovalStatus | undefined;
     currentMissingRequirements: ValueTupleOfStringAndValueTuple_2Of[];
+    currentMissingOptionalRequirements: ValueTupleOfStringAndValueTuple_2Of[];
     currentAvailableApplications: string[];
 }
 
@@ -8725,6 +9461,7 @@ export class IndividualRoleRequirementCompletionStatus implements IIndividualRol
     actionName!: string;
     stage!: RequirementStage;
     whenMet?: DateOnlyTimeline | undefined;
+    isRequired?: boolean | undefined;
 
     constructor(data?: IIndividualRoleRequirementCompletionStatus) {
         if (data) {
@@ -8740,6 +9477,7 @@ export class IndividualRoleRequirementCompletionStatus implements IIndividualRol
             this.actionName = _data["actionName"];
             this.stage = _data["stage"];
             this.whenMet = _data["whenMet"] ? DateOnlyTimeline.fromJS(_data["whenMet"]) : undefined as any;
+            this.isRequired = _data["isRequired"];
         }
     }
 
@@ -8755,6 +9493,7 @@ export class IndividualRoleRequirementCompletionStatus implements IIndividualRol
         data["actionName"] = this.actionName;
         data["stage"] = this.stage;
         data["whenMet"] = this.whenMet ? this.whenMet.toJSON() : undefined as any;
+        data["isRequired"] = this.isRequired;
         return data;
     }
 }
@@ -8763,6 +9502,7 @@ export interface IIndividualRoleRequirementCompletionStatus {
     actionName: string;
     stage: RequirementStage;
     whenMet?: DateOnlyTimeline | undefined;
+    isRequired?: boolean | undefined;
 }
 
 export class ArrangementEntry implements IArrangementEntry {
@@ -9435,6 +10175,11 @@ export abstract class AtomicRecordsCommand implements IAtomicRecordsCommand {
         }
         if (data["discriminator"] === "NoteRecordsCommand") {
             let result = new NoteRecordsCommand();
+            result.init(data);
+            return result;
+        }
+        if (data["discriminator"] === "OrganizationApprovalRecordsCommand") {
+            let result = new OrganizationApprovalRecordsCommand();
             result.init(data);
             return result;
         }
@@ -11311,6 +12056,11 @@ export abstract class CommunityCommand implements ICommunityCommand {
             result.init(data);
             return result;
         }
+        if (data["discriminator"] === "SetOrganizationCategories") {
+            let result = new SetOrganizationCategories();
+            result.init(data);
+            return result;
+        }
         if (data["discriminator"] === "UploadCommunityDocument") {
             let result = new UploadCommunityDocument();
             result.init(data);
@@ -11613,6 +12363,51 @@ export class RenameCommunity extends CommunityCommand implements IRenameCommunit
 
 export interface IRenameCommunity extends ICommunityCommand {
     name: string;
+}
+
+export class SetOrganizationCategories extends CommunityCommand implements ISetOrganizationCategories {
+    categoryIds!: string[];
+
+    constructor(data?: ISetOrganizationCategories) {
+        super(data);
+        if (!data) {
+            this.categoryIds = [];
+        }
+        this._discriminator = "SetOrganizationCategories";
+    }
+
+    override init(_data?: any) {
+        super.init(_data);
+        if (_data) {
+            if (Array.isArray(_data["categoryIds"])) {
+                this.categoryIds = [] as any;
+                for (let item of _data["categoryIds"])
+                    this.categoryIds!.push(item);
+            }
+        }
+    }
+
+    static override fromJS(data: any): SetOrganizationCategories {
+        data = typeof data === 'object' ? data : {};
+        let result = new SetOrganizationCategories();
+        result.init(data);
+        return result;
+    }
+
+    override toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        if (Array.isArray(this.categoryIds)) {
+            data["categoryIds"] = [];
+            for (let item of this.categoryIds)
+                data["categoryIds"].push(item);
+        }
+        super.toJSON(data);
+        return data;
+    }
+}
+
+export interface ISetOrganizationCategories extends ICommunityCommand {
+    categoryIds: string[];
 }
 
 export class UploadCommunityDocument extends CommunityCommand implements IUploadCommunityDocument {
@@ -13617,6 +14412,397 @@ export class UpdateNoteAccessLevel extends NoteCommand implements IUpdateNoteAcc
 
 export interface IUpdateNoteAccessLevel extends INoteCommand {
     accessLevel?: string | undefined;
+}
+
+export class OrganizationApprovalRecordsCommand extends AtomicRecordsCommand implements IOrganizationApprovalRecordsCommand {
+    command!: OrganizationApprovalCommand;
+
+    constructor(data?: IOrganizationApprovalRecordsCommand) {
+        super(data);
+        this._discriminator = "OrganizationApprovalRecordsCommand";
+    }
+
+    override init(_data?: any) {
+        super.init(_data);
+        if (_data) {
+            this.command = _data["command"] ? OrganizationApprovalCommand.fromJS(_data["command"]) : undefined as any;
+        }
+    }
+
+    static override fromJS(data: any): OrganizationApprovalRecordsCommand {
+        data = typeof data === 'object' ? data : {};
+        let result = new OrganizationApprovalRecordsCommand();
+        result.init(data);
+        return result;
+    }
+
+    override toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["command"] = this.command ? this.command.toJSON() : undefined as any;
+        super.toJSON(data);
+        return data;
+    }
+}
+
+export interface IOrganizationApprovalRecordsCommand extends IAtomicRecordsCommand {
+    command: OrganizationApprovalCommand;
+}
+
+export abstract class OrganizationApprovalCommand implements IOrganizationApprovalCommand {
+    organizationId!: string;
+
+    protected _discriminator: string;
+
+    constructor(data?: IOrganizationApprovalCommand) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+        this._discriminator = "OrganizationApprovalCommand";
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.organizationId = _data["organizationId"];
+        }
+    }
+
+    static fromJS(data: any): OrganizationApprovalCommand {
+        data = typeof data === 'object' ? data : {};
+        if (data["discriminator"] === "ActivateOrganizationApprovals") {
+            let result = new ActivateOrganizationApprovals();
+            result.init(data);
+            return result;
+        }
+        if (data["discriminator"] === "CompleteOrganizationRequirement") {
+            let result = new CompleteOrganizationRequirement();
+            result.init(data);
+            return result;
+        }
+        if (data["discriminator"] === "ExemptOrganizationRequirement") {
+            let result = new ExemptOrganizationRequirement();
+            result.init(data);
+            return result;
+        }
+        if (data["discriminator"] === "MarkOrganizationRequirementIncomplete") {
+            let result = new MarkOrganizationRequirementIncomplete();
+            result.init(data);
+            return result;
+        }
+        if (data["discriminator"] === "RemoveOrganizationRole") {
+            let result = new RemoveOrganizationRole();
+            result.init(data);
+            return result;
+        }
+        if (data["discriminator"] === "ResetOrganizationRole") {
+            let result = new ResetOrganizationRole();
+            result.init(data);
+            return result;
+        }
+        if (data["discriminator"] === "UnexemptOrganizationRequirement") {
+            let result = new UnexemptOrganizationRequirement();
+            result.init(data);
+            return result;
+        }
+        throw new Error("The abstract class 'OrganizationApprovalCommand' cannot be instantiated.");
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["discriminator"] = this._discriminator;
+        data["organizationId"] = this.organizationId;
+        return data;
+    }
+}
+
+export interface IOrganizationApprovalCommand {
+    organizationId: string;
+}
+
+export class ActivateOrganizationApprovals extends OrganizationApprovalCommand implements IActivateOrganizationApprovals {
+
+    constructor(data?: IActivateOrganizationApprovals) {
+        super(data);
+        this._discriminator = "ActivateOrganizationApprovals";
+    }
+
+    override init(_data?: any) {
+        super.init(_data);
+    }
+
+    static override fromJS(data: any): ActivateOrganizationApprovals {
+        data = typeof data === 'object' ? data : {};
+        let result = new ActivateOrganizationApprovals();
+        result.init(data);
+        return result;
+    }
+
+    override toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        super.toJSON(data);
+        return data;
+    }
+}
+
+export interface IActivateOrganizationApprovals extends IOrganizationApprovalCommand {
+}
+
+export class CompleteOrganizationRequirement extends OrganizationApprovalCommand implements ICompleteOrganizationRequirement {
+    completedRequirementId!: string;
+    requirementName!: string;
+    completedAtUtc!: Date;
+    uploadedDocumentId?: string | undefined;
+    noteId?: string | undefined;
+
+    constructor(data?: ICompleteOrganizationRequirement) {
+        super(data);
+        this._discriminator = "CompleteOrganizationRequirement";
+    }
+
+    override init(_data?: any) {
+        super.init(_data);
+        if (_data) {
+            this.completedRequirementId = _data["completedRequirementId"];
+            this.requirementName = _data["requirementName"];
+            this.completedAtUtc = _data["completedAtUtc"] ? new Date(_data["completedAtUtc"].toString()) : undefined as any;
+            this.uploadedDocumentId = _data["uploadedDocumentId"];
+            this.noteId = _data["noteId"];
+        }
+    }
+
+    static override fromJS(data: any): CompleteOrganizationRequirement {
+        data = typeof data === 'object' ? data : {};
+        let result = new CompleteOrganizationRequirement();
+        result.init(data);
+        return result;
+    }
+
+    override toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["completedRequirementId"] = this.completedRequirementId;
+        data["requirementName"] = this.requirementName;
+        data["completedAtUtc"] = this.completedAtUtc ? this.completedAtUtc.toISOString() : undefined as any;
+        data["uploadedDocumentId"] = this.uploadedDocumentId;
+        data["noteId"] = this.noteId;
+        super.toJSON(data);
+        return data;
+    }
+}
+
+export interface ICompleteOrganizationRequirement extends IOrganizationApprovalCommand {
+    completedRequirementId: string;
+    requirementName: string;
+    completedAtUtc: Date;
+    uploadedDocumentId?: string | undefined;
+    noteId?: string | undefined;
+}
+
+export class ExemptOrganizationRequirement extends OrganizationApprovalCommand implements IExemptOrganizationRequirement {
+    requirementName!: string;
+    additionalComments!: string;
+    exemptionExpiresAtUtc?: Date | undefined;
+
+    constructor(data?: IExemptOrganizationRequirement) {
+        super(data);
+        this._discriminator = "ExemptOrganizationRequirement";
+    }
+
+    override init(_data?: any) {
+        super.init(_data);
+        if (_data) {
+            this.requirementName = _data["requirementName"];
+            this.additionalComments = _data["additionalComments"];
+            this.exemptionExpiresAtUtc = _data["exemptionExpiresAtUtc"] ? new Date(_data["exemptionExpiresAtUtc"].toString()) : undefined as any;
+        }
+    }
+
+    static override fromJS(data: any): ExemptOrganizationRequirement {
+        data = typeof data === 'object' ? data : {};
+        let result = new ExemptOrganizationRequirement();
+        result.init(data);
+        return result;
+    }
+
+    override toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["requirementName"] = this.requirementName;
+        data["additionalComments"] = this.additionalComments;
+        data["exemptionExpiresAtUtc"] = this.exemptionExpiresAtUtc ? this.exemptionExpiresAtUtc.toISOString() : undefined as any;
+        super.toJSON(data);
+        return data;
+    }
+}
+
+export interface IExemptOrganizationRequirement extends IOrganizationApprovalCommand {
+    requirementName: string;
+    additionalComments: string;
+    exemptionExpiresAtUtc?: Date | undefined;
+}
+
+export class MarkOrganizationRequirementIncomplete extends OrganizationApprovalCommand implements IMarkOrganizationRequirementIncomplete {
+    completedRequirementId!: string;
+    requirementName!: string;
+
+    constructor(data?: IMarkOrganizationRequirementIncomplete) {
+        super(data);
+        this._discriminator = "MarkOrganizationRequirementIncomplete";
+    }
+
+    override init(_data?: any) {
+        super.init(_data);
+        if (_data) {
+            this.completedRequirementId = _data["completedRequirementId"];
+            this.requirementName = _data["requirementName"];
+        }
+    }
+
+    static override fromJS(data: any): MarkOrganizationRequirementIncomplete {
+        data = typeof data === 'object' ? data : {};
+        let result = new MarkOrganizationRequirementIncomplete();
+        result.init(data);
+        return result;
+    }
+
+    override toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["completedRequirementId"] = this.completedRequirementId;
+        data["requirementName"] = this.requirementName;
+        super.toJSON(data);
+        return data;
+    }
+}
+
+export interface IMarkOrganizationRequirementIncomplete extends IOrganizationApprovalCommand {
+    completedRequirementId: string;
+    requirementName: string;
+}
+
+export class RemoveOrganizationRole extends OrganizationApprovalCommand implements IRemoveOrganizationRole {
+    roleName!: string;
+    reason!: RoleRemovalReason;
+    additionalComments?: string | undefined;
+    effectiveSince?: Date | undefined;
+    effectiveThrough?: Date | undefined;
+
+    constructor(data?: IRemoveOrganizationRole) {
+        super(data);
+        this._discriminator = "RemoveOrganizationRole";
+    }
+
+    override init(_data?: any) {
+        super.init(_data);
+        if (_data) {
+            this.roleName = _data["roleName"];
+            this.reason = _data["reason"];
+            this.additionalComments = _data["additionalComments"];
+            this.effectiveSince = _data["effectiveSince"] ? new Date(_data["effectiveSince"].toString()) : undefined as any;
+            this.effectiveThrough = _data["effectiveThrough"] ? new Date(_data["effectiveThrough"].toString()) : undefined as any;
+        }
+    }
+
+    static override fromJS(data: any): RemoveOrganizationRole {
+        data = typeof data === 'object' ? data : {};
+        let result = new RemoveOrganizationRole();
+        result.init(data);
+        return result;
+    }
+
+    override toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["roleName"] = this.roleName;
+        data["reason"] = this.reason;
+        data["additionalComments"] = this.additionalComments;
+        data["effectiveSince"] = this.effectiveSince ? formatDate(this.effectiveSince) : undefined as any;
+        data["effectiveThrough"] = this.effectiveThrough ? formatDate(this.effectiveThrough) : undefined as any;
+        super.toJSON(data);
+        return data;
+    }
+}
+
+export interface IRemoveOrganizationRole extends IOrganizationApprovalCommand {
+    roleName: string;
+    reason: RoleRemovalReason;
+    additionalComments?: string | undefined;
+    effectiveSince?: Date | undefined;
+    effectiveThrough?: Date | undefined;
+}
+
+export class ResetOrganizationRole extends OrganizationApprovalCommand implements IResetOrganizationRole {
+    roleName!: string;
+    forRemovalEffectiveSince?: Date | undefined;
+    effectiveThrough?: Date | undefined;
+
+    constructor(data?: IResetOrganizationRole) {
+        super(data);
+        this._discriminator = "ResetOrganizationRole";
+    }
+
+    override init(_data?: any) {
+        super.init(_data);
+        if (_data) {
+            this.roleName = _data["roleName"];
+            this.forRemovalEffectiveSince = _data["forRemovalEffectiveSince"] ? new Date(_data["forRemovalEffectiveSince"].toString()) : undefined as any;
+            this.effectiveThrough = _data["effectiveThrough"] ? new Date(_data["effectiveThrough"].toString()) : undefined as any;
+        }
+    }
+
+    static override fromJS(data: any): ResetOrganizationRole {
+        data = typeof data === 'object' ? data : {};
+        let result = new ResetOrganizationRole();
+        result.init(data);
+        return result;
+    }
+
+    override toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["roleName"] = this.roleName;
+        data["forRemovalEffectiveSince"] = this.forRemovalEffectiveSince ? formatDate(this.forRemovalEffectiveSince) : undefined as any;
+        data["effectiveThrough"] = this.effectiveThrough ? formatDate(this.effectiveThrough) : undefined as any;
+        super.toJSON(data);
+        return data;
+    }
+}
+
+export interface IResetOrganizationRole extends IOrganizationApprovalCommand {
+    roleName: string;
+    forRemovalEffectiveSince?: Date | undefined;
+    effectiveThrough?: Date | undefined;
+}
+
+export class UnexemptOrganizationRequirement extends OrganizationApprovalCommand implements IUnexemptOrganizationRequirement {
+    requirementName!: string;
+
+    constructor(data?: IUnexemptOrganizationRequirement) {
+        super(data);
+        this._discriminator = "UnexemptOrganizationRequirement";
+    }
+
+    override init(_data?: any) {
+        super.init(_data);
+        if (_data) {
+            this.requirementName = _data["requirementName"];
+        }
+    }
+
+    static override fromJS(data: any): UnexemptOrganizationRequirement {
+        data = typeof data === 'object' ? data : {};
+        let result = new UnexemptOrganizationRequirement();
+        result.init(data);
+        return result;
+    }
+
+    override toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["requirementName"] = this.requirementName;
+        super.toJSON(data);
+        return data;
+    }
+}
+
+export interface IUnexemptOrganizationRequirement extends IOrganizationApprovalCommand {
+    requirementName: string;
 }
 
 export class PersonRecordsCommand extends AtomicRecordsCommand implements IPersonRecordsCommand {

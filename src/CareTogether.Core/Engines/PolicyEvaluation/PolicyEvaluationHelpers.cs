@@ -33,6 +33,19 @@ namespace CareTogether.Engines.PolicyEvaluation
             return statuses.Count == 0 ? null : statuses.Max();
         }
 
+        internal static RoleApprovalStatus? GetMaxRoleStatus(
+            ImmutableList<OrganizationRoleVersionApprovalStatus> versions
+        )
+        {
+            var statuses = versions
+                .Select(version => version.CurrentStatus)
+                .Where(status => status != null)
+                .OfType<RoleApprovalStatus>()
+                .ToImmutableList();
+
+            return statuses.Count == 0 ? null : statuses.Max();
+        }
+
         internal static ImmutableList<IndividualRoleVersionApprovalStatus> SelectPromptableVersions(
             ImmutableList<IndividualRoleVersionApprovalStatus> versions,
             RoleApprovalStatus? effectiveStatus
@@ -72,10 +85,84 @@ namespace CareTogether.Engines.PolicyEvaluation
                     .ToImmutableList();
         }
 
+        internal static ImmutableList<IndividualRoleVersionApprovalStatus> SelectVersionsWithOptionalRequirements(
+            ImmutableList<IndividualRoleVersionApprovalStatus> versions
+        )
+        {
+            var activeVersions = versions.Where(IsActive).ToImmutableList();
+            var maxActiveStatus = GetMaxRoleStatus(activeVersions);
+
+            return maxActiveStatus == null
+                ? activeVersions
+                : activeVersions
+                    .Where(version => version.CurrentStatus == maxActiveStatus)
+                    .ToImmutableList();
+        }
+
+        internal static ImmutableList<FamilyRoleVersionApprovalStatus> SelectVersionsWithOptionalRequirements(
+            ImmutableList<FamilyRoleVersionApprovalStatus> versions
+        )
+        {
+            var activeVersions = versions.Where(IsActive).ToImmutableList();
+            var maxActiveStatus = GetMaxRoleStatus(activeVersions);
+
+            return maxActiveStatus == null
+                ? activeVersions
+                : activeVersions
+                    .Where(version => version.CurrentStatus == maxActiveStatus)
+                    .ToImmutableList();
+        }
+
+        internal static bool IsOptionalRequirementVisible(
+            RequirementStage stage,
+            RoleApprovalStatus? currentStatus
+        ) =>
+            stage switch
+            {
+                // Optional requirements cannot hold a role at their stage, so keep them
+                // actionable after the role advances beyond that stage.
+                RequirementStage.Application => currentStatus
+                    is null
+                        or RoleApprovalStatus.Prospective
+                        or RoleApprovalStatus.Approved
+                        or RoleApprovalStatus.Onboarded
+                        or RoleApprovalStatus.Expired,
+                RequirementStage.Approval => currentStatus
+                    is RoleApprovalStatus.Prospective
+                        or RoleApprovalStatus.Approved
+                        or RoleApprovalStatus.Onboarded
+                        or RoleApprovalStatus.Expired,
+                RequirementStage.Onboarding => currentStatus
+                    is RoleApprovalStatus.Approved
+                        or RoleApprovalStatus.Onboarded
+                        or RoleApprovalStatus.Expired,
+                _ => false,
+            };
+
+        internal static ImmutableList<OrganizationRoleVersionApprovalStatus> SelectPromptableVersions(
+            ImmutableList<OrganizationRoleVersionApprovalStatus> versions,
+            RoleApprovalStatus? effectiveStatus
+        )
+        {
+            if (effectiveStatus == RoleApprovalStatus.Onboarded)
+                return ImmutableList<OrganizationRoleVersionApprovalStatus>.Empty;
+
+            var activeVersions = versions.Where(IsActive).ToImmutableList();
+            var maxActiveStatus = GetMaxRoleStatus(activeVersions);
+            return maxActiveStatus == null
+                ? activeVersions
+                : activeVersions
+                    .Where(version => version.CurrentStatus == maxActiveStatus)
+                    .ToImmutableList();
+        }
+
         private static bool IsActive(IndividualRoleVersionApprovalStatus version) =>
             version.SupersededAtUtc == null || version.SupersededAtUtc > DateTime.UtcNow;
 
         private static bool IsActive(FamilyRoleVersionApprovalStatus version) =>
+            version.SupersededAtUtc == null || version.SupersededAtUtc > DateTime.UtcNow;
+
+        private static bool IsActive(OrganizationRoleVersionApprovalStatus version) =>
             version.SupersededAtUtc == null || version.SupersededAtUtc > DateTime.UtcNow;
     }
 }

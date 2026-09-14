@@ -1,7 +1,7 @@
 import {
   GridLogicOperator,
   type GridFilterModel,
-} from '@mui/x-data-grid';
+} from '@mui/x-data-grid-premium';
 import type { ReferralStatusFilter } from './referralStatusFilter';
 
 export const REFERRAL_COUNTY_BLANK_FILTER_VALUE = '__blank_county__';

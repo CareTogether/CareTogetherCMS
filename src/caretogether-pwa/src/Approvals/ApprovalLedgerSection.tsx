@@ -7,17 +7,22 @@ import {
   TextField,
 } from '@mui/material';
 import { SelectChangeEvent } from '@mui/material/Select';
-import { useMemo, useState } from 'react';
+import { ReactNode, useMemo, useState } from 'react';
 import {
   ApprovalLedgerRow,
   ApprovalLedgerStatus,
 } from './approvalLedgerViewModel';
-import { ApprovalDetailsDrawerV2 } from './ApprovalDetailsDrawerV2';
 import { subjectKey } from './approvalLedgerDataGridViewModel';
 import { ApprovalsDataGridV2 } from './ApprovalsDataGridV2';
 
 type ApprovalLedgerSectionProps = {
+  groupByMember?: boolean;
   rows: ApprovalLedgerRow[];
+  renderDetailsDrawer: (
+    row: ApprovalLedgerRow | null,
+    open: boolean,
+    onClose: () => void
+  ) => ReactNode;
 };
 
 type StatusFilter = ApprovalLedgerStatus | 'all';
@@ -25,6 +30,7 @@ type StatusFilter = ApprovalLedgerStatus | 'all';
 const statusFilterOptions: { value: StatusFilter; label: string }[] = [
   { value: 'all', label: 'All' },
   { value: 'missing', label: 'Missing' },
+  { value: 'optional', label: 'Optional' },
   { value: 'completed', label: 'Completed' },
   { value: 'exempted', label: 'Exempted' },
   { value: 'expiring', label: 'Expiring' },
@@ -40,7 +46,11 @@ function sortStrings(a: string, b: string) {
   return a.localeCompare(b);
 }
 
-export function ApprovalLedgerSection({ rows }: ApprovalLedgerSectionProps) {
+export function ApprovalLedgerSection({
+  groupByMember = false,
+  rows,
+  renderDetailsDrawer,
+}: ApprovalLedgerSectionProps) {
   const [searchText, setSearchText] = useState('');
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
   const [roleFilter, setRoleFilter] = useState('all');
@@ -92,8 +102,7 @@ export function ApprovalLedgerSection({ rows }: ApprovalLedgerSectionProps) {
       if (
         appliesToFilter !== 'all' &&
         !row.appliesTo.some(
-          (subject) =>
-            subjectKey(subject.scope, subject.id) === appliesToFilter
+          (subject) => subjectKey(subject.scope, subject.id) === appliesToFilter
         )
       ) {
         return false;
@@ -205,14 +214,15 @@ export function ApprovalLedgerSection({ rows }: ApprovalLedgerSectionProps) {
         </FormControl>
       </Box>
       <ApprovalsDataGridV2
+        groupByMember={groupByMember}
         rows={visibleRows}
         onRowClick={(row) => openDetailsDrawer(row.id)}
       />
-      <ApprovalDetailsDrawerV2
-        row={selectedRow}
-        open={selectedRow !== null}
-        onClose={closeDetailsDrawer}
-      />
+      {renderDetailsDrawer(
+        selectedRow,
+        selectedRow !== null,
+        closeDetailsDrawer
+      )}
     </Box>
   );
 }

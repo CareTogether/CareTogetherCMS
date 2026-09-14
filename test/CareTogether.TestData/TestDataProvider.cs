@@ -2374,7 +2374,7 @@ namespace CareTogether.TestData
                                     [
                                         Permission.AccessPartneringFamiliesScreen,
                                         Permission.AccessVolunteersScreen,
-                                        Permission.AccessCommunitiesScreen,
+                                        Permission.AccessOrganizationsScreen,
                                     ]
                                 ),
                                 new ContextualPermissionSet(
@@ -2422,7 +2422,7 @@ namespace CareTogether.TestData
                                     new CommunityMemberPermissionContext(
                                         WhenOwnCommunityRoleIsIn: null
                                     ),
-                                    [Permission.ViewCommunityDocumentMetadata]
+                                    [Permission.ViewOrganizationDocumentMetadata]
                                 ),
                                 new ContextualPermissionSet(
                                     new CommunityMemberPermissionContext(
@@ -2432,7 +2432,7 @@ namespace CareTogether.TestData
                                             "Community Co-Organizer",
                                         ]
                                     ),
-                                    [Permission.ReadCommunityDocuments]
+                                    [Permission.ReadOrganizationDocuments]
                                 ),
                                 new ContextualPermissionSet(
                                     new CommunityCoMemberFamiliesPermissionContext(
@@ -2754,6 +2754,56 @@ namespace CareTogether.TestData
                         NoteEntryRequirement.Allowed,
                         null,
                         new Uri("http://example.com/forms/mag"),
+                        null,
+                        null,
+                        null,
+                        null
+                    ),
+                    ["Referral Partner Application"] = new ActionRequirement(
+                        DocumentLinkRequirement.Required,
+                        NoteEntryRequirement.None,
+                        "Upload the completed referral partner application.",
+                        new Uri("http://example.com/forms/referral-partner-application"),
+                        null,
+                        null,
+                        null,
+                        null
+                    ),
+                    ["Host Organization Application"] = new ActionRequirement(
+                        DocumentLinkRequirement.Required,
+                        NoteEntryRequirement.None,
+                        "Upload the completed host organization application.",
+                        new Uri("http://example.com/forms/host-organization-application"),
+                        null,
+                        null,
+                        null,
+                        null
+                    ),
+                    ["Partnership Agreement"] = new ActionRequirement(
+                        DocumentLinkRequirement.Required,
+                        NoteEntryRequirement.None,
+                        "Upload the signed partnership agreement.",
+                        new Uri("http://example.com/forms/partnership-agreement"),
+                        TimeSpan.FromDays(365),
+                        null,
+                        null,
+                        null
+                    ),
+                    ["Site Safety Review"] = new ActionRequirement(
+                        DocumentLinkRequirement.Allowed,
+                        NoteEntryRequirement.None,
+                        "Complete the site safety review and attach the report if available.",
+                        new Uri("http://example.com/forms/site-safety-review"),
+                        TimeSpan.FromDays(365),
+                        null,
+                        null,
+                        null
+                    ),
+                    ["Organization Orientation"] = new ActionRequirement(
+                        DocumentLinkRequirement.None,
+                        NoteEntryRequirement.None,
+                        "Complete the organization partner orientation.",
+                        new Uri("http://example.com/training/organization-orientation"),
                         null,
                         null,
                         null,
@@ -3267,6 +3317,11 @@ namespace CareTogether.TestData
                                             RequirementStage.Approval,
                                             "Bg check"
                                         ),
+                                        new VolunteerApprovalRequirement(
+                                            RequirementStage.Approval,
+                                            "Some optional action",
+                                            IsRequired: false
+                                        ),
                                     ]
                                 ),
                             ]
@@ -3290,6 +3345,11 @@ namespace CareTogether.TestData
                                         new VolunteerApprovalRequirement(
                                             RequirementStage.Approval,
                                             "Interview with Family Coach Supervisor"
+                                        ),
+                                        new VolunteerApprovalRequirement(
+                                            RequirementStage.Onboarding,
+                                            "Some optional action",
+                                            IsRequired: false
                                         ),
                                     ]
                                 ),
@@ -3354,6 +3414,12 @@ namespace CareTogether.TestData
                                             "Meet & Greet",
                                             VolunteerFamilyRequirementScope.OncePerFamily
                                         ),
+                                        new VolunteerFamilyApprovalRequirement(
+                                            RequirementStage.Onboarding,
+                                            "Some optional action",
+                                            VolunteerFamilyRequirementScope.OncePerFamily,
+                                            IsRequired: false
+                                        ),
                                     ]
                                 ),
                                 new VolunteerFamilyRolePolicyVersion(
@@ -3408,6 +3474,63 @@ namespace CareTogether.TestData
                 )
             )
             {
+                OrganizationApprovalPolicy = new OrganizationApprovalPolicy(
+                    new Dictionary<string, OrganizationRolePolicy>
+                    {
+                        ["Referral Partner"] = new OrganizationRolePolicy(
+                            "Referral Partner",
+                            PolicyVersions:
+                            [
+                                new OrganizationRolePolicyVersion(
+                                    "v1",
+                                    null,
+                                    [
+                                        new OrganizationApprovalRequirement(
+                                            RequirementStage.Application,
+                                            "Referral Partner Application"
+                                        ),
+                                        new OrganizationApprovalRequirement(
+                                            RequirementStage.Approval,
+                                            "Partnership Agreement"
+                                        ),
+                                        new OrganizationApprovalRequirement(
+                                            RequirementStage.Onboarding,
+                                            "Organization Orientation"
+                                        ),
+                                    ]
+                                ),
+                            ]
+                        ),
+                        ["Host Organization"] = new OrganizationRolePolicy(
+                            "Host Organization",
+                            PolicyVersions:
+                            [
+                                new OrganizationRolePolicyVersion(
+                                    "v1",
+                                    null,
+                                    [
+                                        new OrganizationApprovalRequirement(
+                                            RequirementStage.Application,
+                                            "Host Organization Application"
+                                        ),
+                                        new OrganizationApprovalRequirement(
+                                            RequirementStage.Approval,
+                                            "Partnership Agreement"
+                                        ),
+                                        new OrganizationApprovalRequirement(
+                                            RequirementStage.Approval,
+                                            "Site Safety Review"
+                                        ),
+                                        new OrganizationApprovalRequirement(
+                                            RequirementStage.Onboarding,
+                                            "Organization Orientation"
+                                        ),
+                                    ]
+                                ),
+                            ]
+                        ),
+                    }.ToImmutableDictionary()
+                ),
                 CustomFields = new FamilyMemberCustomFieldPolicy(
                     PartneringFamily: new FamilyMemberCustomFields(
                         Adult:

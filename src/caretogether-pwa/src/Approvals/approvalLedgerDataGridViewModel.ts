@@ -1,4 +1,4 @@
-import { GridValidRowModel } from '@mui/x-data-grid';
+import type { GridValidRowModel } from '@mui/x-data-grid-premium';
 import { formatUtcDateOnly } from '../Utilities/dateUtils';
 import {
   ApprovalLedgerRow,
@@ -8,6 +8,7 @@ import {
 export const approvalLedgerStatusLabels: Record<ApprovalLedgerStatus, string> =
   {
     missing: 'Missing',
+    optional: 'Optional',
     completed: 'Completed',
     exempted: 'Exempted',
     expiring: 'Expiring',
@@ -21,6 +22,8 @@ export function approvalLedgerStatusColor(status: ApprovalLedgerStatus) {
       return 'warning';
     case 'missing':
       return 'error';
+    case 'optional':
+      return 'info';
     case 'expiring':
       return 'warning';
     case 'availableApplication':
@@ -64,5 +67,4 @@ export function approvalLedgerSearchText(row: ApprovalLedgerRow) {
   ].join(' ');
 }
 
-export type ApprovalLedgerDataGridRowV2 = ApprovalLedgerRow &
-  GridValidRowModel;
+export type ApprovalLedgerDataGridRowV2 = ApprovalLedgerRow & GridValidRowModel;

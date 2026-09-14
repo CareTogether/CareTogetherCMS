@@ -8,7 +8,6 @@ import {
   Box,
   Chip,
   Typography,
-  Tooltip,
 } from '@mui/material';
 import {
   Permission,
@@ -16,7 +15,7 @@ import {
   RoleRemovalReason,
   Note,
 } from '../GeneratedClient';
-import { useParams } from 'react-router';
+import { useLocation, useNavigate, useParams } from 'react-router';
 import {
   Check as CheckIcon,
   DeleteForever as DeleteForeverIcon,
@@ -61,7 +60,9 @@ import {
 } from '../featureFlags';
 import { personNameString } from './PersonName';
 import { useGlobalSnackBar } from '../Hooks/useGlobalSnackBar';
-import { ApprovalLedgerSection } from './ApprovalLedgerSection';
+import { ApprovalLedgerSection } from '../Approvals/ApprovalLedgerSection';
+import { ApprovalTabLabel } from '../Approvals/ApprovalTabLabel';
+import { approvalMobileTabLabel } from '../Approvals/approvalTabPresentation';
 import { RoleSummaryCardsSection } from './RoleSummaryCardsSection';
 import { useAccountInfo } from '../Authentication/Auth';
 import {
@@ -74,10 +75,8 @@ import { FamilyPrimaryHeaderInfoV2 } from './FamilyPrimaryHeaderInfoV2';
 import { FamilyCaseWorkspaceHeaderV2 } from './FamilyCaseWorkspaceHeaderV2';
 import { FamilyCaseHistoryTabV2 } from './FamilyCaseHistoryTabV2';
 import { FamilyOverviewTabV2 } from './FamilyOverviewTabV2';
-import {
-  FamilyScreenTab,
-  FamilyScreenTabsV2,
-} from './FamilyScreenTabsV2';
+import type { FamilyScreenTab } from './FamilyScreenTabs';
+import { ResponsiveScreenTabs } from '../Generic/ResponsiveScreenTabs';
 import {
   FamilyPinnedNotesV2,
   RecentOverviewTimelineItem,
@@ -93,6 +92,7 @@ import { useFamilyOverviewViewModel } from './useFamilyOverviewViewModel';
 import { useFamilyScreenTabsViewModel } from './useFamilyScreenTabsViewModel';
 import { useRecentFamilyNoteActions } from './useRecentFamilyNoteActions';
 import { useFamilyActionsMenuViewModel } from './useFamilyActionsMenuViewModel';
+import { ApprovalDetailsDrawerV2 } from './ApprovalDetailsDrawerV2';
 import { useFamilyCaseSelectionController } from './useFamilyCaseSelectionController';
 
 type ReferralNoteEntry = NonNullable<V1Referral['notes']>[number];
@@ -101,6 +101,12 @@ type RecentNoteAction = 'edit' | 'approve' | 'delete';
 export function FamilyScreenV2() {
   const familyIdMaybe = useParams<{ familyId: string }>();
   const familyId = familyIdMaybe.familyId as string;
+  const location = useLocation();
+  const navigate = useNavigate();
+  const searchParams = new URLSearchParams(location.search);
+  const familyMemberIdFromQuery =
+    searchParams.get('familyMemberId') ?? undefined;
+  const arrangementIdFromQuery = searchParams.get('arrangementId') ?? undefined;
 
   const {
     addCommunityCandidateCommunities,
@@ -187,6 +193,9 @@ export function FamilyScreenV2() {
   const [selectedFamilyMemberRowId, setSelectedFamilyMemberRowId] = useState<
     string | null
   >(null);
+  const previousFamilyMemberIdFromQueryRef = useRef<string | undefined>(
+    undefined
+  );
   const [addNoteDialogOpen, setAddNoteDialogOpen] = useState(false);
   const [recentFamilyNoteAction, setRecentFamilyNoteAction] = useState<{
     action: RecentNoteAction;
@@ -417,6 +426,60 @@ export function FamilyScreenV2() {
     return () => cancelAnimationFrame(frame);
   }, [familyMemberPrintRequested, familyMemberToPrint, printFamilyMemberFn]);
 
+  useEffect(() => {
+    const previousFamilyMemberIdFromQuery =
+      previousFamilyMemberIdFromQueryRef.current;
+    previousFamilyMemberIdFromQueryRef.current = familyMemberIdFromQuery;
+
+    if (!familyMemberIdFromQuery) {
+      if (previousFamilyMemberIdFromQuery) {
+        setSelectedFamilyMemberRowId(null);
+      }
+
+      return;
+    }
+
+    const matchingFamilyMemberRow = familyMemberRows.find(
+      (row) => row.id === familyMemberIdFromQuery
+    );
+
+    if (!matchingFamilyMemberRow) {
+      setSelectedFamilyMemberRowId(null);
+      return;
+    }
+
+    setSelectedFamilyMemberRowId((current) =>
+      current === familyMemberIdFromQuery ? current : familyMemberIdFromQuery
+    );
+  }, [familyMemberIdFromQuery, familyMemberRows]);
+
+  function removeSearchParam(paramName: string) {
+    const nextSearchParams = new URLSearchParams(location.search);
+    nextSearchParams.delete(paramName);
+
+    const searchParamsString = nextSearchParams.size
+      ? `?${nextSearchParams.toString()}`
+      : '';
+
+    navigate(`${location.pathname}${searchParamsString}`, { replace: true });
+  }
+
+  function closeFamilyMemberDrawer() {
+    setSelectedFamilyMemberRowId(null);
+
+    if (familyMemberIdFromQuery) {
+      removeSearchParam('familyMemberId');
+    }
+  }
+
+  function closeArrangementDrawer() {
+    setSelectedArrangementRowId(null);
+
+    if (arrangementIdFromQuery) {
+      removeSearchParam('arrangementId');
+    }
+  }
+
   function printFamilyMemberInformation(member: PrintableFamilyMember) {
     setFamilyMoreMenuAnchor(null);
     setFamilyMemberToPrint(member);
@@ -463,70 +526,6 @@ export function FamilyScreenV2() {
     );
   }
 
-  function approvalTabLabel(label: string) {
-    return (
-      <Box
-        sx={{
-          display: 'inline-flex',
-          alignItems: 'center',
-          gap: 0.75,
-          flexWrap: 'nowrap',
-          whiteSpace: 'nowrap',
-          width: 'max-content',
-        }}
-      >
-        <Box component="span" className="ph-unmask" sx={{ flexShrink: 0 }}>
-          {label}
-        </Box>
-        {approvalAttentionCounts.missing > 0 && (
-          <Tooltip title={`${approvalAttentionCounts.missing} missing`}>
-            <Chip
-              className="ph-unmask"
-              size="small"
-              color="error"
-              label={approvalAttentionCounts.missing}
-              aria-label={`${approvalAttentionCounts.missing} missing approvals`}
-              sx={{
-                height: 20,
-                flexShrink: 0,
-                '& .MuiChip-label': { px: 0.75 },
-              }}
-            />
-          </Tooltip>
-        )}
-        {approvalAttentionCounts.expired > 0 && (
-          <Tooltip title={`${approvalAttentionCounts.expired} expired`}>
-            <Chip
-              className="ph-unmask"
-              size="small"
-              color="warning"
-              label={approvalAttentionCounts.expired}
-              aria-label={`${approvalAttentionCounts.expired} expired approvals`}
-              sx={{
-                height: 20,
-                flexShrink: 0,
-                '& .MuiChip-label': { px: 0.75 },
-              }}
-            />
-          </Tooltip>
-        )}
-      </Box>
-    );
-  }
-
-  function approvalMobileTabLabel(label: string) {
-    const details = [
-      approvalAttentionCounts.missing > 0
-        ? `${approvalAttentionCounts.missing} missing`
-        : null,
-      approvalAttentionCounts.expired > 0
-        ? `${approvalAttentionCounts.expired} expired`
-        : null,
-    ].filter(Boolean);
-
-    return details.length === 0 ? label : `${label} (${details.join(', ')})`;
-  }
-
   function mobileTabLabel(
     label: string,
     count?: number,
@@ -547,14 +546,19 @@ export function FamilyScreenV2() {
       value: tab.value,
       label: tab.label,
       desktopLabel:
-        tab.value === 'approvals'
-          ? approvalTabLabel(tab.label)
-          : tab.count === undefined && tab.unapprovedCount === undefined
-            ? tab.label
-            : tabLabel(tab.label, tab.count, tab.unapprovedCount),
+        tab.value === 'approvals' ? (
+          <ApprovalTabLabel
+            label={tab.label}
+            counts={approvalAttentionCounts}
+          />
+        ) : tab.count === undefined && tab.unapprovedCount === undefined ? (
+          tab.label
+        ) : (
+          tabLabel(tab.label, tab.count, tab.unapprovedCount)
+        ),
       mobileLabel:
         tab.value === 'approvals'
-          ? approvalMobileTabLabel(tab.label)
+          ? approvalMobileTabLabel(tab.label, approvalAttentionCounts)
           : mobileTabLabel(tab.label, tab.count, tab.unapprovedCount),
     })
   );
@@ -824,10 +828,10 @@ export function FamilyScreenV2() {
         }
         onAddCommunityClose={() => setAddCommunityDrawerOpen(false)}
         onAddNoteClose={() => setAddNoteDialogOpen(false)}
-        onArrangementClose={() => setSelectedArrangementRowId(null)}
+        onArrangementClose={closeArrangementDrawer}
         onCloseCaseDrawerClose={() => setCloseCaseDrawerOpen(false)}
         onFamilyCompleteOtherClose={() => setFamilyCompleteOtherOpen(false)}
-        onFamilyMemberClose={() => setSelectedFamilyMemberRowId(null)}
+        onFamilyMemberClose={closeFamilyMemberDrawer}
         onOpenNewV1CaseDialogClose={() => setOpenNewV1CaseDialogOpen(false)}
         onRecentFamilyNoteActionClose={() => setRecentFamilyNoteAction(null)}
         onRecentReferralNoteActionClose={() =>
@@ -880,7 +884,9 @@ export function FamilyScreenV2() {
         notes={pinnedNotes}
         noteAuthorLookup={noteAuthorLookup}
       />
-      <FamilyScreenTabsV2
+      <ResponsiveScreenTabs
+        ariaLabel="Family screen sections"
+        idPrefix="family-screen"
         tabs={familyScreenTabs}
         selectedTab={selectedTab}
         isDesktop={isDesktop}
@@ -918,7 +924,7 @@ export function FamilyScreenV2() {
             volunteerFamilyCustomFields={overviewVolunteerFamilyCustomFields}
             onAddCommunity={openAddCommunityDrawer}
             onCommunityClick={(communityId) =>
-              appNavigate.community(communityId)
+              appNavigate.organization(communityId)
             }
             onFamilyMemberClick={openFamilyMemberDrawer}
             onViewAllRecentActivity={() => setSelectedTab('timelineAndNotes')}
@@ -956,7 +962,17 @@ export function FamilyScreenV2() {
               {showApprovals && family.volunteerFamilyInfo && (
                 <>
                   <Grid item xs={12}>
-                    <ApprovalLedgerSection rows={approvalLedgerRows} />
+                    <ApprovalLedgerSection
+                      groupByMember
+                      rows={approvalLedgerRows}
+                      renderDetailsDrawer={(row, open, onClose) => (
+                        <ApprovalDetailsDrawerV2
+                          row={row}
+                          open={open}
+                          onClose={onClose}
+                        />
+                      )}
+                    />
                   </Grid>
                 </>
               )}

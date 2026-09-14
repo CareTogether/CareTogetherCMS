@@ -103,6 +103,10 @@ namespace CareTogether.Managers
             string ActionName,
             (string Version, string RoleName)[] Versions
         )> MissingRequirements,
+        ImmutableList<(
+            string ActionName,
+            (string Version, string RoleName)[] Versions
+        )> MissingOptionalRequirements,
         ImmutableList<RoleRemoval> RoleRemovals,
         ImmutableDictionary<Guid, VolunteerInfo> IndividualVolunteers,
         ImmutableList<Activity> History,
@@ -120,11 +124,27 @@ namespace CareTogether.Managers
             string ActionName,
             (string Version, string RoleName)[] Versions
         )> MissingRequirements,
+        ImmutableList<(
+            string ActionName,
+            (string Version, string RoleName)[] Versions
+        )> MissingOptionalRequirements,
         ImmutableList<RoleRemoval> RoleRemovals
     );
 
     public sealed record CommunityInfo(
         Community Community,
         ImmutableList<Permission> UserPermissions
+    )
+    {
+        public OrganizationApprovalInfo? ApprovalInfo { get; init; }
+    }
+
+    public sealed record OrganizationApprovalInfo(
+        ImmutableDictionary<string, OrganizationRoleApprovalStatus> ApprovalStatusByRole,
+        ImmutableList<Resources.CompletedRequirementInfo> CompletedRequirements,
+        ImmutableList<Resources.ExemptedRequirementInfo> ExemptedRequirements,
+        ImmutableList<string> AvailableApplications,
+        ImmutableList<string> MissingRequirements,
+        ImmutableList<RoleRemoval> RoleRemovals
     );
 }

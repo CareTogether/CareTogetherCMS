@@ -29,7 +29,7 @@ import {
 import type {
   ApprovalLedgerRow,
   ApprovalLedgerStatus,
-} from './approvalLedgerViewModel';
+} from '../Approvals/approvalLedgerViewModel';
 import { ApprovalDetailsDrawerV2 } from './ApprovalDetailsDrawerV2';
 import {
   RoleManagementDrawerV2,
@@ -64,6 +64,7 @@ const participantStateLabels: Record<ParticipantState, string> = {
 
 const requirementStatusLabels: Record<ApprovalLedgerStatus, string> = {
   missing: 'Missing',
+  optional: 'Optional',
   completed: 'Completed',
   exempted: 'Exempted',
   expiring: 'Expiring',
@@ -76,6 +77,8 @@ function requirementStatusColor(status: ApprovalLedgerStatus) {
     case 'missing':
     case 'expired':
       return 'error';
+    case 'optional':
+      return 'info';
     case 'expiring':
       return 'warning';
     case 'availableApplication':
@@ -152,14 +155,9 @@ function roleApprovalIsActive(
 }
 
 function personLabel(person: Person | undefined) {
-  return [person?.firstName, person?.lastName].filter(Boolean).join(' ') || 'Adult';
-}
-
-function adultPerson(
-  family: CombinedFamilyInfo | undefined,
-  personId: string | undefined
-) {
-  return family?.family?.adults?.find((adult) => adult.item1?.id === personId)?.item1;
+  return (
+    [person?.firstName, person?.lastName].filter(Boolean).join(' ') || 'Adult'
+  );
 }
 
 function buildRoleParticipants(
@@ -179,63 +177,91 @@ function buildRoleParticipants(
 
   const participants: RoleParticipant[] = [];
 
-  Object.entries(volunteerInfo.individualVolunteers ?? {}).forEach(
-    ([personId, individualVolunteer]) => {
-      const removal = activeRoleRemoval(
-        individualVolunteer.roleRemovals,
-        roleName
-      );
-      const person = adultPerson(family, personId);
-      const participatesInFamilyRole =
-        person?.active &&
-        roleApprovalIsActive(volunteerInfo.familyRoleApprovals?.[roleName]);
+  (family?.family?.adults ?? []).forEach((adult) => {
+    const person = adult.item1;
+    const personId = person?.id;
+    if (!personId || !person.active) return;
+    const individualVolunteer = volunteerInfo.individualVolunteers?.[personId];
+    const removal = activeRoleRemoval(
+      individualVolunteer?.roleRemovals,
+      roleName
+    );
+    const participatesInFamilyRole =
+      person?.active &&
+      roleApprovalIsActive(volunteerInfo.familyRoleApprovals?.[roleName]);
 
-      if (!removal && !participatesInFamilyRole) {
-        return;
-      }
-
-      participants.push({
-        id: personId,
-        label: personLabel(person),
-        state: removal ? stateFromRoleRemoval(removal) : 'active',
-      });
+    if (!removal && !participatesInFamilyRole) {
+      return;
     }
-  );
+
+    participants.push({
+      id: personId,
+      label: personLabel(person),
+      state: removal ? stateFromRoleRemoval(removal) : 'active',
+    });
+  });
 
   return participants;
 }
 
 function ParticipantsSection({
   participants,
+  requirements,
+  onRequirementClick,
 }: {
   participants: RoleParticipant[];
+  requirements?: RoleSummaryRequirement[];
+  onRequirementClick: (row: ApprovalLedgerRow) => void;
 }) {
   if (participants.length === 0) {
-    return null;
+    return (
+      <Typography color="text.secondary" variant="body2">
+        No participants for this role.
+      </Typography>
+    );
   }
 
   return (
     <Stack spacing={1}>
-      <Typography variant="subtitle2">Participants</Typography>
+      <Typography variant="subtitle2">Family Members</Typography>
       {participants.map((participant) => (
-        <Box
-          key={participant.id}
-          sx={{
-            alignItems: 'center',
-            display: 'flex',
-            gap: 1,
-            justifyContent: 'space-between',
-          }}
-        >
-          <Typography variant="body2">
-            {participant.label}
-          </Typography>
-          <Chip
-            color={participantStatusColor(participant.state)}
-            label={participantStateLabels[participant.state]}
-            size="small"
-          />
-        </Box>
+        <Stack key={participant.id} spacing={1}>
+          <Box
+            sx={{
+              alignItems: 'center',
+              display: 'flex',
+              gap: 1,
+              justifyContent: 'space-between',
+            }}
+          >
+            <Typography variant="body2">{participant.label}</Typography>
+            <Chip
+              color={participantStatusColor(participant.state)}
+              label={participantStateLabels[participant.state]}
+              size="small"
+            />
+          </Box>
+          {requirements &&
+            (requirements.some(
+              (requirement) => requirement.subject.id === participant.id
+            ) ? (
+              requirements
+                .filter(
+                  (requirement) => requirement.subject.id === participant.id
+                )
+                .map((requirement) => (
+                  <RequirementSummaryRow
+                    key={requirement.id}
+                    requirement={requirement}
+                    onClick={() => onRequirementClick(requirement.ledgerRow)}
+                  />
+                ))
+            ) : (
+              <Typography color="text.secondary" variant="body2">
+                No requirements for this role.
+              </Typography>
+            ))}
+        </Stack>
       ))}
     </Stack>
   );
@@ -301,11 +327,7 @@ function RequirementSummaryRow({
                 size="small"
                 sx={{ flex: '0 0 auto' }}
               />
-              <Typography
-                variant="caption"
-              >
-                {completedOrExemptedOn}
-              </Typography>
+              <Typography variant="caption">{completedOrExemptedOn}</Typography>
             </Stack>
             <Stack
               direction="column"
@@ -318,14 +340,20 @@ function RequirementSummaryRow({
                 sx={{ fontWeight: 600 }}
               >
                 {requirement.requirementName}
-                {requirement.occurrences.flatMap(occurrence => occurrence.policyVersions).filter(version => version).map(version =>
-                  <Fragment key={`${version?.roleName}-${version?.version}`}>
-                    &nbsp;
-                    <Chip color='default' variant='outlined' size='small'
-                      label={`${version?.version}`}
+                {requirement.occurrences
+                  .flatMap((occurrence) => occurrence.policyVersions)
+                  .filter((version) => version)
+                  .map((version) => (
+                    <Fragment key={`${version?.roleName}-${version?.version}`}>
+                      &nbsp;
+                      <Chip
+                        color="default"
+                        variant="outlined"
+                        size="small"
+                        label={`${version?.version}`}
                       />
-                  </Fragment>
-                )}
+                    </Fragment>
+                  ))}
               </Typography>
               {(completedOrExemptedOn || validUntil) && (
                 <Typography color="text.secondary" variant="caption">
@@ -346,7 +374,10 @@ function RequirementSummaryRow({
 }
 
 function familyIdFromContext(
-  context: RoleSummaryCard['context'] | RemovedRoleSummary['context'] | undefined
+  context:
+    | RoleSummaryCard['context']
+    | RemovedRoleSummary['context']
+    | undefined
 ) {
   if (
     context?.kind === 'Volunteer Family' ||
@@ -359,8 +390,14 @@ function familyIdFromContext(
 }
 
 function personForSubject(
-  context: RoleSummaryCard['context'] | RemovedRoleSummary['context'] | undefined,
-  subject: RoleSummaryCard['subject'] | RemovedRoleSummary['subject'] | undefined
+  context:
+    | RoleSummaryCard['context']
+    | RemovedRoleSummary['context']
+    | undefined,
+  subject:
+    | RoleSummaryCard['subject']
+    | RemovedRoleSummary['subject']
+    | undefined
 ) {
   if (!context || subject?.scope !== 'person') {
     return undefined;
@@ -395,8 +432,9 @@ export function RoleDetailsDrawerV2({
   );
   const person =
     role?.subject.scope === 'person'
-      ? family?.family?.adults?.find((adult) => adult.item1?.id === role.subject.id)
-          ?.item1 ?? personForSubject(role.context, role.subject)
+      ? (family?.family?.adults?.find(
+          (adult) => adult.item1?.id === role.subject.id
+        )?.item1 ?? personForSubject(role.context, role.subject))
       : undefined;
   const canRemoveRole =
     canEditRoleParticipation &&
@@ -440,7 +478,7 @@ export function RoleDetailsDrawerV2({
   useEffect(() => {
     setSelectedRequirementRow(null);
     setSelectedRoleAction(null);
-  }, [card?.id, open, removedRole?.id]);
+  }, [card?.id, familyId, open, removedRole?.id]);
 
   const requirements = [...(card?.requirements ?? [])].sort((a, b) =>
     b.status.localeCompare(a.status)
@@ -488,10 +526,7 @@ export function RoleDetailsDrawerV2({
                 >
                   {role.roleName}
                 </Typography>
-                <Typography
-                  color="text.secondary"
-                  variant="body2"
-                >
+                <Typography color="text.secondary" variant="body2">
                   {role.subject.label}
                 </Typography>
                 <Box
@@ -539,8 +574,6 @@ export function RoleDetailsDrawerV2({
               </IconButton>
             </Box>
 
-            <ParticipantsSection participants={participants} />
-
             {card && (
               <>
                 <Typography variant="subtitle2">Requirements</Typography>
@@ -575,7 +608,15 @@ export function RoleDetailsDrawerV2({
                 </Stack>
               </>
             )}
-
+            {role.subject.scope === 'family' && (
+              <ParticipantsSection
+                participants={participants}
+                requirements={
+                  card ? (card.memberRequirements ?? []) : undefined
+                }
+                onRequirementClick={setSelectedRequirementRow}
+              />
+            )}
           </Stack>
         )}
       </Drawer>

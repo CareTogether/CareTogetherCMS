@@ -36,6 +36,10 @@ export function familyIdFromRequirementContext(
     return context.partneringFamilyId ?? null;
   }
 
+  if (context.kind === 'Organization') {
+    return null;
+  }
+
   return context.volunteerFamilyId;
 }
 
@@ -153,7 +157,8 @@ export function arrangementMatchesRequirement(
     }
 
     return (
-      missingRequirementInfo.action?.actionName === requirement.action?.actionName
+      missingRequirementInfo.action?.actionName ===
+      requirement.action?.actionName
     );
   });
 }

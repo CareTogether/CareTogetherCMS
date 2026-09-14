@@ -5,6 +5,8 @@ import {
   FunctionRequirement,
   NoteEntryRequirement,
   Person,
+  RequirementStage,
+  VolunteerFamilyRequirementScope,
 } from '../../../../GeneratedClient';
 
 export type ActionDefinitionDraft = {
@@ -69,7 +71,14 @@ export type VolunteerRolePolicyVersionDraft = {
   version: string;
   superseded: boolean;
   supersededAtUtc: string;
-  requirements: string;
+  requirements: VolunteerRequirementDraft[];
+};
+
+export type VolunteerRequirementDraft = {
+  stage: RequirementStage | '';
+  actionName: string;
+  isRequired: boolean;
+  scope?: VolunteerFamilyRequirementScope | '';
 };
 
 export type NamedPolicyReference = {
@@ -82,4 +91,3 @@ export type PersonOption = {
   label: string;
   person: Person;
 };
-

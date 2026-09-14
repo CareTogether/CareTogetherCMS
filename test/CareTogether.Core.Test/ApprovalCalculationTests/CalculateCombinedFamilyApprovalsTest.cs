@@ -216,6 +216,106 @@ namespace CareTogether.Core.Test.ApprovalCalculationTests
             Assert.AreEqual(2, result.IndividualApprovals.Count);
         }
 
+        [TestMethod]
+        public void OptionalRequirementsAreExposedSeparatelyAfterOnboarding()
+        {
+            var family = CreateTestFamily();
+            var locationPolicy = new EffectiveLocationPolicy(
+                ImmutableDictionary<string, ActionRequirement>.Empty,
+                ImmutableList<CustomField>.Empty,
+                new V1CasePolicy(
+                    ImmutableList<string>.Empty,
+                    ImmutableList<CustomField>.Empty,
+                    ImmutableList<ArrangementPolicy>.Empty,
+                    ImmutableList<FunctionPolicy>.Empty
+                ),
+                new VolunteerPolicy(
+                    ImmutableDictionary<string, VolunteerRolePolicy>.Empty.Add(
+                        "Role1",
+                        new VolunteerRolePolicy(
+                            "Role1",
+                            [
+                                new VolunteerRolePolicyVersion(
+                                    "v1",
+                                    null,
+                                    H.IndividualApprovalRequirementsWithRequired(
+                                        (RequirementStage.Application, "IndividualApplication", true),
+                                        (RequirementStage.Approval, "OptionalIndividual", false)
+                                    )
+                                ),
+                            ]
+                        )
+                    ),
+                    ImmutableDictionary<string, VolunteerFamilyRolePolicy>.Empty.Add(
+                        "FamilyRole1",
+                        new VolunteerFamilyRolePolicy(
+                            "FamilyRole1",
+                            [
+                                new VolunteerFamilyRolePolicyVersion(
+                                    "v1",
+                                    null,
+                                    H.FamilyApprovalRequirementsWithRequired(
+                                        (
+                                            RequirementStage.Application,
+                                            "FamilyApplication",
+                                            VolunteerFamilyRequirementScope.OncePerFamily,
+                                            true
+                                        ),
+                                        (
+                                            RequirementStage.Approval,
+                                            "OptionalFamily",
+                                            VolunteerFamilyRequirementScope.OncePerFamily,
+                                            false
+                                        ),
+                                        (
+                                            RequirementStage.Approval,
+                                            "OptionalAdult",
+                                            VolunteerFamilyRequirementScope.AllAdultsInTheFamily,
+                                            false
+                                        )
+                                    )
+                                ),
+                            ]
+                        )
+                    )
+                )
+            );
+
+            var result = ApprovalCalculations.CalculateCombinedFamilyApprovals(
+                locationPolicy,
+                family,
+                H.Completed(("FamilyApplication", 1)),
+                ImmutableList<Resources.ExemptedRequirementInfo>.Empty,
+                ImmutableList<RoleRemoval>.Empty,
+                H.CompletedIndividualRequirements(
+                    (H.guid1, "IndividualApplication", 1),
+                    (H.guid2, "IndividualApplication", 1)
+                ),
+                ImmutableDictionary<Guid, ImmutableList<Resources.ExemptedRequirementInfo>>.Empty,
+                ImmutableDictionary<Guid, ImmutableList<RoleRemoval>>.Empty
+            );
+
+            Assert.AreEqual(0, result.CurrentMissingFamilyRequirements.Count);
+            Assert.AreEqual(0, result.CurrentMissingIndividualRequirements.Count);
+            CollectionAssert.AreEqual(
+                new[] { "OptionalFamily" },
+                result.CurrentMissingOptionalFamilyRequirements.Select(x => x.ActionName).ToArray()
+            );
+            CollectionAssert.AreEqual(
+                new[]
+                {
+                    "OptionalAdult",
+                    "OptionalAdult",
+                    "OptionalIndividual",
+                    "OptionalIndividual",
+                },
+                result
+                    .CurrentMissingOptionalIndividualRequirements.Select(x => x.ActionName)
+                    .OrderBy(x => x)
+                    .ToArray()
+            );
+        }
+
         [DataTestMethod]
         [DataRow(
             "ApplicationReq1,ApplicationReq2",

@@ -1,10 +1,50 @@
-import { Accordion, AccordionDetails, AccordionSummary, Box, Stack, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Typography } from '@mui/material';
+import {
+  Accordion,
+  AccordionDetails,
+  AccordionSummary,
+  Box,
+  Stack,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Typography,
+} from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import { ReactNode, useState } from 'react';
-import { CustomField, EffectiveLocationPolicy, RequirementStage, VolunteerFamilyRequirementScope, VolunteerFamilyRolePolicyVersion, VolunteerPolicy, VolunteerRolePolicyVersion } from '../../../../GeneratedClient';
+import {
+  CustomField,
+  EffectiveLocationPolicy,
+  RequirementStage,
+  VolunteerFamilyRequirementScope,
+  VolunteerFamilyRolePolicyVersion,
+  VolunteerPolicy,
+  VolunteerRolePolicyVersion,
+} from '../../../../GeneratedClient';
 import { useSidePanel } from '../../../../Hooks/useSidePanel';
 import { CustomFieldsTable } from './CustomFieldsTable';
-import { CustomFieldSidePanel, DeleteRowAction, DuplicateRowAction, EditableActions, EmptyRow, SectionHeader, VolunteerRolePolicyVersionSidePanel, clonePolicyWithVolunteerCustomFields, clonePolicyWithVolunteerPolicy, enumName, formatDate, nextCopyName, removeCustomField, removeVolunteerFamilyRolePolicyVersion, removeVolunteerRolePolicyVersion, upsertCustomField, upsertVolunteerFamilyRolePolicyVersion, upsertVolunteerRolePolicyVersion } from './shared';
+import {
+  CustomFieldSidePanel,
+  DeleteRowAction,
+  DuplicateRowAction,
+  EditableActions,
+  EmptyRow,
+  SectionHeader,
+  VolunteerRolePolicyVersionSidePanel,
+  clonePolicyWithVolunteerCustomFields,
+  clonePolicyWithVolunteerPolicy,
+  enumName,
+  formatDate,
+  nextCopyName,
+  removeCustomField,
+  removeVolunteerFamilyRolePolicyVersion,
+  removeVolunteerRolePolicyVersion,
+  upsertCustomField,
+  upsertVolunteerFamilyRolePolicyVersion,
+  upsertVolunteerRolePolicyVersion,
+} from './shared';
 
 function RolePolicyVersionsTable({
   rows,
@@ -173,6 +213,7 @@ export function VolunteerPolicyTab({
                 >
                   {enumName(RequirementStage, requirement.stage)} -{' '}
                   {requirement.actionName}
+                  {requirement.isRequired === false ? ' - Optional' : ''}
                 </Typography>
               ))
             ) : (
@@ -203,6 +244,7 @@ export function VolunteerPolicyTab({
                   {enumName(RequirementStage, requirement.stage)} -{' '}
                   {requirement.actionName} -{' '}
                   {enumName(VolunteerFamilyRequirementScope, requirement.scope)}
+                  {requirement.isRequired === false ? ' - Optional' : ''}
                 </Typography>
               ))
             ) : (

@@ -77,7 +77,7 @@ export function CommunityRoleAssignments({
           key={`${assignment.personId}-${assignment.communityRole}`}
           disablePadding
           secondaryAction={
-            permissions(Permission.EditCommunityRoleAssignments) ? (
+            permissions(Permission.EditOrganizationRoleAssignments) ? (
               <IconButton
                 edge="end"
                 aria-label="delete"

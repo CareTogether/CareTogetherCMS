@@ -51,7 +51,7 @@ export function useCommunityMemberFamiliesViewModel(
   const familyLookup = useFamilyLookup();
   const community = communityInfo.community!;
   const canEditMemberFamilies = permissions(
-    Permission.EditCommunityMemberFamilies
+    Permission.EditOrganizationMemberFamilies
   );
   const communityCanViewContactInfo = permissions(
     Permission.ViewPersonContactInfo

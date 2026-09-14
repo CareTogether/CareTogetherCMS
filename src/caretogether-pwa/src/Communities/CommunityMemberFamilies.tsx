@@ -220,7 +220,7 @@ export function CommunityMemberFamilies({
     >
       <Table
         size="small"
-        aria-label="Community member families contact table"
+        aria-label="Organization member families contact table"
         sx={{
           minWidth: 720,
           '& thead th': {
@@ -307,7 +307,7 @@ export function CommunityMemberFamilies({
                       {renderFamilyApprovals(familyRow.approvalRows)}
                     </Stack>
                     {canEditMemberFamilies && (
-                      <Tooltip title="Remove family from community">
+                      <Tooltip title="Remove family from organization">
                         <IconButton
                           aria-label="remove member family"
                           color="primary"
