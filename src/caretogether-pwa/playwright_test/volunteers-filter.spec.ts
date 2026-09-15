@@ -1,14 +1,5 @@
-import type { Page } from '@playwright/test';
 import { expect, test } from './support/fixtures';
 import { openAtlantisHome, sideNavigation } from './support/navigation';
-
-const demoDelayMs = Number(process.env.PLAYWRIGHT_DEMO_DELAY_MS ?? 0);
-
-async function pauseForDemo(page: Page) {
-  if (demoDelayMs > 0) {
-    await page.waitForTimeout(demoDelayMs);
-  }
-}
 
 test.describe('volunteer grid filters @pr', () => {
   test('Roles is not Host Family retains non-host volunteer families', async ({
@@ -21,8 +12,6 @@ test.describe('volunteer grid filters @pr', () => {
     await expect(
       page.getByRole('heading', { name: 'Volunteers', level: 4 })
     ).toBeVisible();
-    await pauseForDemo(page);
-
     const grid = page.getByRole('grid');
     const rolesHeader = grid.getByRole('columnheader', { name: /^Roles/ });
 
@@ -31,20 +20,18 @@ test.describe('volunteer grid filters @pr', () => {
       .getByRole('button', { name: 'Roles column menu' })
       .click();
     await page.getByRole('menuitem', { name: 'Filter', exact: true }).click();
-    await pauseForDemo(page);
-
     const operator = page.getByRole('combobox', { name: 'Operator' });
     await operator.click();
-    await page.getByRole('option', { name: 'is not', exact: true }).click();
-    await pauseForDemo(page);
-
+    await page
+      .getByRole('option', { name: 'does not contain', exact: true })
+      .click();
     const value = page.getByRole('combobox', { name: 'Value' });
     await value.click();
     await page
       .getByRole('option', { name: 'Host Family', exact: true })
       .click();
 
-    await expect(operator).toContainText('is not');
+    await expect(operator).toContainText('does not contain');
     await expect(value).toContainText('Host Family');
     await expect(
       grid.getByText('Emily Coachworthy Family', { exact: true })
@@ -58,7 +45,8 @@ test.describe('volunteer grid filters @pr', () => {
     await expect(
       grid.getByText('Berrin Brambleswift Family', { exact: true })
     ).toHaveCount(0);
-    await expect(page.getByText('Total Rows: 3', { exact: true })).toBeVisible();
-    await pauseForDemo(page);
+    await expect(
+      page.getByText('Total Rows: 3', { exact: true })
+    ).toBeVisible();
   });
 });
