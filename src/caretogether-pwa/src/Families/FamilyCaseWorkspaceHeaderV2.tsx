@@ -10,6 +10,7 @@ import { format } from 'date-fns';
 import {
   ArrangementPhase,
   CombinedFamilyInfo,
+  FunctionAssignmentPolicy,
   Permission,
   V1Case,
   V1Referral,
@@ -19,6 +20,8 @@ import { formatStatusWithDate } from '../V1Referrals/formatStatusWithDate';
 import { v2Typography } from './v2Typography';
 import { useFamilyPermissions } from '../Model/SessionModel';
 import { useAppNavigate } from '../Hooks/useAppNavigate';
+import { FunctionAssignmentFieldV2 } from './FunctionAssignmentFieldV2';
+import { assignmentRolesForColumns } from '../FunctionAssignments/assignmentRoleColumns';
 
 export type ActiveCaseArrangementSummaryV2 = {
   id: string;
@@ -33,6 +36,19 @@ export type ActiveCaseArrangementSummaryV2 = {
 
 type FamilyCaseWorkspaceHeaderV2Props = {
   activeCaseArrangements: ActiveCaseArrangementSummaryV2[];
+  canViewFunctionAssignments: boolean;
+  canEditFunctionAssignments: boolean;
+  functionAssignmentPolicies: FunctionAssignmentPolicy[];
+  onAssign: (
+    v1CaseId: string,
+    personId: string,
+    assignmentRole: string
+  ) => Promise<void>;
+  onUnassign: (
+    v1CaseId: string,
+    personId: string,
+    assignmentRole: string
+  ) => Promise<void>;
   canCloseV1Case: boolean;
   canReopenSelectedV1Case: boolean;
   currentReferral?: V1Referral;
@@ -67,6 +83,11 @@ function getCaseOverviewGridColumns(
 
 export function FamilyCaseWorkspaceHeaderV2({
   activeCaseArrangements,
+  canViewFunctionAssignments,
+  canEditFunctionAssignments,
+  functionAssignmentPolicies,
+  onAssign,
+  onUnassign,
   canCloseV1Case,
   canReopenSelectedV1Case,
   currentReferral,
@@ -96,6 +117,10 @@ export function FamilyCaseWorkspaceHeaderV2({
   const permissions = useFamilyPermissions(family);
 
   const appNavigate = useAppNavigate();
+  const assignmentRoles = assignmentRolesForColumns(
+    functionAssignmentPolicies.map((policy) => policy.assignmentRole),
+    selectedV1Case?.assignedIndividualVolunteers ?? []
+  );
 
   return (
     <Box
@@ -172,6 +197,24 @@ export function FamilyCaseWorkspaceHeaderV2({
                   </Box>
                 </Box>
               </Box>
+              {canViewFunctionAssignments &&
+                assignmentRoles.map((assignmentRole) => (
+                  <FunctionAssignmentFieldV2
+                    key={`${selectedV1Case.id}:${assignmentRole}`}
+                    v1Case={selectedV1Case}
+                    assignmentRole={assignmentRole}
+                    policy={functionAssignmentPolicies.find(
+                      (policy) => policy.assignmentRole === assignmentRole
+                    )}
+                    canEdit={canEditFunctionAssignments}
+                    onAssign={(personId, assignmentRole) =>
+                      onAssign(selectedV1Case.id, personId, assignmentRole)
+                    }
+                    onUnassign={(personId, assignmentRole) =>
+                      onUnassign(selectedV1Case.id, personId, assignmentRole)
+                    }
+                  />
+                ))}
               {currentReferral && (
                 <Box>
                   <Chip
