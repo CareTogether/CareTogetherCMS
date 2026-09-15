@@ -52,6 +52,8 @@ type ParticipantState = 'active' | 'inactive' | 'optedOut' | 'denied';
 type RoleParticipant = {
   id: string;
   label: string;
+  person: Person;
+  roleRemoval?: RoleRemoval;
   state: ParticipantState;
 };
 
@@ -197,6 +199,8 @@ function buildRoleParticipants(
     participants.push({
       id: personId,
       label: personLabel(person),
+      person,
+      roleRemoval: removal,
       state: removal ? stateFromRoleRemoval(removal) : 'active',
     });
   });
@@ -205,12 +209,20 @@ function buildRoleParticipants(
 }
 
 function ParticipantsSection({
+  canEditRoleParticipation,
   participants,
   requirements,
+  showParticipantActions,
+  onParticipantRemove,
+  onParticipantReset,
   onRequirementClick,
 }: {
+  canEditRoleParticipation: boolean;
   participants: RoleParticipant[];
   requirements?: RoleSummaryRequirement[];
+  showParticipantActions: boolean;
+  onParticipantRemove: (participant: RoleParticipant) => void;
+  onParticipantReset: (participant: RoleParticipant) => void;
   onRequirementClick: (row: ApprovalLedgerRow) => void;
 }) {
   if (participants.length === 0) {
@@ -235,11 +247,51 @@ function ParticipantsSection({
             }}
           >
             <Typography variant="body2">{participant.label}</Typography>
-            <Chip
-              color={participantStatusColor(participant.state)}
-              label={participantStateLabels[participant.state]}
-              size="small"
-            />
+            <Stack
+              direction="row"
+              spacing={1}
+              sx={{ alignItems: 'center', flexWrap: 'wrap' }}
+            >
+              <Chip
+                color={participantStatusColor(participant.state)}
+                label={participantStateLabels[participant.state]}
+                size="small"
+              />
+              {showParticipantActions && participant.state === 'active' && (
+                <Button
+                  color="error"
+                  disabled={!canEditRoleParticipation}
+                  onClick={() => onParticipantRemove(participant)}
+                  size="small"
+                  variant="outlined"
+                >
+                  Remove from role
+                </Button>
+              )}
+              {showParticipantActions &&
+                participant.state !== 'active' &&
+                participant.roleRemoval && (
+                  <>
+                    {participant.roleRemoval.effectiveSince && (
+                      <Chip
+                        label={`Removed ${formatUtcDateOnly(
+                          participant.roleRemoval.effectiveSince
+                        )}`}
+                        size="small"
+                        variant="outlined"
+                      />
+                    )}
+                    <Button
+                      disabled={!canEditRoleParticipation}
+                      onClick={() => onParticipantReset(participant)}
+                      size="small"
+                      variant="outlined"
+                    >
+                      Reset
+                    </Button>
+                  </>
+                )}
+            </Stack>
           </Box>
           {requirements &&
             (requirements.some(
@@ -412,6 +464,12 @@ function personForSubject(
     : undefined;
 }
 
+type SelectedRoleManagement = {
+  mode: RoleManagementMode;
+  person?: Person;
+  role: RoleSummaryCard | RemovedRoleSummary;
+};
+
 export function RoleDetailsDrawerV2({
   card,
   removedRole,
@@ -421,8 +479,8 @@ export function RoleDetailsDrawerV2({
   const familyLookup = useFamilyLookup();
   const [selectedRequirementRow, setSelectedRequirementRow] =
     useState<ApprovalLedgerRow | null>(null);
-  const [selectedRoleAction, setSelectedRoleAction] =
-    useState<RoleManagementMode | null>(null);
+  const [selectedRoleManagement, setSelectedRoleManagement] =
+    useState<SelectedRoleManagement | null>(null);
   const role = card ?? removedRole ?? null;
   const familyId = familyIdFromContext(role?.context);
   const family = familyLookup(familyId);
@@ -452,11 +510,18 @@ export function RoleDetailsDrawerV2({
           <RoleActionButton
             disabled={!canRemoveRole}
             label="Remove Role"
-            onClick={() => setSelectedRoleAction('remove')}
+            onClick={() =>
+              setSelectedRoleManagement({ mode: 'remove', role: card })
+            }
           />
           <RoleActionButton
             label="Complete Other"
-            onClick={() => setSelectedRoleAction('completeOther')}
+            onClick={() =>
+              setSelectedRoleManagement({
+                mode: 'completeOther',
+                role: card,
+              })
+            }
           />
         </Stack>
       );
@@ -467,7 +532,12 @@ export function RoleDetailsDrawerV2({
         <RoleActionButton
           disabled={!canEditRoleParticipation}
           label="Reset Participation"
-          onClick={() => setSelectedRoleAction('resetParticipation')}
+          onClick={() =>
+            setSelectedRoleManagement({
+              mode: 'resetParticipation',
+              role: removedRole,
+            })
+          }
         />
       );
     }
@@ -477,12 +547,41 @@ export function RoleDetailsDrawerV2({
 
   useEffect(() => {
     setSelectedRequirementRow(null);
-    setSelectedRoleAction(null);
+    setSelectedRoleManagement(null);
   }, [card?.id, familyId, open, removedRole?.id]);
 
   const requirements = [...(card?.requirements ?? [])].sort((a, b) =>
     b.status.localeCompare(a.status)
   );
+  function removedRoleForParticipant(
+    participant: RoleParticipant
+  ): RemovedRoleSummary | null {
+    if (!role || !participant.roleRemoval) {
+      return null;
+    }
+
+    return {
+      id: [
+        'removed',
+        'participant',
+        participant.id,
+        role.roleName,
+        participant.roleRemoval.effectiveSince?.toISOString() ?? '',
+      ].join('|'),
+      subject: {
+        scope: 'person',
+        id: participant.id,
+        label: participant.label,
+      },
+      roleName: role.roleName,
+      roleRemoval: participant.roleRemoval,
+      context: {
+        kind: 'Individual Volunteer',
+        volunteerFamilyId: familyId,
+        personId: participant.id,
+      },
+    };
+  }
 
   return (
     <>
@@ -610,10 +709,33 @@ export function RoleDetailsDrawerV2({
             )}
             {role.subject.scope === 'family' && (
               <ParticipantsSection
+                canEditRoleParticipation={canEditRoleParticipation}
                 participants={participants}
                 requirements={
                   card ? (card.memberRequirements ?? []) : undefined
                 }
+                showParticipantActions={card !== null}
+                onParticipantRemove={(participant) => {
+                  if (!card) return;
+
+                  setSelectedRoleManagement({
+                    mode: 'remove',
+                    person: participant.person,
+                    role: card,
+                  });
+                }}
+                onParticipantReset={(participant) => {
+                  const removedParticipantRole =
+                    removedRoleForParticipant(participant);
+
+                  if (!removedParticipantRole) return;
+
+                  setSelectedRoleManagement({
+                    mode: 'resetParticipation',
+                    person: participant.person,
+                    role: removedParticipantRole,
+                  });
+                }}
                 onRequirementClick={setSelectedRequirementRow}
               />
             )}
@@ -626,12 +748,12 @@ export function RoleDetailsDrawerV2({
         onClose={() => setSelectedRequirementRow(null)}
       />
       <RoleManagementDrawerV2
-        mode={selectedRoleAction}
-        person={person}
-        role={role}
+        mode={selectedRoleManagement?.mode ?? null}
+        person={selectedRoleManagement?.person ?? person}
+        role={selectedRoleManagement?.role ?? null}
         volunteerFamilyId={familyId}
-        open={selectedRoleAction !== null}
-        onClose={() => setSelectedRoleAction(null)}
+        open={selectedRoleManagement !== null}
+        onClose={() => setSelectedRoleManagement(null)}
       />
     </>
   );

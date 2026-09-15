@@ -93,6 +93,13 @@ function RoleManagementBody({
   return null;
 }
 
+function personLabel(person: Person | undefined) {
+  return (
+    [person?.firstName, person?.lastName].filter(Boolean).join(' ') ||
+    undefined
+  );
+}
+
 export function RoleManagementDrawerV2({
   mode,
   person,
@@ -102,6 +109,7 @@ export function RoleManagementDrawerV2({
   onClose,
 }: RoleManagementDrawerV2Props) {
   const content = mode ? roleManagementContent[mode] : undefined;
+  const participantLabel = personLabel(person) ?? role?.subject.label;
 
   return (
     <Drawer
@@ -140,11 +148,8 @@ export function RoleManagementDrawerV2({
               <Typography id="role-management-title" variant="h5">
                 {content.title}
               </Typography>
-              <Typography
-                color="text.secondary"
-                variant="body2"
-              >
-                {role.roleName} for {role.subject.label}
+              <Typography color="text.secondary" variant="body2">
+                {role.roleName} for {participantLabel}
               </Typography>
             </Box>
             <IconButton aria-label="close role management" onClick={onClose}>
