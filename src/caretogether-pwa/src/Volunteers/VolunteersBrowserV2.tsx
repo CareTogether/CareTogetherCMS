@@ -1,51 +1,21 @@
-import { Box, Stack, Typography } from '@mui/material';
-import type {
-  GridFilterModel,
-  GridRowSelectionModel,
-} from '@mui/x-data-grid-premium';
+import { Add as AddIcon } from '@mui/icons-material';
+import { Box, Button, Stack, Typography } from '@mui/material';
+import type { GridRowSelectionModel } from '@mui/x-data-grid-premium';
 import { useMemo, useState } from 'react';
 import { useFeatureFlagEnabled } from 'posthog-js/react';
 import { EmailAddress, Permission } from '../GeneratedClient';
 import { useAppNavigate } from '../Hooks/useAppNavigate';
 import { useGlobalSnackBar } from '../Hooks/useGlobalSnackBar';
-import { useSidePanel } from '../Hooks/useSidePanel';
 import { v2Typography } from '../Families/v2Typography';
 import { useRequiredSelectedLocationContext } from '../Model/Data';
 import { useOrganizationConfiguration } from '../Model/ConfigurationModel';
 import { useAllVolunteerFamiliesPermissions } from '../Model/SessionModel';
 import { BulkSmsSideSheet } from './BulkSmsSideSheet';
 import { CreateVolunteerFamilyDrawer } from './CreateVolunteerFamilyDrawer';
-import { VolunteerAssignmentFiltersSidePanel } from './VolunteerApprovalTab/VolunteerAssignmentFiltersSidePanel';
-import { VolunteerCustomFieldFiltersSidePanel } from './VolunteerApprovalTab/VolunteerCustomFieldFiltersSidePanel';
 import { VolunteersDataGridV2 } from './VolunteersDataGridV2';
 import { VolunteersToolbarV2 } from './VolunteersToolbarV2';
 import { useVolunteersBrowserViewModel } from './useVolunteersBrowserViewModel';
-import { filterOption } from './VolunteerApprovalTab/filterOption';
-import {
-  gridFilterModelFromVolunteerFilters,
-  volunteerFiltersFromGridFilterModel,
-} from './volunteersGridFilterAdapter';
 import { UPDATE_TEST_FAMILY_FEATURE_FLAG } from '../featureFlags';
-import {
-  defaultVolunteerGridFilterOperator,
-  type VolunteerGridFilterOperator,
-} from './volunteerGridFilterOperator';
-
-function selectedFilterValues(filters: filterOption[]) {
-  return filters
-    .filter((filter) => filter.selected && filter.value !== undefined)
-    .map((filter) => filter.value!);
-}
-
-function hasIncompleteFilter(filterModel: GridFilterModel) {
-  return filterModel.items.some(
-    (item) =>
-      item.value === undefined ||
-      item.value === null ||
-      item.value === '' ||
-      (Array.isArray(item.value) && item.value.length === 0)
-  );
-}
 
 export function VolunteersBrowserV2() {
   const appNavigate = useAppNavigate();
@@ -60,49 +30,14 @@ export function VolunteersBrowserV2() {
     useState(false);
   const [smsMode, setSmsMode] = useState(false);
   const [selectedFamilyIds, setSelectedFamilyIds] = useState<string[]>([]);
-  const [roleFilterOperator, setRoleFilterOperator] =
-    useState<VolunteerGridFilterOperator>(defaultVolunteerGridFilterOperator);
-  const [statusFilterOperator, setStatusFilterOperator] =
-    useState<VolunteerGridFilterOperator>(
-      defaultVolunteerGridFilterOperator
-    );
-
+  const [pivotActive, setPivotActive] = useState(false);
   const {
-    activeAssignmentFilterCount,
-    activeCustomFieldFilterCount,
     arrangementTypes,
-    assignmentFilters,
-    customFieldCount,
-    customFieldFilters,
-    customFields,
-    getCustomFieldFilterOptionsForField,
-    requirementFilter,
-    requirementFilterOptions,
-    roleFilters,
+    familyCustomFields,
+    roleNames,
     rows,
-    searchValue,
-    setAssignmentFilter,
-    setCustomFieldFilter,
-    setRequirementFilter,
-    setRoleFilterValues,
-    setSearchValue,
-    setStatusFilterValues,
-    statusFilters,
-    visibleVolunteerFamilies,
-  } = useVolunteersBrowserViewModel(
-    roleFilterOperator,
-    statusFilterOperator
-  );
-  const {
-    SidePanel: AssignmentFiltersSidePanel,
-    openSidePanel: openAssignmentFiltersSidePanel,
-    closeSidePanel: closeAssignmentFiltersSidePanel,
-  } = useSidePanel();
-  const {
-    SidePanel: CustomFieldFiltersSidePanel,
-    openSidePanel: openCustomFieldFiltersSidePanel,
-    closeSidePanel: closeCustomFieldFiltersSidePanel,
-  } = useSidePanel();
+    volunteerCustomFields,
+  } = useVolunteersBrowserViewModel();
   const canCreateVolunteerFamily =
     permissions(Permission.EditFamilyInfo) &&
     permissions(Permission.ActivateVolunteerFamily);
@@ -127,31 +62,10 @@ export function VolunteersBrowserV2() {
   const selectedVolunteerFamilies = useMemo(() => {
     const selectedFamilyIdSet = new Set(selectedFamilyIds);
 
-    return visibleVolunteerFamilies.filter((family) =>
-      selectedFamilyIdSet.has(family.family!.id!)
-    );
-  }, [selectedFamilyIds, visibleVolunteerFamilies]);
-  const appliedFilterModel = useMemo(
-    () =>
-      gridFilterModelFromVolunteerFilters({
-        logicOperator: 'and',
-        requirementFilter,
-        roleFilterOperator,
-        roleFilters: selectedFilterValues(roleFilters),
-        statusFilterOperator,
-        statusFilters: selectedFilterValues(statusFilters),
-      }),
-    [
-      requirementFilter,
-      roleFilterOperator,
-      roleFilters,
-      statusFilterOperator,
-      statusFilters,
-    ]
-  );
-  const [pendingFilterModel, setPendingFilterModel] =
-    useState<GridFilterModel | null>(null);
-  const filterModel = pendingFilterModel ?? appliedFilterModel;
+    return rows
+      .map((row) => row.sourceFamily)
+      .filter((family) => selectedFamilyIdSet.has(family.family!.id!));
+  }, [rows, selectedFamilyIds]);
 
   function selectedFamilyContactEmails() {
     return selectedVolunteerFamilies
@@ -180,10 +94,6 @@ export function VolunteersBrowserV2() {
     );
   }
 
-  function clearSelection() {
-    setSelectedFamilyIds([]);
-  }
-
   function handleRowSelectionModelChange(model: GridRowSelectionModel) {
     const visibleRowIdSet = new Set(visibleRowIds);
 
@@ -196,41 +106,6 @@ export function VolunteersBrowserV2() {
       Array.from(model.ids)
         .map(String)
         .filter((id) => visibleRowIdSet.has(id))
-    );
-  }
-
-  function handleAssignmentFilterChange(
-    arrangementType: string,
-    selectedValues: Parameters<typeof setAssignmentFilter>[1]
-  ) {
-    clearSelection();
-    setAssignmentFilter(arrangementType, selectedValues);
-  }
-
-  function handleCustomFieldFilterChange(
-    fieldName: string,
-    selectedValues: Parameters<typeof setCustomFieldFilter>[1]
-  ) {
-    clearSelection();
-    setCustomFieldFilter(fieldName, selectedValues);
-  }
-
-  function handleSearchChange(value: string) {
-    clearSelection();
-    setSearchValue(value);
-  }
-
-  function handleFilterModelChange(model: GridFilterModel) {
-    const filters = volunteerFiltersFromGridFilterModel(model);
-
-    setPendingFilterModel(hasIncompleteFilter(model) ? model : null);
-    setRoleFilterOperator(filters.roleFilterOperator);
-    setStatusFilterOperator(filters.statusFilterOperator);
-    clearSelection();
-    setRoleFilterValues(filters.roleFilters);
-    setStatusFilterValues(filters.statusFilters);
-    setRequirementFilter(
-      filters.requirementFilter as Parameters<typeof setRequirementFilter>[0]
     );
   }
 
@@ -248,54 +123,57 @@ export function VolunteersBrowserV2() {
           Review volunteer families.
         </Typography>
       </Box>
-      <VolunteersToolbarV2
-        activeAssignmentFilterCount={activeAssignmentFilterCount}
-        activeCustomFieldFilterCount={activeCustomFieldFilterCount}
-        arrangementTypeCount={arrangementTypes.length}
-        canCreateVolunteerFamily={canCreateVolunteerFamily}
-        canUseBulkEmail={canUseBulkEmail}
-        canUseBulkSms={canUseBulkSms}
-        customFieldCount={customFieldCount}
-        searchValue={searchValue}
-        selectedVolunteerCount={selectedVolunteerCount}
-        smsMode={smsMode}
-        onSearchChange={handleSearchChange}
-        onAssignmentFiltersClick={openAssignmentFiltersSidePanel}
-        onCopyEmailAddresses={copyEmailAddresses}
-        onCreateVolunteerFamily={() => setCreateVolunteerFamilyDrawerOpen(true)}
-        onCustomFieldFiltersClick={openCustomFieldFiltersSidePanel}
-        onToggleBulkSms={() => setSmsMode(!smsMode)}
-      />
-      <AssignmentFiltersSidePanel>
-        <VolunteerAssignmentFiltersSidePanel
-          arrangementTypes={arrangementTypes}
-          selectedValuesByArrangementType={assignmentFilters}
-          onArrangementTypeChange={handleAssignmentFilterChange}
-          onClose={closeAssignmentFiltersSidePanel}
-        />
-      </AssignmentFiltersSidePanel>
-      <CustomFieldFiltersSidePanel>
-        <VolunteerCustomFieldFiltersSidePanel
-          customFields={customFields}
-          getOptionsForField={getCustomFieldFilterOptionsForField}
-          selectedValuesByField={customFieldFilters}
-          onFieldChange={handleCustomFieldFilterChange}
-          onClose={closeCustomFieldFiltersSidePanel}
-        />
-      </CustomFieldFiltersSidePanel>
+      <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
+        <Stack
+          direction={{ xs: 'column', sm: 'row' }}
+          sx={{
+            alignItems: { xs: 'flex-end', sm: 'center' },
+            flexWrap: { xs: 'nowrap', sm: 'wrap' },
+            gap: 1,
+          }}
+        >
+          <VolunteersToolbarV2
+            canUseBulkEmail={canUseBulkEmail}
+            canUseBulkSms={canUseBulkSms}
+            bulkActionsDisabled={pivotActive}
+            selectedVolunteerCount={selectedVolunteerCount}
+            smsMode={smsMode}
+            onCopyEmailAddresses={copyEmailAddresses}
+            onToggleBulkSms={() => setSmsMode(!smsMode)}
+          />
+          {canCreateVolunteerFamily && (
+            <Button
+              size="small"
+              variant="contained"
+              startIcon={<AddIcon />}
+              sx={{
+                alignSelf: { xs: 'stretch', md: 'center' },
+                flexShrink: 0,
+                whiteSpace: 'nowrap',
+              }}
+              onClick={() => setCreateVolunteerFamilyDrawerOpen(true)}
+            >
+              Add Volunteer Family
+            </Button>
+          )}
+        </Stack>
+      </Box>
       <Box sx={{ flex: 1, minHeight: 0 }}>
         <VolunteersDataGridV2
-          customFields={customFields}
-          filterModel={filterModel}
-          onFilterModelChange={handleFilterModelChange}
+          arrangementTypes={arrangementTypes}
+          familyCustomFields={familyCustomFields}
           onRowClick={(row) => appNavigate.family(row.id)}
+          onPivotActiveChange={(active) => {
+            setPivotActive(active);
+            if (active) setSelectedFamilyIds([]);
+          }}
           onRowSelectionModelChange={handleRowSelectionModelChange}
-          requirementFilterOptions={requirementFilterOptions}
-          roleFilters={roleFilters}
+          roleNames={roleNames}
           rowSelectionModel={rowSelectionModel}
           rows={rows}
-          statusFilters={statusFilters}
+          volunteerCustomFields={volunteerCustomFields}
           updateTestFamilyFlagEnabled={updateTestFamilyFlagEnabled}
+          pivotActive={pivotActive}
         />
       </Box>
       {createVolunteerFamilyDrawerOpen && (

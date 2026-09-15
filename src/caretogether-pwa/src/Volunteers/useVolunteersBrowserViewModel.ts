@@ -1,529 +1,247 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
-import {
-  CombinedFamilyInfo,
-  CustomField,
-  RoleApprovalStatus,
-} from '../GeneratedClient';
+import { useMemo } from 'react';
+import { CombinedFamilyInfo, CustomField } from '../GeneratedClient';
 import { familyNameString } from '../Families/FamilyName';
-import { filterFamiliesByText } from '../Families/FamilyUtils';
 import { personNameString } from '../Families/PersonName';
-import { matchesCustomFieldFilters } from '../Generic/CustomFieldsFilter/matchesCustomFieldFilters';
-import {
-  CustomFieldFilterOption,
-  CustomFieldFilterSelectionsByField,
-  CustomFieldFilterValue,
-} from '../Generic/CustomFieldsFilter/types';
-import { useCustomFieldFilters } from '../Generic/CustomFieldsFilter/useCustomFieldFilters';
-import {
-  useAllApprovalAndOnboardingRequirements,
-  usePolicy,
-  useRoleFilters,
-  useStatusFilters,
-} from '../Model/PolicyModel';
+import { usePolicy } from '../Model/PolicyModel';
 import { useVolunteerFamilies } from '../Model/VolunteersModel';
 import {
-  AssignmentFilterSelectionsByArrangementType,
-  AssignmentFilterValue,
-  matchesAssignmentFilters,
-} from './VolunteerApprovalTab/assignmentFilters';
-import { filterOption } from './VolunteerApprovalTab/filterOption';
-import type { VolunteerGridFilterOperator } from './volunteerGridFilterOperator';
-import {
   buildVolunteerApprovalRolesPresentation,
-  VolunteerApprovalRolesPresentation,
+  type VolunteerApprovalRolesPresentation,
 } from './VolunteerApprovalTab/volunteerApprovalRolePresentation';
-import { familyOrFamilyMembersMeetRoleStatusFilterCriteria } from './VolunteerApprovalTab/volunteerApprovalRoleStatusFilters';
+import type { filterOption } from './VolunteerApprovalTab/filterOption';
 import {
   buildVolunteerMissingRequirementGroups,
   completeRequirementFilterValue,
-  familyHasMissingRequirements,
   missingRequirementFilterValue,
-  RequirementFilterValue,
-  VolunteerMissingRequirementGroup,
+  type VolunteerMissingRequirementGroup,
 } from './VolunteerApprovalTab/volunteerMissingRequirementsPresentation';
+import {
+  notAppliedRoleFilterValue,
+  roleFilterValues,
+} from './roleFilterValues';
 
+export type VolunteerCustomFieldValue = boolean | string | string[] | null;
 export type VolunteerBrowserRowV2 = {
-  customFieldValues: Record<string, unknown>;
-  id: string;
+  arrangementAssignmentValues: Record<string, 'assigned' | 'unassigned'>;
   family: string;
-  requirementFilterValues: string[];
+  familyCustomFieldValues: Record<string, VolunteerCustomFieldValue>;
+  familyLastName: string;
+  id: string;
   missingRequirementGroups: VolunteerMissingRequirementGroup[];
   primaryContact: string;
+  requirementFilterValues: string[];
   roleFilterValues: string[];
   roles: VolunteerApprovalRolesPresentation;
+  searchableText: string;
   sourceFamily: CombinedFamilyInfo;
   statusFilterValues: string[];
   statusLabels: string[];
+  volunteerFamilyCount: number;
+  volunteerCustomFieldValues: Record<string, VolunteerCustomFieldValue>;
 };
-
 type VolunteersBrowserViewModel = {
-  activeAssignmentFilterCount: number;
-  activeCustomFieldFilterCount: number;
   arrangementTypes: string[];
-  assignmentFilters: AssignmentFilterSelectionsByArrangementType;
-  customFieldCount: number;
-  customFieldFilters: CustomFieldFilterSelectionsByField;
-  customFields: CustomField[];
-  empty: boolean;
-  getCustomFieldFilterOptionsForField: (
-    field: CustomField
-  ) => CustomFieldFilterOption[];
-  requirementFilter: RequirementFilterValue | undefined;
-  requirementFilterOptions: string[];
-  roleFilters: filterOption[];
+  familyCustomFields: CustomField[];
+  roleNames: string[];
   rows: VolunteerBrowserRowV2[];
-  searchValue: string;
-  setAssignmentFilter: (
-    arrangementType: string,
-    selectedValues: AssignmentFilterValue[]
-  ) => void;
-  setCustomFieldFilter: (
-    fieldName: string,
-    selectedValues: CustomFieldFilterValue[]
-  ) => void;
-  setRequirementFilter: (value: RequirementFilterValue | undefined) => void;
-  setRoleFilterValues: (values: string[]) => void;
-  setSearchValue: (value: string) => void;
-  setStatusFilterValues: (values: string[]) => void;
-  statusFilters: filterOption[];
-  totalVolunteerFamilies: number;
-  visibleVolunteerFamilies: CombinedFamilyInfo[];
+  volunteerCustomFields: CustomField[];
 };
-
-type CustomFieldValuesByFamily = Map<CombinedFamilyInfo, Record<string, unknown>>;
-
-function primaryContactName(family: CombinedFamilyInfo) {
-  const primaryContact = family.family?.adults?.find(
+function primaryContact(family: CombinedFamilyInfo) {
+  return family.family?.adults?.find(
     (adult) => adult.item1?.id === family.family?.primaryFamilyContactPersonId
   )?.item1;
-
-  return primaryContact ? personNameString(primaryContact) : '';
 }
-
-function customFieldValuesForFamily(
-  family: CombinedFamilyInfo,
-  customFields: CustomField[],
-  customFieldValuesByFamily: CustomFieldValuesByFamily
+function valuesByName(
+  values: { customFieldName?: string; value?: unknown }[] | undefined
 ) {
-  const valuesByName = customFieldValuesByFamily.get(family) ?? {};
-
   return Object.fromEntries(
-    customFields.map((field) => [field.name, valuesByName[field.name]])
-  );
-}
-
-function familyRoleNames(family: CombinedFamilyInfo) {
-  return Object.keys(family.volunteerFamilyInfo?.familyRoleApprovals ?? {});
-}
-
-function individualRoleNames(family: CombinedFamilyInfo) {
-  return Object.values(
-    family.volunteerFamilyInfo?.individualVolunteers ?? {}
-  ).flatMap((volunteer) =>
-    Object.keys(volunteer.approvalStatusByRole ?? {})
-  );
-}
-
-function roleFilterValuesForFamily(
-  family: CombinedFamilyInfo,
-  roleFilters: filterOption[]
-) {
-  const roleNames = new Set(familyRoleNames(family).concat(individualRoleNames(family)));
-
-  return roleFilters
-    .filter(
-      (roleFilter) =>
-        roleFilter.value !== undefined && roleNames.has(roleFilter.key)
+    (values ?? []).flatMap((value) =>
+      value.customFieldName
+        ? [[value.customFieldName, value.value ?? null]]
+        : []
     )
-    .map((roleFilter) => roleFilter.value!);
+  ) as Record<string, VolunteerCustomFieldValue>;
 }
-
-function statusValue(status: RoleApprovalStatus | null | undefined) {
-  return status === null || status === undefined ? '0' : status.toString();
-}
-
-function statusFilterValuesForFamily(family: CombinedFamilyInfo) {
+function statusValues(family: CombinedFamilyInfo) {
   return Array.from(
     new Set(
-      Object.values(family.volunteerFamilyInfo?.familyRoleApprovals ?? {})
-        .map((approval) => statusValue(approval.currentStatus))
-        .concat(
-          Object.values(
-            family.volunteerFamilyInfo?.individualVolunteers ?? {}
-          ).flatMap((volunteer) =>
-            Object.values(volunteer.approvalStatusByRole ?? {}).map(
-              (approval) => statusValue(approval.currentStatus)
-            )
-          )
-        )
+      [
+        ...Object.values(family.volunteerFamilyInfo?.familyRoleApprovals ?? {}),
+        ...Object.values(
+          family.volunteerFamilyInfo?.individualVolunteers ?? {}
+        ).flatMap((volunteer) =>
+          Object.values(volunteer.approvalStatusByRole ?? {})
+        ),
+      ].map((approval) =>
+        approval.currentStatus == null ? '0' : String(approval.currentStatus)
+      )
     )
   );
 }
-
-function statusLabelsForFamily(
+function assignmentValues(
   family: CombinedFamilyInfo,
-  statusFilters: filterOption[]
+  arrangementTypes: string[]
 ) {
-  const statusLabelsByValue = new Map(
-    statusFilters
-      .filter((statusFilter) => statusFilter.value !== undefined)
-      .map((statusFilter) => [statusFilter.value!, statusFilter.key])
-  );
-
-  return statusFilterValuesForFamily(family)
-    .map((value) => statusLabelsByValue.get(value))
-    .filter((label): label is string => Boolean(label));
+  return Object.fromEntries(
+    arrangementTypes.map((arrangementType) => [
+      arrangementType,
+      family.volunteerFamilyInfo?.assignments?.some(
+        (assignment) =>
+          assignment.arrangementType === arrangementType &&
+          !assignment.endedAtUtc &&
+          !assignment.cancelledAtUtc
+      )
+        ? 'assigned'
+        : 'unassigned',
+    ])
+  ) as Record<string, 'assigned' | 'unassigned'>;
+}
+function searchText(family: CombinedFamilyInfo) {
+  return [
+    ...(family.family?.adults ?? []).map(
+      (adult) =>
+        `${adult.item1?.firstName ?? ''} ${adult.item1?.lastName ?? ''}`
+    ),
+    ...(family.family?.children ?? []).map(
+      (child) => `${child?.firstName ?? ''} ${child?.lastName ?? ''}`
+    ),
+  ].join('\n');
 }
 
-function requirementFilterValuesForGroups(
-  missingRequirementGroups: VolunteerMissingRequirementGroup[]
-) {
-  const missingRequirements = missingRequirementGroups.flatMap(
-    (group) => group.requirements
-  );
-
-  if (!missingRequirements.length) {
-    return [completeRequirementFilterValue];
-  }
-
-  return Array.from(new Set([missingRequirementFilterValue, ...missingRequirements]));
-}
-
-function toVolunteerBrowserRow(
+function toRow(
   family: CombinedFamilyInfo,
-  customFields: CustomField[],
-  roleFilters: filterOption[],
-  statusFilters: filterOption[],
-  customFieldValuesByFamily: CustomFieldValuesByFamily
-) {
+  familyCustomFields: CustomField[],
+  volunteerCustomFields: CustomField[],
+  arrangementTypes: string[],
+  statusLabelsByValue: Map<string, string>,
+  roleNamesForPresentation: string[]
+): VolunteerBrowserRowV2 {
+  const contact = primaryContact(family);
+  const roleFilters = roleNamesForPresentation.map(
+    (key): filterOption => ({ key, selected: false, value: undefined })
+  );
   const missingRequirementGroups = buildVolunteerMissingRequirementGroups(
     family,
     roleFilters
   );
-
+  const requirementNames = missingRequirementGroups.flatMap(
+    (group) => group.requirements
+  );
+  const statuses = statusValues(family);
+  const familyValues = valuesByName(family.family?.completedCustomFields);
+  const volunteerValues = valuesByName(
+    family.volunteerFamilyInfo?.completedCustomFields
+  );
   return {
-    customFieldValues: customFieldValuesForFamily(
-      family,
-      customFields,
-      customFieldValuesByFamily
-    ),
-    id: family.family!.id!,
+    arrangementAssignmentValues: assignmentValues(family, arrangementTypes),
     family: familyNameString(family),
-    requirementFilterValues:
-      requirementFilterValuesForGroups(missingRequirementGroups),
+    familyCustomFieldValues: Object.fromEntries(
+      familyCustomFields.map((field) => [
+        field.name,
+        familyValues[field.name] ?? null,
+      ])
+    ),
+    familyLastName: contact?.lastName ?? '⚠ MISSING PRIMARY CONTACT',
+    id: family.family!.id!,
     missingRequirementGroups,
-    primaryContact: primaryContactName(family),
-    roleFilterValues: roleFilterValuesForFamily(family, roleFilters),
+    primaryContact: contact ? personNameString(contact) : '',
+    requirementFilterValues: requirementNames.length
+      ? Array.from(
+          new Set([missingRequirementFilterValue, ...requirementNames])
+        )
+      : [completeRequirementFilterValue],
+    roleFilterValues: roleFilterValues(family),
     roles: buildVolunteerApprovalRolesPresentation(family, roleFilters),
+    searchableText: searchText(family),
     sourceFamily: family,
-    statusFilterValues: statusFilterValuesForFamily(family),
-    statusLabels: statusLabelsForFamily(family, statusFilters),
+    statusFilterValues: statuses,
+    statusLabels: statuses.map(
+      (status) => statusLabelsByValue.get(status) ?? status
+    ),
+    volunteerCustomFieldValues: Object.fromEntries(
+      volunteerCustomFields.map((field) => [
+        field.name,
+        volunteerValues[field.name] ?? null,
+      ])
+    ),
+    volunteerFamilyCount: 1,
   };
 }
 
-function volunteerCustomFields(
-  policyCustomFields: CustomField[] | undefined,
-  volunteerCustomFields: CustomField[] | undefined
-) {
-  return (policyCustomFields ?? []).concat(volunteerCustomFields ?? []);
-}
-
-function buildCustomFieldValuesByFamily(volunteerFamilies: CombinedFamilyInfo[]) {
-  return new Map(
-    volunteerFamilies.map((family) => [
-      family,
-      customFieldValuesByName(family),
-    ])
-  );
-}
-
-function customFieldValuesByName(family: CombinedFamilyInfo) {
-  const valuesByName: Record<string, unknown> = {};
-
-  family.volunteerFamilyInfo?.completedCustomFields?.forEach((customField) => {
-    valuesByName[customField.customFieldName] = customField.value;
-  });
-  family.family?.completedCustomFields?.forEach((customField) => {
-    if (customField.value === undefined || customField.value === null) {
-      return;
-    }
-
-    valuesByName[customField.customFieldName] = customField.value;
-  });
-
-  return valuesByName;
-}
-
-function customFieldValueFromLookup(
-  customFieldValuesByFamily: CustomFieldValuesByFamily,
-  family: CombinedFamilyInfo,
-  fieldName: string
-) {
-  return customFieldValuesByFamily.get(family)?.[fieldName];
-}
-
-function customFieldIsBlank(value: unknown) {
-  return value === undefined || value === null;
-}
-
-function applySearchStage(
-  volunteerFamilies: CombinedFamilyInfo[],
-  searchValue: string
-) {
-  return filterFamiliesByText(volunteerFamilies, searchValue);
-}
-
-function applyFilterStage(
-  volunteerFamilies: CombinedFamilyInfo[],
-  roleFilters: filterOption[],
-  statusFilters: filterOption[],
-  assignmentFilters: AssignmentFilterSelectionsByArrangementType,
-  customFields: CustomField[],
-  customFieldFilters: CustomFieldFilterSelectionsByField,
-  customFieldValuesByFamily: CustomFieldValuesByFamily,
-  requirementFilter: RequirementFilterValue | undefined,
-  roleFilterOperator: VolunteerGridFilterOperator,
-  statusFilterOperator: VolunteerGridFilterOperator
-) {
-  return volunteerFamilies.filter(
-    (family) =>
-      familyOrFamilyMembersMeetRoleStatusFilterCriteria(
-        family,
-        roleFilters,
-        statusFilters,
-        statusFilterOperator,
-        roleFilterOperator
-      ) &&
-      familyHasMissingRequirements(
-        family,
-        roleFilters,
-        requirementFilter
-      ) &&
-      matchesAssignmentFilters(family, assignmentFilters) &&
-      matchesCustomFieldFilters({
-        item: family,
-        customFields,
-        selectedValuesByField: customFieldFilters,
-        isBlank: (item, fieldName) =>
-          customFieldIsBlank(
-            customFieldValueFromLookup(
-              customFieldValuesByFamily,
-              item,
-              fieldName
-            )
-          ),
-        getValue: (item, fieldName) =>
-          customFieldValueFromLookup(
-            customFieldValuesByFamily,
-            item,
-            fieldName
-          ),
-      })
-  );
-}
-
-function mapRows(
-  volunteerFamilies: CombinedFamilyInfo[],
-  customFields: CustomField[],
-  roleFilters: filterOption[],
-  statusFilters: filterOption[],
-  customFieldValuesByFamily: CustomFieldValuesByFamily
-) {
-  return volunteerFamilies.map((family) =>
-    toVolunteerBrowserRow(
-      family,
-      customFields,
-      roleFilters,
-      statusFilters,
-      customFieldValuesByFamily
-    )
-  );
-}
-
-function withSelectedFilterValues(
-  filters: filterOption[],
-  selectedValues: string[]
-) {
-  const selectedValueSet = new Set(selectedValues);
-
-  return filters.map((filter) => ({
-    ...filter,
-    selected:
-      filter.value !== undefined && selectedValueSet.has(filter.value),
-  }));
-}
-
-export function useVolunteersBrowserViewModel(
-  roleFilterOperator: VolunteerGridFilterOperator,
-  statusFilterOperator: VolunteerGridFilterOperator
-): VolunteersBrowserViewModel {
-  const volunteerFamilies = useVolunteerFamilies();
-  const requirementNames = useAllApprovalAndOnboardingRequirements();
+export function useVolunteersBrowserViewModel(): VolunteersBrowserViewModel {
+  const families = useVolunteerFamilies();
   const policy = usePolicy();
-  const [roleFilters, setRoleFilters] = useRoleFilters();
-  const [statusFilters, setStatusFilters] = useStatusFilters();
-  const [assignmentFilters, setAssignmentFilters] =
-    useState<AssignmentFilterSelectionsByArrangementType>({});
-  const [searchValue, setSearchValue] = useState('');
-  const [requirementFilter, setRequirementFilter] =
-    useState<RequirementFilterValue | undefined>();
-  const sourceFamilies = volunteerFamilies;
+  const familyCustomFields = useMemo(
+    () => policy.customFamilyFields ?? [],
+    [policy.customFamilyFields]
+  );
+  const volunteerCustomFields = useMemo(
+    () => policy.volunteerPolicy?.customFields ?? [],
+    [policy.volunteerPolicy?.customFields]
+  );
   const arrangementTypes = useMemo(
     () =>
       Array.from(
         new Set(
-          (policy.referralPolicy?.arrangementPolicies ?? [])
-            .map((arrangementPolicy) => arrangementPolicy.arrangementType)
-            .filter(
-              (arrangementType): arrangementType is string => !!arrangementType
-            )
+          (policy.referralPolicy?.arrangementPolicies ?? []).flatMap(
+            (policy) => (policy.arrangementType ? [policy.arrangementType] : [])
+          )
         )
       ),
     [policy.referralPolicy?.arrangementPolicies]
   );
-  const activeAssignmentFilterCount = Object.values(assignmentFilters).filter(
-    (selectedValues) => selectedValues.length > 0
-  ).length;
-  const customFields = useMemo(
+  const roleNamesForPresentation = useMemo(
     () =>
-      volunteerCustomFields(
-        policy.customFamilyFields,
-        policy.volunteerPolicy?.customFields
-      ),
-    [policy.customFamilyFields, policy.volunteerPolicy?.customFields]
-  );
-  const customFieldValuesByFamily = useMemo(
-    () => buildCustomFieldValuesByFamily(sourceFamilies),
-    [sourceFamilies]
-  );
-  const getCustomFieldValue = useCallback(
-    (family: CombinedFamilyInfo, fieldName: string) =>
-      customFieldValueFromLookup(customFieldValuesByFamily, family, fieldName),
-    [customFieldValuesByFamily]
-  );
-  const isCustomFieldBlank = useCallback(
-    (family: CombinedFamilyInfo, fieldName: string) =>
-      customFieldIsBlank(getCustomFieldValue(family, fieldName)),
-    [getCustomFieldValue]
-  );
-  const {
-    selectedValuesByField: customFieldFilters,
-    setSelectedValuesForField: setCustomFieldFilter,
-    getOptionsForField: getCustomFieldFilterOptionsForField,
-  } = useCustomFieldFilters({
-    customFields,
-    items: sourceFamilies,
-    isBlank: isCustomFieldBlank,
-    getValue: getCustomFieldValue,
-  });
-  const customFieldCount = customFields.length;
-  const activeCustomFieldFilterCount = Object.values(
-    customFieldFilters
-  ).filter((selectedValues) => selectedValues.length > 0).length;
-
-  useEffect(() => {
-    setAssignmentFilters((currentFilters) => {
-      const validFilters = Object.fromEntries(
-        Object.entries(currentFilters).filter(([arrangementType]) =>
-          arrangementTypes.includes(arrangementType)
-        )
-      );
-
-      return Object.keys(validFilters).length ===
-        Object.keys(currentFilters).length
-        ? currentFilters
-        : validFilters;
-    });
-  }, [arrangementTypes]);
-
-  function setAssignmentFilter(
-    arrangementType: string,
-    selectedValues: AssignmentFilterValue[]
-  ) {
-    setAssignmentFilters((previous) => ({
-      ...previous,
-      [arrangementType]: selectedValues,
-    }));
-  }
-
-  function setRoleFilterValues(values: string[]) {
-    setRoleFilters(withSelectedFilterValues(roleFilters, values));
-  }
-
-  function setStatusFilterValues(values: string[]) {
-    setStatusFilters(withSelectedFilterValues(statusFilters, values));
-  }
-
-  const visibleVolunteerFamilies = useMemo(() => {
-    const searchedFamilies = applySearchStage(sourceFamilies, searchValue);
-    const filteredFamilies = applyFilterStage(
-      searchedFamilies,
-      roleFilters,
-      statusFilters,
-      assignmentFilters,
-      customFields,
-      customFieldFilters,
-      customFieldValuesByFamily,
-      requirementFilter,
-      roleFilterOperator,
-      statusFilterOperator
-    );
-
-    return filteredFamilies;
-  }, [
-    assignmentFilters,
-    customFieldFilters,
-    customFieldValuesByFamily,
-    customFields,
-    requirementFilter,
-    roleFilterOperator,
-    roleFilters,
-    searchValue,
-    sourceFamilies,
-    statusFilterOperator,
-    statusFilters,
-  ]);
-  const rows = useMemo(
-    () =>
-      mapRows(
-        visibleVolunteerFamilies,
-        customFields,
-        roleFilters,
-        statusFilters,
-        customFieldValuesByFamily
+      Array.from(
+        new Set([
+          ...Object.keys(policy.volunteerPolicy?.volunteerFamilyRoles ?? {}),
+          ...Object.keys(policy.volunteerPolicy?.volunteerRoles ?? {}),
+        ])
       ),
     [
-      customFieldValuesByFamily,
-      customFields,
-      roleFilters,
-      statusFilters,
-      visibleVolunteerFamilies,
+      policy.volunteerPolicy?.volunteerFamilyRoles,
+      policy.volunteerPolicy?.volunteerRoles,
     ]
   );
-
+  const statusLabelsByValue = useMemo(
+    () =>
+      new Map([
+        ['0', notAppliedRoleFilterValue],
+        ['1', 'Prospective'],
+        ['2', 'Approved'],
+        ['3', 'Onboarded'],
+        ['4', 'Expired'],
+        ['5', 'Inactive'],
+        ['6', 'Denied'],
+      ]),
+    []
+  );
+  const rows = useMemo(
+    () =>
+      families.map((family) =>
+        toRow(
+          family,
+          familyCustomFields,
+          volunteerCustomFields,
+          arrangementTypes,
+          statusLabelsByValue,
+          roleNamesForPresentation
+        )
+      ),
+    [
+      arrangementTypes,
+      families,
+      familyCustomFields,
+      roleNamesForPresentation,
+      statusLabelsByValue,
+      volunteerCustomFields,
+    ]
+  );
   return {
-    activeAssignmentFilterCount,
-    activeCustomFieldFilterCount,
     arrangementTypes,
-    assignmentFilters,
-    customFieldCount,
-    customFieldFilters,
-    customFields,
-    empty: rows.length === 0,
-    getCustomFieldFilterOptionsForField,
-    requirementFilter,
-    requirementFilterOptions: requirementNames,
-    roleFilters,
+    familyCustomFields,
+    roleNames: [notAppliedRoleFilterValue, ...roleNamesForPresentation],
     rows,
-    searchValue,
-    setAssignmentFilter,
-    setCustomFieldFilter,
-    setRequirementFilter,
-    setRoleFilterValues,
-    setSearchValue,
-    setStatusFilterValues,
-    statusFilters,
-    totalVolunteerFamilies: sourceFamilies.length,
-    visibleVolunteerFamilies,
+    volunteerCustomFields,
   };
 }
