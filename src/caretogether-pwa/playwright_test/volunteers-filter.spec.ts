@@ -30,6 +30,8 @@ test.describe('volunteer grid filters @pr', () => {
     await page
       .getByRole('option', { name: 'Host Family', exact: true })
       .click();
+    await page.keyboard.press('Escape');
+    await expect(page.getByRole('listbox')).toBeHidden();
 
     await expect(operator).toContainText('does not contain');
     await expect(value).toContainText('Host Family');
@@ -46,7 +48,7 @@ test.describe('volunteer grid filters @pr', () => {
       grid.getByText('Berrin Brambleswift Family', { exact: true })
     ).toHaveCount(0);
     await expect(
-      page.getByText('Total Rows: 3', { exact: true })
-    ).toBeVisible();
+      grid.getByRole('checkbox', { name: 'Select row', exact: true })
+    ).toHaveCount(3);
   });
 });

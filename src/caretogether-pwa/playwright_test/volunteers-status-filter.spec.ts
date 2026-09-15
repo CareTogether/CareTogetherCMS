@@ -4,6 +4,7 @@ import type {
   GridMultiSelectColDef,
 } from '@mui/x-data-grid-premium';
 import { CombinedFamilyInfo } from '../src/GeneratedClient';
+import { roleFilterValues } from '../src/Volunteers/roleFilterValues';
 import { buildVolunteersGridColumns } from '../src/Volunteers/volunteersGridColumns';
 import type { VolunteerBrowserRowV2 } from '../src/Volunteers/useVolunteersBrowserViewModel';
 
@@ -91,4 +92,36 @@ test('Status remains a non-sortable, non-analytical native multi-select column',
   expect(column.pivotable).toBe(false);
   expect(column.chartable).toBe(false);
   expect(column.getApplyQuickFilterFn).toBeDefined();
+});
+
+test('Role filter values ignore un-applied role entries', () => {
+  const family = {
+    volunteerFamilyInfo: {
+      familyRoleApprovals: {
+        'Family Coach': { currentStatus: 2 },
+        'Host Family': { currentStatus: null },
+      },
+      individualVolunteers: {
+        adult: {
+          approvalStatusByRole: {
+            'Family Friend': { currentStatus: null },
+          },
+        },
+      },
+    },
+  } as CombinedFamilyInfo;
+
+  expect(roleFilterValues(family)).toEqual(['Family Coach']);
+});
+
+test('Role filter values expose Not Applied when no roles are current', () => {
+  const family = {
+    volunteerFamilyInfo: {
+      familyRoleApprovals: {
+        'Host Family': { currentStatus: null },
+      },
+    },
+  } as CombinedFamilyInfo;
+
+  expect(roleFilterValues(family)).toEqual(['Not Applied']);
 });

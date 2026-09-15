@@ -15,6 +15,10 @@ import {
   missingRequirementFilterValue,
   type VolunteerMissingRequirementGroup,
 } from './VolunteerApprovalTab/volunteerMissingRequirementsPresentation';
+import {
+  notAppliedRoleFilterValue,
+  roleFilterValues,
+} from './roleFilterValues';
 
 export type VolunteerCustomFieldValue = boolean | string | string[] | null;
 export type VolunteerBrowserRowV2 = {
@@ -42,8 +46,6 @@ type VolunteersBrowserViewModel = {
   rows: VolunteerBrowserRowV2[];
   volunteerCustomFields: CustomField[];
 };
-const notAppliedLabel = 'Not Applied';
-
 function primaryContact(family: CombinedFamilyInfo) {
   return family.family?.adults?.find(
     (adult) => adult.item1?.id === family.family?.primaryFamilyContactPersonId
@@ -59,23 +61,6 @@ function valuesByName(
         : []
     )
   ) as Record<string, VolunteerCustomFieldValue>;
-}
-function roleNames(family: CombinedFamilyInfo) {
-  const names = new Set([
-    ...Object.keys(family.volunteerFamilyInfo?.familyRoleApprovals ?? {}),
-    ...Object.values(
-      family.volunteerFamilyInfo?.individualVolunteers ?? {}
-    ).flatMap((volunteer) => Object.keys(volunteer.approvalStatusByRole ?? {})),
-  ]);
-  const hasAppliedRole = [
-    ...Object.values(family.volunteerFamilyInfo?.familyRoleApprovals ?? {}),
-    ...Object.values(
-      family.volunteerFamilyInfo?.individualVolunteers ?? {}
-    ).flatMap((volunteer) =>
-      Object.values(volunteer.approvalStatusByRole ?? {})
-    ),
-  ].some((approval) => approval.currentStatus != null);
-  return hasAppliedRole ? Array.from(names) : [notAppliedLabel, ...names];
 }
 function statusValues(family: CombinedFamilyInfo) {
   return Array.from(
@@ -165,7 +150,7 @@ function toRow(
           new Set([missingRequirementFilterValue, ...requirementNames])
         )
       : [completeRequirementFilterValue],
-    roleFilterValues: roleNames(family),
+    roleFilterValues: roleFilterValues(family),
     roles: buildVolunteerApprovalRolesPresentation(family, roleFilters),
     searchableText: searchText(family),
     sourceFamily: family,
@@ -221,7 +206,7 @@ export function useVolunteersBrowserViewModel(): VolunteersBrowserViewModel {
   const statusLabelsByValue = useMemo(
     () =>
       new Map([
-        ['0', notAppliedLabel],
+        ['0', notAppliedRoleFilterValue],
         ['1', 'Prospective'],
         ['2', 'Approved'],
         ['3', 'Onboarded'],
@@ -255,7 +240,7 @@ export function useVolunteersBrowserViewModel(): VolunteersBrowserViewModel {
   return {
     arrangementTypes,
     familyCustomFields,
-    roleNames: [notAppliedLabel, ...roleNamesForPresentation],
+    roleNames: [notAppliedRoleFilterValue, ...roleNamesForPresentation],
     rows,
     volunteerCustomFields,
   };
