@@ -477,10 +477,24 @@ export function clonePolicyWithActionDefinition(
   actionName: string,
   action: ActionRequirement
 ) {
-  const actionDefinitions = { ...(policy.actionDefinitions ?? {}) };
   if (previousName && previousName !== actionName) {
-    delete actionDefinitions[previousName];
+    const actionDefinitions = Object.fromEntries(
+      Object.entries(policy.actionDefinitions ?? {}).map(
+        ([currentName, currentAction]) =>
+          currentName === previousName
+            ? [actionName, action]
+            : [currentName, currentAction]
+      )
+    );
+
+    if (!(previousName in (policy.actionDefinitions ?? {}))) {
+      actionDefinitions[actionName] = action;
+    }
+
+    return new EffectiveLocationPolicy({ ...policy, actionDefinitions });
   }
+
+  const actionDefinitions = { ...(policy.actionDefinitions ?? {}) };
   actionDefinitions[actionName] = action;
   return new EffectiveLocationPolicy({ ...policy, actionDefinitions });
 }
