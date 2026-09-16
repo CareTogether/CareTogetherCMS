@@ -24,6 +24,10 @@ function assignmentField(page: Page, role = assignmentRole) {
   return page.getByRole('group', { name: role, exact: true });
 }
 
+function selectedCaseUrl(caseId: string) {
+  return new RegExp(`[?&]v1CaseId=${caseId}(?:&|$)`);
+}
+
 async function clearAssignedPerson(page: Page, expectedName: string) {
   const input = page.getByRole('combobox', { name: 'Assigned person' });
   await expect(input).toHaveValue(expectedName);
@@ -394,7 +398,7 @@ test.describe('UIV2 case function assignments @pr', () => {
     await openFamily(page);
     await page.getByRole('tab', { name: /Case History/ }).click();
     await page.getByRole('button', { name: /Closed Case/ }).click();
-    await expect(page).toHaveURL(new RegExp(historicalCaseId));
+    await expect(page).toHaveURL(selectedCaseUrl(historicalCaseId));
     await page
       .getByRole('button', { name: 'Edit Case Manager', exact: true })
       .click();
@@ -404,7 +408,7 @@ test.describe('UIV2 case function assignments @pr', () => {
     await page
       .getByRole('button', { name: /Open Case/, includeHidden: true })
       .dispatchEvent('click');
-    await expect(page).not.toHaveURL(new RegExp(historicalCaseId));
+    await expect(page).toHaveURL(selectedCaseUrl(openCaseId));
     await expect(
       page.getByRole('heading', { name: 'Edit Case Manager' })
     ).toHaveCount(0);
