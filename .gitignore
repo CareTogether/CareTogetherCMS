@@ -365,3 +365,4 @@ __blobstorage__/
 
 .DS_Store
 .codex
+*.tsbuildinfo
