@@ -18,6 +18,8 @@ import {
   missingRequirementFilterValue,
   type VolunteerMissingRequirementGroup,
 } from './VolunteerApprovalTab/volunteerMissingRequirementsPresentation';
+import { notAppliedLabel } from './VolunteerApprovalTab/catchAllLabel';
+import { roleApprovalStatusFilterOptions } from './roleApprovalStatusPresentation';
 import type {
   VolunteerBrowserRowV2,
   VolunteerCustomFieldValue,
@@ -50,15 +52,7 @@ const emptyOperators = <V,>(): GridFilterOperator<
   },
 ];
 const membershipOperators = getGridMultiSelectOperators();
-const statusOptions = [
-  ['0', 'Not Applied'],
-  ['1', 'Prospective'],
-  ['2', 'Approved'],
-  ['3', 'Onboarded'],
-  ['4', 'Expired'],
-  ['5', 'Inactive'],
-  ['6', 'Denied'],
-].map(([value, label]) => ({ value, label }));
+const statusOptions = roleApprovalStatusFilterOptions(notAppliedLabel);
 
 export function requirementFilterLabel(value: string) {
   if (value === missingRequirementFilterValue) return 'Missing';

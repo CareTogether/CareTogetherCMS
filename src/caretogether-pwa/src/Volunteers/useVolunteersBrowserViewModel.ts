@@ -19,6 +19,7 @@ import {
   notAppliedRoleFilterValue,
   roleFilterValues,
 } from './roleFilterValues';
+import { roleApprovalStatusFilterOptions } from './roleApprovalStatusPresentation';
 
 export type VolunteerCustomFieldValue = boolean | string | string[] | null;
 export type VolunteerBrowserRowV2 = {
@@ -205,15 +206,11 @@ export function useVolunteersBrowserViewModel(): VolunteersBrowserViewModel {
   );
   const statusLabelsByValue = useMemo(
     () =>
-      new Map([
-        ['0', notAppliedRoleFilterValue],
-        ['1', 'Prospective'],
-        ['2', 'Approved'],
-        ['3', 'Onboarded'],
-        ['4', 'Expired'],
-        ['5', 'Inactive'],
-        ['6', 'Denied'],
-      ]),
+      new Map(
+        roleApprovalStatusFilterOptions(notAppliedRoleFilterValue).map(
+          ({ value, label }) => [value, label]
+        )
+      ),
     []
   );
   const rows = useMemo(
