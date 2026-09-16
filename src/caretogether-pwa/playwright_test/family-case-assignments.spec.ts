@@ -23,6 +23,14 @@ const coordinatorRole = 'Case Coordinator';
 function assignmentField(page: Page, role = assignmentRole) {
   return page.getByRole('group', { name: role, exact: true });
 }
+
+async function clearAssignedPerson(page: Page, expectedName: string) {
+  const input = page.getByRole('combobox', { name: 'Assigned person' });
+  await expect(input).toHaveValue(expectedName);
+  await input.focus();
+  await page.getByRole('button', { name: 'Clear', exact: true }).click();
+}
+
 const featureFlags = {
   [FAMILY_SCREEN_V2_EARLY_ACCESS_FEATURE_FLAG]: true,
   [FUNCTION_ASSIGNMENTS_FEATURE_FLAG]: true,
@@ -224,7 +232,7 @@ test.describe('UIV2 case function assignments @pr', () => {
       await page
         .getByRole('button', { name: 'Edit Case Manager', exact: true })
         .click();
-      await page.getByRole('button', { name: 'Clear', exact: true }).click();
+      await clearAssignedPerson(page, replacementName);
       await page.getByRole('button', { name: 'Save', exact: true }).click();
       await expect(
         page.getByRole('heading', { name: 'Edit Case Manager' })
@@ -390,10 +398,7 @@ test.describe('UIV2 case function assignments @pr', () => {
     await page
       .getByRole('button', { name: 'Edit Case Manager', exact: true })
       .click();
-    await expect(
-      page.getByRole('combobox', { name: 'Assigned person' })
-    ).toHaveValue('Leia Skywalker');
-    await page.getByRole('button', { name: 'Clear', exact: true }).click();
+    await clearAssignedPerson(page, 'Leia Skywalker');
     // Exercise a selection change while the modal owns focus; ordinary clicks
     // on the history list are blocked by the drawer backdrop.
     await page
