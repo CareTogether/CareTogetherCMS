@@ -3,12 +3,9 @@ import { expect, test } from './support/fixtures';
 import { ATLANTIS_ROUTE } from './support/constants';
 import {
   AssignedIndividualVolunteer,
-  EffectiveLocationPolicy,
   FamilyRecordsAggregate,
-  FunctionAssignmentPolicy,
   Permission,
   RecordsAggregate,
-  V1Case,
 } from '../src/GeneratedClient';
 import {
   FAMILY_SCREEN_V2_EARLY_ACCESS_FEATURE_FLAG,
@@ -16,7 +13,8 @@ import {
 } from '../src/featureFlags';
 
 const familyId = '11111111-1111-1111-1111-111111111111';
-const historicalCaseId = 'eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee';
+const historicalCaseId = familyId;
+const openCaseId = '22222222-2222-2222-2222-222222222222';
 const firstPersonId = '55555555-5555-5555-5555-555555555555';
 const secondPersonId = '66666666-6666-6666-6666-666666666666';
 const assignmentRole = 'Case Manager';
@@ -38,8 +36,8 @@ type AssignmentCommand = {
   assignmentRole: string;
 };
 
-// Keep normal authenticated application loading, but isolate assignment data
-// and writes from the shared development dataset.
+// Keep normal authenticated application loading, but isolate assignment
+// scenarios and writes from the shared development dataset.
 async function prepareAssignments(
   page: Page,
   access: 'edit' | 'view' | 'none' = 'edit',
@@ -52,27 +50,18 @@ async function prepareAssignments(
 ) {
   const commands: AssignmentCommand[] = [];
   let target: FamilyRecordsAggregate;
-  await page.route('**/Configuration/policy', async (route) => {
-    const response = await route.fetch();
-    const policy = EffectiveLocationPolicy.fromJS(await response.json());
-    policy.referralPolicy!.functionAssignmentPolicies = [
-      FunctionAssignmentPolicy.fromJS({
-        assignmentRole,
-        eligibility: { eligiblePeople: [firstPersonId, secondPersonId] },
-      }),
-      FunctionAssignmentPolicy.fromJS({
-        assignmentRole: coordinatorRole,
-        eligibility: { eligiblePeople: [firstPersonId, secondPersonId] },
-      }),
-    ];
-    if (options.noPolicy) {
+  if (options.noPolicy) {
+    await page.route('**/Configuration/policy', async (route) => {
+      const response = await route.fetch();
+      const policy = await response.json();
       policy.referralPolicy!.functionAssignmentPolicies =
         policy.referralPolicy!.functionAssignmentPolicies.filter(
-          (policy) => policy.assignmentRole !== assignmentRole
+          (policy: { assignmentRole: string }) =>
+            policy.assignmentRole !== assignmentRole
         );
-    }
-    await route.fulfill({ response, json: policy });
-  });
+      await route.fulfill({ response, json: policy });
+    });
+  }
   await page.route('**/Records', async (route) => {
     const response = await route.fetch();
     const records = (await response.json()).map(
@@ -95,44 +84,12 @@ async function prepareAssignments(
     if (access === 'edit')
       family.userPermissions.push(Permission.EditV1CaseFunctionAssignments);
     const openCase = family.partneringFamilyInfo!.openV1Case!;
-    openCase.assignedIndividualVolunteers = [
-      AssignedIndividualVolunteer.fromJS({
-        personId: firstPersonId,
-        assignmentRole,
-        assignedAtUtc: '2025-01-01T00:00:00Z',
-        assignedByUserId: firstPersonId,
-      }),
-    ];
-    if (options.unassigned) openCase.assignedIndividualVolunteers = [];
-    openCase.assignedIndividualVolunteers.push(
-      AssignedIndividualVolunteer.fromJS({
-        personId: firstPersonId,
-        assignmentRole: coordinatorRole,
-        assignedAtUtc: '2025-01-01T00:00:00Z',
-      })
-    );
-    family.partneringFamilyInfo!.closedV1Cases = [
-      V1Case.fromJS({
-        ...openCase.toJSON(),
-        id: historicalCaseId,
-        openedAtUtc: '2020-01-01T00:00:00Z',
-        closedAtUtc: '2020-02-01T00:00:00Z',
-        assignedIndividualVolunteers: [
-          {
-            personId: secondPersonId,
-            assignmentRole,
-            assignedAtUtc: '2020-01-01T00:00:00Z',
-          },
-          {
-            personId: firstPersonId,
-            assignmentRole: 'Historical Support',
-            assignedAtUtc: '2020-01-01T00:00:00Z',
-          },
-        ],
-        arrangements: [],
-        linkedV1ReferralIds: [],
-      }),
-    ];
+    if (options.unassigned) {
+      openCase.assignedIndividualVolunteers =
+        openCase.assignedIndividualVolunteers?.filter(
+          (assignment) => assignment.assignmentRole !== assignmentRole
+        ) ?? [];
+    }
     if (options.noCase) {
       family.partneringFamilyInfo!.openV1Case = undefined;
       family.partneringFamilyInfo!.closedV1Cases = [];
@@ -172,7 +129,7 @@ async function prepareAssignments(
   return commands;
 }
 
-async function openFamily(page: Page, caseId = familyId) {
+async function openFamily(page: Page, caseId = openCaseId) {
   await page.goto(`${ATLANTIS_ROUTE}families/${familyId}?v1CaseId=${caseId}`);
   await expect(page.getByRole('tab', { name: /Case History/ })).toBeVisible();
 }
@@ -180,7 +137,7 @@ async function openFamily(page: Page, caseId = familyId) {
 test.describe('UIV2 case function assignments @pr', () => {
   test.use({ featureFlags });
 
-  for (const caseId of [familyId, historicalCaseId]) {
+  for (const caseId of [openCaseId, historicalCaseId]) {
     test(`displays, changes and clears Case Manager on case ${caseId}`, async ({
       page,
     }) => {
@@ -315,7 +272,7 @@ test.describe('UIV2 case function assignments @pr', () => {
     expect(commands).toHaveLength(1);
     expect(commands[0]).toMatchObject({
       discriminator: 'AssignIndividualVolunteer',
-      referralId: familyId,
+      referralId: openCaseId,
       personId: secondPersonId,
     });
   });
@@ -391,13 +348,13 @@ test.describe('UIV2 case function assignments @pr', () => {
     expect(commands).toMatchObject([
       {
         discriminator: 'UnassignIndividualVolunteer',
-        referralId: familyId,
+        referralId: openCaseId,
         personId: firstPersonId,
         assignmentRole: coordinatorRole,
       },
       {
         discriminator: 'AssignIndividualVolunteer',
-        referralId: familyId,
+        referralId: openCaseId,
         personId: secondPersonId,
         assignmentRole: coordinatorRole,
       },
