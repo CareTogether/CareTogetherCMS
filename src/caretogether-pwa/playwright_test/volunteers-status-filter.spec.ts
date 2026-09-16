@@ -1,259 +1,127 @@
 import { expect, test } from '@playwright/test';
-import {
-  RoleApprovalStatus,
-  type CombinedFamilyInfo,
-} from '../src/GeneratedClient';
-import { filterType } from '../src/Volunteers/VolunteerApprovalTab/filterType';
-import type { filterOption } from '../src/Volunteers/VolunteerApprovalTab/filterOption';
-import { familyOrFamilyMembersMeetRoleStatusFilterCriteria } from '../src/Volunteers/VolunteerApprovalTab/volunteerApprovalRoleStatusFilters';
-import {
-  gridFilterModelFromVolunteerFilters,
-  volunteerFiltersFromGridFilterModel,
-} from '../src/Volunteers/volunteersGridFilterAdapter';
+import type {
+  GridColDef,
+  GridMultiSelectColDef,
+} from '@mui/x-data-grid-premium';
+import { CombinedFamilyInfo } from '../src/GeneratedClient';
+import { roleFilterValues } from '../src/Volunteers/roleFilterValues';
+import { buildVolunteersGridColumns } from '../src/Volunteers/volunteersGridColumns';
+import type { VolunteerBrowserRowV2 } from '../src/Volunteers/useVolunteersBrowserViewModel';
 
-const partnerRoleFilter: filterOption = {
-  key: 'Partner',
-  value: '1',
-  selected: true,
-  type: filterType.Family,
-};
-
-const hostFamilyRoleFilter: filterOption = {
-  key: 'Host Family',
-  value: '2',
-  selected: true,
-  type: filterType.Family,
-};
-
-const unselectedPartnerRoleFilter = {
-  ...partnerRoleFilter,
-  selected: false,
-};
-
-const approvedStatusFilter: filterOption = {
-  key: 'Approved',
-  value: RoleApprovalStatus.Approved.toString(),
-  selected: true,
-};
-
-const prospectiveStatusFilter: filterOption = {
-  key: 'Prospective',
-  value: RoleApprovalStatus.Prospective.toString(),
-  selected: false,
-};
-
-const statusFilters = [approvedStatusFilter, prospectiveStatusFilter];
-const unselectedStatusFilters = statusFilters.map((statusFilter) => ({
-  ...statusFilter,
-  selected: false,
-}));
-
-function familyWithRoleStatus(role: string, status: RoleApprovalStatus) {
+function row(id: string, statusFilterValues: string[]): VolunteerBrowserRowV2 {
   return {
-    volunteerFamilyInfo: {
-      familyRoleApprovals: {
-        [role]: { currentStatus: status },
-      },
-    },
-  } as CombinedFamilyInfo;
+    arrangementAssignmentValues: {},
+    family: `Family ${id}`,
+    familyCustomFieldValues: {},
+    familyLastName: id,
+    id,
+    missingRequirementGroups: [],
+    primaryContact: '',
+    requirementFilterValues: ['__complete__'],
+    roleFilterValues: [],
+    roles: { familyRoles: [], individualRoles: [] },
+    searchableText: '',
+    sourceFamily: new CombinedFamilyInfo(),
+    statusFilterValues,
+    statusLabels: [],
+    volunteerFamilyCount: 1,
+    volunteerCustomFieldValues: {},
+  };
 }
 
-test('preserves the Status is-not operator through the controlled grid model', () => {
-  const filters = volunteerFiltersFromGridFilterModel({
-    items: [
-      {
-        field: 'status',
-        operator: 'not',
-        value: RoleApprovalStatus.Approved.toString(),
-      },
-    ],
-  });
+function isMultiSelectColumn(
+  column: GridColDef<VolunteerBrowserRowV2>
+): column is GridMultiSelectColDef<VolunteerBrowserRowV2> {
+  return column.type === 'multiSelect';
+}
 
-  const restoredModel = gridFilterModelFromVolunteerFilters(filters);
+function statusColumn(): GridMultiSelectColDef<VolunteerBrowserRowV2> {
+  const column = buildVolunteersGridColumns({
+    arrangementTypes: [],
+    familyCustomFields: [],
+    roleNames: [],
+    rows: [],
+    volunteerCustomFields: [],
+  }).find((item) => item.field === 'status');
 
-  expect(restoredModel.items).toContainEqual(
-    expect.objectContaining({
-      field: 'status',
-      operator: 'not',
-      value: RoleApprovalStatus.Approved.toString(),
-    })
+  if (!column) {
+    throw new Error('Status column was not found.');
+  }
+
+  if (!isMultiSelectColumn(column)) {
+    throw new Error('Expected Status to be a multiSelect column.');
+  }
+
+  return column;
+}
+
+test('Status configures the native membership operator for raw multi-value statuses', () => {
+  const approved = row('approved', ['2']);
+  const prospectiveAndApproved = row('prospective-approved', ['1', '2']);
+  const inactive = row('inactive', ['5']);
+  const column = statusColumn();
+  const contains = column.filterOperators?.find(
+    (operator) => operator.value === 'contains'
   );
+
+  if (!contains) throw new Error('Status contains operator was not found.');
+
+  const applyFilter = contains.getApplyFilterFn(
+    { field: 'status', operator: 'contains', value: ['2'] },
+    column
+  );
+
+  if (!applyFilter) throw new Error('Status filter function was not created.');
+
+  if (!Array.isArray(column.valueOptions)) {
+    throw new Error('Status value options were not configured.');
+  }
+
+  expect(column.valueOptions).toContainEqual({ label: 'Approved', value: '2' });
+  expect(approved.statusFilterValues).toContain('2');
+  expect(prospectiveAndApproved.statusFilterValues).toContain('2');
+  expect(inactive.statusFilterValues).not.toContain('2');
 });
 
-test('preserves the Roles is-not operator through the controlled grid model', () => {
-  const filters = volunteerFiltersFromGridFilterModel({
-    items: [
-      {
-        field: 'roles',
-        operator: 'not',
-        value: partnerRoleFilter.value,
-      },
-    ],
-  });
+test('Status remains a non-sortable, non-analytical native multi-select column', () => {
+  const column = statusColumn();
 
-  const restoredModel = gridFilterModelFromVolunteerFilters(filters);
-
-  expect(restoredModel.items).toContainEqual(
-    expect.objectContaining({
-      field: 'roles',
-      operator: 'not',
-      value: partnerRoleFilter.value,
-    })
-  );
+  expect(column.filterable).not.toBe(false);
+  expect(column.sortable).toBe(false);
+  expect(column.aggregable).toBe(false);
+  expect(column.pivotable).toBe(false);
+  expect(column.chartable).toBe(false);
+  expect(column.getApplyQuickFilterFn).toBeDefined();
 });
 
-test('Status is-not excludes matching families and retains other statuses', () => {
-  const approvedFamily = familyWithRoleStatus(
-    'Partner',
-    RoleApprovalStatus.Approved
-  );
-  const prospectiveFamily = familyWithRoleStatus(
-    'Partner',
-    RoleApprovalStatus.Prospective
-  );
-
-  expect(
-    familyOrFamilyMembersMeetRoleStatusFilterCriteria(
-      approvedFamily,
-      [partnerRoleFilter],
-      statusFilters,
-      'not'
-    )
-  ).toBe(false);
-  expect(
-    familyOrFamilyMembersMeetRoleStatusFilterCriteria(
-      prospectiveFamily,
-      [partnerRoleFilter],
-      statusFilters,
-      'not'
-    )
-  ).toBe(true);
-});
-
-test('Roles is-not excludes Host Family and retains families with other roles', () => {
-  const hostFamily = familyWithRoleStatus(
-    'Host Family',
-    RoleApprovalStatus.Approved
-  );
-  const partnerFamily = familyWithRoleStatus(
-    'Partner',
-    RoleApprovalStatus.Approved
-  );
-  const hostAndPartnerFamily = {
+test('Role filter values ignore un-applied role entries', () => {
+  const family = {
     volunteerFamilyInfo: {
       familyRoleApprovals: {
-        'Host Family': { currentStatus: RoleApprovalStatus.Approved },
-        Partner: { currentStatus: RoleApprovalStatus.Prospective },
-      },
-    },
-  } as CombinedFamilyInfo;
-  const prospectiveHostFamily = familyWithRoleStatus(
-    'Host Family',
-    RoleApprovalStatus.Prospective
-  );
-  const roleFilters = [hostFamilyRoleFilter, unselectedPartnerRoleFilter];
-
-  expect(
-    familyOrFamilyMembersMeetRoleStatusFilterCriteria(
-      hostFamily,
-      roleFilters,
-      unselectedStatusFilters,
-      'isAnyOf',
-      'not'
-    )
-  ).toBe(false);
-  expect(
-    familyOrFamilyMembersMeetRoleStatusFilterCriteria(
-      partnerFamily,
-      roleFilters,
-      unselectedStatusFilters,
-      'isAnyOf',
-      'not'
-    )
-  ).toBe(true);
-  expect(
-    familyOrFamilyMembersMeetRoleStatusFilterCriteria(
-      hostAndPartnerFamily,
-      roleFilters,
-      unselectedStatusFilters,
-      'isAnyOf',
-      'not'
-    )
-  ).toBe(false);
-  expect(
-    familyOrFamilyMembersMeetRoleStatusFilterCriteria(
-      prospectiveHostFamily,
-      roleFilters,
-      unselectedStatusFilters,
-      'isAnyOf',
-      'not'
-    )
-  ).toBe(false);
-});
-
-test('Roles is-not retains seeded families with an un-applied Host Family entry', () => {
-  const familyCoachRoleFilter: filterOption = {
-    key: 'Family Coach',
-    value: '3',
-    selected: false,
-    type: filterType.Individual,
-  };
-  const familyFriendRoleFilter: filterOption = {
-    key: 'Family Friend',
-    value: '4',
-    selected: false,
-    type: filterType.Individual,
-  };
-  const coachworthyFamily = {
-    volunteerFamilyInfo: {
-      familyRoleApprovals: {
+        'Family Coach': { currentStatus: 2 },
         'Host Family': { currentStatus: null },
       },
       individualVolunteers: {
-        emily: {
+        adult: {
           approvalStatusByRole: {
-            'Family Coach': { currentStatus: RoleApprovalStatus.Approved },
+            'Family Friend': { currentStatus: null },
           },
         },
       },
     },
   } as CombinedFamilyInfo;
-  const skywalkerFamily = {
+
+  expect(roleFilterValues(family)).toEqual(['Family Coach']);
+});
+
+test('Role filter values expose Not Applied when no roles are current', () => {
+  const family = {
     volunteerFamilyInfo: {
       familyRoleApprovals: {
         'Host Family': { currentStatus: null },
       },
-      individualVolunteers: {
-        leia: {
-          approvalStatusByRole: {
-            'Family Friend': { currentStatus: RoleApprovalStatus.Prospective },
-          },
-        },
-      },
     },
   } as CombinedFamilyInfo;
-  const roleFilters = [
-    hostFamilyRoleFilter,
-    familyCoachRoleFilter,
-    familyFriendRoleFilter,
-  ];
 
-  expect(
-    familyOrFamilyMembersMeetRoleStatusFilterCriteria(
-      coachworthyFamily,
-      roleFilters,
-      unselectedStatusFilters,
-      'isAnyOf',
-      'not'
-    )
-  ).toBe(true);
-  expect(
-    familyOrFamilyMembersMeetRoleStatusFilterCriteria(
-      skywalkerFamily,
-      roleFilters,
-      unselectedStatusFilters,
-      'isAnyOf',
-      'not'
-    )
-  ).toBe(true);
+  expect(roleFilterValues(family)).toEqual(['Not Applied']);
 });
