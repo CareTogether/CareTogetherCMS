@@ -8,9 +8,8 @@ import {
   V1Referral,
   V1ReferralStatus,
 } from '../GeneratedClient';
-import { getFilteredArrangements } from '../V1Cases/Arrangements/ArrangementsSection/getFilteredArrangements';
 import {
-  ArrangementRowV2,
+  ArrangementBrowserRowV2,
   buildArrangementRowsV2,
   ChildcareArrangementRowV2,
 } from '../V1Cases/Arrangements/arrangementViewModel';
@@ -93,16 +92,17 @@ export function useFamilyCaseViewModel({
 
   const openReferralId = useMemo(
     () =>
-      familyReferrals.find((referral) => referral.status === V1ReferralStatus.Open)
-        ?.referralId,
+      familyReferrals.find(
+        (referral) => referral.status === V1ReferralStatus.Open
+      )?.referralId,
     [familyReferrals]
   );
 
-  const selectedCaseArrangementRows = useMemo<ArrangementRowV2[]>(() => {
+  const selectedCaseArrangementRows = useMemo<ArrangementBrowserRowV2[]>(() => {
     if (!family || !selectedV1Case) return [];
 
     return buildArrangementRowsV2({
-      arrangements: getFilteredArrangements(selectedV1Case, []),
+      arrangements: selectedV1Case.arrangements ?? [],
       arrangementPolicies: policy.referralPolicy?.arrangementPolicies,
       family,
       v1Case: selectedV1Case,

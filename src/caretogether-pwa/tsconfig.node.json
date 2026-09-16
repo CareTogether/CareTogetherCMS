@@ -10,6 +10,6 @@
   "include": [
     "vite.config.ts",
     "playwright.config.ts",
-    "playwright_test/**/*.ts"
+    "playwright_test/support/constants.ts"
   ]
 }
