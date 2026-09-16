@@ -6,5 +6,10 @@
     "types": ["node", "vite/client"]
   },
   "include": ["src", "playwright_test/**/*.ts"],
-  "exclude": ["../.local/**", "../**/.local/**"]
+  "exclude": [
+    "**/.local/**",
+    "**/*.local",
+    "../.local/**",
+    "../**/.local/**"
+  ]
 }
