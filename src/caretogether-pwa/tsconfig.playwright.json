@@ -2,8 +2,9 @@
   "extends": "./tsconfig.json",
   "compilerOptions": {
     "composite": false,
-    "types": ["node"]
+    "noEmit": true,
+    "types": ["node", "vite/client"]
   },
   "include": ["src", "playwright_test/**/*.ts"],
-  "exclude": ["**/.local/**", "**/*.local"]
+  "exclude": ["**/.local/**", "**/*.local", "../.local/**", "../**/.local/**"]
 }

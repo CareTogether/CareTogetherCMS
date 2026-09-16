@@ -48,9 +48,32 @@ export type ArrangementRowV2 = {
   v1Case: V1Case;
 };
 
-export type ChildcareArrangementRowV2 = ArrangementRowV2 & {
+export type ArrangementFunctionAssignmentValueV2 = {
+  assignmentIds: string[];
+  assignmentLabels: string[];
+};
+
+export type ArrangementBrowserRowV2 = ArrangementRowV2 & {
+  arrangementPolicyVersion: string | null;
+  cancelledAtUtc: Date | null;
+  currentLocationLabel: string | null;
+  endedAtUtc: Date | null;
+  participantLabel: string | null;
+  phase: ArrangementPhase | null;
+  plannedEndUtc: Date | null;
+  plannedStartUtc: Date | null;
+  requestedAtUtc: Date | null;
+  startedAtUtc: Date | null;
+  searchableText: string;
+  functionAssignmentValues: Record<
+    string,
+    ArrangementFunctionAssignmentValueV2
+  >;
+};
+
+export type ChildcareArrangementRowV2 = ArrangementBrowserRowV2 & {
   arrangementType: 'Childcare';
-  currentLocationLabel?: string;
+  currentLocationLabel: string | null;
   nextPlannedLocationLabel?: string;
 };
 
@@ -190,6 +213,18 @@ function assignmentVariantLabel(
     : '';
 }
 
+export function arrangementFunctionFieldId(
+  arrangementType: string,
+  arrangementPolicyVersion: string | null,
+  functionName: string
+) {
+  return `functionAssignment:${JSON.stringify([
+    arrangementType,
+    arrangementPolicyVersion,
+    functionName,
+  ])}`;
+}
+
 function buildFunctionSummaries({
   arrangement,
   arrangementPolicy,
@@ -247,7 +282,7 @@ export function buildArrangementRowsV2({
   familyLabel,
   personLabel,
   v1Case,
-}: BuildArrangementRowsV2Parameters): ArrangementRowV2[] {
+}: BuildArrangementRowsV2Parameters): ArrangementBrowserRowV2[] {
   return arrangements.map((arrangement) => {
     const arrangementPolicy = resolveArrangementPolicy(
       arrangementPolicies,
@@ -263,20 +298,72 @@ export function buildArrangementRowsV2({
       ?.map((assignment) => familyLabel(assignment.familyId))
       .filter(Boolean);
 
-    const arrangementRow: ArrangementRowV2 = {
+    const functionSummaries = buildFunctionSummaries({
+      arrangement,
+      arrangementPolicy,
+      familyLabel,
+      personLabel,
+    });
+    const arrangementPolicyVersion =
+      arrangement.arrangementPolicyVersion ?? null;
+    const arrangementType = arrangement.arrangementType || 'Arrangement';
+    const functionAssignmentValues = Object.fromEntries(
+      functionSummaries.map((summary) => {
+        const assignmentIds = summary.assignments.map((assignment) =>
+          isIndividualAssignment(assignment)
+            ? `person:${assignment.familyId}:${assignment.personId}`
+            : `family:${assignment.familyId}`
+        );
+        return [
+          arrangementFunctionFieldId(
+            arrangementType,
+            arrangementPolicyVersion,
+            summary.functionName
+          ),
+          {
+            assignmentIds,
+            assignmentLabels: summary.assignmentLabels,
+          },
+        ];
+      })
+    );
+    const participantLabel = personLabel(
+      family.family?.id,
+      arrangement.partneringFamilyPersonId
+    );
+    const currentLocation = currentLocationLabel(arrangement, familyLabel);
+    const statusLabel = arrangementPhaseLabel(arrangement.phase);
+    const searchableText = [
+      arrangementType,
+      participantLabel,
+      statusLabel,
+      caseLabel(v1Case),
+      currentLocation,
+    ]
+      .filter((value): value is string => Boolean(value))
+      .join('\n');
+
+    const arrangementRow: ArrangementBrowserRowV2 = {
       id: arrangement.id,
-      arrangementType: arrangement.arrangementType || 'Arrangement',
+      arrangementType,
+      arrangementPolicyVersion,
+      cancelledAtUtc: arrangement.cancelledAtUtc ?? null,
       caseLabel: caseLabel(v1Case),
       familyLabel: familyNameString(family),
-      childOrPersonLabel: personLabel(
-        family.family?.id,
-        arrangement.partneringFamilyPersonId
-      ),
-      hostFamilyLabel: currentLocationLabel(arrangement, familyLabel),
+      childOrPersonLabel: participantLabel || undefined,
+      currentLocationLabel: currentLocation ?? null,
+      endedAtUtc: arrangement.endedAtUtc ?? null,
+      hostFamilyLabel: currentLocation,
+      participantLabel: participantLabel || null,
+      phase: arrangement.phase ?? null,
+      plannedEndUtc: arrangement.plannedEndUtc ?? null,
+      plannedStartUtc: arrangement.plannedStartUtc ?? null,
+      requestedAtUtc: arrangement.requestedAtUtc ?? null,
+      startedAtUtc: arrangement.startedAtUtc ?? null,
       volunteerLabel:
         [...individualAssignmentLabels, ...familyAssignmentLabels].join(', ') ||
         undefined,
-      statusLabel: arrangementPhaseLabel(arrangement.phase),
+      statusLabel,
       requestedDate: formatDate(arrangement.requestedAtUtc),
       startedDate: formatDate(arrangement.startedAtUtc),
       endedDate: formatDate(arrangement.endedAtUtc),
@@ -285,12 +372,9 @@ export function buildArrangementRowsV2({
       plannedEndDate: formatDate(arrangement.plannedEndUtc),
       reason: arrangement.reason,
       comments: arrangement.comments,
-      functionSummaries: buildFunctionSummaries({
-        arrangement,
-        arrangementPolicy,
-        familyLabel,
-        personLabel,
-      }),
+      functionAssignmentValues,
+      functionSummaries,
+      searchableText,
       source: arrangement,
       arrangementPolicy,
       partneringFamily: family,
@@ -306,7 +390,8 @@ export function buildArrangementRowsV2({
       const childcareArrangementRow: ChildcareArrangementRowV2 = {
         ...arrangementRow,
         arrangementType: 'Childcare',
-        currentLocationLabel: currentLocationLabel(arrangement, familyLabel),
+        currentLocationLabel:
+          currentLocationLabel(arrangement, familyLabel) ?? null,
         nextPlannedLocationLabel: nextPlannedLocationLabel(
           arrangement,
           familyLabel

@@ -9,16 +9,16 @@ import {
 } from '../../../GeneratedClient';
 import { usePolicy } from '../../../Model/PolicyModel';
 import { ArrangementsDataGridV2 } from '../ArrangementsDataGridV2';
-import { ArrangementRowV2 } from '../arrangementViewModel';
+import { ArrangementBrowserRowV2 } from '../arrangementViewModel';
 import { CreateArrangementDialog } from '../CreateArrangementDialog';
 import { isArrangementPolicyAvailable } from '../arrangementPolicyVersions';
 
 type ArrangementSectionProps = {
-  arrangementRows: ArrangementRowV2[];
+  arrangementRows: ArrangementBrowserRowV2[];
   v1Case: V1Case;
   permissions: (permission: Permission) => boolean;
   hideTitle?: boolean;
-  onArrangementRowClick: (row: ArrangementRowV2) => void;
+  onArrangementRowClick: (row: ArrangementBrowserRowV2) => void;
   scrollToArrangementId?: string;
 };
 
