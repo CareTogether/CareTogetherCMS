@@ -709,7 +709,9 @@ export function ApprovalsDataGridV2({
         showToolbar
         slotProps={{
           toolbar: {
-            quickFilterParser: approvalLedgerQuickFilterParser,
+            quickFilterProps: {
+              quickFilterParser: approvalLedgerQuickFilterParser,
+            },
             csvOptions: {
               fields: [...approvalLedgerExportFields],
               getRowsToExport: approvalLedgerLeafRowIdsForExport,
