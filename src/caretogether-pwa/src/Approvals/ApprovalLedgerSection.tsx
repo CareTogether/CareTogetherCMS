@@ -1,18 +1,12 @@
-import {
-  Box,
-  FormControl,
-  InputLabel,
-  MenuItem,
-  Select,
-  TextField,
-} from '@mui/material';
+import { Box, FormControl, InputLabel, MenuItem, Select } from '@mui/material';
 import { SelectChangeEvent } from '@mui/material/Select';
 import { ReactNode, useMemo, useState } from 'react';
+import { ApprovalLedgerRow } from './approvalLedgerViewModel';
 import {
-  ApprovalLedgerRow,
-  ApprovalLedgerStatus,
-} from './approvalLedgerViewModel';
-import { subjectKey } from './approvalLedgerDataGridViewModel';
+  filterApprovalLedgerRows,
+  subjectKey,
+  type ApprovalLedgerDomainFilters,
+} from './approvalLedgerDataGridViewModel';
 import { ApprovalsDataGridV2 } from './ApprovalsDataGridV2';
 
 type ApprovalLedgerSectionProps = {
@@ -25,9 +19,10 @@ type ApprovalLedgerSectionProps = {
   ) => ReactNode;
 };
 
-type StatusFilter = ApprovalLedgerStatus | 'all';
-
-const statusFilterOptions: { value: StatusFilter; label: string }[] = [
+const statusFilterOptions: {
+  value: ApprovalLedgerDomainFilters['statusFilter'];
+  label: string;
+}[] = [
   { value: 'all', label: 'All' },
   { value: 'missing', label: 'Missing' },
   { value: 'optional', label: 'Optional' },
@@ -38,10 +33,6 @@ const statusFilterOptions: { value: StatusFilter; label: string }[] = [
   { value: 'availableApplication', label: 'Available Application' },
 ];
 
-function includesText(value: string, searchText: string) {
-  return value.toLocaleLowerCase().includes(searchText);
-}
-
 function sortStrings(a: string, b: string) {
   return a.localeCompare(b);
 }
@@ -51,8 +42,8 @@ export function ApprovalLedgerSection({
   rows,
   renderDetailsDrawer,
 }: ApprovalLedgerSectionProps) {
-  const [searchText, setSearchText] = useState('');
-  const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
+  const [statusFilter, setStatusFilter] =
+    useState<ApprovalLedgerDomainFilters['statusFilter']>('all');
   const [roleFilter, setRoleFilter] = useState('all');
   const [appliesToFilter, setAppliesToFilter] = useState('all');
   const [selectedRowId, setSelectedRowId] = useState<string | null>(null);
@@ -87,42 +78,20 @@ export function ApprovalLedgerSection({
     [rows]
   );
 
-  const visibleRows = useMemo(() => {
-    const normalizedSearchText = searchText.trim().toLocaleLowerCase();
+  const visibleRows = useMemo(
+    () =>
+      filterApprovalLedgerRows(rows, {
+        appliesToFilter,
+        roleFilter,
+        statusFilter,
+      }),
+    [appliesToFilter, roleFilter, rows, statusFilter]
+  );
 
-    return rows.filter((row) => {
-      if (statusFilter !== 'all' && row.status !== statusFilter) {
-        return false;
-      }
-
-      if (roleFilter !== 'all' && !row.neededForRoles.includes(roleFilter)) {
-        return false;
-      }
-
-      if (
-        appliesToFilter !== 'all' &&
-        !row.appliesTo.some(
-          (subject) => subjectKey(subject.scope, subject.id) === appliesToFilter
-        )
-      ) {
-        return false;
-      }
-
-      if (!normalizedSearchText) {
-        return true;
-      }
-
-      return [
-        row.requirementName,
-        ...row.appliesTo.map((subject) => subject.label),
-        ...row.neededForRoles,
-        ...row.notes,
-      ].some((value) => includesText(value, normalizedSearchText));
-    });
-  }, [appliesToFilter, roleFilter, rows, searchText, statusFilter]);
-
-  function handleStatusFilterChange(event: SelectChangeEvent<StatusFilter>) {
-    setStatusFilter(event.target.value as StatusFilter);
+  function handleStatusFilterChange(
+    event: SelectChangeEvent<ApprovalLedgerDomainFilters['statusFilter']>
+  ) {
+    setStatusFilter(event.target.value);
   }
 
   function handleRoleFilterChange(event: SelectChangeEvent) {
@@ -148,19 +117,12 @@ export function ApprovalLedgerSection({
           display: 'grid',
           gridTemplateColumns: {
             xs: '1fr',
-            md: 'minmax(220px, 1fr) 180px 180px 180px',
+            md: 'repeat(3, minmax(180px, 1fr))',
           },
           gap: 1,
           mb: 1,
         }}
       >
-        <TextField
-          label="Search"
-          placeholder="Search approvals..."
-          size="small"
-          value={searchText}
-          onChange={(event) => setSearchText(event.target.value)}
-        />
         <FormControl size="small">
           <InputLabel id="approval-ledger-status-filter-label">
             Status

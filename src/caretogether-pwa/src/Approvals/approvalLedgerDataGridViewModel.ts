@@ -5,6 +5,38 @@ import {
   ApprovalLedgerStatus,
 } from './approvalLedgerViewModel';
 
+export const APPROVAL_LEDGER_SEARCH_FIELD = 'searchText';
+
+export const approvalLedgerDefaultColumnFields = [
+  'status',
+  'requirementName',
+  'appliesTo',
+  'completedOrExemptedOn',
+  'validUntil',
+  'neededForRoles',
+  'documents',
+  'notes',
+  'completedOrExemptedByUserId',
+  'openDetails',
+] as const;
+
+export const approvalLedgerExportFields = [
+  'status',
+  'requirementName',
+  'appliesTo',
+  'completedOrExemptedOn',
+  'validUntil',
+  'neededForRoles',
+  'documents',
+  'notes',
+] as const;
+
+export type ApprovalLedgerDomainFilters = {
+  appliesToFilter: string;
+  roleFilter: string;
+  statusFilter: ApprovalLedgerStatus | 'all';
+};
+
 export const approvalLedgerStatusLabels: Record<ApprovalLedgerStatus, string> =
   {
     missing: 'Missing',
@@ -54,17 +86,69 @@ export function subjectKey(scope: string, id: string) {
 
 export function approvalLedgerSearchText(row: ApprovalLedgerRow) {
   return [
-    approvalLedgerStatusLabels[row.status],
     row.requirementName,
     ...row.appliesTo.map((subject) => subject.label),
-    formatApprovalLedgerDate(row.completedOrExemptedOn),
-    formatApprovalLedgerDate(row.validUntil),
     ...row.neededForRoleLabels,
     ...row.neededForRoles,
-    countLabel(row.linkedDocumentIds.length, 'document', 'documents'),
-    countLabel(row.noteIds.length + row.notes.length, 'note', 'notes'),
     ...row.notes,
-  ].join(' ');
+  ].join('\n');
+}
+
+export function approvalLedgerQuickFilterParser(input: string) {
+  const searchText = input.trim();
+  return searchText ? [searchText] : [];
+}
+
+export function filterApprovalLedgerRows(
+  rows: ApprovalLedgerRow[],
+  { appliesToFilter, roleFilter, statusFilter }: ApprovalLedgerDomainFilters
+) {
+  return rows.filter((row) => {
+    if (statusFilter !== 'all' && row.status !== statusFilter) {
+      return false;
+    }
+
+    if (roleFilter !== 'all' && !row.neededForRoles.includes(roleFilter)) {
+      return false;
+    }
+
+    return (
+      appliesToFilter === 'all' ||
+      row.appliesTo.some(
+        (subject) => subjectKey(subject.scope, subject.id) === appliesToFilter
+      )
+    );
+  });
+}
+
+export function approvalLedgerMemberGroupingKey(row: ApprovalLedgerRow) {
+  const subject = row.appliesTo[0];
+  return subject ? subjectKey(subject.scope, subject.id) : 'unassigned';
+}
+
+export function compareApprovalLedgerMemberKeys(
+  memberLabels: Map<string, string>,
+  firstKey: string,
+  secondKey: string
+) {
+  const memberRank = (key: string) => {
+    if (!memberLabels.has(key)) return 2;
+    if (key.startsWith('family:')) return 0;
+    return key.startsWith('person:') ? 1 : 2;
+  };
+  const rank = memberRank(firstKey) - memberRank(secondKey);
+  if (rank) return rank;
+
+  const labelOrder = (memberLabels.get(firstKey) ?? 'Unassigned').localeCompare(
+    memberLabels.get(secondKey) ?? 'Unassigned'
+  );
+  return labelOrder || firstKey.localeCompare(secondKey);
+}
+
+export function isApprovalLedgerLeafRowNode(
+  rowNode: { type?: string } | null | undefined
+) {
+  return rowNode?.type === 'leaf';
 }
 
 export type ApprovalLedgerDataGridRowV2 = ApprovalLedgerRow & GridValidRowModel;
