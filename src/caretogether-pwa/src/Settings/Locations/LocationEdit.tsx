@@ -7,7 +7,7 @@ import {
   IconButton,
   Button,
 } from '@mui/material';
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { useBackdrop } from '../../Hooks/useBackdrop';
 import { useOrganizationConfiguration } from '../../Model/ConfigurationModel';
 import {
@@ -43,6 +43,7 @@ import {
 } from '../../Shell/shellLayoutConstants';
 import { useFeatureFlagEnabled, usePostHog } from 'posthog-js/react';
 import { SELF_SERVICE_POLICY_FEATURE_FLAG } from '../../featureFlags';
+import { clonePolicyWithActionDefinitionOrder } from './Tabs/PolicyConfiguration/policyUtils';
 
 export function LocationEdit() {
   const { editingLocationId } = useParams<{
@@ -83,10 +84,28 @@ export function LocationEdit() {
   const featureFlagsLoaded = posthog.featureFlags.hasLoadedFlags;
   const [policyDraft, setPolicyDraft] = useState(policy);
   const [policySaveErrors, setPolicySaveErrors] = useState<string[]>([]);
+  const policyDraftLocationIdRef = useRef(targetLocationId);
+  const actionDefinitionOrderRef = useRef(
+    Object.keys(policy.actionDefinitions ?? {})
+  );
 
   useEffect(() => {
-    setPolicyDraft(policy);
-  }, [policy]);
+    if (policyDraftLocationIdRef.current !== targetLocationId) {
+      policyDraftLocationIdRef.current = targetLocationId;
+      actionDefinitionOrderRef.current = Object.keys(
+        policy.actionDefinitions ?? {}
+      );
+    }
+
+    const orderedPolicy = clonePolicyWithActionDefinitionOrder(
+      policy,
+      actionDefinitionOrderRef.current
+    );
+    actionDefinitionOrderRef.current = Object.keys(
+      orderedPolicy.actionDefinitions ?? {}
+    );
+    setPolicyDraft(orderedPolicy);
+  }, [policy, targetLocationId]);
 
   const tabs = useMemo(
     () => [
@@ -188,6 +207,12 @@ export function LocationEdit() {
   function savePolicy(nextPolicy: EffectiveLocationPolicy) {
     if (!targetLocationId) return;
 
+    const previousActionDefinitionOrder = actionDefinitionOrderRef.current;
+    const nextActionDefinitionOrder = Object.keys(
+      nextPolicy.actionDefinitions ?? {}
+    );
+    actionDefinitionOrderRef.current = nextActionDefinitionOrder;
+
     withBackdrop(async () => {
       try {
         setPolicySaveErrors([]);
@@ -196,9 +221,15 @@ export function LocationEdit() {
           targetLocationId,
           nextPolicy
         );
-        setPolicyDraft(saved);
+        setPolicyDraft(
+          clonePolicyWithActionDefinitionOrder(
+            saved,
+            nextActionDefinitionOrder
+          )
+        );
         refreshPolicy();
       } catch (error) {
+        actionDefinitionOrderRef.current = previousActionDefinitionOrder;
         setPolicySaveErrors(getPolicySaveErrors(error));
       }
     });

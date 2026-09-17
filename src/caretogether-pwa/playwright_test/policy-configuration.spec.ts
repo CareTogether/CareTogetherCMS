@@ -3,7 +3,10 @@ import {
   ActionRequirement,
   EffectiveLocationPolicy,
 } from '../src/GeneratedClient';
-import { clonePolicyWithActionDefinition } from '../src/Settings/Locations/Tabs/PolicyConfiguration/policyUtils';
+import {
+  clonePolicyWithActionDefinition,
+  clonePolicyWithActionDefinitionOrder,
+} from '../src/Settings/Locations/Tabs/PolicyConfiguration/policyUtils';
 
 function action() {
   return new ActionRequirement({});
@@ -52,6 +55,26 @@ test('appends newly added action definitions', () => {
   );
 
   expect(Object.keys(updatedPolicy.actionDefinitions ?? {})).toEqual([
+    'Family assessment',
+    'Background check',
+    'Home visit',
+  ]);
+});
+
+test('restores the editor order after the server reorders action definitions', () => {
+  const savedPolicy = policyWithActionDefinitions([
+    'Home visit',
+    'Family assessment',
+    'Background check',
+  ]);
+
+  const orderedPolicy = clonePolicyWithActionDefinitionOrder(savedPolicy, [
+    'Family assessment',
+    'Background check',
+    'Home visit',
+  ]);
+
+  expect(Object.keys(orderedPolicy.actionDefinitions ?? {})).toEqual([
     'Family assessment',
     'Background check',
     'Home visit',

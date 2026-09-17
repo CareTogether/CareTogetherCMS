@@ -499,6 +499,32 @@ export function clonePolicyWithActionDefinition(
   return new EffectiveLocationPolicy({ ...policy, actionDefinitions });
 }
 
+export function clonePolicyWithActionDefinitionOrder(
+  policy: EffectiveLocationPolicy,
+  actionNames: string[]
+) {
+  const actionDefinitions = policy.actionDefinitions ?? {};
+  const requestedNames = new Set(actionNames);
+  const orderedNames = [
+    ...actionNames.filter((actionName) =>
+      Object.prototype.hasOwnProperty.call(actionDefinitions, actionName)
+    ),
+    ...Object.keys(actionDefinitions).filter(
+      (actionName) => !requestedNames.has(actionName)
+    ),
+  ];
+
+  return new EffectiveLocationPolicy({
+    ...policy,
+    actionDefinitions: Object.fromEntries(
+      orderedNames.map((actionName) => [
+        actionName,
+        actionDefinitions[actionName],
+      ])
+    ),
+  });
+}
+
 export function clonePolicyWithCustomFamilyFields(
   policy: EffectiveLocationPolicy,
   fields: CustomField[]
