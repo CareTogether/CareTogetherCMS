@@ -20,8 +20,10 @@ import { useMemo } from 'react';
 import { FamilyDocumentRowV2 } from './familyDocumentsViewModelV2';
 import { v2DataGridStyles } from './v2DataGridStyles';
 import { v2Typography } from './v2Typography';
+import { usePersistedGridFilterModel } from '../Hooks/usePersistedGridFilterModel';
 
 type FamilyDocumentsDataGridV2Props = {
+  filterScopeId?: string;
   onDelete: (row: FamilyDocumentRowV2) => void;
   onDownload: (row: FamilyDocumentRowV2) => void;
   rows: FamilyDocumentRowV2[];
@@ -177,6 +179,7 @@ function buildColumns({
 }
 
 export function FamilyDocumentsDataGridV2({
+  filterScopeId,
   onDelete,
   onDownload,
   rows,
@@ -186,6 +189,11 @@ export function FamilyDocumentsDataGridV2({
     () => buildColumns({ onDelete, onDownload }),
     [onDelete, onDownload]
   );
+  const { filterModel, onFilterModelChange } = usePersistedGridFilterModel({
+    columns,
+    entityId: filterScopeId,
+    namespace: 'familyDocuments',
+  });
 
   return (
     <Box sx={v2DataGridStyles(theme)}>
@@ -193,6 +201,8 @@ export function FamilyDocumentsDataGridV2({
         autoHeight
         rows={rows}
         columns={columns}
+        filterModel={filterModel}
+        onFilterModelChange={onFilterModelChange}
         rowHeight={56}
         columnHeaderHeight={42}
         disableRowSelectionOnClick

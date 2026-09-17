@@ -12,8 +12,10 @@ import {
 } from './volunteerAssignmentsGridColumns';
 import type { AssignmentBrowserRowV2 } from './volunteerAssignmentViewModel';
 import { v2DataGridStyles } from './v2DataGridStyles';
+import { usePersistedGridFilterModel } from '../Hooks/usePersistedGridFilterModel';
 
 type VolunteerAssignmentsDataGridV2Props = {
+  filterScopeId?: string;
   onRowClick: (row: AssignmentBrowserRowV2) => void;
   rows: AssignmentBrowserRowV2[];
 };
@@ -21,9 +23,6 @@ type VolunteerAssignmentsDataGridV2Props = {
 const assignmentsGridInitialState: GridInitialState = {
   columns: {
     columnVisibilityModel: assignmentsDefaultColumnVisibility,
-  },
-  filter: {
-    filterModel: { items: [], quickFilterExcludeHiddenColumns: false },
   },
   sorting: {
     sortModel: assignmentsInitialSortModel,
@@ -39,6 +38,7 @@ function clearActiveGridElement() {
 }
 
 export function VolunteerAssignmentsDataGridV2({
+  filterScopeId,
   onRowClick,
   rows,
 }: VolunteerAssignmentsDataGridV2Props) {
@@ -47,6 +47,11 @@ export function VolunteerAssignmentsDataGridV2({
     () => buildVolunteerAssignmentsGridColumns(rows),
     [rows]
   );
+  const { filterModel, onFilterModelChange } = usePersistedGridFilterModel({
+    columns,
+    entityId: filterScopeId,
+    namespace: 'volunteerAssignments',
+  });
 
   return (
     <Box sx={v2DataGridStyles(theme)}>
@@ -58,6 +63,8 @@ export function VolunteerAssignmentsDataGridV2({
         disableRowGrouping
         rows={rows}
         columns={columns}
+        filterModel={filterModel}
+        onFilterModelChange={onFilterModelChange}
         rowHeight={56}
         columnHeaderHeight={42}
         disableRowSelectionOnClick

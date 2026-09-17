@@ -20,6 +20,7 @@ import {
 } from './volunteersGridColumns';
 import type { VolunteerBrowserRowV2 } from './useVolunteersBrowserViewModel';
 import { VolunteersChartsPanel } from './VolunteersChartsPanel';
+import { usePersistedGridFilterModel } from '../Hooks/usePersistedGridFilterModel';
 
 type Props = {
   arrangementTypes: string[];
@@ -124,6 +125,10 @@ export function VolunteersDataGridV2({
       ) : null,
     [pivotActive]
   );
+  const { filterModel, onFilterModelChange } = usePersistedGridFilterModel({
+    columns,
+    namespace: 'volunteers',
+  });
 
   return (
     <GridChartsIntegrationContextProvider key={gridConfigurationKey}>
@@ -138,6 +143,8 @@ export function VolunteersDataGridV2({
           pagination
           rows={rows}
           columns={columns}
+          filterModel={filterModel}
+          onFilterModelChange={onFilterModelChange}
           slots={slots}
           loading={loading}
           getEstimatedRowHeight={() => 88}
@@ -155,12 +162,6 @@ export function VolunteersDataGridV2({
           initialState={{
             pagination: { paginationModel: { pageSize: 100 } },
             sorting: { sortModel: [{ field: 'family', sort: 'asc' }] },
-            filter: {
-              filterModel: {
-                items: [],
-                quickFilterExcludeHiddenColumns: false,
-              },
-            },
             columns: { columnVisibilityModel },
           }}
           slotProps={{

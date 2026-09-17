@@ -7,7 +7,6 @@ import {
   type GridColumnVisibilityModel,
   type GridColDef,
   type GridChartsPanelProps,
-  type GridInitialState,
   type GridRowParams,
 } from '@mui/x-data-grid-premium';
 import {
@@ -30,6 +29,7 @@ import {
 } from './referralsGridColumns';
 import { referralsInitialSortModel } from './referralsGridSorting';
 import { ReferralsChartsPanel } from './ReferralsChartsPanel';
+import { usePersistedGridFilterModel } from '../Hooks/usePersistedGridFilterModel';
 
 type ReferralsDataGridV2Props = {
   assignmentRoles?: ReferralAssignmentRoleV2[];
@@ -41,11 +41,6 @@ type ReferralsDataGridV2Props = {
   rows: ReferralBrowserRowV2[];
 };
 
-const referralsGridInitialState: GridInitialState = {
-  filter: {
-    filterModel: { items: [], quickFilterExcludeHiddenColumns: false },
-  },
-};
 const referralsGridSlots = { noRowsOverlay: ReferralsEmptyState };
 const referralsGridSlotProps = {
   chartsPanel: {
@@ -156,6 +151,10 @@ function ReferralsGridSession({
 }) {
   const theme = useTheme();
   const [pivotActive, setPivotActive] = useState(false);
+  const { filterModel, onFilterModelChange } = usePersistedGridFilterModel({
+    columns,
+    namespace: 'referrals',
+  });
   const slots = useMemo(
     () => ({
       ...referralsGridSlots,
@@ -217,7 +216,8 @@ function ReferralsGridSession({
             columns={columns}
             sortModel={pivotActive ? undefined : sortModel}
             onSortModelChange={pivotActive ? undefined : setSortModel}
-            initialState={referralsGridInitialState}
+            filterModel={filterModel}
+            onFilterModelChange={onFilterModelChange}
             filterDebounceMs={200}
             columnVisibilityModel={visibleColumns}
             onColumnVisibilityModelChange={

@@ -117,6 +117,7 @@ export function FamilyDocumentsSectionV2({
         )}
         {rows.length > 0 ? (
           <FamilyDocumentsDataGridV2
+            filterScopeId={family.family?.id}
             rows={rows}
             onDelete={openDeleteDialog}
             onDownload={downloadDocument}

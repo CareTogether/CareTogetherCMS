@@ -6,6 +6,7 @@ import {
 } from '@mui/x-data-grid-premium';
 import { useCallback, useMemo, useState } from 'react';
 import { v2DataGridStyles } from '../../Families/v2DataGridStyles';
+import { usePersistedGridFilterModel } from '../../Hooks/usePersistedGridFilterModel';
 import {
   arrangementsInitialSortModel,
   arrangementsDefaultColumnVisibility,
@@ -14,18 +15,25 @@ import {
 import type { ArrangementBrowserRowV2 } from './arrangementViewModel';
 
 type ArrangementsDataGridV2Props = {
+  filterScopeId?: string;
   highlightedArrangementId?: string;
   onRowClick: (row: ArrangementBrowserRowV2) => void;
   rows: ArrangementBrowserRowV2[];
 };
 
 export function ArrangementsDataGridV2({
+  filterScopeId,
   highlightedArrangementId,
   onRowClick,
   rows,
 }: ArrangementsDataGridV2Props) {
   const theme = useTheme();
   const columns = useMemo(() => buildArrangementsGridColumns(rows), [rows]);
+  const { filterModel, onFilterModelChange } = usePersistedGridFilterModel({
+    columns,
+    entityId: filterScopeId,
+    namespace: 'arrangements',
+  });
   const [columnVisibilityModel, setColumnVisibilityModel] =
     useState<GridColumnVisibilityModel>({});
   const visibleColumns = useMemo(
@@ -58,6 +66,8 @@ export function ArrangementsDataGridV2({
         disableRowGrouping
         rows={rows}
         columns={columns}
+        filterModel={filterModel}
+        onFilterModelChange={onFilterModelChange}
         columnVisibilityModel={visibleColumns}
         onColumnVisibilityModelChange={setColumnVisibilityModel}
         getRowHeight={() => 'auto'}

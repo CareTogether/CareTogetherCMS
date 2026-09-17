@@ -33,6 +33,7 @@ import {
 } from './approvalLedgerGridHelpers';
 import { v2DataGridStyles } from '../Families/v2DataGridStyles';
 import { v2Typography } from '../Families/v2Typography';
+import { usePersistedGridFilterModel } from '../Hooks/usePersistedGridFilterModel';
 
 type ApprovalsDataGridV2Props = {
   groupByMember?: boolean;
@@ -605,6 +606,10 @@ export function ApprovalsDataGridV2({
       })
     );
   }, [groupByMember, neededForRoleOptions, userLookup]);
+  const { filterModel, onFilterModelChange } = usePersistedGridFilterModel({
+    columns,
+    namespace: 'approvalsLedger',
+  });
 
   const clearGridFocus = () => {
     const activeElement = document.activeElement;
@@ -664,6 +669,8 @@ export function ApprovalsDataGridV2({
         autoHeight
         rows={rows}
         columns={columns}
+        filterModel={filterModel}
+        onFilterModelChange={onFilterModelChange}
         rowGroupingModel={groupByMember ? memberGroupingModel : undefined}
         groupingColDef={groupByMember ? groupingColDef : undefined}
         defaultGroupingExpansionDepth={groupByMember ? -1 : undefined}
@@ -686,9 +693,6 @@ export function ApprovalsDataGridV2({
               [APPROVAL_LEDGER_SEARCH_FIELD]: false,
               ...(groupByMember && { appliesTo: false }),
             },
-          },
-          filter: {
-            filterModel: { items: [], quickFilterExcludeHiddenColumns: false },
           },
         }}
         onRowClick={({ row }) => {

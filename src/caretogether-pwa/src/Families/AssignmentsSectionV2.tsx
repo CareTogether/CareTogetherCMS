@@ -71,6 +71,7 @@ export function AssignmentsSection({
         </Typography>
       )}
       <VolunteerAssignmentsDataGridV2
+        filterScopeId={family.family?.id}
         rows={assignmentRows}
         onRowClick={(row) => {
           if (row.childFamilyId) navigate.family(row.childFamilyId);
