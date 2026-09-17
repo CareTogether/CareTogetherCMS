@@ -477,12 +477,52 @@ export function clonePolicyWithActionDefinition(
   actionName: string,
   action: ActionRequirement
 ) {
-  const actionDefinitions = { ...(policy.actionDefinitions ?? {}) };
   if (previousName && previousName !== actionName) {
-    delete actionDefinitions[previousName];
+    const actionDefinitions = Object.fromEntries(
+      Object.entries(policy.actionDefinitions ?? {}).map(
+        ([currentName, currentAction]) =>
+          currentName === previousName
+            ? [actionName, action]
+            : [currentName, currentAction]
+      )
+    );
+
+    if (!(previousName in (policy.actionDefinitions ?? {}))) {
+      actionDefinitions[actionName] = action;
+    }
+
+    return new EffectiveLocationPolicy({ ...policy, actionDefinitions });
   }
+
+  const actionDefinitions = { ...(policy.actionDefinitions ?? {}) };
   actionDefinitions[actionName] = action;
   return new EffectiveLocationPolicy({ ...policy, actionDefinitions });
+}
+
+export function clonePolicyWithActionDefinitionOrder(
+  policy: EffectiveLocationPolicy,
+  actionNames: string[]
+) {
+  const actionDefinitions = policy.actionDefinitions ?? {};
+  const requestedNames = new Set(actionNames);
+  const orderedNames = [
+    ...actionNames.filter((actionName) =>
+      Object.prototype.hasOwnProperty.call(actionDefinitions, actionName)
+    ),
+    ...Object.keys(actionDefinitions).filter(
+      (actionName) => !requestedNames.has(actionName)
+    ),
+  ];
+
+  return new EffectiveLocationPolicy({
+    ...policy,
+    actionDefinitions: Object.fromEntries(
+      orderedNames.map((actionName) => [
+        actionName,
+        actionDefinitions[actionName],
+      ])
+    ),
+  });
 }
 
 export function clonePolicyWithCustomFamilyFields(
