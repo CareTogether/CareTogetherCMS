@@ -55,6 +55,7 @@ import { useV1CasesModel } from '../Model/V1CasesModel';
 import { usePolicy } from '../Model/PolicyModel';
 import {
   FAMILY_MEMBER_PRINT_INFORMATION_FEATURE_FLAG,
+  FUNCTION_ASSIGNMENTS_FEATURE_FLAG,
   REFERRALS_FEATURE_FLAG,
   UPDATE_TEST_FAMILY_FEATURE_FLAG,
 } from '../featureFlags';
@@ -143,6 +144,15 @@ export function FamilyScreenV2() {
   const { setAndShowGlobalSnackBar } = useGlobalSnackBar();
 
   const permissions = useFamilyPermissions(family);
+  const functionAssignmentsEnabled = useFeatureFlagEnabled(
+    FUNCTION_ASSIGNMENTS_FEATURE_FLAG
+  );
+  const canViewFunctionAssignments =
+    functionAssignmentsEnabled === true &&
+    permissions(Permission.ViewV1CaseFunctionAssignments);
+  const canEditFunctionAssignments =
+    canViewFunctionAssignments &&
+    permissions(Permission.EditV1CaseFunctionAssignments);
   const globalPermissions = useGlobalPermissions();
   const { getFamilyNoteActions, getReferralNoteActions } =
     useRecentFamilyNoteActions({
@@ -867,6 +877,27 @@ export function FamilyScreenV2() {
       {isPartneringFamily && (
         <FamilyCaseWorkspaceHeaderV2
           activeCaseArrangements={activeCaseArrangements}
+          canViewFunctionAssignments={canViewFunctionAssignments}
+          canEditFunctionAssignments={canEditFunctionAssignments}
+          functionAssignmentPolicies={
+            policy.referralPolicy?.functionAssignmentPolicies ?? []
+          }
+          onAssign={(v1CaseId, personId, assignmentRole) =>
+            v1CasesModel.assignIndividualVolunteerToV1Case(
+              familyId,
+              v1CaseId,
+              personId,
+              assignmentRole
+            )
+          }
+          onUnassign={(v1CaseId, personId, assignmentRole) =>
+            v1CasesModel.unassignIndividualVolunteerFromV1Case(
+              familyId,
+              v1CaseId,
+              personId,
+              assignmentRole
+            )
+          }
           canCloseV1Case={!!canCloseV1Case}
           canReopenSelectedV1Case={canReopenSelectedV1Case}
           currentReferral={currentReferral}
