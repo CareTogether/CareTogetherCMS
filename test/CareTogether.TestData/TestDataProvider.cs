@@ -13,6 +13,7 @@ using CareTogether.Resources.Policies;
 using CareTogether.Resources.V1Cases;
 using CareTogether.Utilities.EventLog;
 using CareTogether.Utilities.ObjectStore;
+using V1CaseAssignIndividualVolunteer = CareTogether.Resources.V1Cases.V1CaseCommands.AssignIndividualVolunteer;
 
 namespace CareTogether.TestData
 {
@@ -1168,6 +1169,21 @@ namespace CareTogether.TestData
                 ),
                 new ReferralCommandExecuted(
                     adminId,
+                    V1CasesMonth(5, 4, 10, 1),
+                    new V1CaseAssignIndividualVolunteer(guid1, guid1, guid6, "Case Manager")
+                ),
+                new ReferralCommandExecuted(
+                    adminId,
+                    V1CasesMonth(5, 4, 10, 2),
+                    new V1CaseAssignIndividualVolunteer(
+                        guid1,
+                        guid1,
+                        guid5,
+                        "Historical Support"
+                    )
+                ),
+                new ReferralCommandExecuted(
+                    adminId,
                     V1CasesMonth(5, 4, 15, 15),
                     new CompleteReferralRequirement(
                         guid1,
@@ -1378,6 +1394,16 @@ namespace CareTogether.TestData
                     adminId,
                     StartOfCurrentMonth(),
                     new CreateReferral(guid1, guid2, V1CasesMonth(1, 19, 30, 45))
+                ),
+                new ReferralCommandExecuted(
+                    adminId,
+                    StartOfCurrentMonth().AddSeconds(1),
+                    new V1CaseAssignIndividualVolunteer(guid1, guid2, guid5, "Case Manager")
+                ),
+                new ReferralCommandExecuted(
+                    adminId,
+                    StartOfCurrentMonth().AddSeconds(2),
+                    new V1CaseAssignIndividualVolunteer(guid1, guid2, guid5, "Case Coordinator")
                 ),
                 new ReferralCommandExecuted(
                     adminId,
@@ -3275,7 +3301,16 @@ namespace CareTogether.TestData
                                 EligibleLocationRoles: [SystemConstants.ORGANIZATION_ADMINISTRATOR],
                                 EligibleIndividualVolunteerRoles: [],
                                 EligibleVolunteerFamilyRoles: [],
-                                EligiblePeople: []
+                                EligiblePeople: [guid5, guid6]
+                            )
+                        ),
+                        new FunctionAssignmentPolicy(
+                            "Case Coordinator",
+                            new FunctionAssignmentEligibility(
+                                EligibleLocationRoles: [],
+                                EligibleIndividualVolunteerRoles: [],
+                                EligibleVolunteerFamilyRoles: [],
+                                EligiblePeople: [guid5, guid6]
                             )
                         ),
                     ],

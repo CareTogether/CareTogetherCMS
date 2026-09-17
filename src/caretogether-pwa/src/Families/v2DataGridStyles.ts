@@ -6,6 +6,20 @@ type V2DataGridStylesOptions = {
   highlightedRowColor?: string;
 };
 
+export function v2DataGridFocusStyles(theme: Theme) {
+  return {
+    '& .MuiDataGrid-cell:focus, & .MuiDataGrid-cell:focus-within, & .MuiDataGrid-columnHeader:focus, & .MuiDataGrid-columnHeader:focus-within':
+      {
+        outline: 'none',
+      },
+    '& .MuiDataGrid-cell:focus-visible, & .MuiDataGrid-columnHeader:focus-visible':
+      {
+        outline: `2px solid ${theme.palette.primary.main}`,
+        outlineOffset: -2,
+      },
+  };
+}
+
 export function v2DataGridStyles(
   theme: Theme,
   {
@@ -58,13 +72,6 @@ export function v2DataGridStyles(
       backgroundColor: theme.palette.action.hover,
       borderBottomColor: theme.palette.divider,
     },
-    '& .MuiDataGrid-root .MuiDataGrid-cell:focus, & .MuiDataGrid-root .MuiDataGrid-cell:focus-within':
-      {
-        outline: 'none',
-      },
-    '& .MuiDataGrid-root .MuiDataGrid-columnHeader:focus, & .MuiDataGrid-root .MuiDataGrid-columnHeader:focus-within':
-      {
-        outline: 'none',
-      },
+    ...v2DataGridFocusStyles(theme),
   };
 }

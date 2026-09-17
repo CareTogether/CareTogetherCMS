@@ -1,0 +1,10 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "composite": false,
+    "noEmit": true,
+    "types": ["node", "vite/client"]
+  },
+  "include": ["src", "playwright_test/**/*.ts"],
+  "exclude": ["**/.local/**", "**/*.local", "../.local/**", "../**/.local/**"]
+}

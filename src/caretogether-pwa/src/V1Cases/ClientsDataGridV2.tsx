@@ -1,4 +1,4 @@
-import { Box, Stack, Typography } from '@mui/material';
+import { Box, Stack, Typography, useTheme } from '@mui/material';
 import {
   DataGridPremium,
   GridChartsIntegrationContextProvider,
@@ -30,6 +30,7 @@ import {
   isOptionalClientsColumn,
 } from './clientsGridColumns';
 import { ClientsChartsPanel } from './ClientsChartsPanel';
+import { v2DataGridFocusStyles } from '../Families/v2DataGridStyles';
 
 type ClientsDataGridV2Props = {
   rows: ClientBrowserRowV2[];
@@ -61,10 +62,13 @@ const clientsGridInitialState: GridInitialState = {
     filterModel: { items: [], quickFilterExcludeHiddenColumns: false },
   },
 };
-const clientsGridSx = {
-  '& .MuiDataGrid-row': { cursor: 'pointer', minHeight: 56 },
-  '& .MuiDataGrid-cell': { alignItems: 'center', display: 'flex', py: 1 },
-};
+function clientsGridSx(theme: Parameters<typeof v2DataGridFocusStyles>[0]) {
+  return {
+    ...v2DataGridFocusStyles(theme),
+    '& .MuiDataGrid-row': { cursor: 'pointer', minHeight: 56 },
+    '& .MuiDataGrid-cell': { alignItems: 'center', display: 'flex', py: 1 },
+  };
+}
 function getClientsRowHeight() {
   return 'auto' as const;
 }
@@ -105,6 +109,7 @@ export function ClientsDataGridV2({
   onSortModelChange,
   onRowClick,
 }: ClientsDataGridV2Props) {
+  const theme = useTheme();
   const [pivotActive, setPivotActive] = useState(false);
   const slots = useMemo(
     () => ({
@@ -190,7 +195,7 @@ export function ClientsDataGridV2({
             onRowClick={handleRowClick}
             slots={slots}
             slotProps={clientsGridSlotProps}
-            sx={clientsGridSx}
+            sx={clientsGridSx(theme)}
           />
         </Box>
         <GridChartsRendererProxy

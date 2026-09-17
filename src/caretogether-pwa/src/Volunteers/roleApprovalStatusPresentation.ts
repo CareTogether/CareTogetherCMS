@@ -3,8 +3,27 @@ import { RoleApprovalStatus } from '../GeneratedClient';
 
 type RoleApprovalStatusChipColor = NonNullable<ChipProps['color']>;
 
+export const roleApprovalStatusesForFilters = [
+  RoleApprovalStatus.Prospective,
+  RoleApprovalStatus.Approved,
+  RoleApprovalStatus.Onboarded,
+  RoleApprovalStatus.Expired,
+  RoleApprovalStatus.Inactive,
+  RoleApprovalStatus.Denied,
+] as const;
+
 export function roleApprovalStatusLabel(status: RoleApprovalStatus) {
   return RoleApprovalStatus[status];
+}
+
+export function roleApprovalStatusFilterOptions(notAppliedLabel: string) {
+  return [
+    { value: '0', label: notAppliedLabel },
+    ...roleApprovalStatusesForFilters.map((status) => ({
+      value: String(status),
+      label: roleApprovalStatusLabel(status),
+    })),
+  ];
 }
 
 export function roleApprovalStatusChipColor(

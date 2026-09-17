@@ -29,6 +29,7 @@ type FunctionAssignmentsSectionProps = {
 };
 
 type FunctionAssignmentsEditorDrawerProps = {
+  title?: string;
   open: boolean;
   assignments: AssignedIndividualVolunteer[];
   policies: FunctionAssignmentPolicy[];
@@ -38,6 +39,7 @@ type FunctionAssignmentsEditorDrawerProps = {
 };
 
 export function FunctionAssignmentsEditorDrawer({
+  title = 'Edit Function Assignments',
   open,
   assignments,
   policies,
@@ -92,7 +94,7 @@ export function FunctionAssignmentsEditorDrawer({
       }}
     >
       <Stack spacing={2}>
-        <Typography variant="h6">Edit Function Assignments</Typography>
+        <Typography variant="h6">{title}</Typography>
 
         {editorRows.map(({ assignmentRole, options, selectedCandidate }) => {
           return (
@@ -184,7 +186,7 @@ export function FunctionAssignmentsSection({
   }
 
   return (
-    <Box className="ph-unmask" sx={{ width: '100%' }}>
+    <Box sx={{ width: '100%' }}>
       <Stack
         direction="row"
         spacing={2}

@@ -31,12 +31,7 @@ export function AssignmentsSection({
   const navigate = useAppNavigate();
 
   const assignments = useMemo(
-    () =>
-      [...(family.volunteerFamilyInfo?.assignments ?? [])].sort((a, b) => {
-        const dateA = a.startedAtUtc?.getTime() ?? 0;
-        const dateB = b.startedAtUtc?.getTime() ?? 0;
-        return dateB - dateA;
-      }),
+    () => family.volunteerFamilyInfo?.assignments ?? [],
     [family.volunteerFamilyInfo?.assignments]
   );
 
