@@ -1682,13 +1682,6 @@ namespace CareTogether.TestData
                     SetupMonth(1),
                     new ActivateVolunteerFamily(guid0)
                 ),
-                // The Doe family also has a client case. Activating volunteer participation for
-                // the same family demonstrates that client and volunteer status can coexist.
-                new VolunteerFamilyCommandExecuted(
-                    adminId,
-                    ApprovalsMonth(1),
-                    new ActivateVolunteerFamily(guid1)
-                ),
                 new VolunteerFamilyCommandExecuted(
                     adminId,
                     ApprovalsMonth(1),

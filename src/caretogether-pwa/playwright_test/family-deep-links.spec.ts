@@ -82,7 +82,16 @@ test.describe('family deep links @pr', () => {
     await page.goto(ATLANTIS_ROUTE);
 
     await page.getByRole('button', { name: /previous/i }).click();
-    await page.getByText('Eric Doe - Family Coach Safety Visit').click();
+    const safetyVisit = page.getByText('Eric Doe - Family Coach Safety Visit');
+
+    if (!(await safetyVisit.isVisible())) {
+      const eventDay = page.getByRole('gridcell').filter({
+        has: page.getByText('14', { exact: true }),
+      });
+      await eventDay.getByRole('button', { name: /more/i }).click();
+    }
+
+    await safetyVisit.click();
 
     await expect(page).toHaveURL(new RegExp(`v1CaseId=${DOE_V1_CASE_ID}`));
     await expect(page).toHaveURL(
