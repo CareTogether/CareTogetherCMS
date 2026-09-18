@@ -20,12 +20,18 @@ import { personNameString } from '../Families/PersonName';
 
 const MAX_DISPLAYED_RESULTS = 100;
 
-interface SearchIndex {
-  text: string;
+interface FamilySearchResult {
+  id: string;
+  label: string;
+  searchText: string;
   phones: string[];
+  isClient: boolean;
+  isVolunteer: boolean;
 }
 
-function buildSearchIndex(family: CombinedFamilyInfo): SearchIndex {
+function buildFamilySearchResult(
+  family: CombinedFamilyInfo
+): FamilySearchResult {
   const textParts: string[] = [];
   const phones: string[] = [];
 
@@ -54,7 +60,21 @@ function buildSearchIndex(family: CombinedFamilyInfo): SearchIndex {
     textParts.push(personNameString(child).toLowerCase());
   }
 
-  return { text: textParts.join(' '), phones };
+  return {
+    id: family.family!.id!,
+    label: familyNameString(family) || family.family!.id!,
+    searchText: textParts.join(' '),
+    phones,
+    isClient: family.partneringFamilyInfo != null,
+    isVolunteer: family.volunteerFamilyInfo != null,
+  };
+}
+
+function familyTypeSuffix(result: FamilySearchResult): string {
+  if (result.isClient && result.isVolunteer) return ' (client/volunteer)';
+  if (result.isClient) return ' (client)';
+  if (result.isVolunteer) return ' (volunteer)';
+  return '';
 }
 
 interface ShellSearchBarProps {
@@ -77,38 +97,35 @@ export function ShellSearchBar({
 
   const [searchText, setSearchText] = useState('');
 
-  const searchableIndex = useMemo(
-    () => new Map(families.map((family) => [family, buildSearchIndex(family)])),
+  const searchResults = useMemo(
+    () => families.map(buildFamilySearchResult),
     [families]
   );
 
   const filterFamilies = useCallback(
     (
-      families: CombinedFamilyInfo[],
-      state: FilterOptionsState<CombinedFamilyInfo>
+      results: FamilySearchResult[],
+      state: FilterOptionsState<FamilySearchResult>
     ) => {
       const query = state.inputValue.toLowerCase().trim();
-      if (!query) return families.slice(0, MAX_DISPLAYED_RESULTS);
+      if (!query) return results.slice(0, MAX_DISPLAYED_RESULTS);
 
       const queryDigits = query.replace(/[^0-9]/g, '');
 
-      const results: CombinedFamilyInfo[] = [];
-      for (const family of families) {
-        const index = searchableIndex.get(family);
-        if (!index) continue;
-
+      const filtered: FamilySearchResult[] = [];
+      for (const result of results) {
         if (
-          index.text.includes(query) ||
+          result.searchText.includes(query) ||
           (queryDigits.length > 0 &&
-            index.phones.some((p) => p.includes(queryDigits)))
+            result.phones.some((p) => p.includes(queryDigits)))
         ) {
-          results.push(family);
-          if (results.length >= MAX_DISPLAYED_RESULTS) break;
+          filtered.push(result);
+          if (filtered.length >= MAX_DISPLAYED_RESULTS) break;
         }
       }
-      return results;
+      return filtered;
     },
-    [searchableIndex]
+    []
   );
 
   function openAndFocusSearch() {
@@ -119,17 +136,16 @@ export function ShellSearchBar({
   }
 
   const selectFamily = useCallback(
-    (_event: React.SyntheticEvent, family: CombinedFamilyInfo | null) => {
-      if (!family) return;
+    (_event: React.SyntheticEvent, result: FamilySearchResult | null) => {
+      if (!result) return;
       setSearchText('');
-      navigateTo.family(family.family!.id!);
+      navigateTo.family(result.id);
     },
     [navigateTo]
   );
 
   const getOptionLabel = useCallback(
-    (family: CombinedFamilyInfo) =>
-      familyNameString(family) || family.family!.id!,
+    (result: FamilySearchResult) => result.label,
     []
   );
 
@@ -146,12 +162,31 @@ export function ShellSearchBar({
         if (reason === 'selectOption' || reason === 'reset') return;
         setSearchText(value);
       }}
-      options={families}
+      options={searchResults}
       openOnFocus
       filterOptions={filterFamilies}
-      getOptionKey={(family) => family.family!.id!}
+      getOptionKey={(result) => result.id}
       getOptionLabel={getOptionLabel}
       onChange={selectFamily}
+      renderOption={(props, result) => (
+        <li {...props}>
+          <div
+            style={{
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+              whiteSpace: 'nowrap',
+            }}
+          >
+            {result.label}
+            <small
+              className="ph-unmask"
+              style={{ opacity: 0.7 }}
+            >
+              {familyTypeSuffix(result)}
+            </small>
+          </div>
+        </li>
+      )}
       slots={{ paper: Paper }}
       slotProps={{
         paper: {
