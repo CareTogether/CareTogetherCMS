@@ -10,10 +10,11 @@ import {
 import { useScreenTitle } from '../Shell/ShellScreenTitle';
 import { PersonName } from '../Families/PersonName';
 import { FamilyName } from '../Families/FamilyName';
-import { EmojiPeople } from '@mui/icons-material';
+import { EmojiPeople, Event } from '@mui/icons-material';
 import { AppNavigate, useAppNavigate } from '../Hooks/useAppNavigate';
 import { QueueItem, useQueueItems } from '../Model/QueueModel';
 import { ReactElement } from 'react';
+import { format } from 'date-fns';
 
 interface InboxMessageProps {
   icon: ReactElement;
@@ -96,6 +97,37 @@ function getMessageProps(
         secondaryContent: (
           <Typography variant="body2" sx={{ color: 'black' }}>
             <FamilyName family={item.family} />
+          </Typography>
+        ),
+      };
+
+    case 'ArrangementDueToStart':
+      return {
+        icon: <Event color="warning" />,
+        onClick: () => {
+          const familyId = item.family.family?.id;
+          const v1CaseId = item.v1CaseId;
+          const arrangementId = item.arrangementId;
+
+          if (familyId && v1CaseId && arrangementId) {
+            appNavigate.family(familyId, { v1CaseId, arrangementId });
+          }
+        },
+        primaryContent: (
+          <>
+            <Typography
+              variant="body1"
+              sx={{ display: 'inline', fontWeight: 'bold' }}
+            >
+              Arrangement due to start:{' '}
+            </Typography>
+            <PersonName person={item.child} /> - {item.arrangementType}
+          </>
+        ),
+        secondaryContent: (
+          <Typography variant="body2" sx={{ color: 'black' }}>
+            <FamilyName family={item.family} /> - planned to start{' '}
+            {format(item.plannedStartUtc, 'M/d/yyyy')}
           </Typography>
         ),
       };
