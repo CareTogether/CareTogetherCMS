@@ -25,6 +25,7 @@ import { add, format, formatDuration, isValid } from 'date-fns';
 import { useEffect, useState } from 'react';
 import {
   Arrangement,
+  ArrangementPhase,
   CompletedRequirementInfo,
   DocumentLinkRequirement,
   ExemptedRequirementInfo,
@@ -143,6 +144,29 @@ function contextLabel(context: RequirementContext) {
   return context.kind;
 }
 
+function arrangementDateLabel(arrangement: Arrangement) {
+  const formatDay = (date?: Date) => (date ? format(date, 'M/d/yyyy') : '');
+
+  if (arrangement.phase === ArrangementPhase.Cancelled) {
+    const cancelledAt = formatDay(arrangement.cancelledAtUtc);
+    return cancelledAt !== '' ? `Cancelled ${cancelledAt}` : '';
+  }
+
+  if (arrangement.phase === ArrangementPhase.Ended) {
+    const endedAt = formatDay(arrangement.endedAtUtc);
+    return endedAt !== '' ? `Ended ${endedAt}` : '';
+  }
+
+  const startDay = formatDay(
+    arrangement.startedAtUtc ?? arrangement.plannedStartUtc
+  );
+  const endDay = formatDay(arrangement.plannedEndUtc);
+
+  if (startDay !== '' && endDay !== '') return `${startDay} – ${endDay}`;
+  if (startDay !== '') return `Starting ${startDay}`;
+  return `Requested ${formatDay(arrangement.requestedAtUtc)}`;
+}
+
 function ArrangementApplyLabel({
   arrangement,
   context,
@@ -156,27 +180,35 @@ function ArrangementApplyLabel({
   const person = familyId
     ? personLookup(familyId, arrangement.partneringFamilyPersonId)
     : undefined;
+  const dates = arrangementDateLabel(arrangement);
 
   return (
-    <Typography component="span" variant="body2">
-      {arrangement.arrangementType} - {personNameString(person)}
-      {context.kind === 'Family Volunteer Assignment'
-        ? ` (${familyNameString(familyLookup(context.assignment.familyId))})`
-        : ''}
-      {context.kind === 'Individual Volunteer Assignment'
-        ? ` (${
-            personLookup
-              ? personNameString(
-                  personLookup(
-                    context.assignment.familyId,
-                    context.assignment.personId
+    <Box sx={{ display: 'flex', flexDirection: 'column' }}>
+      <Typography component="span" variant="body2">
+        {arrangement.arrangementType} - {personNameString(person)}
+        {context.kind === 'Family Volunteer Assignment'
+          ? ` (${familyNameString(familyLookup(context.assignment.familyId))})`
+          : ''}
+        {context.kind === 'Individual Volunteer Assignment'
+          ? ` (${
+              personLookup
+                ? personNameString(
+                    personLookup(
+                      context.assignment.familyId,
+                      context.assignment.personId
+                    )
                   )
-                )
-              : ''
-          })`
-        : ''}{' '}
-      - {getArrangementRequirementStatusLabel(arrangement)}
-    </Typography>
+                : ''
+            })`
+          : ''}{' '}
+        - {getArrangementRequirementStatusLabel(arrangement)}
+      </Typography>
+      {dates !== '' && (
+        <Typography color="text.secondary" component="span" variant="caption">
+          {dates}
+        </Typography>
+      )}
+    </Box>
   );
 }
 
