@@ -1,6 +1,5 @@
 import Grid from '@mui/material/Grid';
-import {
-  useState } from 'react';
+import { useState } from 'react';
 import {
   FormControl,
   FormControlLabel,
@@ -105,6 +104,7 @@ export function RemoveFamilyRoleDialog({
               minRows={2}
               maxRows={5}
               size="small"
+              required
               value={additionalComments}
               onChange={(e) =>
                 setFields({ ...fields, additionalComments: e.target.value })
