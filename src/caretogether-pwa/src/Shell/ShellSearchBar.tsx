@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useRef } from 'react';
+import { useCallback, useMemo, useRef, useState } from 'react';
 import { flushSync } from 'react-dom';
 import { Search as SearchIcon } from '@mui/icons-material';
 import {
@@ -75,6 +75,8 @@ export function ShellSearchBar({
 
   const navigateTo = useAppNavigate();
 
+  const [searchText, setSearchText] = useState('');
+
   const searchableIndex = useMemo(
     () => new Map(families.map((family) => [family, buildSearchIndex(family)])),
     [families]
@@ -97,7 +99,8 @@ export function ShellSearchBar({
 
         if (
           index.text.includes(query) ||
-          (queryDigits.length > 0 && index.phones.some((p) => p.includes(queryDigits)))
+          (queryDigits.length > 0 &&
+            index.phones.some((p) => p.includes(queryDigits)))
         ) {
           results.push(family);
           if (results.length >= MAX_DISPLAYED_RESULTS) break;
@@ -118,6 +121,7 @@ export function ShellSearchBar({
   const selectFamily = useCallback(
     (_event: React.SyntheticEvent, family: CombinedFamilyInfo | null) => {
       if (!family) return;
+      setSearchText('');
       navigateTo.family(family.family!.id!);
     },
     [navigateTo]
@@ -136,6 +140,12 @@ export function ShellSearchBar({
       fullWidth
       onBlur={() => setOpenMobileSearch(false)}
       autoHighlight
+      value={null}
+      inputValue={searchText}
+      onInputChange={(_event, value, reason) => {
+        if (reason === 'selectOption' || reason === 'reset') return;
+        setSearchText(value);
+      }}
       options={families}
       openOnFocus
       filterOptions={filterFamilies}
