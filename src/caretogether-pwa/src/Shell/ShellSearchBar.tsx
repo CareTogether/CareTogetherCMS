@@ -1,4 +1,4 @@
-import { useRef } from 'react';
+import { useCallback, useMemo, useRef } from 'react';
 import { flushSync } from 'react-dom';
 import { Search as SearchIcon } from '@mui/icons-material';
 import {
@@ -18,6 +18,45 @@ import { useVisibleFamilies } from '../Model/Data';
 import { useAppNavigate } from '../Hooks/useAppNavigate';
 import { personNameString } from '../Families/PersonName';
 
+const MAX_DISPLAYED_RESULTS = 100;
+
+interface SearchIndex {
+  text: string;
+  phones: string[];
+}
+
+function buildSearchIndex(family: CombinedFamilyInfo): SearchIndex {
+  const textParts: string[] = [];
+  const phones: string[] = [];
+
+  for (const adult of family.family?.adults ?? []) {
+    const person = adult.item1;
+    if (!person) continue;
+
+    textParts.push(personNameString(person).toLowerCase());
+
+    for (const email of person.emailAddresses ?? []) {
+      if (email.address) textParts.push(email.address.toLowerCase());
+    }
+
+    for (const phone of person.phoneNumbers ?? []) {
+      if (phone.number) phones.push(phone.number.replace(/[^0-9]/g, ''));
+    }
+
+    for (const address of person.addresses ?? []) {
+      textParts.push(
+        `${address.line1} ${address.line2} ${address.city} ${address.state} ${address.county} ${address.postalCode}`
+      );
+    }
+  }
+
+  for (const child of family.family?.children ?? []) {
+    textParts.push(personNameString(child).toLowerCase());
+  }
+
+  return { text: textParts.join(' '), phones };
+}
+
 interface ShellSearchBarProps {
   openMobileSearch: boolean;
   setOpenMobileSearch: (value: boolean) => void;
@@ -36,6 +75,39 @@ export function ShellSearchBar({
 
   const navigateTo = useAppNavigate();
 
+  const searchableIndex = useMemo(
+    () => new Map(families.map((family) => [family, buildSearchIndex(family)])),
+    [families]
+  );
+
+  const filterFamilies = useCallback(
+    (
+      families: CombinedFamilyInfo[],
+      state: FilterOptionsState<CombinedFamilyInfo>
+    ) => {
+      const query = state.inputValue.toLowerCase().trim();
+      if (!query) return families.slice(0, MAX_DISPLAYED_RESULTS);
+
+      const queryDigits = query.replace(/[^0-9]/g, '');
+
+      const results: CombinedFamilyInfo[] = [];
+      for (const family of families) {
+        const index = searchableIndex.get(family);
+        if (!index) continue;
+
+        if (
+          index.text.includes(query) ||
+          (queryDigits.length > 0 && index.phones.some((p) => p.includes(queryDigits)))
+        ) {
+          results.push(family);
+          if (results.length >= MAX_DISPLAYED_RESULTS) break;
+        }
+      }
+      return results;
+    },
+    [searchableIndex]
+  );
+
   function openAndFocusSearch() {
     flushSync(() => {
       setOpenMobileSearch(true);
@@ -43,66 +115,19 @@ export function ShellSearchBar({
     searchBoxRef.current.click();
   }
 
-  function filterFamilies(
-    families: CombinedFamilyInfo[],
-    state: FilterOptionsState<CombinedFamilyInfo>
-  ) {
-    const searchQueryLowercase = state.inputValue.toLowerCase();
-    const searchQueryPhoneNumber = searchQueryLowercase.replace(/[^0-9]/g, '');
-    return families.filter((family) => {
-      for (const adult of family.family?.adults ?? []) {
-        if (
-          personNameString(adult.item1)
-            .toLowerCase()
-            .includes(searchQueryLowercase)
-        )
-          return true;
+  const selectFamily = useCallback(
+    (_event: React.SyntheticEvent, family: CombinedFamilyInfo | null) => {
+      if (!family) return;
+      navigateTo.family(family.family!.id!);
+    },
+    [navigateTo]
+  );
 
-        if (
-          adult?.item1?.emailAddresses?.some((email) =>
-            email.address?.toLowerCase().includes(searchQueryLowercase)
-          )
-        ) {
-          return true;
-        }
-
-        if (
-          searchQueryPhoneNumber.length > 0 &&
-          adult.item1?.phoneNumbers?.some((phone) =>
-            phone.number
-              ?.replace(/[^0-9]/g, '')
-              .includes(searchQueryPhoneNumber)
-          )
-        )
-          return true;
-
-        if (
-          adult.item1?.addresses?.find((address) => {
-            const combinedAddress = `${address.line1} ${address.line2} ${address.city} ${address.state} ${address.county} ${address.postalCode}`;
-            return combinedAddress.includes(searchQueryLowercase);
-          })
-        )
-          return true;
-      }
-
-      for (const child of family.family?.children ?? []) {
-        if (
-          personNameString(child).toLowerCase().includes(searchQueryLowercase)
-        )
-          return true;
-      }
-
-      return false;
-    });
-  }
-
-  function selectFamily(
-    _event: React.SyntheticEvent,
-    family: CombinedFamilyInfo | null
-  ) {
-    if (!family) return;
-    navigateTo.family(family.family!.id!);
-  }
+  const getOptionLabel = useCallback(
+    (family: CombinedFamilyInfo) =>
+      familyNameString(family) || family.family!.id!,
+    []
+  );
 
   const searchInner = (
     <Autocomplete
@@ -115,9 +140,7 @@ export function ShellSearchBar({
       openOnFocus
       filterOptions={filterFamilies}
       getOptionKey={(family) => family.family!.id!}
-      getOptionLabel={(family) => {
-        return familyNameString(family) || family.family!.id!;
-      }}
+      getOptionLabel={getOptionLabel}
       onChange={selectFamily}
       slots={{ paper: Paper }}
       slotProps={{
