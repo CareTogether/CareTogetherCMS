@@ -97,6 +97,7 @@ export function ArrangementsSection({
 
       {arrangementRows.length > 0 ? (
         <ArrangementsDataGridV2
+          filterScopeId={v1Case.id}
           highlightedArrangementId={scrollToArrangementId}
           rows={arrangementRows}
           onRowClick={onArrangementRowClick}
