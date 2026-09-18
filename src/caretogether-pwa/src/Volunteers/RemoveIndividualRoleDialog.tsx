@@ -1,6 +1,5 @@
 import Grid from '@mui/material/Grid';
-import {
-  useState } from 'react';
+import { useState } from 'react';
 import {
   FormControl,
   FormControlLabel,
@@ -116,6 +115,7 @@ export function RemoveIndividualRoleDialog({
               maxRows={5}
               size="small"
               value={additionalComments}
+              required
               onChange={(e) =>
                 setFields({ ...fields, additionalComments: e.target.value })
               }
