@@ -280,7 +280,7 @@ namespace CareTogether.Resources.Directory
                                     c.CompletedCustomFieldId,
                                     c.CustomFieldName,
                                     c.CustomFieldType,
-                                    c.Value
+                                    CustomFieldValue.Normalize(c.CustomFieldType, c.Value)
                                 )
                             ),
                         },
@@ -415,7 +415,7 @@ namespace CareTogether.Resources.Directory
                                     c.CompletedCustomFieldId,
                                     c.CustomFieldName,
                                     c.CustomFieldType,
-                                    c.Value
+                                    CustomFieldValue.Normalize(c.CustomFieldType, c.Value)
                                 )
                             ),
                         },

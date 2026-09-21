@@ -13,13 +13,22 @@ import {
   CustomFieldValidation,
 } from '../GeneratedClient';
 import { useInlineEditor } from '../Hooks/useInlineEditor';
+import {
+  type CustomFieldValue,
+  formatDateOnlyForApi,
+  formatDateOnlyForDisplay,
+  formatDateTimeForApi,
+  formatDateTimeForDisplay,
+  parseDateOnlyApiValue,
+  parseDateTimeApiValue,
+} from './customFieldValue';
+import { ValidateDatePicker } from './Forms/ValidateDatePicker';
 import { sortByPolicyOrder } from './sortByPolicyOrder';
 
 type CustomFieldEditorProps = {
   customFieldPolicy: CustomField;
   completedCustomFieldInfo?: CompletedCustomFieldInfo;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  onSave: (value: any) => Promise<void>;
+  onSave: (value: CustomFieldValue) => Promise<void>;
 };
 
 export function CustomFieldEditor({
@@ -27,7 +36,7 @@ export function CustomFieldEditor({
   completedCustomFieldInfo,
   onSave,
 }: CustomFieldEditorProps) {
-  const savedValue = completedCustomFieldInfo?.value;
+  const savedValue: CustomFieldValue = completedCustomFieldInfo?.value;
   const type = customFieldPolicy.type!;
 
   const editor = useInlineEditor(onSave, savedValue);
@@ -42,13 +51,7 @@ export function CustomFieldEditor({
               <RadioGroup
                 name="boolean-custom-field"
                 row
-                value={
-                  (editor.value as boolean | null) == null
-                    ? ''
-                    : editor.value
-                      ? 'yes'
-                      : 'no'
-                }
+                value={editor.value == null ? '' : editor.value ? 'yes' : 'no'}
                 onChange={(e) =>
                   editor.setValue(
                     e.target.value === 'yes'
@@ -77,11 +80,32 @@ export function CustomFieldEditor({
                 customFieldPolicy.validValues || []
               )}
               onChange={(_event, newValue: string[]) => {
-                const sorted = sortByPolicyOrder(newValue, customFieldPolicy.validValues || []);
+                const sorted = sortByPolicyOrder(
+                  newValue,
+                  customFieldPolicy.validValues || []
+                );
                 editor.setValue(sorted.length > 0 ? sorted : null);
               }}
-              freeSolo={customFieldPolicy.validation === CustomFieldValidation.SuggestOnly}
+              freeSolo={
+                customFieldPolicy.validation ===
+                CustomFieldValidation.SuggestOnly
+              }
               renderInput={(params) => <TextField {...params} />}
+            />
+          ) : type === CustomFieldType.DateOnly ? (
+            <ValidateDatePicker
+              value={parseDateOnlyApiValue(editor.value)}
+              onChange={(date) =>
+                editor.setValue(date ? formatDateOnlyForApi(date) : null)
+              }
+            />
+          ) : type === CustomFieldType.DateTime ? (
+            <ValidateDatePicker
+              includeTime
+              value={parseDateTimeApiValue(editor.value)}
+              onChange={(date) =>
+                editor.setValue(date ? formatDateTimeForApi(date) : null)
+              }
             />
           ) : customFieldPolicy.validation ===
             CustomFieldValidation.SuggestOnly ? (
@@ -94,13 +118,13 @@ export function CustomFieldEditor({
                 .slice()
                 .sort((a, b) => -b.localeCompare(a))}
               renderInput={(params) => <TextField required {...params} />}
-              inputValue={editor.value || ''}
+              inputValue={typeof editor.value === 'string' ? editor.value : ''}
             />
           ) : (
             <TextField
               variant="outlined"
               size="medium"
-              value={editor.value || ''}
+              value={typeof editor.value === 'string' ? editor.value : ''}
               onChange={(e) => editor.setValue(e.target.value)}
             />
           )
@@ -113,12 +137,18 @@ export function CustomFieldEditor({
             'No'
           )
         ) : type === CustomFieldType.StringArray ? (
-          Array.isArray(savedValue)
-            ? sortByPolicyOrder(
-                savedValue.map(String),
-                customFieldPolicy.validValues ?? []
-              ).join(', ')
-            : savedValue
+          Array.isArray(savedValue) ? (
+            sortByPolicyOrder(
+              savedValue.map(String),
+              customFieldPolicy.validValues ?? []
+            ).join(', ')
+          ) : (
+            savedValue
+          )
+        ) : type === CustomFieldType.DateOnly ? (
+          formatDateOnlyForDisplay(savedValue)
+        ) : type === CustomFieldType.DateTime ? (
+          formatDateTimeForDisplay(savedValue)
         ) : (
           savedValue
         )}

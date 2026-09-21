@@ -3086,6 +3086,8 @@ export enum CustomFieldType {
     Boolean = 0,
     String = 1,
     StringArray = 2,
+    DateOnly = 3,
+    DateTime = 4,
 }
 
 export enum CustomFieldValidation {

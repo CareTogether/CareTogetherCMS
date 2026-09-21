@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import { format } from 'date-fns';
-import { ArrangementPhase, CustomFieldType } from '../GeneratedClient';
+import { ArrangementPhase } from '../GeneratedClient';
 import type {
   Arrangement,
   CombinedFamilyInfo,
@@ -23,8 +23,12 @@ import {
 import { matchingArrangements } from './PartneringFamilies/arrangementHelpers';
 import { openReferralByFamilyId } from './PartneringFamilies/sortPartneringFamilies';
 import { clientsOpenedAtTime } from './clientsGridSorting';
+import {
+  customFieldGridValues,
+  type CustomFieldGridValue,
+} from '../Generic/customFieldValue';
 
-export type ClientCustomFieldValue = string | boolean | string[] | null;
+export type ClientCustomFieldValue = CustomFieldGridValue;
 export type ClientAssignmentRoleV2 = {
   role: string;
   options: { value: string; label: string }[];
@@ -154,36 +158,15 @@ function hasIntakeStatus(
   return (openCase.arrangements ?? []).length === 0;
 }
 
-function typedCustomFieldValue(
-  value: unknown,
-  type: CustomFieldType
-): ClientCustomFieldValue {
-  if (type === CustomFieldType.Boolean)
-    return typeof value === 'boolean' ? value : null;
-  if (type === CustomFieldType.StringArray) {
-    return Array.isArray(value)
-      ? value.filter((item): item is string => typeof item === 'string')
-      : null;
-  }
-  return typeof value === 'string' ? value : null;
-}
-
 function customFieldValues(
   fields: CustomField[],
   completed: CompletedCustomFieldInfo[] = [],
   missing: string[] = []
 ) {
-  return Object.fromEntries(
-    fields.map((field) => [
-      field.name,
-      missing.includes(field.name)
-        ? null
-        : typedCustomFieldValue(
-            completed.find((value) => value.customFieldName === field.name)
-              ?.value,
-            field.type
-          ),
-    ])
+  return customFieldGridValues(fields, (field) =>
+    missing.includes(field.name)
+      ? null
+      : completed.find((value) => value.customFieldName === field.name)?.value
   );
 }
 

@@ -1,10 +1,13 @@
 import { Box, Chip } from '@mui/material';
 import { ReactNode } from 'react';
 import { sortByPolicyOrder } from '../../Generic/sortByPolicyOrder';
+import { CustomFieldType } from '../../GeneratedClient';
+import { formatCustomFieldValue } from '../../Generic/customFieldValue';
 
 export function renderVolunteerCustomFieldValue(
   value: unknown,
-  validValues?: string[]
+  validValues?: string[],
+  type?: CustomFieldType
 ): ReactNode {
   if (value === null || typeof value === 'undefined') {
     return '';
@@ -28,5 +31,5 @@ export function renderVolunteerCustomFieldValue(
       </Box>
     );
   }
-  return String(value);
+  return formatCustomFieldValue(type, value);
 }

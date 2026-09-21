@@ -168,7 +168,7 @@ namespace CareTogether.Resources.Approvals
                             c.CompletedCustomFieldId,
                             c.CustomFieldName,
                             c.CustomFieldType,
-                            c.Value
+                            CustomFieldValue.Normalize(c.CustomFieldType, c.Value)
                         )
                     ),
                 },

@@ -22,6 +22,7 @@ import {
   AssignIndividualVolunteer3 as AssignIndividualVolunteer,
   UnassignIndividualVolunteer3 as UnassignIndividualVolunteer,
 } from '../GeneratedClient';
+import type { CustomFieldValue } from '../Generic/customFieldValue';
 import { commandFactory } from './CommandFactory';
 import {
   useAtomicRecordsCommandCallback,
@@ -74,7 +75,7 @@ export function useV1ReferralsModel() {
     async (
       referralId: string,
       customField: CustomField,
-      value: boolean | string | string[] | null
+      value: CustomFieldValue
     ) => {
       const command = new V1ReferralRecordsCommand();
 

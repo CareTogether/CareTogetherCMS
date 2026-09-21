@@ -5,6 +5,10 @@ import { personNameString } from '../Families/PersonName';
 import { usePolicy } from '../Model/PolicyModel';
 import { useVolunteerFamilies } from '../Model/VolunteersModel';
 import {
+  toCustomFieldGridValue,
+  type CustomFieldGridValue,
+} from '../Generic/customFieldValue';
+import {
   buildVolunteerApprovalRolesPresentation,
   type VolunteerApprovalRolesPresentation,
 } from './VolunteerApprovalTab/volunteerApprovalRolePresentation';
@@ -21,7 +25,7 @@ import {
 } from './roleFilterValues';
 import { roleApprovalStatusFilterOptions } from './roleApprovalStatusPresentation';
 
-export type VolunteerCustomFieldValue = boolean | string | string[] | null;
+export type VolunteerCustomFieldValue = CustomFieldGridValue;
 export type VolunteerBrowserRowV2 = {
   arrangementAssignmentValues: Record<string, 'assigned' | 'unassigned'>;
   family: string;
@@ -53,14 +57,25 @@ function primaryContact(family: CombinedFamilyInfo) {
   )?.item1;
 }
 function valuesByName(
-  values: { customFieldName?: string; value?: unknown }[] | undefined
+  values: { customFieldName?: string; value?: unknown }[] | undefined,
+  fields: CustomField[]
 ) {
+  const fieldTypes = new Map(fields.map((field) => [field.name, field.type]));
+
   return Object.fromEntries(
-    (values ?? []).flatMap((value) =>
-      value.customFieldName
-        ? [[value.customFieldName, value.value ?? null]]
-        : []
-    )
+    (values ?? []).flatMap((value) => {
+      if (!value.customFieldName) return [];
+
+      const customFieldType = fieldTypes.get(value.customFieldName);
+      if (typeof customFieldType === 'undefined') return [];
+
+      return [
+        [
+          value.customFieldName,
+          toCustomFieldGridValue(value.value, customFieldType),
+        ],
+      ];
+    })
   ) as Record<string, VolunteerCustomFieldValue>;
 }
 function statusValues(family: CombinedFamilyInfo) {
@@ -129,9 +144,13 @@ function toRow(
     (group) => group.requirements
   );
   const statuses = statusValues(family);
-  const familyValues = valuesByName(family.family?.completedCustomFields);
+  const familyValues = valuesByName(
+    family.family?.completedCustomFields,
+    familyCustomFields
+  );
   const volunteerValues = valuesByName(
-    family.volunteerFamilyInfo?.completedCustomFields
+    family.volunteerFamilyInfo?.completedCustomFields,
+    volunteerCustomFields
   );
   return {
     arrangementAssignmentValues: assignmentValues(family, arrangementTypes),

@@ -228,6 +228,8 @@ namespace CareTogether.Resources.Policies
         Boolean,
         String,
         StringArray,
+        DateOnly,
+        DateTime,
     }
 
     public enum CustomFieldValidation
