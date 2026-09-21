@@ -40,6 +40,10 @@ import type {
   RoleSummaryCard,
   RoleSummaryRequirement,
 } from './roleSummaryViewModel';
+import {
+  roleRemovalComment,
+  roleRemovalReasonLabel,
+} from './roleRemovalPresentation';
 
 type RoleDetailsDrawerV2Props = {
   card: RoleSummaryCard | null;
@@ -502,6 +506,9 @@ export function RoleDetailsDrawerV2({
   const removedDate = removedRole?.roleRemoval.effectiveSince
     ? formatUtcDateOnly(removedRole.roleRemoval.effectiveSince)
     : undefined;
+  const removedStatusLabel = removedRole
+    ? `Removed - ${roleRemovalReasonLabel(removedRole.roleRemoval.reason)}`
+    : 'Removed';
   const participants = role ? buildRoleParticipants(family, role) : [];
   const headerActions = (() => {
     if (card) {
@@ -655,7 +662,12 @@ export function RoleDetailsDrawerV2({
                     </Stack>
                   ) : (
                     <Stack direction="row" spacing={1}>
-                      <Chip color="default" label="Removed" size="small" />
+                      <Chip
+                        className="ph-unmask"
+                        color="default"
+                        label={removedStatusLabel}
+                        size="small"
+                      />
                       {removedDate && (
                         <Chip
                           label={removedDate}
@@ -672,6 +684,30 @@ export function RoleDetailsDrawerV2({
                 <CloseIcon />
               </IconButton>
             </Box>
+
+            {removedRole && (
+              <Box
+                sx={{
+                  bgcolor: 'action.hover',
+                  border: 1,
+                  borderColor: 'divider',
+                  borderRadius: 1,
+                  px: 1.5,
+                  py: 1,
+                }}
+              >
+                <Typography
+                  color="text.secondary"
+                  sx={{ textTransform: 'uppercase' }}
+                  variant="caption"
+                >
+                  Removal comment
+                </Typography>
+                <Typography sx={{ fontWeight: 600 }} variant="body1">
+                  {roleRemovalComment(removedRole.roleRemoval)}
+                </Typography>
+              </Box>
+            )}
 
             {card && (
               <>

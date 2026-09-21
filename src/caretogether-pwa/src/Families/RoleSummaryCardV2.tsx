@@ -4,6 +4,7 @@ import {
   CardActionArea,
   LinearProgress,
   Stack,
+  Tooltip,
   Typography,
 } from '@mui/material';
 import { alpha, Theme } from '@mui/material/styles';
@@ -100,7 +101,7 @@ export function RoleSummaryCardV2({ card, onClick }: RoleSummaryCardV2Props) {
     </Stack>
   );
 
-  return (
+  const roleSummaryCard = (
     <Card
       variant="outlined"
       sx={[
@@ -143,5 +144,14 @@ export function RoleSummaryCardV2({ card, onClick }: RoleSummaryCardV2Props) {
         <Box sx={{ p: 1.5 }}>{content}</Box>
       )}
     </Card>
+  );
+
+  return (
+    <Tooltip
+      title="See details"
+      slotProps={{ tooltip: { className: 'ph-unmask' } }}
+    >
+      {roleSummaryCard}
+    </Tooltip>
   );
 }
