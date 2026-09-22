@@ -15,12 +15,25 @@ test.describe('clients grid @pr', () => {
     await searchButton.click();
 
     const searchInput = gridToolbar.getByRole('searchbox');
-    await searchInput.fill('persisted-search-probe');
-    await expect(searchInput).toHaveValue('persisted-search-probe');
+    const searchText = 'persisted-search-probe';
+    await searchInput.fill(searchText);
+    await expect(searchInput).toHaveValue(searchText);
+    await expect
+      .poll(() =>
+        page.evaluate(
+          (expectedSearchText) =>
+            Object.entries(localStorage).some(
+              ([key, value]) =>
+                key.includes(':clients:') && value.includes(expectedSearchText)
+            ),
+          searchText
+        )
+      )
+      .toBe(true);
 
     await page.reload();
 
     await expect(searchInput).toBeVisible();
-    await expect(searchInput).toHaveValue('persisted-search-probe');
+    await expect(searchInput).toHaveValue(searchText);
   });
 });
