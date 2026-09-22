@@ -9,6 +9,7 @@ import {
 } from '@mui/x-data-grid-premium';
 import { CustomFieldType, type CustomField } from '../GeneratedClient';
 import { v2Typography } from '../Families/v2Typography';
+import { formatCustomFieldGridValue } from '../Generic/customFieldValue';
 import { simplify } from '../Utilities/stringUtils';
 import { ClientFamilyCellV2 } from './ClientFamilyCellV2';
 import { ClientArrangementSummaryCellV2 } from './ClientArrangementSummaryCellV2';
@@ -72,7 +73,7 @@ function formatValue(value: ClientCustomFieldValue) {
   if (value === null) return '';
   if (Array.isArray(value)) return value.join(', ');
   if (typeof value === 'boolean') return value ? 'Yes' : 'No';
-  return value;
+  return typeof value === 'string' ? value : '';
 }
 
 function normalizedQuickFilter(value: unknown) {
@@ -114,7 +115,7 @@ function arrayColumn(
   };
 }
 
-function customFieldColumns(
+export function buildClientCustomFieldColumns(
   fields: CustomField[],
   scope: 'case' | 'family',
   rows: ClientBrowserRowV2[]
@@ -140,6 +141,31 @@ function customFieldColumns(
         const value = getValue(row);
         return Array.isArray(value) ? value : null;
       });
+    }
+    if (
+      definition.type === CustomFieldType.DateOnly ||
+      definition.type === CustomFieldType.DateTime
+    ) {
+      return {
+        aggregable: false,
+        chartable: false,
+        field,
+        headerName,
+        minWidth: 180,
+        flex: 1,
+        pivotable: false,
+        type:
+          definition.type === CustomFieldType.DateOnly ? 'date' : 'dateTime',
+        valueGetter: (_value, row) => getValue(row),
+        valueFormatter: (value) =>
+          formatCustomFieldGridValue(definition.type!, value),
+        getApplyQuickFilterFn: () => null,
+        renderCell: ({ value }) => (
+          <Typography {...v2Typography.browserCell}>
+            {formatCustomFieldGridValue(definition.type!, value) || '-'}
+          </Typography>
+        ),
+      };
     }
     if (
       definition.type === CustomFieldType.String &&
@@ -322,8 +348,8 @@ export function buildClientsColumns(
         </Typography>
       ),
     })),
-    ...customFieldColumns(familyCustomFields, 'family', rows),
-    ...customFieldColumns(caseCustomFields, 'case', rows),
+    ...buildClientCustomFieldColumns(familyCustomFields, 'family', rows),
+    ...buildClientCustomFieldColumns(caseCustomFields, 'case', rows),
     {
       field: 'arrangements',
       headerName: 'Arrangements',

@@ -1,4 +1,5 @@
 import { useCallback } from 'react';
+import type { CustomFieldValue } from '../Generic/customFieldValue';
 import { atom, useAtomValue } from 'jotai';
 import {
   AddAdultToFamilyCommand,
@@ -86,38 +87,42 @@ const noteAuthorLookupErrorsTracked = new Set<string>();
 const familyByIdAtom = atom((get) => {
   const visibleFamilies = get(visibleFamiliesAtom);
 
-  return mapLoadedValue(visibleFamilies, (families) =>
-    new Map(
-      families.flatMap((family) =>
-        family.family?.id ? [[family.family.id, family] as const] : []
+  return mapLoadedValue(
+    visibleFamilies,
+    (families) =>
+      new Map(
+        families.flatMap((family) =>
+          family.family?.id ? [[family.family.id, family] as const] : []
+        )
       )
-    )
   );
 });
 
 const personAndFamilyByPersonIdAtom = atom((get) => {
   const visibleFamilies = get(visibleFamiliesAtom);
 
-  return mapLoadedValue(visibleFamilies, (families) =>
-    new Map(
-      families.flatMap((family) => [
-        ...(family.family?.adults?.flatMap((adult) =>
-          adult.item1?.id
-            ? [
-                [
-                  adult.item1.id,
-                  { family: family.family, person: adult.item1 },
-                ] as const,
-              ]
-            : []
-        ) ?? []),
-        ...(family.family?.children?.flatMap((child) =>
-          child.id
-            ? [[child.id, { family: family.family, person: child }] as const]
-            : []
-        ) ?? []),
-      ])
-    )
+  return mapLoadedValue(
+    visibleFamilies,
+    (families) =>
+      new Map(
+        families.flatMap((family) => [
+          ...(family.family?.adults?.flatMap((adult) =>
+            adult.item1?.id
+              ? [
+                  [
+                    adult.item1.id,
+                    { family: family.family, person: adult.item1 },
+                  ] as const,
+                ]
+              : []
+          ) ?? []),
+          ...(family.family?.children?.flatMap((child) =>
+            child.id
+              ? [[child.id, { family: family.family, person: child }] as const]
+              : []
+          ) ?? []),
+        ])
+      )
   );
 });
 
@@ -147,15 +152,17 @@ const userPersonByIdAtom = atom((get) => {
 const communityByIdAtom = atom((get) => {
   const visibleAggregates = get(visibleAggregatesState);
 
-  return mapLoadedValue(visibleAggregates, (aggregates) =>
-    new Map(
-      aggregates.flatMap((aggregate) =>
-        aggregate instanceof CommunityRecordsAggregate &&
-        aggregate.community?.community?.id
-          ? [[aggregate.community.community.id, aggregate.community] as const]
-          : []
+  return mapLoadedValue(
+    visibleAggregates,
+    (aggregates) =>
+      new Map(
+        aggregates.flatMap((aggregate) =>
+          aggregate instanceof CommunityRecordsAggregate &&
+          aggregate.community?.community?.id
+            ? [[aggregate.community.community.id, aggregate.community] as const]
+            : []
+        )
       )
-    )
   );
 });
 
@@ -178,16 +185,19 @@ function trackNoteAuthorLookupError(note: Note, reason: string) {
 export function usePersonLookup() {
   const familyById = useAtomValue(familyByIdAtom);
 
-  return useCallback((familyId?: string, personId?: string) => {
-    const family = familyId ? familyById.get(familyId) : undefined;
-    const adult = family?.family?.adults?.find(
-      (adult) => adult.item1!.id === personId
-    );
-    const person =
-      adult?.item1 ||
-      family?.family?.children?.find((child) => child.id === personId);
-    return person;
-  }, [familyById]);
+  return useCallback(
+    (familyId?: string, personId?: string) => {
+      const family = familyId ? familyById.get(familyId) : undefined;
+      const adult = family?.family?.adults?.find(
+        (adult) => adult.item1!.id === personId
+      );
+      const person =
+        adult?.item1 ||
+        family?.family?.children?.find((child) => child.id === personId);
+      return person;
+    },
+    [familyById]
+  );
 }
 
 export function usePersonAndFamilyLookup() {
@@ -206,13 +216,16 @@ export function usePersonAndFamilyLookup() {
 export function useUserLookup() {
   const userPersonById = useAtomValue(userPersonByIdAtom);
 
-  return useCallback((userId?: string) => {
-    if (isSystemUserId(userId)) {
-      return systemPerson;
-    }
+  return useCallback(
+    (userId?: string) => {
+      if (isSystemUserId(userId)) {
+        return systemPerson;
+      }
 
-    return userPersonById.get(userId);
-  }, [userPersonById]);
+      return userPersonById.get(userId);
+    },
+    [userPersonById]
+  );
 }
 
 export function useNoteAuthorLookup() {
@@ -404,7 +417,7 @@ export function useDirectoryModel() {
     async (
       familyId: string,
       customField: CustomField,
-      value: boolean | string | null
+      value: CustomFieldValue
     ) => {
       const command = commandFactory(UpdateCustomFamilyField, {
         familyId: familyId,
@@ -421,7 +434,7 @@ export function useDirectoryModel() {
       _familyId: string,
       personId: string,
       customField: CustomField,
-      value: boolean | string | string[] | null
+      value: CustomFieldValue
     ) => {
       const command = commandFactory(UpdateCustomFamilyMemberField, {
         personId: personId,

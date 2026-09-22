@@ -1,11 +1,5 @@
 import Grid from '../../Generic/GridLegacyCompat';
-import {
-  Box,
-  Checkbox,
-  TableCell,
-  TableRow,
-  Typography,
-} from '@mui/material';
+import { Box, Checkbox, TableCell, TableRow, Typography } from '@mui/material';
 import { CombinedFamilyInfo } from '../../GeneratedClient';
 import React, { useState } from 'react';
 import { usePolicy } from '../../Model/PolicyModel';
@@ -301,7 +295,8 @@ function VolunteerApprovalTableRows(props: VolunteerApprovalTableItemProps) {
             <TableCell key={customFieldName}>
               {renderVolunteerCustomFieldValue(
                 familyCustomFieldValue,
-                fieldPolicy?.validValues
+                fieldPolicy?.validValues,
+                fieldPolicy?.type
               )}
             </TableCell>
           );

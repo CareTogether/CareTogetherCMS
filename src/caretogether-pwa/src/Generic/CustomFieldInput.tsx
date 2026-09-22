@@ -10,9 +10,15 @@ import {
   CustomFieldType,
   CustomFieldValidation,
 } from '../GeneratedClient';
+import {
+  type CustomFieldValue,
+  formatDateOnlyForApi,
+  formatDateTimeForApi,
+  parseDateOnlyApiValue,
+  parseDateTimeApiValue,
+} from './customFieldValue';
+import { ValidateDatePicker } from './Forms/ValidateDatePicker';
 import { sortByPolicyOrder } from './sortByPolicyOrder';
-
-type CustomFieldValue = string | boolean | number | string[] | null | undefined;
 
 type CustomFieldInputProps = {
   customFieldPolicy: CustomField;
@@ -66,6 +72,25 @@ export function CustomFieldInput({
           customFieldPolicy.validation === CustomFieldValidation.SuggestOnly
         }
         renderInput={(params) => <TextField {...params} />}
+      />
+    );
+  }
+
+  if (type === CustomFieldType.DateOnly) {
+    return (
+      <ValidateDatePicker
+        value={parseDateOnlyApiValue(value)}
+        onChange={(date) => onChange(date ? formatDateOnlyForApi(date) : null)}
+      />
+    );
+  }
+
+  if (type === CustomFieldType.DateTime) {
+    return (
+      <ValidateDatePicker
+        includeTime
+        value={parseDateTimeApiValue(value)}
+        onChange={(date) => onChange(date ? formatDateTimeForApi(date) : null)}
       />
     );
   }

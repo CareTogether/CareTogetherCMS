@@ -1,4 +1,5 @@
 import { familyNameString } from '../Families/FamilyName';
+import { formatCustomFieldValue } from '../Generic/customFieldValue';
 import {
   CombinedFamilyInfo,
   CustomField,
@@ -173,6 +174,13 @@ export function formatReferralCustomFieldDisplayValue(
 ) {
   if (value === null || value === undefined || value === '') {
     return '\u2014';
+  }
+
+  if (
+    field.type === CustomFieldType.DateOnly ||
+    field.type === CustomFieldType.DateTime
+  ) {
+    return formatCustomFieldValue(field.type, value);
   }
 
   return field.type === CustomFieldType.Boolean

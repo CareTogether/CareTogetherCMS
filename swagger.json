@@ -2396,12 +2396,16 @@
         "x-enumNames": [
           "Boolean",
           "String",
-          "StringArray"
+          "StringArray",
+          "DateOnly",
+          "DateTime"
         ],
         "enum": [
           0,
           1,
-          2
+          2,
+          3,
+          4
         ]
       },
       "CustomFieldValidation": {

@@ -1,4 +1,4 @@
-import { CustomField } from '../../GeneratedClient';
+import { CustomField, CustomFieldType } from '../../GeneratedClient';
 import { Box } from '@mui/material';
 import { CustomFieldsFilterSelect } from './CustomFieldsFilterSelect';
 import {
@@ -38,7 +38,12 @@ export function CustomFieldsFilter({
       }}
     >
       {customFields.map((field) => {
-        if (!field.name) return null;
+        if (
+          !field.name ||
+          field.type === CustomFieldType.DateOnly ||
+          field.type === CustomFieldType.DateTime
+        )
+          return null;
 
         const selectedValues = selectedValuesByField[field.name] ?? [];
 

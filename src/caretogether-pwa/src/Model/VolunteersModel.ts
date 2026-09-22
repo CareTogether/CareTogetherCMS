@@ -1,4 +1,5 @@
 import { atom, useAtomValue } from 'jotai';
+import type { CustomFieldValue } from '../Generic/customFieldValue';
 import {
   ActionRequirement,
   CompleteVolunteerFamilyRequirement,
@@ -282,7 +283,7 @@ export function useVolunteersModel() {
       async (
         volunteerFamilyId,
         customField: CustomField,
-        value: boolean | string | null
+        value: CustomFieldValue
       ) => {
         const command = commandFactory(UpdateCustomVolunteerFamilyField, {
           familyId: volunteerFamilyId,

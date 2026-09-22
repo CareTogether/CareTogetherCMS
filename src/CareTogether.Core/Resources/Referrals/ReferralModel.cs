@@ -207,7 +207,7 @@ namespace CareTogether.Resources.V1Cases
                                         c.CompletedCustomFieldId,
                                         c.CustomFieldName,
                                         c.CustomFieldType,
-                                        c.Value
+                                        CustomFieldValue.Normalize(c.CustomFieldType, c.Value)
                                     )
                                 ),
                             },
