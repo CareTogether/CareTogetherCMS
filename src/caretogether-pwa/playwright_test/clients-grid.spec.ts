@@ -11,7 +11,7 @@ test.describe('clients grid @pr', () => {
     await expect(searchButton).toBeVisible();
     await searchButton.click();
 
-    const searchInput = page.getByRole('textbox', { name: /^search$/i });
+    const searchInput = page.getByRole('searchbox', { name: /^search$/i });
     await searchInput.fill('persisted-search-probe');
     await expect(searchInput).toHaveValue('persisted-search-probe');
 
