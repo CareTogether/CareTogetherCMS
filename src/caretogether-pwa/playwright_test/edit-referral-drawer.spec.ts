@@ -10,9 +10,11 @@ import {
 
 const referralSourceField = 'Referral Source';
 const referralSourceValue = 'Asgard';
+const referralId = 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa';
 
 type ReferralRecord = {
   discriminator: string;
+  id: string;
   referral: {
     referral: {
       referralId: string;
@@ -24,9 +26,40 @@ type ReferralRecord = {
   };
 };
 
+const referralRecord: ReferralRecord = {
+  discriminator: 'ReferralRecordsAggregate',
+  id: referralId,
+  referral: {
+    referral: {
+      referralId,
+      createdAtUtc: new Date().toISOString(),
+      title: 'Referral edit test',
+      status: V1ReferralStatus.Open,
+      completedCustomFields: {
+        [referralSourceField]: {
+          userId: '11111111-1111-1111-1111-111111111111',
+          timestampUtc: new Date().toISOString(),
+          completedCustomFieldId: '22222222-2222-2222-2222-222222222222',
+          customFieldName: referralSourceField,
+          customFieldType: CustomFieldType.String,
+          value: referralSourceValue,
+        },
+      },
+      completedRequirements: [],
+      exemptedRequirements: [],
+      uploadedDocuments: [],
+      deletedDocuments: [],
+      assignedIndividualVolunteers: [],
+      history: [],
+      notes: [],
+      missingIntakeRequirements: [],
+    },
+    userPermissions: [Permission.EditV1Referral],
+  },
+};
+
 async function prepareReferral(page: Page) {
   const commands: unknown[] = [];
-  let referralRecord: ReferralRecord | undefined;
 
   await page.route('**/Configuration/policy', async (route) => {
     const response = await route.fetch();
@@ -50,41 +83,24 @@ async function prepareReferral(page: Page) {
   await page.route('**/Records', async (route) => {
     const response = await route.fetch();
     const records = (await response.json()) as ReferralRecord[];
-    referralRecord = records.find(
-      (record) =>
-        record.discriminator === 'ReferralRecordsAggregate' &&
-        record.referral.referral.status === V1ReferralStatus.Open &&
-        record.referral.userPermissions.includes(Permission.EditV1Referral)
-    );
-    expect(referralRecord, 'An editable open referral exists').toBeTruthy();
-
-    referralRecord!.referral.referral.completedCustomFields[
-      referralSourceField
-    ] = {
-      userId: '11111111-1111-1111-1111-111111111111',
-      timestampUtc: new Date().toISOString(),
-      completedCustomFieldId: '22222222-2222-2222-2222-222222222222',
-      customFieldName: referralSourceField,
-      customFieldType: CustomFieldType.String,
-      value: referralSourceValue,
-    };
-
-    await route.fulfill({ response, json: records });
+    await route.fulfill({
+      response,
+      json: records
+        .filter((record) => record.id !== referralRecord.id)
+        .concat(referralRecord),
+    });
   });
 
   await page.route('**/Records/atomicRecordsCommand', async (route) => {
     commands.push(route.request().postDataJSON());
-    await route.fulfill({ json: referralRecord ? [referralRecord] : [] });
+    await route.fulfill({ json: [referralRecord] });
   });
 
   await page.goto(`${ATLANTIS_ROUTE}referrals`);
-  await expect
-    .poll(() => referralRecord?.referral.referral.referralId)
-    .toBeTruthy();
 
   return {
     commands,
-    referral: referralRecord!.referral.referral,
+    referral: referralRecord.referral.referral,
   };
 }
 
