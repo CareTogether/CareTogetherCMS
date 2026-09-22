@@ -58,9 +58,13 @@ export function CustomFieldInput({
         options={validValues}
         value={sortByPolicyOrder(arrayValue, validValues)}
         onChange={(_, newValue) =>
-          onChange(newValue.length ? sortByPolicyOrder(newValue, validValues) : null)
+          onChange(
+            newValue.length ? sortByPolicyOrder(newValue, validValues) : null
+          )
         }
-        freeSolo={customFieldPolicy.validation === CustomFieldValidation.SuggestOnly}
+        freeSolo={
+          customFieldPolicy.validation === CustomFieldValidation.SuggestOnly
+        }
         renderInput={(params) => <TextField {...params} />}
       />
     );
@@ -74,9 +78,11 @@ export function CustomFieldInput({
           .slice()
           .sort((a, b) => -b.localeCompare(a))}
         inputValue={(value as string) || ''}
-        onInputChange={(_, newValue) =>
-          onChange(newValue.length ? newValue : null)
-        }
+        onInputChange={(_, newValue, reason) => {
+          if (reason === 'reset') return;
+
+          onChange(newValue.length ? newValue : null);
+        }}
         renderInput={(params) => <TextField {...params} />}
       />
     );

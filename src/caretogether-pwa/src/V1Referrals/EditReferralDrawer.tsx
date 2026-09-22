@@ -34,7 +34,7 @@ export function EditReferralDrawer({
   const {
     control,
     handleSubmit,
-    formState: { isSubmitting },
+    formState: { dirtyFields, isSubmitting },
   } = useForm<AddReferralFormValues>({
     resolver: zodResolver(addReferralSchema),
     defaultValues: {
@@ -52,13 +52,17 @@ export function EditReferralDrawer({
   });
 
   const onSubmit = async (data: AddReferralFormValues) => {
-    await updateReferralDetails(referral.referralId, {
-      openedAtUtc: data.openedAtLocal,
-      title: data.title,
-      comment: data.comment || undefined,
-    });
+    if (dirtyFields.openedAtLocal || dirtyFields.title || dirtyFields.comment) {
+      await updateReferralDetails(referral.referralId, {
+        openedAtUtc: data.openedAtLocal,
+        title: data.title,
+        comment: data.comment || undefined,
+      });
+    }
 
     for (const field of referralCustomFields) {
+      if (!dirtyFields.customFields?.[field.name]) continue;
+
       const value = data.customFields?.[field.name];
 
       if (value !== undefined) {
