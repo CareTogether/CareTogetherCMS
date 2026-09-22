@@ -7,11 +7,14 @@ test.describe('clients grid @pr', () => {
   }) => {
     await page.goto(`${ATLANTIS_ROUTE}clients`);
 
-    const searchButton = page.getByRole('button', { name: /^search$/i });
+    const gridToolbar = page.getByRole('toolbar');
+    const searchButton = gridToolbar.getByRole('button', {
+      name: /^search$/i,
+    });
     await expect(searchButton).toBeVisible();
     await searchButton.click();
 
-    const searchInput = page.getByRole('searchbox', { name: /^search$/i });
+    const searchInput = gridToolbar.getByRole('searchbox');
     await searchInput.fill('persisted-search-probe');
     await expect(searchInput).toHaveValue('persisted-search-probe');
 
