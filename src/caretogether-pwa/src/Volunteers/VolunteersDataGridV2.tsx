@@ -21,6 +21,7 @@ import {
 import type { VolunteerBrowserRowV2 } from './useVolunteersBrowserViewModel';
 import { VolunteersChartsPanel } from './VolunteersChartsPanel';
 import { usePersistedGridFilterModel } from '../Hooks/usePersistedGridFilterModel';
+import { notAppliedRoleFilterValue } from './roleFilterValues';
 
 type Props = {
   arrangementTypes: string[];
@@ -84,6 +85,9 @@ export function VolunteersDataGridV2({
           `arrangementAssignment:${type}`,
           false,
         ]),
+        ...roleNames
+          .filter((roleName) => roleName !== notAppliedRoleFilterValue)
+          .map((roleName) => [`roleStatus:${roleName}`, false]),
         ...familyCustomFields.map((field) => [
           `familyCustomField:${field.name}`,
           false,
@@ -93,7 +97,7 @@ export function VolunteersDataGridV2({
           false,
         ]),
       ]),
-    [arrangementTypes, familyCustomFields, volunteerCustomFields]
+    [arrangementTypes, familyCustomFields, roleNames, volunteerCustomFields]
   );
   const gridConfigurationKey = useMemo(
     () =>

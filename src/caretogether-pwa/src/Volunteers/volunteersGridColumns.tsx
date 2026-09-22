@@ -393,6 +393,35 @@ export function buildVolunteersGridColumns({
           </Typography>
         ),
     },
+    ...roleNames
+      .filter((roleName) => roleName !== notAppliedLabel)
+      .map(
+        (roleName): GridColDef<VolunteerBrowserRowV2> => ({
+          ...noAnalytics,
+          field: `roleStatus:${roleName}`,
+          headerName: `${roleName} Status`,
+          minWidth: 180,
+          sortable: false,
+          type: 'multiSelect',
+          valueOptions: statusOptions.filter(
+            (option) => option.label !== notAppliedLabel
+          ),
+          valueGetter: (_value, row) => row.roleStatusValues[roleName] ?? [],
+          valueFormatter: (_value, row) =>
+            (row.roleStatusValues[roleName] ?? [])
+              .map(
+                (status) =>
+                  statusOptions.find((option) => option.value === status)
+                    ?.label ?? status
+              )
+              .join(', '),
+          filterOperators: [
+            ...membershipOperators,
+            ...emptyOperators<string[]>(),
+          ],
+          getApplyQuickFilterFn: () => null,
+        })
+      ),
     {
       ...noAnalytics,
       field: 'missingRequirements',

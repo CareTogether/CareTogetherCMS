@@ -1,10 +1,12 @@
 import {
   CombinedFamilyInfo,
   DateOnlyTimelineOfRoleApprovalStatus,
+  RoleApprovalStatus,
 } from '../../GeneratedClient';
 import { filterOption } from './filterOption';
 
 export type VolunteerApprovalRoleChipPresentation = {
+  currentStatus?: RoleApprovalStatus;
   roleName: string;
   status?: DateOnlyTimelineOfRoleApprovalStatus;
 };
@@ -19,6 +21,9 @@ export function buildVolunteerApprovalRolesPresentation(
   roleFilters: Pick<filterOption, 'key'>[]
 ): VolunteerApprovalRolesPresentation {
   const familyRoles = roleFilters.map((roleFilter) => ({
+    currentStatus:
+      family.volunteerFamilyInfo?.familyRoleApprovals?.[roleFilter.key]
+        ?.currentStatus,
     roleName: roleFilter.key,
     status:
       family.volunteerFamilyInfo?.familyRoleApprovals?.[roleFilter.key]
@@ -29,27 +34,26 @@ export function buildVolunteerApprovalRolesPresentation(
     VolunteerApprovalRoleChipPresentation
   >();
 
-  family.family?.adults?.forEach((adult) => {
-    const adultId = adult.item1?.id;
+  Object.values(family.volunteerFamilyInfo?.individualVolunteers ?? {}).forEach(
+    (volunteer) => {
+      Object.entries(volunteer.approvalStatusByRole ?? {}).forEach(
+        ([roleName, roleApprovalStatus]) => {
+          if (
+            roleApprovalStatus.currentStatus == null ||
+            individualRolesByName.has(roleName)
+          ) {
+            return;
+          }
 
-    if (!adultId) {
-      return;
+          individualRolesByName.set(roleName, {
+            currentStatus: roleApprovalStatus.currentStatus,
+            roleName,
+            status: roleApprovalStatus.effectiveRoleApprovalStatus,
+          });
+        }
+      );
     }
-
-    Object.entries(
-      family.volunteerFamilyInfo?.individualVolunteers?.[adultId]
-        ?.approvalStatusByRole ?? {}
-    ).forEach(([roleName, roleApprovalStatus]) => {
-      if (individualRolesByName.has(roleName)) {
-        return;
-      }
-
-      individualRolesByName.set(roleName, {
-        roleName,
-        status: roleApprovalStatus.effectiveRoleApprovalStatus,
-      });
-    });
-  });
+  );
 
   return {
     familyRoles,

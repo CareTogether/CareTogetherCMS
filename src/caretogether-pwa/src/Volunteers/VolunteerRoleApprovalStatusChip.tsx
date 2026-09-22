@@ -1,12 +1,16 @@
 import { Chip, SxProps, Theme } from '@mui/material';
 import { format } from 'date-fns';
-import { DateOnlyTimelineOfRoleApprovalStatus } from '../GeneratedClient';
+import {
+  DateOnlyTimelineOfRoleApprovalStatus,
+  RoleApprovalStatus,
+} from '../GeneratedClient';
 import {
   roleApprovalStatusChipColor,
   roleApprovalStatusLabel,
 } from './roleApprovalStatusPresentation';
 
 type VolunteerRoleApprovalStatusChipProps = {
+  currentStatus?: RoleApprovalStatus;
   roleName: string;
   status?: DateOnlyTimelineOfRoleApprovalStatus;
   sx?: SxProps<Theme> | undefined;
@@ -15,6 +19,7 @@ type VolunteerRoleApprovalStatusChipProps = {
 const FUTURE_CUTOFF = new Date(3000, 0, 1);
 
 export function VolunteerRoleApprovalStatusChip({
+  currentStatus,
   roleName,
   status,
   sx,
@@ -23,7 +28,7 @@ export function VolunteerRoleApprovalStatusChip({
   const currentStatusRange = status?.ranges?.find(
     (r) => r.start && r.start <= now && (!r.end || r.end >= now)
   );
-  const currentStatusValue = currentStatusRange?.tag;
+  const currentStatusValue = currentStatus ?? currentStatusRange?.tag;
   const expiresAt = currentStatusRange?.end;
 
   return currentStatusValue != null ? (

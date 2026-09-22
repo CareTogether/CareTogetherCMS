@@ -32,6 +32,7 @@ export type VolunteerBrowserRowV2 = {
   primaryContact: string;
   requirementFilterValues: string[];
   roleFilterValues: string[];
+  roleStatusValues: Record<string, string[]>;
   roles: VolunteerApprovalRolesPresentation;
   searchableText: string;
   sourceFamily: CombinedFamilyInfo;
@@ -77,6 +78,30 @@ function statusValues(family: CombinedFamilyInfo) {
         approval.currentStatus == null ? '0' : String(approval.currentStatus)
       )
     )
+  );
+}
+
+function roleStatusValues(family: CombinedFamilyInfo, roleNames: string[]) {
+  return Object.fromEntries(
+    roleNames.map((roleName) => [
+      roleName,
+      Array.from(
+        new Set(
+          [
+            family.volunteerFamilyInfo?.familyRoleApprovals?.[roleName]
+              ?.currentStatus,
+            ...Object.values(
+              family.volunteerFamilyInfo?.individualVolunteers ?? {}
+            ).map(
+              (volunteer) =>
+                volunteer.approvalStatusByRole?.[roleName]?.currentStatus
+            ),
+          ]
+            .filter((status) => status !== null && status !== undefined)
+            .map(String)
+        )
+      ),
+    ])
   );
 }
 function assignmentValues(
@@ -152,6 +177,7 @@ function toRow(
         )
       : [completeRequirementFilterValue],
     roleFilterValues: roleFilterValues(family),
+    roleStatusValues: roleStatusValues(family, roleNamesForPresentation),
     roles: buildVolunteerApprovalRolesPresentation(family, roleFilters),
     searchableText: searchText(family),
     sourceFamily: family,
