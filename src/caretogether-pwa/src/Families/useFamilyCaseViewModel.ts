@@ -10,8 +10,8 @@ import {
 } from '../GeneratedClient';
 import {
   ArrangementBrowserRowV2,
+  arrangementHasChildInvolvement,
   buildArrangementRowsV2,
-  ChildcareArrangementRowV2,
 } from '../V1Cases/Arrangements/arrangementViewModel';
 import { ActiveCaseArrangementSummaryV2 } from './FamilyCaseWorkspaceHeaderV2';
 
@@ -125,16 +125,18 @@ export function useFamilyCaseViewModel({
     return selectedCaseArrangementRows
       .filter((row) => row.id && isActiveCaseArrangement(row.source))
       .map((row) => {
+        const childInvolvement = arrangementHasChildInvolvement(
+          row.arrangementPolicy
+        );
+
         return {
           id: row.id,
           arrangementType: row.arrangementType,
           arrangedPersonLabel: row.childOrPersonLabel || 'Unassigned',
-          childInvolvement: row.arrangementType === 'Childcare',
-          currentLocationLabel:
-            row.arrangementType === 'Childcare'
-              ? (row as ChildcareArrangementRowV2).currentLocationLabel ||
-                'not yet placed'
-              : undefined,
+          childInvolvement,
+          currentLocationLabel: childInvolvement
+            ? row.currentLocationLabel || 'not yet placed'
+            : undefined,
           phase: row.source.phase,
           relevantDateLabel: row.startedDate
             ? `Started ${row.startedDate}`

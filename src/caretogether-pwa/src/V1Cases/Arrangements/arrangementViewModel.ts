@@ -71,12 +71,6 @@ export type ArrangementBrowserRowV2 = ArrangementRowV2 & {
   >;
 };
 
-export type ChildcareArrangementRowV2 = ArrangementBrowserRowV2 & {
-  arrangementType: 'Childcare';
-  currentLocationLabel: string | null;
-  nextPlannedLocationLabel?: string;
-};
-
 type BuildArrangementRowsV2Parameters = {
   arrangements: Arrangement[];
   arrangementPolicies?: ArrangementPolicy[];
@@ -88,6 +82,17 @@ type BuildArrangementRowsV2Parameters = {
   ) => string;
   familyLabel: (familyId: string | undefined) => string;
 };
+
+export function arrangementHasChildInvolvement(
+  arrangementPolicy?: ArrangementPolicy
+) {
+  const childInvolvement = arrangementPolicy?.childInvolvement;
+
+  return (
+    childInvolvement !== undefined &&
+    childInvolvement !== ChildInvolvement.NoChildInvolvement
+  );
+}
 
 function arrangementPhaseLabel(phase?: ArrangementPhase) {
   if (phase === ArrangementPhase.SettingUp) return 'Setting up';
@@ -146,45 +151,6 @@ function currentLocationLabel(
   return currentLocation
     ? familyLabel(currentLocation.childLocationFamilyId)
     : undefined;
-}
-
-function nextPlannedLocationLabel(
-  arrangement: Arrangement,
-  familyLabel: BuildArrangementRowsV2Parameters['familyLabel']
-) {
-  const currentLocation =
-    arrangement.childLocationHistory &&
-    arrangement.childLocationHistory.length > 0
-      ? arrangement.childLocationHistory[
-          arrangement.childLocationHistory.length - 1
-        ]
-      : undefined;
-  const nextPlannedLocation =
-    arrangement.childLocationPlan && arrangement.childLocationPlan.length > 0
-      ? arrangement.childLocationPlan.find(
-          (entry) =>
-            currentLocation == null ||
-            (entry.timestampUtc! > currentLocation.timestampUtc! &&
-              entry.childLocationFamilyId !==
-                currentLocation.childLocationFamilyId)
-        ) ||
-        arrangement.childLocationPlan
-          .slice()
-          .reverse()
-          .find(
-            (entry) =>
-              entry.childLocationFamilyId !==
-              currentLocation?.childLocationFamilyId
-          )
-      : undefined;
-
-  if (!nextPlannedLocation) {
-    return undefined;
-  }
-
-  return `${familyLabel(nextPlannedLocation.childLocationFamilyId)} on ${formatDate(
-    nextPlannedLocation.timestampUtc
-  )}`;
 }
 
 function isIndividualAssignment(
@@ -381,23 +347,6 @@ export function buildArrangementRowsV2({
       v1Case,
     };
 
-    if (
-      arrangementPolicy?.childInvolvement ===
-      ChildInvolvement.NoChildInvolvement
-    ) {
-      return arrangementRow;
-    } else {
-      const childcareArrangementRow: ChildcareArrangementRowV2 = {
-        ...arrangementRow,
-        arrangementType: 'Childcare',
-        currentLocationLabel:
-          currentLocationLabel(arrangement, familyLabel) ?? null,
-        nextPlannedLocationLabel: nextPlannedLocationLabel(
-          arrangement,
-          familyLabel
-        ),
-      };
-      return childcareArrangementRow;
-    }
+    return arrangementRow;
   });
 }
