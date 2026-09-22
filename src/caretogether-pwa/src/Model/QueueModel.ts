@@ -174,6 +174,10 @@ const arrangementsDueToStartAtom = atom((get) => {
           arrangement.plannedStartUtc !== undefined &&
           arrangement.plannedStartUtc! <= endOfToday
       )
+      .sort(
+        ({ arrangement: first }, { arrangement: second }) =>
+          first.plannedStartUtc!.getTime() - second.plannedStartUtc!.getTime()
+      )
       .map(({ arrangement, family, v1Case }) => {
         const child = family.family?.children?.find(
           (child) => child.id === arrangement.partneringFamilyPersonId
