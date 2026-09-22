@@ -17,6 +17,7 @@ import { CombinedFamilyInfo } from '../GeneratedClient';
 import { useVisibleFamilies } from '../Model/Data';
 import { useAppNavigate } from '../Hooks/useAppNavigate';
 import { personNameString } from '../Families/PersonName';
+import { normalizeShellSearchText } from './shellSearch';
 
 const MAX_DISPLAYED_RESULTS = 100;
 
@@ -63,7 +64,7 @@ function buildFamilySearchResult(
   return {
     id: family.family!.id!,
     label: familyNameString(family) || family.family!.id!,
-    searchText: textParts.join(' '),
+    searchText: normalizeShellSearchText(textParts.join(' ')),
     phones,
     isClient: family.partneringFamilyInfo != null,
     isVolunteer: family.volunteerFamilyInfo != null,
@@ -107,7 +108,7 @@ export function ShellSearchBar({
       results: FamilySearchResult[],
       state: FilterOptionsState<FamilySearchResult>
     ) => {
-      const query = state.inputValue.toLowerCase().trim();
+      const query = normalizeShellSearchText(state.inputValue);
       if (!query) return results.slice(0, MAX_DISPLAYED_RESULTS);
 
       const queryDigits = query.replace(/[^0-9]/g, '');
@@ -178,10 +179,7 @@ export function ShellSearchBar({
             }}
           >
             {result.label}
-            <small
-              className="ph-unmask"
-              style={{ opacity: 0.7 }}
-            >
+            <small className="ph-unmask" style={{ opacity: 0.7 }}>
               {familyTypeSuffix(result)}
             </small>
           </div>
