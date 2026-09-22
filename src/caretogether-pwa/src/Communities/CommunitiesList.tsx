@@ -1,4 +1,11 @@
-import { Box, Button, Drawer, useTheme } from '@mui/material';
+import {
+  Box,
+  Button,
+  Drawer,
+  Stack,
+  Typography,
+  useTheme,
+} from '@mui/material';
 import {
   DataGridPremium,
   GridChartsIntegrationContextProvider,
@@ -25,6 +32,7 @@ import { useOrganizationConfigurationLoadable } from '../Model/ConfigurationMode
 import { useFeatureFlagEnabled } from 'posthog-js/react';
 import { ORGANIZATION_CATEGORIES_FEATURE_FLAG } from '../featureFlags';
 import { v2DataGridStyles } from '../Families/v2DataGridStyles';
+import { v2Typography } from '../Families/v2Typography';
 import { usePersistedGridFilterModel } from '../Hooks/usePersistedGridFilterModel';
 import {
   buildOrganizationsGridColumns,
@@ -221,22 +229,48 @@ export function CommunitiesList() {
 
   return (
     <>
-      <Button
-        variant="contained"
-        startIcon={<AddIcon />}
-        onClick={() => setAddDrawerOpen(true)}
-        sx={{ marginRight: 'auto', marginY: 2 }}
-      >
-        Add new organization
-      </Button>
+      <Stack spacing={2} sx={{ flex: 1, minHeight: 0 }}>
+        <Box>
+          <Typography
+            className="ph-unmask"
+            {...v2Typography.pageTitle}
+            sx={{ mt: 2 }}
+          >
+            Organizations
+          </Typography>
+          <Typography
+            className="ph-unmask"
+            {...v2Typography.secondaryValue}
+            sx={{ ...v2Typography.secondaryValue.sx, mt: 0.5 }}
+          >
+            Browse and manage organizations.
+          </Typography>
+        </Box>
 
-      <OrganizationsDataGrid
-        columns={columns}
-        filterModel={filterModel}
-        onFilterModelChange={onFilterModelChange}
-        onRowClick={openCommunity}
-        rows={rows}
-      />
+        <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
+          <Button
+            size="small"
+            variant="contained"
+            startIcon={<AddIcon />}
+            sx={{
+              alignSelf: { xs: 'stretch', md: 'center' },
+              flexShrink: 0,
+              whiteSpace: 'nowrap',
+            }}
+            onClick={() => setAddDrawerOpen(true)}
+          >
+            ADD NEW ORGANIZATION
+          </Button>
+        </Box>
+
+        <OrganizationsDataGrid
+          columns={columns}
+          filterModel={filterModel}
+          onFilterModelChange={onFilterModelChange}
+          onRowClick={openCommunity}
+          rows={rows}
+        />
+      </Stack>
       {permissions(Permission.CreateOrganization) && (
         <Drawer
           anchor="right"
