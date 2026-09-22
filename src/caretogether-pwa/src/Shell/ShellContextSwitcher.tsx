@@ -7,6 +7,7 @@ import {
   useMediaQuery,
   useTheme,
 } from '@mui/material';
+import { alpha } from '@mui/material/styles';
 import { useNavigate } from 'react-router-dom';
 import {
   useLocationConfigurationLoadable,
@@ -19,10 +20,12 @@ import {
 
 interface ShellContextSwitcherProps {
   contained?: boolean;
+  showOrganization?: boolean;
 }
 
 export function ShellContextSwitcher({
   contained = false,
+  showOrganization = true,
 }: ShellContextSwitcherProps) {
   const organizationConfiguration = useOrganizationConfigurationLoadable();
   const locationConfiguration = useLocationConfigurationLoadable();
@@ -33,6 +36,7 @@ export function ShellContextSwitcher({
 
   const theme = useTheme();
   const isDesktop = useMediaQuery(theme.breakpoints.up('md'));
+  const isAppBarContext = contained && !showOrganization && isDesktop;
 
   const availableLocations = currentOrganization?.locations;
 
@@ -58,45 +62,48 @@ export function ShellContextSwitcher({
         overflow: 'hidden',
       }}
     >
-      {organizationConfiguration ? (
-        <Typography
-          className="ph-unmask"
-          variant="subtitle1"
-          component="h1"
-          noWrap
-          title={organizationConfiguration.organizationName}
-          sx={{
-            position: 'relative',
-            top: -4,
-            boxSizing: 'border-box',
-            maxWidth: '100%',
-            px: 1,
-            overflow: 'hidden',
-            textOverflow: 'ellipsis',
-          }}
-        >
-          {organizationConfiguration.organizationName}
-        </Typography>
-      ) : (
-        <Skeleton
-          variant="text"
-          width={130}
-          animation="wave"
-          sx={{ marginTop: -0.5, marginLeft: 1 }}
-        />
-      )}
+      {showOrganization &&
+        (organizationConfiguration ? (
+          <Typography
+            className="ph-unmask"
+            variant="subtitle1"
+            component="h1"
+            noWrap
+            title={organizationConfiguration.organizationName}
+            sx={{
+              position: 'relative',
+              top: -4,
+              boxSizing: 'border-box',
+              maxWidth: '100%',
+              px: 1,
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+            }}
+          >
+            {organizationConfiguration.organizationName}
+          </Typography>
+        ) : (
+          <Skeleton
+            variant="text"
+            width={130}
+            animation="wave"
+            sx={{ marginTop: -0.5, marginLeft: 1 }}
+          />
+        ))}
       {locationConfiguration &&
       availableLocations &&
       locations &&
       selectedLocationContext ? (
         availableLocations.length >= 1 ? (
           <Select
+            inputProps={{ 'aria-label': 'Location' }}
             className="ph-unmask"
             size={isDesktop ? 'small' : 'medium'}
-            variant="outlined"
+            variant={isAppBarContext ? 'standard' : 'outlined'}
+            {...(isAppBarContext && { disableUnderline: true })}
             sx={{
-              marginLeft: 0.5,
-              marginTop: isDesktop ? -1 : 0,
+              marginLeft: showOrganization ? 0.5 : 0,
+              marginTop: showOrganization && isDesktop ? -1 : 0,
               height: isDesktop ? 24 : 56,
               minWidth: 0,
               maxWidth: '100%',
@@ -121,6 +128,31 @@ export function ShellContextSwitcher({
                 {
                   borderColor: '#fff8',
                 },
+              ...(isAppBarContext && {
+                height: 'auto',
+                borderRadius: 1,
+                '& .MuiSelect-select.MuiInputBase-input': {
+                  backgroundColor: 'transparent',
+                  py: 0.75,
+                  pl: 1,
+                  pr: 4,
+                },
+                '& .MuiSelect-icon': {
+                  color: theme.palette.primary.contrastText,
+                  right: theme.spacing(0.5),
+                },
+                '&:hover': {
+                  backgroundColor: alpha(
+                    theme.palette.primary.contrastText,
+                    theme.palette.action.hoverOpacity
+                  ),
+                },
+                '& .MuiSelect-select:focus-visible': {
+                  outline: `2px solid ${theme.palette.primary.contrastText}`,
+                  outlineOffset: -2,
+                  borderRadius: 1,
+                },
+              }),
             }}
             MenuProps={{
               slotProps: {
@@ -153,7 +185,7 @@ export function ShellContextSwitcher({
             title={locationConfiguration.name}
             sx={{
               position: 'relative',
-              top: -8,
+              top: showOrganization ? -8 : 0,
               boxSizing: 'border-box',
               maxWidth: '100%',
               px: 1,

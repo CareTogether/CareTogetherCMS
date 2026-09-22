@@ -1,8 +1,10 @@
+import { v2Typography } from '../Families/v2Typography';
 import {
   Box,
   Button,
   Chip,
   Drawer,
+  Typography,
   Table,
   TableBody,
   TableCell,
@@ -20,9 +22,14 @@ import { useVisibleCommunities } from '../Model/Data';
 import { useAppNavigate } from '../Hooks/useAppNavigate';
 import { useOrganizationConfigurationLoadable } from '../Model/ConfigurationModel';
 import { useFeatureFlagEnabled } from 'posthog-js/react';
-import { ORGANIZATION_CATEGORIES_FEATURE_FLAG } from '../featureFlags';
+import {
+  FAMILY_SCREEN_V2_EARLY_ACCESS_FEATURE_FLAG,
+  ORGANIZATION_CATEGORIES_FEATURE_FLAG,
+} from '../featureFlags';
 
 export function CommunitiesList() {
+  const isV2 =
+    useFeatureFlagEnabled(FAMILY_SCREEN_V2_EARLY_ACCESS_FEATURE_FLAG) === true;
   useScreenTitle('Organizations');
 
   const organizationCategoriesEnabled =
@@ -49,6 +56,16 @@ export function CommunitiesList() {
 
   return (
     <>
+      {isV2 && (
+        <Typography
+          className="ph-unmask"
+          {...v2Typography.pageTitle}
+          component="h1"
+          sx={{ mt: 2, mb: 2 }}
+        >
+          Organizations
+        </Typography>
+      )}
       <Button
         variant="contained"
         startIcon={<AddIcon />}

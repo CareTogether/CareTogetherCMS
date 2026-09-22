@@ -1,14 +1,12 @@
 import { useState } from 'react';
-import {
-  Menu as MenuIcon,
-  MenuOpen,
-} from '@mui/icons-material';
+import { Menu as MenuIcon, MenuOpen } from '@mui/icons-material';
 import {
   AppBar,
   Box,
   IconButton,
   Skeleton,
   Toolbar,
+  Tooltip,
   Typography,
   useMediaQuery,
   useTheme,
@@ -21,7 +19,12 @@ import {
 import { useAtomValue } from 'jotai';
 import { ShellSearchBar } from './ShellSearchBar';
 import { ShellUserProfileMenu } from './ShellUserProfileMenu';
-import { SHELL_APP_BAR_HEIGHT } from './shellLayoutConstants';
+import {
+  COLLAPSED_DRAWER_WIDTH,
+  SHELL_APP_BAR_HEIGHT,
+} from './shellLayoutConstants';
+import { useFeatureFlagEnabled } from 'posthog-js/react';
+import { FAMILY_SCREEN_V2_EARLY_ACCESS_FEATURE_FLAG } from '../featureFlags';
 
 interface ShellAppBarProps {
   menuDrawerOpen: boolean;
@@ -36,6 +39,9 @@ export function ShellAppBar({
 }: ShellAppBarProps) {
   const theme = useTheme();
   const isDesktop = useMediaQuery(theme.breakpoints.up('md'));
+  const isV2 =
+    useFeatureFlagEnabled(FAMILY_SCREEN_V2_EARLY_ACCESS_FEATURE_FLAG) === true;
+  const toggleLabel = menuDrawerOpen ? 'Collapse sidebar' : 'Expand sidebar';
 
   const [openMobileSearch, setOpenMobileSearch] = useState(true);
 
@@ -61,7 +67,56 @@ export function ShellAppBar({
           minHeight: SHELL_APP_BAR_HEIGHT,
         }}
       >
-        {isDesktop && (
+        {isDesktop && isV2 && (
+          <Box
+            sx={{
+              display: 'flex',
+              alignItems: 'center',
+              minWidth: 0,
+              flex: '0 1 auto',
+              gap: 1,
+            }}
+          >
+            <Box
+              sx={{
+                width: COLLAPSED_DRAWER_WIDTH,
+                flexShrink: 0,
+                display: 'flex',
+                justifyContent: 'center',
+              }}
+            >
+              <Tooltip title={toggleLabel}>
+                <IconButton
+                  color="inherit"
+                  aria-label={toggleLabel}
+                  aria-expanded={menuDrawerOpen}
+                  onClick={() => setMenuDrawerOpen(!menuDrawerOpen)}
+                >
+                  {menuDrawerOpen ? <MenuOpen /> : <MenuIcon />}
+                </IconButton>
+              </Tooltip>
+            </Box>
+            <Typography
+              className="ph-unmask"
+              variant="h6"
+              component="span"
+              noWrap
+              sx={{ flexShrink: 0 }}
+            >
+              CareTogether
+            </Typography>
+            <Box
+              sx={{
+                minWidth: 0,
+                maxWidth: theme.spacing(28),
+                flex: '0 1 auto',
+              }}
+            >
+              <ShellContextSwitcher contained showOrganization={false} />
+            </Box>
+          </Box>
+        )}
+        {isDesktop && !isV2 && (
           <Box sx={{ display: 'flex', alignItems: 'center' }}>
             {menuDrawerOpen ? (
               <Box
@@ -122,7 +177,14 @@ export function ShellAppBar({
             )}
           </Box>
         )}
-        <Box sx={{ flexGrow: 1, display: 'flex', justifyContent: 'center' }}>
+        <Box
+          sx={{
+            flexGrow: 1,
+            display: 'flex',
+            justifyContent: 'center',
+            ...(isV2 && isDesktop && { minWidth: 0 }),
+          }}
+        >
           <ShellSearchBar
             openMobileSearch={openMobileSearch}
             setOpenMobileSearch={setOpenMobileSearch}

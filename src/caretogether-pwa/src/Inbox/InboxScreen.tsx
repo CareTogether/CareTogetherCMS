@@ -1,3 +1,6 @@
+import { FAMILY_SCREEN_V2_EARLY_ACCESS_FEATURE_FLAG } from '../featureFlags';
+import { v2Typography } from '../Families/v2Typography';
+import { useFeatureFlagEnabled } from 'posthog-js/react';
 import {
   Container,
   List,
@@ -172,10 +175,22 @@ function MessageList() {
 }
 
 export function InboxScreen() {
+  const isV2 =
+    useFeatureFlagEnabled(FAMILY_SCREEN_V2_EARLY_ACCESS_FEATURE_FLAG) === true;
   useScreenTitle('Inbox');
 
   return (
     <Container maxWidth={false} sx={{ paddingLeft: '12px' }}>
+      {isV2 && (
+        <Typography
+          className="ph-unmask"
+          {...v2Typography.pageTitle}
+          component="h1"
+          sx={{ mt: 2, mb: 2 }}
+        >
+          Inbox
+        </Typography>
+      )}
       <MessageList />
     </Container>
   );
