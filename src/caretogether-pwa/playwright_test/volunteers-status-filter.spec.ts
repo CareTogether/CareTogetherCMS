@@ -19,6 +19,7 @@ function row(id: string, statusFilterValues: string[]): VolunteerBrowserRowV2 {
     primaryContact: '',
     requirementFilterValues: ['__complete__'],
     roleFilterValues: [],
+    roleStatusValues: {},
     roles: { familyRoles: [], individualRoles: [] },
     searchableText: '',
     sourceFamily: new CombinedFamilyInfo(),
