@@ -7,10 +7,8 @@ import type {
 import { CombinedFamilyInfo } from '../src/GeneratedClient';
 import { roleFilterValues } from '../src/Volunteers/roleFilterValues';
 import { buildVolunteersGridColumns } from '../src/Volunteers/volunteersGridColumns';
-import {
-  buildVolunteerBrowserRow,
-  type VolunteerBrowserRowV2,
-} from '../src/Volunteers/useVolunteersBrowserViewModel';
+import type { VolunteerBrowserRowV2 } from '../src/Volunteers/useVolunteersBrowserViewModel';
+import { getFamilyCounty } from '../src/Utilities/getFamilyCounty';
 
 function row(
   id: string,
@@ -156,7 +154,7 @@ test('County uses the native single-select filter with safe missing values', () 
   expect(column.valueFormatter).toBeDefined();
 });
 
-test('County projects from the volunteer family primary contact current address', () => {
+test('County resolves from the volunteer family primary contact current address', () => {
   const family = CombinedFamilyInfo.fromJS({
     family: {
       id: 'family-1',
@@ -184,9 +182,7 @@ test('County projects from the volunteer family primary contact current address'
     },
   });
 
-  const projected = buildVolunteerBrowserRow(family, [], [], [], new Map(), []);
-
-  expect(projected.county).toBe('Wake');
+  expect(getFamilyCounty(family)).toBe('Wake');
 });
 
 test('Role filter values ignore un-applied role entries', () => {
