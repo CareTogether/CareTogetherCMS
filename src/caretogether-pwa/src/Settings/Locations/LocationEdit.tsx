@@ -1,3 +1,4 @@
+import { v2Typography } from '../../Families/v2Typography';
 import {
   Alert,
   Stack,
@@ -40,12 +41,18 @@ import { api } from '../../Api/Api';
 import {
   DESKTOP_BOTTOM_SAFE_AREA,
   MOBILE_BOTTOM_SAFE_AREA,
+  SHELL_APP_BAR_HEIGHT,
 } from '../../Shell/shellLayoutConstants';
 import { useFeatureFlagEnabled, usePostHog } from 'posthog-js/react';
-import { SELF_SERVICE_POLICY_FEATURE_FLAG } from '../../featureFlags';
+import {
+  FAMILY_SCREEN_V2_EARLY_ACCESS_FEATURE_FLAG,
+  SELF_SERVICE_POLICY_FEATURE_FLAG,
+} from '../../featureFlags';
 import { clonePolicyWithActionDefinitionOrder } from './Tabs/PolicyConfiguration/policyUtils';
 
 export function LocationEdit() {
+  const isV2 =
+    useFeatureFlagEnabled(FAMILY_SCREEN_V2_EARLY_ACCESS_FEATURE_FLAG) === true;
   const { editingLocationId } = useParams<{
     editingLocationId: string;
   }>();
@@ -277,15 +284,22 @@ export function LocationEdit() {
       className="ph-unmask"
       spacing={0}
       sx={{
-        height: {
-          xs: `calc(100vh - 48px - ${MOBILE_BOTTOM_SAFE_AREA}px)`,
-          md: `calc(100vh - 48px - ${DESKTOP_BOTTOM_SAFE_AREA}px)`,
-        },
+        height: isV2
+          ? {
+              xs: `calc(100dvh - ${SHELL_APP_BAR_HEIGHT.xs} - ${MOBILE_BOTTOM_SAFE_AREA}px)`,
+              sm: `calc(100dvh - ${SHELL_APP_BAR_HEIGHT.sm} - ${MOBILE_BOTTOM_SAFE_AREA}px)`,
+              md: `calc(100dvh - ${SHELL_APP_BAR_HEIGHT.md} - ${DESKTOP_BOTTOM_SAFE_AREA}px)`,
+            }
+          : {
+              xs: `calc(100vh - 48px - ${MOBILE_BOTTOM_SAFE_AREA}px)`,
+              md: `calc(100vh - 48px - ${DESKTOP_BOTTOM_SAFE_AREA}px)`,
+            },
         minHeight: 0,
+        ...(isV2 && { boxSizing: 'border-box' }),
         pt: 2,
       }}
     >
-      <Box>
+      <Box sx={isV2 ? { flexShrink: 0 } : undefined}>
         <Breadcrumbs
           items={[
             {
@@ -299,6 +313,11 @@ export function LocationEdit() {
           ]}
           currentPageLabel={location.name || ''}
         />
+        {isV2 && (
+          <Typography {...v2Typography.pageTitle} component="h1" sx={{ my: 2 }}>
+            Editing {location.name} configuration
+          </Typography>
+        )}
       </Box>
 
       <Box

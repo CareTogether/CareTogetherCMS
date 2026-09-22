@@ -28,10 +28,7 @@ import {
 } from '../Model/SessionModel';
 import { V1CaseContext } from '../Requirements/RequirementContext';
 import { ActivityTimelineV2 } from '../Activities/ActivityTimelineV2';
-import {
-  useScreenTitleComponent,
-  useScreenTitle,
-} from '../Shell/ShellScreenTitle';
+import { useScreenTitle } from '../Shell/ShellScreenTitle';
 import {
   useFamilyLookup,
   useNoteAuthorLookup,
@@ -50,7 +47,6 @@ import { useBackdrop } from '../Hooks/useBackdrop';
 import { ArrangementsSection } from '../V1Cases/Arrangements/ArrangementsSection/ArrangementsSectionV2';
 import type { ArrangementRowV2 } from '../V1Cases/Arrangements/arrangementViewModel';
 import { useFeatureFlagEnabled } from 'posthog-js/react';
-import { TestFamilyBadge } from './TestFamilyBadge';
 import { useV1CasesModel } from '../Model/V1CasesModel';
 import { usePolicy } from '../Model/PolicyModel';
 import {
@@ -311,7 +307,6 @@ export function FamilyScreenV2() {
   } = useFamilyHeaderViewModel(family);
 
   useScreenTitle(screenTitle);
-  useScreenTitleComponent(family ? <TestFamilyBadge family={family} /> : null);
 
   function openUploadDocumentDialog() {
     setFamilyMoreMenuAnchor(null);
