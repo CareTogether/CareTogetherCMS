@@ -69,6 +69,18 @@ function readFilterPreferences(
   }
 }
 
+function restoredFilterModel(
+  preferences: PersistedDataGridFilterPreferencesV1 | null,
+  columns: GridColDef[]
+) {
+  const storedFilterModel = filterModelFromPersistedDataGridFilters(
+    preferences ?? emptyPersistedDataGridFilters
+  );
+  return filterModelFromPersistedDataGridFilters(
+    normalizeGridFilterModel(storedFilterModel, columns)
+  );
+}
+
 function writeFilterPreferences(key: string, preferences: unknown) {
   try {
     window.localStorage.setItem(key, JSON.stringify(preferences));
@@ -113,17 +125,16 @@ export function usePersistedGridFilterModel({
   const savedPreferences = preferencesLoaded
     ? loadedPreferences.preferences
     : null;
-  const [keyedFilterModel, setKeyedFilterModel] = useState<KeyedGridFilterModel>(
-    () => ({
-      filterModel: emptyGridFilterModel,
-      storageKey: null,
-    })
-  );
+  const [keyedFilterModel, setKeyedFilterModel] =
+    useState<KeyedGridFilterModel>(() => ({
+      filterModel: restoredFilterModel(loadedPreferences.preferences, columns),
+      storageKey,
+    }));
   const filterModel =
     keyedFilterModel.storageKey === storageKey
       ? keyedFilterModel.filterModel
       : emptyGridFilterModel;
-  const restoredFilterPreferenceStorageKey = useRef<string | null>(null);
+  const restoredFilterPreferenceStorageKey = useRef<string | null>(storageKey);
   const normalizedFilterModel = useMemo(
     () => normalizeGridFilterModel(filterModel, columns),
     [columns, filterModel]
@@ -157,16 +168,9 @@ export function usePersistedGridFilterModel({
       return;
     }
 
-    const restoredPreferences = normalizeGridFilterModel(
-      filterModelFromPersistedDataGridFilters(
-        savedPreferences ?? emptyPersistedDataGridFilters
-      ),
-      columns
-    );
-
     restoredFilterPreferenceStorageKey.current = storageKey;
     setKeyedFilterModel({
-      filterModel: filterModelFromPersistedDataGridFilters(restoredPreferences),
+      filterModel: restoredFilterModel(savedPreferences, columns),
       storageKey,
     });
   }, [columns, preferencesLoaded, savedPreferences, storageKey]);
