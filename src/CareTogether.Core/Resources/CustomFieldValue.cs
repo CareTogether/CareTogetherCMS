@@ -1,7 +1,7 @@
 using System;
 using System.Globalization;
-using System.Text.RegularExpressions;
 using CareTogether.Resources.Policies;
+using CareTogether.Utilities.Dates;
 using Newtonsoft.Json.Linq;
 
 namespace CareTogether.Resources
@@ -9,11 +9,6 @@ namespace CareTogether.Resources
     public static class CustomFieldValue
     {
         private const string DateOnlyFormat = "yyyy-MM-dd";
-
-        private static readonly Regex IsoDateTime = new(
-            @"^\d{4}-\d{2}-\d{2}T.+(?:Z|[+-]\d{2}:\d{2})$",
-            RegexOptions.CultureInvariant
-        );
 
         public static object? Normalize(CustomFieldType customFieldType, object? value) =>
             value is null
@@ -47,26 +42,14 @@ namespace CareTogether.Resources
 
         private static string NormalizeDateTime(object value)
         {
-            var dateTime = RequireString(value, "DateTime");
-
-            if (
-                !IsoDateTime.IsMatch(dateTime)
-                || !DateTimeOffset.TryParse(
-                    dateTime,
-                    CultureInfo.InvariantCulture,
-                    DateTimeStyles.RoundtripKind,
-                    out var parsed
-                )
-            )
+            if (Dates.TryNormalizeDateTime(value, out var normalized))
             {
-                throw new InvalidOperationException(
-                    "DateTime custom field values must be ISO 8601 timestamps with a timezone offset."
-                );
+                return normalized!;
             }
 
-            return parsed
-                .ToUniversalTime()
-                .ToString("yyyy-MM-dd'T'HH:mm:ss.fff'Z'", CultureInfo.InvariantCulture);
+            throw new InvalidOperationException(
+                "DateTime custom field values must be ISO 8601 timestamps with a timezone offset."
+            );
         }
 
         private static string RequireString(object value, string customFieldType) =>

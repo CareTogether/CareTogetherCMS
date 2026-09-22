@@ -2,6 +2,7 @@ using System;
 using CareTogether.Resources;
 using CareTogether.Resources.Policies;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
 namespace CareTogether.Core.Test
@@ -54,6 +55,42 @@ namespace CareTogether.Core.Test
             );
 
             Assert.AreEqual("2026-09-18T17:30:00.000Z", value);
+        }
+
+        [TestMethod]
+        public void DateTimeValuesAcceptTheJsonStringPayloadUsedByTheApi()
+        {
+            var jsonValue = JsonConvert.DeserializeObject<object>(
+                "\"2026-09-01T03:00:00.000Z\""
+            );
+
+            var value = CustomFieldValue.Normalize(CustomFieldType.DateTime, jsonValue);
+
+            Assert.AreEqual("2026-09-01T03:00:00.000Z", value);
+        }
+
+        [TestMethod]
+        public void DateTimeJsonValuesWithOffsetsAreNormalizedToUtc()
+        {
+            var jsonValue = JsonConvert.DeserializeObject<object>(
+                "\"2026-09-18T13:30:00-04:00\""
+            );
+
+            var value = CustomFieldValue.Normalize(CustomFieldType.DateTime, jsonValue);
+
+            Assert.AreEqual("2026-09-18T17:30:00.000Z", value);
+        }
+
+        [TestMethod]
+        public void DateTimeJsonValuesWithoutTimezoneOffsetsAreRejected()
+        {
+            var jsonValue = JsonConvert.DeserializeObject<object>(
+                "\"2026-09-18T13:30:00\""
+            );
+
+            Assert.ThrowsExactly<InvalidOperationException>(() =>
+                CustomFieldValue.Normalize(CustomFieldType.DateTime, jsonValue)
+            );
         }
 
         [DataTestMethod]
