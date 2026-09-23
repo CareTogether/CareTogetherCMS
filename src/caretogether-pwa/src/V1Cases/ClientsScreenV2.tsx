@@ -17,7 +17,10 @@ import {
   clientsToolbarSortValue,
   normalizeClientsGridSortModel,
 } from './clientsGridSorting';
-import { FUNCTION_ASSIGNMENTS_FEATURE_FLAG } from '../featureFlags';
+import {
+  FAMILY_MEMBER_CUSTOM_FIELDS_FEATURE_FLAG,
+  FUNCTION_ASSIGNMENTS_FEATURE_FLAG,
+} from '../featureFlags';
 import {
   useAllPartneringFamiliesPermissions,
   useGlobalPermissions,
@@ -33,6 +36,9 @@ export function ClientsScreenV2() {
   const permissions = useAllPartneringFamiliesPermissions();
   const functionAssignmentsEnabled = useFeatureFlagEnabled(
     FUNCTION_ASSIGNMENTS_FEATURE_FLAG
+  );
+  const familyMemberCustomFieldsEnabled = useFeatureFlagEnabled(
+    FAMILY_MEMBER_CUSTOM_FIELDS_FEATURE_FLAG
   );
   const canViewFunctionAssignments =
     functionAssignmentsEnabled === true &&
@@ -74,6 +80,8 @@ export function ClientsScreenV2() {
     assignmentRoles,
     familyCustomFields,
     caseCustomFields,
+    adultCustomFields,
+    childCustomFields,
   } = useClientsBrowserViewModel({ canViewFunctionAssignments });
   const hasFeaturebaseChat = globalPermissions(Permission.AccessSupportScreen);
   return (
@@ -102,6 +110,12 @@ export function ClientsScreenV2() {
             assignmentRoles={assignmentRoles}
             familyCustomFields={familyCustomFields}
             caseCustomFields={caseCustomFields}
+            adultCustomFields={
+              familyMemberCustomFieldsEnabled ? adultCustomFields : []
+            }
+            childCustomFields={
+              familyMemberCustomFieldsEnabled ? childCustomFields : []
+            }
             sortModel={sortModel}
             onSortModelChange={handleSortModelChange}
             onRowClick={handleRowClick}

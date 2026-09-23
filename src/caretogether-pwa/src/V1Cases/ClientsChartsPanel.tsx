@@ -11,8 +11,8 @@ export function ClientsChartsPanel({
   if (!pivotActive) {
     return (
       <Alert severity="info" sx={{ m: 2 }}>
-        Use Pivot to group and summarize your client data, then create a chart
-        from the aggregated results.
+        Use Pivot to group by a family, adult, or child field. Count is added as
+        a value automatically; then create a chart from the results.
       </Alert>
     );
   }
