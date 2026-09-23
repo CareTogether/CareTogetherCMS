@@ -185,29 +185,13 @@ function getSchedulerColor(
 }
 
 function getEventClassName(
-  event: LegacyDashboardCalendarEvent,
   filter: CalendarFilters,
   index: number
 ) {
-  const color = event.color || event.backgroundColor;
-  const colorClass =
-    color === DASHBOARD_CALENDAR_LEGACY_EVENT_COLORS.lightBlue
-      ? 'dashboard-calendar-event--light-blue'
-      : color === DASHBOARD_CALENDAR_LEGACY_EVENT_COLORS.teal
-        ? 'dashboard-calendar-event--teal'
-        : color === DASHBOARD_CALENDAR_LEGACY_EVENT_COLORS.red
-          ? 'dashboard-calendar-event--red'
-          : color === DASHBOARD_CALENDAR_LEGACY_EVENT_COLORS.purple
-            ? 'dashboard-calendar-event--purple'
-            : '';
-
   return [
     'dashboard-calendar-event',
     `dashboard-calendar-event-id-${getSchedulerEventId(filter, index)}`,
-    colorClass,
-  ]
-    .filter(Boolean)
-    .join(' ');
+  ].join(' ');
 }
 
 function toSchedulerEvents(
@@ -232,7 +216,7 @@ function toSchedulerEvents(
         draggable: false,
         resizable: false,
         color: getSchedulerColor(event),
-        className: getEventClassName(event, filter, index),
+        className: getEventClassName(filter, index),
         ...event.extendedProps,
       };
     })
