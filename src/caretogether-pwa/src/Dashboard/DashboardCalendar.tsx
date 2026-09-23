@@ -461,8 +461,8 @@ export function DashboardCalendar() {
           '.MuiEventCalendar-root': {
             width: '100%',
             minHeight: {
-              xs: 520,
-              md: 'calc(100vh - 210px)',
+              xs: 700,
+              md: 'max(700px, calc(100vh - 30px))',
             },
           },
           '.MuiEventCalendar-sidePanel, .MuiEventCalendar-sidePanelCollapse, .MuiEventCalendar-sidePanelDivider, .MuiEventCalendar-headerToolbarSidePanelToggle':
@@ -494,11 +494,23 @@ export function DashboardCalendar() {
           },
           '.MuiEventCalendar-monthViewGrid': {
             minHeight: {
-              xs: 480,
-              md: 'calc(100vh - 280px)',
+              xs: 780,
+              md: 'max(780px, calc(100vh - 100px))',
             },
           },
+          '.MuiEventCalendar-monthViewRow': {
+            containerType: 'size',
+          },
+          '.MuiEventCalendar-monthViewRow:first-of-type .MuiEventCalendar-monthViewCell':
+            {
+              // The scheduler measures this cell assuming 18px events and 4px gaps.
+              // Reserve measurement space for our taller month events.
+              borderBottom:
+                'max(calc(20cqh - 3px), calc(25cqh - 10px)) solid transparent',
+            },
           '.MuiEventCalendar-monthViewCell': {
+            height: '100%',
+            minHeight: 0,
             verticalAlign: 'top',
           },
           '.MuiEventCalendar-monthViewCellEvents': {
@@ -616,6 +628,11 @@ export function DashboardCalendar() {
           }}
         />
         <EventCalendar
+          key={
+            view === 'month'
+              ? `month-${visibleDate.getFullYear()}-${visibleDate.getMonth()}`
+              : view
+          }
           events={filteredEvents}
           visibleDate={visibleDate}
           view={view}
