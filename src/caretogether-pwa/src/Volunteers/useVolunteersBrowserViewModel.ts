@@ -4,6 +4,7 @@ import { familyNameString } from '../Families/FamilyName';
 import { personNameString } from '../Families/PersonName';
 import { usePolicy } from '../Model/PolicyModel';
 import { useVolunteerFamilies } from '../Model/VolunteersModel';
+import { getFamilyCounty } from '../Utilities/getFamilyCounty';
 import {
   toCustomFieldGridValue,
   type CustomFieldGridValue,
@@ -28,6 +29,7 @@ import { roleApprovalStatusFilterOptions } from './roleApprovalStatusPresentatio
 export type VolunteerCustomFieldValue = CustomFieldGridValue;
 export type VolunteerBrowserRowV2 = {
   arrangementAssignmentValues: Record<string, 'assigned' | 'unassigned'>;
+  county: string | null;
   family: string;
   familyCustomFieldValues: Record<string, VolunteerCustomFieldValue>;
   familyLastName: string;
@@ -149,7 +151,7 @@ function searchText(family: CombinedFamilyInfo) {
   ].join('\n');
 }
 
-function toRow(
+export function buildVolunteerBrowserRow(
   family: CombinedFamilyInfo,
   familyCustomFields: CustomField[],
   volunteerCustomFields: CustomField[],
@@ -179,6 +181,7 @@ function toRow(
   );
   return {
     arrangementAssignmentValues: assignmentValues(family, arrangementTypes),
+    county: getFamilyCounty(family),
     family: familyNameString(family),
     familyCustomFieldValues: Object.fromEntries(
       familyCustomFields.map((field) => [
@@ -261,7 +264,7 @@ export function useVolunteersBrowserViewModel(): VolunteersBrowserViewModel {
   const rows = useMemo(
     () =>
       families.map((family) =>
-        toRow(
+        buildVolunteerBrowserRow(
           family,
           familyCustomFields,
           volunteerCustomFields,

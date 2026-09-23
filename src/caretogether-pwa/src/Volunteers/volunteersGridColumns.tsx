@@ -326,6 +326,13 @@ export function buildVolunteersGridColumns({
   updateTestFamilyFlagEnabled?: boolean;
   volunteerCustomFields: CustomField[];
 }): GridColDef<VolunteerBrowserRowV2>[] {
+  const counties = Array.from(
+    new Set(
+      rows
+        .map((row) => row.county)
+        .filter((county): county is string => county !== null)
+    )
+  ).sort((first, second) => first.localeCompare(second));
   const columns: GridColDef<VolunteerBrowserRowV2>[] = [
     {
       ...noAnalytics,
@@ -374,6 +381,26 @@ export function buildVolunteersGridColumns({
             {row.primaryContact}
           </Typography>
         ),
+    },
+    {
+      aggregable: false,
+      chartable: rows.every((row) => row.county !== null),
+      field: 'county',
+      headerName: 'County',
+      type: 'singleSelect',
+      minWidth: 140,
+      flex: 1,
+      pivotable: true,
+      valueOptions: counties,
+      filterOperators: [
+        ...getGridSingleSelectOperators(),
+        ...emptyOperators<string | null>(),
+      ],
+      getApplyQuickFilterFn: () => null,
+      valueFormatter: (value: string | null) => value ?? '',
+      renderCell: ({ value }) => (
+        <Typography {...v2Typography.browserCell}>{value || '-'}</Typography>
+      ),
     },
     {
       ...noAnalytics,
