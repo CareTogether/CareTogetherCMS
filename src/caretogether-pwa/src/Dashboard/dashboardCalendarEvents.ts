@@ -464,8 +464,11 @@ export function buildDashboardCalendarEventGroups(
     }
   );
 
-  const arrangementPlannedChildcare = allArrangements.flatMap(
-    ({ arrangement, person, familyId, v1CaseId }) => {
+  const arrangementPlannedChildcare = allArrangements
+    .filter(
+      ({ arrangement }) => arrangement.phase !== ArrangementPhase.Cancelled
+    )
+    .flatMap(({ arrangement, person, familyId, v1CaseId }) => {
       const durationEntries = (arrangement.childLocationPlan || []).flatMap(
         (entry, index, plan) => {
           const nextEntry = index < plan.length - 1 ? plan[index + 1] : null;
@@ -505,8 +508,7 @@ export function buildDashboardCalendarEventGroups(
           entry.backgroundColor ===
           DASHBOARD_CALENDAR_LEGACY_EVENT_COLORS.lightBlue
       );
-    }
-  );
+    });
 
   return {
     [CalendarFilters.ArrangementCancelled]: toSchedulerEvents(
