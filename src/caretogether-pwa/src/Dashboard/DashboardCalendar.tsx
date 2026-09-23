@@ -43,6 +43,10 @@ const DASHBOARD_CALENDAR_EVENT_COLORS = {
     backgroundColor: '#ffa3a3',
     color: '#770000',
   },
+  purple: {
+    backgroundColor: '#d1c4e9',
+    color: '#311b5b',
+  },
 } as const;
 
 type CalendarView = 'day' | 'week' | 'month' | 'agenda';
@@ -59,6 +63,14 @@ type CalendarEventTypeFilter = {
 };
 
 const calendarEventTypeFilters: CalendarEventTypeFilter[] = [
+  {
+    key: 'cancelled-arrangement',
+    filter: CalendarFilters.ArrangementCancelled,
+    eventColor: DASHBOARD_CALENDAR_EVENT_COLORS.purple,
+    icon: '✖',
+    label: 'Cancelled arrangement',
+    description: 'cancelled arrangement across its planned start-to-end range',
+  },
   {
     key: 'planned-duration',
     filter: CalendarFilters.ArrangementPlannedDuration,
@@ -182,6 +194,10 @@ function getDashboardCalendarEventTypeFilterKey(
   filter: CalendarFilters,
   event: DashboardCalendarEvent
 ) {
+  if (filter === CalendarFilters.ArrangementCancelled) {
+    return 'cancelled-arrangement';
+  }
+
   if (filter === CalendarFilters.ArrangementPlannedDuration) {
     return 'planned-duration';
   }
@@ -586,6 +602,10 @@ export function DashboardCalendar() {
           '.dashboard-calendar-event--red': {
             ...DASHBOARD_CALENDAR_EVENT_COLORS.red,
           },
+          '.dashboard-calendar-event.dashboard-calendar-event--purple, .dashboard-calendar-event.dashboard-calendar-event--purple:hover':
+            {
+              ...DASHBOARD_CALENDAR_EVENT_COLORS.purple,
+            },
         }}
       >
         <GlobalStyles

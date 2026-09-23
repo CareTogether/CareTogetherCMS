@@ -3,7 +3,7 @@ import type {
   SchedulerEvent,
   SchedulerEventColor,
 } from '@mui/x-scheduler/models';
-import { ChildLocationPlan } from '../GeneratedClient';
+import { ArrangementPhase, ChildLocationPlan } from '../GeneratedClient';
 import type {
   Arrangement,
   CombinedFamilyInfo,
@@ -17,9 +17,11 @@ const DASHBOARD_CALENDAR_LEGACY_EVENT_COLORS = {
   lightBlue: 'lightblue',
   red: 'red',
   teal: 'teal',
+  purple: 'purple',
 } as const;
 
 export enum CalendarFilters {
+  ArrangementCancelled = 'Arrangement - Cancelled',
   ArrangementPlannedDuration = 'Arrangement - Planned Duration',
   ArrangementActualStartEndDates = 'Arrangement - Actual Start & End Dates',
   ArrangementCompletedRequirements = 'Arrangement - Completed Requirements',
@@ -175,6 +177,10 @@ function getSchedulerColor(
     return 'teal';
   }
 
+  if (color === DASHBOARD_CALENDAR_LEGACY_EVENT_COLORS.purple) {
+    return 'purple';
+  }
+
   return undefined;
 }
 
@@ -191,7 +197,9 @@ function getEventClassName(
         ? 'dashboard-calendar-event--teal'
         : color === DASHBOARD_CALENDAR_LEGACY_EVENT_COLORS.red
           ? 'dashboard-calendar-event--red'
-          : '';
+          : color === DASHBOARD_CALENDAR_LEGACY_EVENT_COLORS.purple
+            ? 'dashboard-calendar-event--purple'
+            : '';
 
   return [
     'dashboard-calendar-event',
@@ -233,7 +241,9 @@ function toSchedulerEvents(
 
 export function buildDashboardCalendarEventGroups(
   partneringFamilies: CombinedFamilyInfo[] | undefined,
-  familyLookup: (familyId: string | undefined) => CombinedFamilyInfo | undefined,
+  familyLookup: (
+    familyId: string | undefined
+  ) => CombinedFamilyInfo | undefined,
   visibleDateRange: DashboardCalendarDateRange
 ): CalendarEventGroups {
   const allArrangements = (partneringFamilies || []).flatMap((family) =>
@@ -242,13 +252,44 @@ export function buildDashboardCalendarEventGroups(
       .flatMap((v1Case) => getDashboardCalendarArrangements(family, v1Case))
   );
 
+  const arrangementCancelled = allArrangements
+    .filter(
+      ({ arrangement }) =>
+        arrangement.phase === ArrangementPhase.Cancelled &&
+        dateRangeOverlaps(
+          arrangement.plannedStartUtc,
+          arrangement.plannedEndUtc,
+          visibleDateRange
+        )
+    )
+    .map(
+      ({
+        arrangement,
+        person,
+        familyId,
+        v1CaseId,
+      }): LegacyDashboardCalendarEvent => ({
+        title: `✖ ${personNameString(person)} - ${arrangement.arrangementType}`,
+        start:
+          arrangement.plannedStartUtc &&
+          format(arrangement.plannedStartUtc, 'yyyy-MM-dd'),
+        end:
+          arrangement.plannedEndUtc &&
+          format(arrangement.plannedEndUtc, 'yyyy-MM-dd'),
+        backgroundColor: DASHBOARD_CALENDAR_LEGACY_EVENT_COLORS.purple,
+        extendedProps: { familyId, v1CaseId, arrangementId: arrangement.id },
+      })
+    );
+
   const arrangementPlannedDurations = allArrangements
-    .filter(({ arrangement }) =>
-      dateRangeOverlaps(
-        arrangement.plannedStartUtc,
-        arrangement.plannedEndUtc,
-        visibleDateRange
-      )
+    .filter(
+      ({ arrangement }) =>
+        arrangement.phase !== ArrangementPhase.Cancelled &&
+        dateRangeOverlaps(
+          arrangement.plannedStartUtc,
+          arrangement.plannedEndUtc,
+          visibleDateRange
+        )
     )
     .map(
       ({
@@ -271,11 +312,7 @@ export function buildDashboardCalendarEventGroups(
 
   const arrangementActualStarts = allArrangements
     .filter(({ arrangement }) =>
-      dateRangeOverlaps(
-        arrangement.startedAtUtc,
-        undefined,
-        visibleDateRange
-      )
+      dateRangeOverlaps(arrangement.startedAtUtc, undefined, visibleDateRange)
     )
     .map(
       ({
@@ -488,6 +525,10 @@ export function buildDashboardCalendarEventGroups(
   );
 
   return {
+    [CalendarFilters.ArrangementCancelled]: toSchedulerEvents(
+      arrangementCancelled,
+      CalendarFilters.ArrangementCancelled
+    ),
     [CalendarFilters.ArrangementPlannedDuration]: toSchedulerEvents(
       arrangementPlannedDurations,
       CalendarFilters.ArrangementPlannedDuration
