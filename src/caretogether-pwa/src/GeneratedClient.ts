@@ -10301,6 +10301,11 @@ export abstract class ArrangementsCommand implements IArrangementsCommand {
             result.init(data);
             return result;
         }
+        if (data["discriminator"] === "ChangeArrangementType") {
+            let result = new ChangeArrangementType();
+            result.init(data);
+            return result;
+        }
         if (data["discriminator"] === "CompleteArrangementRequirement") {
             let result = new CompleteArrangementRequirement();
             result.init(data);
@@ -10599,6 +10604,44 @@ export class CancelArrangementsSetup extends ArrangementsCommand implements ICan
 
 export interface ICancelArrangementsSetup extends IArrangementsCommand {
     cancelledAtUtc: Date;
+}
+
+export class ChangeArrangementType extends ArrangementsCommand implements IChangeArrangementType {
+    arrangementType!: string;
+    arrangementPolicyVersion?: string | undefined;
+
+    constructor(data?: IChangeArrangementType) {
+        super(data);
+        this._discriminator = "ChangeArrangementType";
+    }
+
+    override init(_data?: any) {
+        super.init(_data);
+        if (_data) {
+            this.arrangementType = _data["arrangementType"];
+            this.arrangementPolicyVersion = _data["arrangementPolicyVersion"];
+        }
+    }
+
+    static override fromJS(data: any): ChangeArrangementType {
+        data = typeof data === 'object' ? data : {};
+        let result = new ChangeArrangementType();
+        result.init(data);
+        return result;
+    }
+
+    override toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["arrangementType"] = this.arrangementType;
+        data["arrangementPolicyVersion"] = this.arrangementPolicyVersion;
+        super.toJSON(data);
+        return data;
+    }
+}
+
+export interface IChangeArrangementType extends IArrangementsCommand {
+    arrangementType: string;
+    arrangementPolicyVersion?: string | undefined;
 }
 
 export class CompleteArrangementRequirement extends ArrangementsCommand implements ICompleteArrangementRequirement {

@@ -185,6 +185,7 @@ namespace CareTogether.Engines.Authorization
                 command switch
                 {
                     CreateArrangement => Permission.CreateArrangement,
+                    ChangeArrangementType => Permission.EditArrangement,
                     ArrangementAssignIndividualVolunteer => Permission.EditAssignments,
                     AssignVolunteerFamily => Permission.EditAssignments,
                     ArrangementUnassignIndividualVolunteer => Permission.EditAssignments,
