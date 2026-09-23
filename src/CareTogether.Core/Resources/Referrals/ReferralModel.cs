@@ -341,6 +341,10 @@ namespace CareTogether.Resources.V1Cases
                         )
                             ? command switch
                             {
+                                ChangeArrangementType c => (
+                                    ChangeArrangementTypeDuringSetup(arrangementEntry, c),
+                                    null
+                                ),
                                 AssignIndividualVolunteer c => (
                                     arrangementEntry with
                                     {
@@ -919,6 +923,28 @@ namespace CareTogether.Resources.V1Cases
                         );
                 }
             );
+        }
+
+        private static ArrangementEntry ChangeArrangementTypeDuringSetup(
+            ArrangementEntry arrangement,
+            ChangeArrangementType command
+        )
+        {
+            var hasLifecycleHistory =
+                arrangement.StartedAtUtc != null
+                || arrangement.EndedAtUtc != null
+                || arrangement.CancelledAtUtc != null;
+
+            if (!arrangement.Active || hasLifecycleHistory)
+                throw new InvalidOperationException(
+                    "The arrangement type can only be changed before the arrangement has started, ended, or been cancelled."
+                );
+
+            return arrangement with
+            {
+                ArrangementType = command.ArrangementType,
+                ArrangementPolicyVersion = command.ArrangementPolicyVersion,
+            };
         }
 
         private static (V1CaseEntry V1CaseEntry, Activity? Activity) AssignIndividualVolunteer(

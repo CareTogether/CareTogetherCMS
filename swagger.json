@@ -6342,6 +6342,7 @@
             "AssignIndividualVolunteer": "#/components/schemas/AssignIndividualVolunteer",
             "AssignVolunteerFamily": "#/components/schemas/AssignVolunteerFamily",
             "CancelArrangementsSetup": "#/components/schemas/CancelArrangementsSetup",
+            "ChangeArrangementType": "#/components/schemas/ChangeArrangementType",
             "CompleteArrangementRequirement": "#/components/schemas/CompleteArrangementRequirement",
             "CompleteIndividualVolunteerAssignmentRequirement": "#/components/schemas/CompleteIndividualVolunteerAssignmentRequirement",
             "CompleteVolunteerFamilyAssignmentRequirement": "#/components/schemas/CompleteVolunteerFamilyAssignmentRequirement",
@@ -6480,6 +6481,29 @@
               "cancelledAtUtc": {
                 "type": "string",
                 "format": "date-time"
+              }
+            }
+          }
+        ]
+      },
+      "ChangeArrangementType": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/ArrangementsCommand"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "arrangementType"
+            ],
+            "properties": {
+              "arrangementType": {
+                "type": "string"
+              },
+              "arrangementPolicyVersion": {
+                "type": "string",
+                "nullable": true
               }
             }
           }

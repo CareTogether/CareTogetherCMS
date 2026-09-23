@@ -6,6 +6,7 @@ import {
   ActionRequirement,
   CompleteReferralRequirement as CompleteV1CaseRequirement,
   CreateArrangement,
+  ChangeArrangementType,
   CompleteArrangementRequirement,
   StartArrangements,
   EndArrangements,
@@ -547,6 +548,24 @@ export function useV1CasesModel() {
     }
   );
 
+  const changeArrangementType = useArrangementsCommandCallbackWithLocation(
+    async (
+      partneringFamilyId: string,
+      v1CaseId: string,
+      arrangementId: string,
+      arrangementType: string,
+      arrangementPolicyVersion?: string | null
+    ) => {
+      return commandFactory(ChangeArrangementType, {
+        familyId: partneringFamilyId,
+        referralId: v1CaseId,
+        arrangementIds: [arrangementId],
+        arrangementType,
+        arrangementPolicyVersion: arrangementPolicyVersion || undefined,
+      });
+    }
+  );
+
   const planArrangementStart = useArrangementsCommandCallbackWithLocation(
     async (
       partneringFamilyId: string,
@@ -1027,6 +1046,7 @@ export function useV1CasesModel() {
     exemptIndividualVolunteerAssignmentRequirement,
     unexemptIndividualVolunteerAssignmentRequirement,
     createArrangement,
+    changeArrangementType,
     planArrangementStart,
     startArrangement,
     editArrangementStartTime,

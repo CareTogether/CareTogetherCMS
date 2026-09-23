@@ -2,6 +2,7 @@ import {
   Arrangement,
   ArrangementPolicy,
   ArrangementPolicyVersion,
+  ChildInvolvement,
 } from '../../GeneratedClient';
 
 export function hasPolicyVersions(arrangementPolicy: ArrangementPolicy) {
@@ -32,6 +33,58 @@ export function isArrangementPolicyAvailable(
   return (
     !arrangementPolicy.supersededAtUtc ||
     new Date(arrangementPolicy.supersededAtUtc) > now
+  );
+}
+
+export function childInvolvementSupportsParticipant(
+  childInvolvement: ChildInvolvement,
+  participantIsAdult: boolean,
+  participantIsChild: boolean
+) {
+  if (childInvolvement === ChildInvolvement.ChildOrAdultInvolvement) {
+    return participantIsAdult || participantIsChild;
+  }
+  if (childInvolvement === ChildInvolvement.NoChildInvolvement) {
+    return participantIsAdult;
+  }
+  return participantIsChild;
+}
+
+export function getAvailablePolicyVersionsForParticipant(
+  arrangementPolicy: ArrangementPolicy,
+  participantIsAdult: boolean,
+  participantIsChild: boolean
+) {
+  return getAvailablePolicyVersions(arrangementPolicy).filter((policyVersion) =>
+    childInvolvementSupportsParticipant(
+      policyVersion.childInvolvement,
+      participantIsAdult,
+      participantIsChild
+    )
+  );
+}
+
+export function isArrangementPolicyAvailableForParticipant(
+  arrangementPolicy: ArrangementPolicy,
+  participantIsAdult: boolean,
+  participantIsChild: boolean
+) {
+  if (!isArrangementPolicyAvailable(arrangementPolicy)) return false;
+
+  if (hasPolicyVersions(arrangementPolicy)) {
+    return (
+      getAvailablePolicyVersionsForParticipant(
+        arrangementPolicy,
+        participantIsAdult,
+        participantIsChild
+      ).length > 0
+    );
+  }
+
+  return childInvolvementSupportsParticipant(
+    arrangementPolicy.childInvolvement,
+    participantIsAdult,
+    participantIsChild
   );
 }
 

@@ -200,6 +200,14 @@ namespace CareTogether.Resources.V1Cases
         string? ArrangementPolicyVersion = null
     ) : ArrangementsCommand(FamilyId, ReferralId, ArrangementIds);
 
+    public sealed record ChangeArrangementType(
+        Guid FamilyId,
+        Guid ReferralId,
+        ImmutableList<Guid> ArrangementIds,
+        string ArrangementType,
+        string? ArrangementPolicyVersion = null
+    ) : ArrangementsCommand(FamilyId, ReferralId, ArrangementIds);
+
     public sealed record AssignIndividualVolunteer(
         Guid FamilyId,
         Guid ReferralId,
