@@ -4,6 +4,7 @@ import {
   createAccessTokenAcquirer,
   createSilentRedirectUri,
   getIdentityProviderErrorCode,
+  isInteractiveRecoveryRequired,
 } from './AccessTokenAcquirer.ts';
 
 type Account = { id: string };
@@ -161,5 +162,15 @@ test('extracts a stable Azure B2C error code for telemetry', () => {
   assert.equal(
     getIdentityProviderErrorCode(new Error('network failed')),
     undefined
+  );
+});
+
+test('treats a silent iframe timeout as recoverable interactive auth', () => {
+  assert.equal(
+    isInteractiveRecoveryRequired(
+      { errorCode: 'monitor_window_timeout' },
+      () => false
+    ),
+    true
   );
 });

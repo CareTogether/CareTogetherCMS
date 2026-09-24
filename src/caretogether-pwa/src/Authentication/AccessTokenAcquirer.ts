@@ -21,6 +21,23 @@ export function getIdentityProviderErrorCode(error: unknown) {
   return message?.match(/\bAADB2C\d+\b/)?.[0];
 }
 
+export function isInteractiveRecoveryRequired(
+  error: unknown,
+  isInteractionRequired: (error: unknown) => boolean
+) {
+  if (isInteractionRequired(error)) {
+    return true;
+  }
+
+  if (typeof error !== 'object' || error === null || !('errorCode' in error)) {
+    return false;
+  }
+
+  return (
+    (error as { errorCode?: unknown }).errorCode === 'monitor_window_timeout'
+  );
+}
+
 type TokenResult<TAccount> = {
   accessToken: string;
   account?: TAccount | null;
@@ -79,7 +96,12 @@ export function createAccessTokenAcquirer<TAccount>(
       return (await dependencies.acquireTokenSilently(activeAccount))
         .accessToken;
     } catch (error) {
-      if (!dependencies.isInteractionRequired(error)) {
+      if (
+        !isInteractiveRecoveryRequired(
+          error,
+          dependencies.isInteractionRequired
+        )
+      ) {
         throw error;
       }
 

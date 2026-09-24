@@ -12,6 +12,7 @@ import {
   createAccessTokenAcquirer,
   createSilentRedirectUri,
   getIdentityProviderErrorCode,
+  isInteractiveRecoveryRequired,
 } from './AccessTokenAcquirer';
 
 // MSAL configuration for single page application authorization. For guidance, see
@@ -61,6 +62,14 @@ function trace(scope: string, message: string) {
 
 function renderMsalError(error: unknown) {
   return `${error}`; //TODO: How to log MSAL.js errors?
+}
+
+function isMsalInteractionRequired(error: unknown) {
+  return error instanceof InteractionRequiredAuthError;
+}
+
+function isMsalInteractiveRecoveryRequired(error: unknown) {
+  return isInteractiveRecoveryRequired(error, isMsalInteractionRequired);
 }
 
 function getMsalErrorProperty(error: unknown, property: string) {
@@ -431,7 +440,7 @@ async function loginAndSetActiveAccountAsync(): Promise<AccountInfo> {
       trace(`Login`, `Silent SSO was successful.`);
     } catch (error) {
       trace(`Login`, `Silent SSO failed with: ${renderMsalError(error)}`);
-      if (!(error instanceof InteractionRequiredAuthError)) {
+      if (!isMsalInteractiveRecoveryRequired(error)) {
         throw displayableError(error);
       }
     }
@@ -467,7 +476,7 @@ async function loginAndSetActiveAccountAsync(): Promise<AccountInfo> {
         `Login`,
         `Silent token acquisition failed with: ${renderMsalError(error)}`
       );
-      if (!(error instanceof InteractionRequiredAuthError)) {
+      if (!isMsalInteractiveRecoveryRequired(error)) {
         throw displayableError(error);
       }
     }
@@ -565,8 +574,7 @@ const acquireMsalAccessToken = createAccessTokenAcquirer({
       scopes,
       redirectUri: silentRedirectUri,
     }),
-  isInteractionRequired: (error) =>
-    error instanceof InteractionRequiredAuthError,
+  isInteractionRequired: isMsalInteractionRequired,
   setActiveAccount: (account) => globalMsalInstance.setActiveAccount(account),
   onEvent: trackAccessTokenAcquisition,
 });
