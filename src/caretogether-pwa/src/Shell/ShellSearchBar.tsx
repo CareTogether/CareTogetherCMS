@@ -17,14 +17,21 @@ import { CombinedFamilyInfo } from '../GeneratedClient';
 import { useVisibleFamilies } from '../Model/Data';
 import { useAppNavigate } from '../Hooks/useAppNavigate';
 import { personNameString } from '../Families/PersonName';
-import { normalizeShellSearchText } from './shellSearch';
+import {
+  filterAndRankShellSearchResults,
+  normalizeShellSearchText,
+} from './shellSearch';
 
 const MAX_DISPLAYED_RESULTS = 100;
 
 interface FamilySearchResult {
   id: string;
   label: string;
-  searchText: string;
+  normalizedPrimaryContactFirstName: string;
+  normalizedPrimaryContactLastName: string;
+  normalizedPrimaryContactName: string;
+  normalizedOtherNameTexts: string[];
+  normalizedSearchText: string;
   phones: string[];
   isClient: boolean;
   isVolunteer: boolean;
@@ -33,6 +40,12 @@ interface FamilySearchResult {
 function buildFamilySearchResult(
   family: CombinedFamilyInfo
 ): FamilySearchResult {
+  const primaryContactPersonId =
+    family.family?.primaryFamilyContactPersonId?.toLowerCase();
+  let normalizedPrimaryContactFirstName = '';
+  let normalizedPrimaryContactLastName = '';
+  let normalizedPrimaryContactName = '';
+  const normalizedOtherNameTexts: string[] = [];
   const textParts: string[] = [];
   const phones: string[] = [];
 
@@ -40,7 +53,18 @@ function buildFamilySearchResult(
     const person = adult.item1;
     if (!person) continue;
 
-    textParts.push(personNameString(person).toLowerCase());
+    const normalizedName = normalizeShellSearchText(personNameString(person));
+    if (person.id?.toLowerCase() === primaryContactPersonId) {
+      normalizedPrimaryContactFirstName = normalizeShellSearchText(
+        person.firstName ?? ''
+      );
+      normalizedPrimaryContactLastName = normalizeShellSearchText(
+        person.lastName ?? ''
+      );
+      normalizedPrimaryContactName = normalizedName;
+    } else {
+      normalizedOtherNameTexts.push(normalizedName);
+    }
 
     for (const email of person.emailAddresses ?? []) {
       if (email.address) textParts.push(email.address.toLowerCase());
@@ -58,13 +82,19 @@ function buildFamilySearchResult(
   }
 
   for (const child of family.family?.children ?? []) {
-    textParts.push(personNameString(child).toLowerCase());
+    normalizedOtherNameTexts.push(
+      normalizeShellSearchText(personNameString(child))
+    );
   }
 
   return {
     id: family.family!.id!,
     label: familyNameString(family) || family.family!.id!,
-    searchText: normalizeShellSearchText(textParts.join(' ')),
+    normalizedPrimaryContactFirstName,
+    normalizedPrimaryContactLastName,
+    normalizedPrimaryContactName,
+    normalizedOtherNameTexts,
+    normalizedSearchText: normalizeShellSearchText(textParts.join(' ')),
     phones,
     isClient: family.partneringFamilyInfo != null,
     isVolunteer: family.volunteerFamilyInfo != null,
@@ -107,25 +137,12 @@ export function ShellSearchBar({
     (
       results: FamilySearchResult[],
       state: FilterOptionsState<FamilySearchResult>
-    ) => {
-      const query = normalizeShellSearchText(state.inputValue);
-      if (!query) return results.slice(0, MAX_DISPLAYED_RESULTS);
-
-      const queryDigits = query.replace(/[^0-9]/g, '');
-
-      const filtered: FamilySearchResult[] = [];
-      for (const result of results) {
-        if (
-          result.searchText.includes(query) ||
-          (queryDigits.length > 0 &&
-            result.phones.some((p) => p.includes(queryDigits)))
-        ) {
-          filtered.push(result);
-          if (filtered.length >= MAX_DISPLAYED_RESULTS) break;
-        }
-      }
-      return filtered;
-    },
+    ) =>
+      filterAndRankShellSearchResults(
+        results,
+        state.inputValue,
+        MAX_DISPLAYED_RESULTS
+      ),
     []
   );
 
