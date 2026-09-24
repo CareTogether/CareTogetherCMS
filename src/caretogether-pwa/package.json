@@ -63,6 +63,7 @@
   },
   "scripts": {
     "dev": "vite",
+    "test:unit": "node --test src/**/*.test.ts",
     "type-check": "tsc --noEmit",
     "build": "npm run type-check && vite build",
     "lint": "eslint \"src/**/*.{ts,tsx}\" --report-unused-disable-directives --max-warnings 0",
