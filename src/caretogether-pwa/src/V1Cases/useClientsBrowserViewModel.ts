@@ -2,6 +2,7 @@ import { useMemo } from 'react';
 import { format } from 'date-fns';
 import { ArrangementPhase } from '../GeneratedClient';
 import type {
+  Age,
   Arrangement,
   CombinedFamilyInfo,
   CustomField,
@@ -40,6 +41,8 @@ export type ClientBrowserRowV2 = {
   familyId: string;
   rowKind: 'family' | 'adult' | 'child';
   personName: string;
+  personAge?: Age;
+  memberCount: number;
   treePath: string[];
   family: string;
   memberNames: string;
@@ -292,12 +295,19 @@ export function useClientsBrowserViewModel({
             ),
           };
         };
+        const adults = (family.family?.adults ?? []).flatMap((entry) =>
+          entry.item1?.id ? [entry.item1] : []
+        );
+        const children = (family.family?.children ?? []).filter(
+          (person) => !!person?.id
+        );
         const familyRow: ClientBrowserRowV2 = {
           id: familyId,
           reportCount: 1,
           familyId,
           rowKind: 'family',
           personName: '',
+          memberCount: adults.length + children.length,
           treePath: [familyId],
           family: familyNameString(family),
           memberNames: [
@@ -359,18 +369,13 @@ export function useClientsBrowserViewModel({
           adultCustomFieldValues: {},
           childCustomFieldValues: {},
         };
-        const adults = (family.family?.adults ?? []).flatMap((entry) =>
-          entry.item1?.id ? [entry.item1] : []
-        );
-        const children = (family.family?.children ?? []).filter(
-          (person) => !!person?.id
-        );
         const memberRows: ClientBrowserRowV2[] = [
           ...adults.map((person) => ({
             ...familyRow,
             id: `${familyId}:adult:${person.id}`,
             rowKind: 'adult' as const,
             personName: personNameString(person),
+            personAge: person.age,
             treePath: [familyId, `adult:${person.id}`],
             ...personArrangementValues(person.id),
             adultCustomFieldValues: customFieldValues(
@@ -383,6 +388,7 @@ export function useClientsBrowserViewModel({
             id: `${familyId}:child:${person.id}`,
             rowKind: 'child' as const,
             personName: personNameString(person),
+            personAge: person.age,
             treePath: [familyId, `child:${person.id}`],
             ...personArrangementValues(person.id),
             childCustomFieldValues: customFieldValues(

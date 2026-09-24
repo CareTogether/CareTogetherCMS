@@ -1,4 +1,4 @@
-import { Typography } from '@mui/material';
+import { Chip, Typography } from '@mui/material';
 import {
   getGridBooleanOperators,
   getGridMultiSelectOperators,
@@ -80,6 +80,11 @@ function groupingValue(value: ClientCustomFieldValue) {
   if (typeof value === 'boolean') return value;
   if (typeof value === 'string' && value !== '') return value;
   return '(No value)';
+}
+
+function caseStatusDetails(status: string, caseStatus: string) {
+  const prefix = `${caseStatus} `;
+  return status.startsWith(prefix) ? status.slice(prefix.length) : status;
 }
 
 function normalizedQuickFilter(value: unknown) {
@@ -306,8 +311,8 @@ export function buildClientsColumns(
       renderCell: ({ row }) => (
         <ClientFamilyCellV2
           familyName={row.family || '-'}
+          memberCount={row.memberCount}
           phoneNumber={row.phoneNumber}
-          primaryContactName={row.primaryContactName}
         />
       ),
     },
@@ -350,9 +355,18 @@ export function buildClientsColumns(
       minWidth: 150,
       flex: 1,
       renderCell: ({ row }) => (
-        <Typography {...v2Typography.browserCell} noWrap>
-          {row.status || '-'}
-        </Typography>
+        <Chip
+          size="small"
+          color={row.caseStatus === 'Open' ? 'success' : 'default'}
+          label={[
+            row.caseStatus,
+            row.status && row.status !== row.caseStatus
+              ? caseStatusDetails(row.status, row.caseStatus)
+              : undefined,
+          ]
+            .filter(Boolean)
+            .join(' · ')}
+        />
       ),
     },
     arrayColumn(
