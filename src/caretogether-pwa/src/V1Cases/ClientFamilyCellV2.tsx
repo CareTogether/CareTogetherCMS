@@ -81,7 +81,7 @@ export function ClientFamilyCellV2({
                   sx={{
                     display: 'inline-flex',
                     transform:
-                      memberType === 'child' ? 'translateY(-2px)' : undefined,
+                      memberType === 'child' ? 'translateY(-0.5px)' : undefined,
                   }}
                 >
                   <MemberIcon
