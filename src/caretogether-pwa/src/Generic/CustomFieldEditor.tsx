@@ -111,7 +111,14 @@ export function CustomFieldEditor({
             CustomFieldValidation.SuggestOnly ? (
             <Autocomplete
               freeSolo
-              onInputChange={(_event, newValue: string) => {
+              value={typeof editor.value === 'string' ? editor.value : null}
+              onChange={(_event, newValue: string | null) => {
+                editor.setValue(
+                  newValue != null && newValue.length > 0 ? newValue : null
+                );
+              }}
+              onInputChange={(_event, newValue: string, reason) => {
+                if (reason !== 'input') return;
                 editor.setValue(newValue.length > 0 ? newValue : null);
               }}
               options={(customFieldPolicy.validValues || [])
