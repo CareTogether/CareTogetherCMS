@@ -225,8 +225,7 @@ export function ClientsDataGridV2({
             params.row.rowKind === 'family' ? (
               <ClientFamilyCellV2
                 familyName={params.row.family || '-'}
-                memberCount={params.row.memberCount}
-                phoneNumber={params.row.phoneNumber}
+                memberSummaries={params.row.memberSummaries}
               />
             ) : (
               <>

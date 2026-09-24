@@ -1,4 +1,5 @@
-import { Chip, Typography } from '@mui/material';
+import { Phone as PhoneIcon } from '@mui/icons-material';
+import { Chip, Stack, Typography } from '@mui/material';
 import {
   getGridBooleanOperators,
   getGridMultiSelectOperators,
@@ -311,10 +312,24 @@ export function buildClientsColumns(
       renderCell: ({ row }) => (
         <ClientFamilyCellV2
           familyName={row.family || '-'}
-          memberCount={row.memberCount}
-          phoneNumber={row.phoneNumber}
+          memberSummaries={row.memberSummaries}
         />
       ),
+    },
+    {
+      field: 'phoneNumber',
+      headerName: 'Phone',
+      minWidth: 170,
+      getApplyQuickFilterFn: normalizedQuickFilter,
+      renderCell: ({ row }) =>
+        row.phoneNumber ? (
+          <Stack direction="row" spacing={0.5} sx={{ alignItems: 'center' }}>
+            <PhoneIcon color="action" fontSize="small" />
+            <Typography {...v2Typography.browserCell} noWrap>
+              {row.phoneNumber}
+            </Typography>
+          </Stack>
+        ) : null,
     },
     {
       field: 'memberNames',

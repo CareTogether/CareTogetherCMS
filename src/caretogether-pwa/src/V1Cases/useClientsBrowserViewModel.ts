@@ -7,6 +7,7 @@ import type {
   CombinedFamilyInfo,
   CustomField,
   CompletedCustomFieldInfo,
+  Gender,
   V1Case,
 } from '../GeneratedClient';
 import { familyLastName } from '../Families/FamilyUtils';
@@ -35,6 +36,10 @@ export type ClientAssignmentRoleV2 = {
   role: string;
   options: { value: string; label: string }[];
 };
+export type ClientMemberSummaryV2 = {
+  memberType: 'adult' | 'child';
+  gender?: Gender;
+};
 export type ClientBrowserRowV2 = {
   reportCount: 1;
   id: string;
@@ -42,7 +47,7 @@ export type ClientBrowserRowV2 = {
   rowKind: 'family' | 'adult' | 'child';
   personName: string;
   personAge?: Age;
-  memberCount: number;
+  memberSummaries: ClientMemberSummaryV2[];
   treePath: string[];
   family: string;
   memberNames: string;
@@ -307,7 +312,16 @@ export function useClientsBrowserViewModel({
           familyId,
           rowKind: 'family',
           personName: '',
-          memberCount: adults.length + children.length,
+          memberSummaries: [
+            ...adults.map((person) => ({
+              memberType: 'adult' as const,
+              gender: person.gender,
+            })),
+            ...children.map((person) => ({
+              memberType: 'child' as const,
+              gender: person.gender,
+            })),
+          ],
           treePath: [familyId],
           family: familyNameString(family),
           memberNames: [
