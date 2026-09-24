@@ -1,6 +1,7 @@
 import { expect, test } from '@playwright/test';
 import {
   filterAndRankShellSearchResults,
+  findShellSearchHighlightRange,
   normalizeShellSearchText,
 } from '../src/Shell/shellSearch';
 
@@ -8,6 +9,19 @@ test('normalizes repeated whitespace when matching full names', () => {
   expect(normalizeShellSearchText('Alex  Smith')).toBe(
     normalizeShellSearchText('Alex Smith')
   );
+});
+
+test('finds a case-insensitive text range to highlight', () => {
+  expect(findShellSearchHighlightRange('Ashley Johnson', 'John')).toEqual({
+    start: 7,
+    end: 11,
+  });
+});
+
+test('finds a digit range across formatted phone punctuation', () => {
+  expect(
+    findShellSearchHighlightRange('(515) 304-8087', '515304', '5153048087')
+  ).toEqual({ start: 1, end: 9 });
 });
 
 test('ranks primary-contact matches before household and address matches', () => {

@@ -21,6 +21,10 @@ import {
   filterAndRankShellSearchResults,
   normalizeShellSearchText,
 } from './shellSearch';
+import {
+  ShellSearchMatchDetail,
+  ShellSearchMatchExplanation,
+} from './ShellSearchMatchExplanation';
 
 const MAX_DISPLAYED_RESULTS = 100;
 
@@ -33,6 +37,7 @@ interface FamilySearchResult {
   normalizedOtherNameTexts: string[];
   normalizedSearchText: string;
   phones: string[];
+  matchDetails: ShellSearchMatchDetail[];
   isClient: boolean;
   isVolunteer: boolean;
 }
@@ -46,6 +51,9 @@ function buildFamilySearchResult(
   let normalizedPrimaryContactLastName = '';
   let normalizedPrimaryContactName = '';
   const normalizedOtherNameTexts: string[] = [];
+  const primaryContactMatchDetails: ShellSearchMatchDetail[] = [];
+  const otherNameMatchDetails: ShellSearchMatchDetail[] = [];
+  const otherMatchDetails: ShellSearchMatchDetail[] = [];
   const textParts: string[] = [];
   const phones: string[] = [];
 
@@ -62,29 +70,72 @@ function buildFamilySearchResult(
         person.lastName ?? ''
       );
       normalizedPrimaryContactName = normalizedName;
+      primaryContactMatchDetails.push({
+        label: 'Primary contact',
+        value: personNameString(person),
+        normalizedValue: normalizedName,
+      });
     } else {
       normalizedOtherNameTexts.push(normalizedName);
+      otherNameMatchDetails.push({
+        label: 'Household member',
+        value: personNameString(person),
+        normalizedValue: normalizedName,
+      });
     }
 
     for (const email of person.emailAddresses ?? []) {
-      if (email.address) textParts.push(email.address.toLowerCase());
+      if (!email.address) continue;
+      textParts.push(email.address.toLowerCase());
+      otherMatchDetails.push({
+        label: 'Email',
+        value: email.address,
+        normalizedValue: normalizeShellSearchText(email.address),
+      });
     }
 
     for (const phone of person.phoneNumbers ?? []) {
-      if (phone.number) phones.push(phone.number.replace(/[^0-9]/g, ''));
+      if (!phone.number) continue;
+      const phoneDigits = phone.number.replace(/[^0-9]/g, '');
+      phones.push(phoneDigits);
+      otherMatchDetails.push({
+        label: 'Phone',
+        value: phone.number,
+        normalizedValue: normalizeShellSearchText(phone.number),
+        phoneDigits,
+      });
     }
 
     for (const address of person.addresses ?? []) {
-      textParts.push(
-        `${address.line1} ${address.line2} ${address.city} ${address.state} ${address.county} ${address.postalCode}`
-      );
+      const addressValue = [
+        address.line1,
+        address.line2,
+        address.city,
+        address.state,
+        address.county,
+        address.postalCode,
+      ]
+        .filter(Boolean)
+        .join(', ');
+      const normalizedAddress = normalizeShellSearchText(addressValue);
+      textParts.push(normalizedAddress);
+      otherMatchDetails.push({
+        label: 'Address',
+        value: addressValue,
+        normalizedValue: normalizedAddress,
+      });
     }
   }
 
   for (const child of family.family?.children ?? []) {
-    normalizedOtherNameTexts.push(
-      normalizeShellSearchText(personNameString(child))
-    );
+    const childName = personNameString(child);
+    const normalizedChildName = normalizeShellSearchText(childName);
+    normalizedOtherNameTexts.push(normalizedChildName);
+    otherNameMatchDetails.push({
+      label: 'Household member',
+      value: childName,
+      normalizedValue: normalizedChildName,
+    });
   }
 
   return {
@@ -96,6 +147,10 @@ function buildFamilySearchResult(
     normalizedOtherNameTexts,
     normalizedSearchText: normalizeShellSearchText(textParts.join(' ')),
     phones,
+    matchDetails: primaryContactMatchDetails.concat(
+      otherNameMatchDetails,
+      otherMatchDetails
+    ),
     isClient: family.partneringFamilyInfo != null,
     isVolunteer: family.volunteerFamilyInfo != null,
   };
@@ -199,6 +254,10 @@ export function ShellSearchBar({
             <small className="ph-unmask" style={{ opacity: 0.7 }}>
               {familyTypeSuffix(result)}
             </small>
+            <ShellSearchMatchExplanation
+              details={result.matchDetails}
+              query={searchText}
+            />
           </div>
         </li>
       )}
