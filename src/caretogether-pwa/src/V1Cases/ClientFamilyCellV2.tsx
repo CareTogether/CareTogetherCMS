@@ -1,66 +1,89 @@
-import { Phone as PhoneIcon } from '@mui/icons-material';
-import { Box, Stack, Typography } from '@mui/material';
+import PersonIcon from '@mui/icons-material/Person';
+import { Box, Stack, Tooltip, Typography } from '@mui/material';
+import { Gender } from '../GeneratedClient';
 import { v2Typography } from '../Families/v2Typography';
+import type { ClientMemberSummaryV2 } from './useClientsBrowserViewModel';
 
 type ClientFamilyCellV2Props = {
   familyName: string;
-  phoneNumber?: string;
-  primaryContactName?: string;
+  memberSummaries: ClientMemberSummaryV2[];
 };
+
+function MemberIcon({
+  memberType,
+  label,
+  color,
+}: Pick<ClientMemberSummaryV2, 'memberType'> & {
+  label: string;
+  color: string;
+}) {
+  return (
+    <PersonIcon
+      aria-label={label}
+      sx={{
+        color,
+        fontSize: memberType === 'child' ? 17 : 21,
+      }}
+    />
+  );
+}
 
 export function ClientFamilyCellV2({
   familyName,
-  phoneNumber,
-  primaryContactName,
+  memberSummaries,
 }: ClientFamilyCellV2Props) {
   return (
-    <Stack spacing={0.5} sx={{ minWidth: 0 }}>
-      <Typography
-        {...v2Typography.primaryValue}
-        noWrap
-        sx={{ ...v2Typography.primaryValue.sx, fontWeight: 700, minWidth: 0 }}
+    <Stack
+      component="span"
+      spacing={0.5}
+      sx={{ display: 'inline-flex', minWidth: 0 }}
+    >
+      <Box
+        component="span"
+        sx={{ alignItems: 'center', display: 'flex', gap: 0.75, minWidth: 0 }}
       >
-        {familyName}
-      </Typography>
-      {(primaryContactName || phoneNumber) && (
-        <Box
+        <Typography
+          component="span"
+          {...v2Typography.primaryValue}
+          noWrap
           sx={{
-            alignItems: 'center',
-            display: 'flex',
-            flexWrap: 'wrap',
-            gap: 0.75,
+            ...v2Typography.primaryValue.sx,
+            flex: '0 1 auto',
+            fontWeight: 700,
             minWidth: 0,
           }}
         >
-          {primaryContactName && (
-            <Typography
-              {...v2Typography.browserSecondary}
-              noWrap
-              sx={{ minWidth: 0 }}
-            >
-              {primaryContactName}
-            </Typography>
-          )}
-          {phoneNumber && (
-            <Box
-              sx={{
-                alignItems: 'center',
-                display: 'inline-flex',
-                gap: 0.5,
-                minWidth: 0,
-                whiteSpace: 'nowrap',
-              }}
-            >
-              <PhoneIcon color="action" fontSize="small" />
-              <Typography
-                {...v2Typography.browserSecondary}
-                noWrap
-                sx={{ minWidth: 0 }}
-              >
-                {phoneNumber}
-              </Typography>
-            </Box>
-          )}
+          {familyName}
+        </Typography>
+      </Box>
+      {memberSummaries.length > 0 && (
+        <Box
+          component="span"
+          sx={{ alignItems: 'center', display: 'flex', gap: 0.25 }}
+        >
+          {memberSummaries.map(({ memberType, gender }, index) => {
+            const color =
+              gender === Gender.Male
+                ? '#6f8fa8'
+                : gender === Gender.Female
+                  ? '#b38a9c'
+                  : '#9aa3ad';
+            const memberNumber = memberSummaries
+              .slice(0, index + 1)
+              .filter((member) => member.memberType === memberType).length;
+            const label = `${memberType === 'adult' ? 'Adult' : 'Child'} ${memberNumber}`;
+            return (
+              <Tooltip key={`${memberType}-${index}`} title={label}>
+                <Box component="span" sx={{ display: 'inline-flex' }}>
+                  <MemberIcon
+                    color={color}
+                    label={label}
+                    memberType={memberType}
+                  />
+                </Box>
+              </Tooltip>
+            );
+          })}
         </Box>
       )}
     </Stack>
