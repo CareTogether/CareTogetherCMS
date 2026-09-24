@@ -9,6 +9,13 @@ type ClientFamilyCellV2Props = {
   memberSummaries: ClientMemberSummaryV2[];
 };
 
+function memberColor(gender?: Gender) {
+  if (gender === Gender.Male) return '#6f8fa8';
+  if (gender === Gender.Female) return '#b38a9c';
+  if (gender === Gender.SeeNotes) return '#9aa3ad';
+  return '#9aa3ad';
+}
+
 function MemberIcon({
   memberType,
   label,
@@ -59,22 +66,24 @@ export function ClientFamilyCellV2({
       {memberSummaries.length > 0 && (
         <Box
           component="span"
-          sx={{ alignItems: 'center', display: 'flex', gap: 0.25 }}
+          sx={{ alignItems: 'flex-end', display: 'flex', gap: 0.25 }}
         >
           {memberSummaries.map(({ memberType, gender }, index) => {
-            const color =
-              gender === Gender.Male
-                ? '#6f8fa8'
-                : gender === Gender.Female
-                  ? '#b38a9c'
-                  : '#9aa3ad';
+            const color = memberColor(gender);
             const memberNumber = memberSummaries
               .slice(0, index + 1)
               .filter((member) => member.memberType === memberType).length;
             const label = `${memberType === 'adult' ? 'Adult' : 'Child'} ${memberNumber}`;
             return (
               <Tooltip key={`${memberType}-${index}`} title={label}>
-                <Box component="span" sx={{ display: 'inline-flex' }}>
+                <Box
+                  component="span"
+                  sx={{
+                    display: 'inline-flex',
+                    transform:
+                      memberType === 'child' ? 'translateY(-0.5px)' : undefined,
+                  }}
+                >
                   <MemberIcon
                     color={color}
                     label={label}
