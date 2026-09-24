@@ -140,6 +140,7 @@ export function ClientsDataGridV2({
 }: ClientsDataGridV2Props) {
   const theme = useTheme();
   const [pivotActive, setPivotActive] = useState(false);
+  const [pivotPanelOpen, setPivotPanelOpen] = useState(false);
   const [pivotModel, setPivotModel] = useState<GridPivotModel>(
     initialClientsPivotModel
   );
@@ -300,6 +301,7 @@ export function ClientsDataGridV2({
         )}
         <Box sx={{ height: '100%', minHeight: 360 }}>
           <DataGridPremium
+            key={pivotActive ? 'clients-pivot-grid' : 'clients-tree-grid'}
             showToolbar
             chartsIntegration
             treeData={!pivotActive}
@@ -309,6 +311,8 @@ export function ClientsDataGridV2({
             disableAggregation
             pivotActive={pivotActive}
             onPivotActiveChange={setPivotActive}
+            pivotPanelOpen={pivotPanelOpen}
+            onPivotPanelOpenChange={setPivotPanelOpen}
             pivotModel={pivotModel}
             onPivotModelChange={setPivotModel}
             aggregationRowsScope="filtered"
