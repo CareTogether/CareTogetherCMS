@@ -66,7 +66,7 @@ export function ClientFamilyCellV2({
       {memberSummaries.length > 0 && (
         <Box
           component="span"
-          sx={{ alignItems: 'flex-end', display: 'flex', gap: 0.25 }}
+          sx={{ alignItems: 'flex-end', display: 'flex', gap: 0.1 }}
         >
           {memberSummaries.map(({ memberType, gender }, index) => {
             const color = memberColor(gender);
