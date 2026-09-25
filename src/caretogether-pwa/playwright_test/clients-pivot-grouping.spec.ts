@@ -70,6 +70,26 @@ test('pivot field scope chooses one record per entity being counted', () => {
   ).toEqual([]);
 });
 
+test('organization is the final client grid column and supports empty filtering', () => {
+  const rows = [
+    { organizationNames: ['Downtown Church'] },
+    { organizationNames: [] },
+  ] as ClientBrowserRowV2[];
+  const columns = buildClientsColumns(rows, [], [], [], [], [], []);
+  const organizationColumn = columns.find(
+    (column) => column.field === 'organizationNames'
+  );
+
+  expect(columns.at(-1)?.field).toBe('organizationNames');
+  expect(organizationColumn?.valueOptions).toEqual([
+    { value: '', label: 'Unassigned' },
+    { value: 'Downtown Church', label: 'Downtown Church' },
+  ]);
+  expect(
+    organizationColumn?.filterOperators?.map((operator) => operator.value)
+  ).toEqual(expect.arrayContaining(['isEmpty', 'isNotEmpty']));
+});
+
 test('family custom fields remain available when counting adults', () => {
   const field = new CustomField({
     name: 'Region',

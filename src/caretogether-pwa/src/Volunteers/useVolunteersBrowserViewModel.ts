@@ -2,6 +2,7 @@ import { useMemo } from 'react';
 import { CombinedFamilyInfo, CustomField } from '../GeneratedClient';
 import { familyNameString } from '../Families/FamilyName';
 import { personNameString } from '../Families/PersonName';
+import { useVisibleCommunities } from '../Model/Data';
 import { usePolicy } from '../Model/PolicyModel';
 import { useVolunteerFamilies } from '../Model/VolunteersModel';
 import { getFamilyCounty } from '../Utilities/getFamilyCounty';
@@ -25,7 +26,7 @@ import {
   roleFilterValues,
 } from './roleFilterValues';
 import { roleApprovalStatusFilterOptions } from './roleApprovalStatusPresentation';
-
+import { organizationNamesByFamilyId } from './volunteerOrganizationModel';
 export type VolunteerCustomFieldValue = CustomFieldGridValue;
 export type VolunteerBrowserRowV2 = {
   arrangementAssignmentValues: Record<string, 'assigned' | 'unassigned'>;
@@ -35,6 +36,7 @@ export type VolunteerBrowserRowV2 = {
   familyLastName: string;
   id: string;
   missingRequirementGroups: VolunteerMissingRequirementGroup[];
+  organizationNames: string[];
   primaryContact: string;
   requirementFilterValues: string[];
   roleFilterValues: string[];
@@ -153,6 +155,7 @@ function searchText(family: CombinedFamilyInfo) {
 
 export function buildVolunteerBrowserRow(
   family: CombinedFamilyInfo,
+  organizationNames: string[],
   familyCustomFields: CustomField[],
   volunteerCustomFields: CustomField[],
   arrangementTypes: string[],
@@ -192,6 +195,7 @@ export function buildVolunteerBrowserRow(
     familyLastName: contact?.lastName ?? '⚠ MISSING PRIMARY CONTACT',
     id: family.family!.id!,
     missingRequirementGroups,
+    organizationNames,
     primaryContact: contact ? personNameString(contact) : '',
     requirementFilterValues: requirementNames.length
       ? Array.from(
@@ -219,6 +223,7 @@ export function buildVolunteerBrowserRow(
 
 export function useVolunteersBrowserViewModel(): VolunteersBrowserViewModel {
   const families = useVolunteerFamilies();
+  const communities = useVisibleCommunities();
   const policy = usePolicy();
   const familyCustomFields = useMemo(
     () => policy.customFamilyFields ?? [],
@@ -261,11 +266,19 @@ export function useVolunteersBrowserViewModel(): VolunteersBrowserViewModel {
       ),
     []
   );
+  const organizationNamesByFamily = useMemo(
+    () =>
+      organizationNamesByFamilyId(
+        communities.map((communityInfo) => communityInfo.community)
+      ),
+    [communities]
+  );
   const rows = useMemo(
     () =>
       families.map((family) =>
         buildVolunteerBrowserRow(
           family,
+          organizationNamesByFamily.get(family.family!.id!) ?? [],
           familyCustomFields,
           volunteerCustomFields,
           arrangementTypes,
@@ -279,6 +292,7 @@ export function useVolunteersBrowserViewModel(): VolunteersBrowserViewModel {
       familyCustomFields,
       roleNamesForPresentation,
       statusLabelsByValue,
+      organizationNamesByFamily,
       volunteerCustomFields,
     ]
   );

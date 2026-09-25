@@ -439,6 +439,18 @@ export function buildClientsColumns(
       ),
       (row) => row.arrangementTypes
     ),
+    {
+      ...arrayColumn(
+        'organizationNames',
+        'Organization',
+        Array.from(new Set(rows.flatMap((row) => row.organizationNames ?? [])))
+          .sort((first, second) => first.localeCompare(second))
+          .map((value) => ({ value, label: value })),
+        (row) => row.organizationNames ?? [],
+        'Unassigned'
+      ),
+      filterOperators: [...arrayFilterOperators, ...emptyOperators<string[]>()],
+    },
   ];
   return columns.map((column) => ({
     chartable: column.pivotable === true,
