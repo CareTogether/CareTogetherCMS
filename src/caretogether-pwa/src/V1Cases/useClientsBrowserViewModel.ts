@@ -13,7 +13,10 @@ import type {
 import { familyLastName } from '../Families/FamilyUtils';
 import { familyNameString } from '../Families/FamilyName';
 import { personNameString } from '../Families/PersonName';
-import { usePersonAndFamilyLookup } from '../Model/DirectoryModel';
+import {
+  useFamilyLookup,
+  usePersonAndFamilyLookup,
+} from '../Model/DirectoryModel';
 import { usePartneringFamilies } from '../Model/V1CasesModel';
 import { usePolicy } from '../Model/PolicyModel';
 import { useVisibleCommunities, useVisibleReferrals } from '../Model/Data';
@@ -26,6 +29,10 @@ import { matchingArrangements } from './PartneringFamilies/arrangementHelpers';
 import { openReferralByFamilyId } from './PartneringFamilies/sortPartneringFamilies';
 import { clientsOpenedAtTime } from './clientsGridSorting';
 import { clientPersonArrangements } from './clientPersonArrangements';
+import {
+  clientArrangementFunctionAssignmentsFor,
+  type ClientArrangementFunctionAssignmentV2,
+} from './clientArrangementFunctions';
 import {
   customFieldGridValues,
   type CustomFieldGridValue,
@@ -61,6 +68,7 @@ export type ClientBrowserRowV2 = {
   caseStatus: 'Open' | 'Closed' | 'No case';
   arrangementStatuses: string[];
   arrangementTypes: string[];
+  arrangementFunctionAssignments: ClientArrangementFunctionAssignmentV2[];
   county: string;
   arrangementRows: ClientArrangementSummaryItemV2[];
   arrangements: string;
@@ -210,6 +218,7 @@ export function useClientsBrowserViewModel({
   const communities = useVisibleCommunities();
   const referralRecords = useVisibleReferrals();
   const policy = usePolicy();
+  const familyLookup = useFamilyLookup();
   const lookup = usePersonAndFamilyLookup();
   const referrals = useMemo(
     () =>
@@ -305,6 +314,14 @@ export function useClientsBrowserViewModel({
             arrangementTypes: Array.from(
               new Set(personArrangementRows.map((row) => row.arrangementType))
             ),
+            arrangementFunctionAssignments:
+              clientArrangementFunctionAssignmentsFor(
+                personArrangements,
+                policy.referralPolicy?.arrangementPolicies,
+                (_familyId, personId) =>
+                  personNameString(lookup(personId).person),
+                (familyId) => familyNameString(familyLookup(familyId))
+              ),
             arrangementStatuses: arrangementStatusesFor(
               clientPersonArrangements(openArrangements, personId)
             ),
@@ -360,6 +377,14 @@ export function useClientsBrowserViewModel({
           arrangementTypes: Array.from(
             new Set(arrangementRows.map((a) => a.arrangementType))
           ),
+          arrangementFunctionAssignments:
+            clientArrangementFunctionAssignmentsFor(
+              arrangements,
+              policy.referralPolicy?.arrangementPolicies,
+              (_familyId, personId) =>
+                personNameString(lookup(personId).person),
+              (familyId) => familyNameString(familyLookup(familyId))
+            ),
           county: getFamilyCounty(family) ?? '',
           arrangementRows,
           arrangements: arrangementSummary(arrangementRows),
@@ -434,6 +459,8 @@ export function useClientsBrowserViewModel({
       adultCustomFields,
       childCustomFields,
       organizationNamesByFamily,
+      policy.referralPolicy?.arrangementPolicies,
+      familyLookup,
     ]
   );
   const counties = useMemo(

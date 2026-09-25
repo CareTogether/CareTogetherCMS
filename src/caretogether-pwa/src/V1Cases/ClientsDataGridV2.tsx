@@ -30,6 +30,7 @@ import {
 } from './clientsGridSorting';
 import {
   buildClientsColumns,
+  isInternalClientsColumn,
   isOptionalClientsColumn,
 } from './clientsGridColumns';
 import { ClientsChartsPanel } from './ClientsChartsPanel';
@@ -67,7 +68,14 @@ const clientsGridSlotProps = {
     ) =>
       clientsGridSortSlotProps.columnsManagement
         .getTogglableColumns(columns)
-        .filter((field) => field !== 'family'),
+        .filter(
+          (field) => field !== 'family' && !isInternalClientsColumn(field)
+        ),
+  },
+  filterPanel: {
+    filterFormProps: {
+      valueInputProps: { sx: { width: 280 } },
+    },
   },
   chartsPanel: {
     schema: {
