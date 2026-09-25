@@ -388,6 +388,15 @@ namespace CareTogether.Resources.Directory
                                 ? c.PhoneNumber.Id
                                 : personEntry.PreferredPhoneNumberId,
                         },
+                        RemovePersonPhoneNumber c => personEntry with
+                        {
+                            PhoneNumbers = personEntry.PhoneNumbers
+                                .Where(p => p.Id != c.PhoneNumberId)
+                                .ToImmutableList(),
+                            PreferredPhoneNumberId = personEntry.PreferredPhoneNumberId == c.PhoneNumberId
+                                ? null
+                                : personEntry.PreferredPhoneNumberId,
+                        },
                         AddPersonEmailAddress c => personEntry with
                         {
                             EmailAddresses = personEntry.EmailAddresses.Add(c.EmailAddress),
@@ -403,6 +412,15 @@ namespace CareTogether.Resources.Directory
                             ),
                             PreferredEmailAddressId = c.IsPreferredEmailAddress
                                 ? c.EmailAddress.Id
+                                : personEntry.PreferredEmailAddressId,
+                        },
+                        RemovePersonEmailAddress c => personEntry with
+                        {
+                            EmailAddresses = personEntry.EmailAddresses
+                                .Where(e => e.Id != c.EmailAddressId)
+                                .ToImmutableList(),
+                            PreferredEmailAddressId = personEntry.PreferredEmailAddressId == c.EmailAddressId
+                                ? null
                                 : personEntry.PreferredEmailAddressId,
                         },
                         UpdateCustomFamilyMemberField c => personEntry with

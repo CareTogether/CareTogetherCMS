@@ -43,6 +43,8 @@ import {
   CustodialRelationshipType,
   UpdateCustodialRelationshipType,
   RemoveCustodialRelationship,
+  RemovePersonEmailAddress,
+  RemovePersonPhoneNumber,
   ChangePrimaryFamilyContact,
   FamilyRecordsCommand,
   PersonRecordsCommand,
@@ -566,6 +568,14 @@ export function useDirectoryModel() {
       return command;
     }
   );
+  const removePersonPhoneNumber = usePersonCommandCallback(
+    async (_familyId, personId: string, phoneNumberId: string) => {
+      return commandFactory(RemovePersonPhoneNumber, {
+        personId,
+        phoneNumberId,
+      });
+    }
+  );
   const addPersonEmailAddress = usePersonCommandCallback(
     async (
       _familyId,
@@ -605,6 +615,14 @@ export function useDirectoryModel() {
         isPreferredEmailAddress: isPreferred,
       });
       return command;
+    }
+  );
+  const removePersonEmailAddress = usePersonCommandCallback(
+    async (_familyId, personId: string, emailAddressId: string) => {
+      return commandFactory(RemovePersonEmailAddress, {
+        personId,
+        emailAddressId,
+      });
     }
   );
   const addPersonAddress = usePersonCommandCallback(
@@ -952,8 +970,10 @@ export function useDirectoryModel() {
     undoCreatePerson,
     addPersonPhoneNumber,
     updatePersonPhoneNumber,
+    removePersonPhoneNumber,
     addPersonEmailAddress,
     updatePersonEmailAddress,
+    removePersonEmailAddress,
     addPersonAddress,
     updatePersonAddress,
     addAdult,

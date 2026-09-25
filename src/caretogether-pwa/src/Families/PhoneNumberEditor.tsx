@@ -6,16 +6,19 @@ import {
   FormControl,
   FormControlLabel,
   FormLabel,
+  IconButton,
   Radio,
   RadioGroup,
   TextField,
 } from '@mui/material';
 import {
   Add as AddIcon,
+  DeleteForever as DeleteForeverIcon,
   Favorite,
   FavoriteBorder,
 } from '@mui/icons-material';
 import { useDirectoryModel } from '../Model/DirectoryModel';
+import { useBackdrop } from '../Hooks/useBackdrop';
 import { useInlineEditor } from '../Hooks/useInlineEditor';
 import { PersonEditorProps } from './PersonEditorProps';
 import {
@@ -42,6 +45,7 @@ export function PhoneNumberEditor({
   phoneNumber,
 }: PhoneNumberEditorProps) {
   const directoryModel = useDirectoryModel();
+  const withBackdrop = useBackdrop();
 
   // Automatically assume this is the person's preferred phone number if it is the
   // first phone number being added for that person.
@@ -89,6 +93,19 @@ export function PhoneNumberEditor({
       isPreferred: isPreferred,
     });
     editor.setEditing(true);
+  }
+
+  async function handleDelete() {
+    if (!phoneNumber?.id) return;
+    if (!window.confirm('Remove this phone number?')) return;
+
+    await withBackdrop(() =>
+      directoryModel.removePersonPhoneNumber(
+        familyId!,
+        person.id!,
+        phoneNumber.id!
+      )
+    );
   }
 
   const permissions = useFamilyIdPermissions(familyId);
@@ -203,8 +220,20 @@ export function PhoneNumberEditor({
                 />
               )}
               {phoneNumber!.number} - {PhoneNumberType[phoneNumber!.type!]}
-              {permissions(Permission.EditPersonContactInfo) &&
-                editor.editButton}
+              {permissions(Permission.EditPersonContactInfo) && (
+                <>
+                  {editor.editButton}
+                  <IconButton
+                    aria-label="Remove phone number"
+                    color="error"
+                    onClick={handleDelete}
+                    size="small"
+                    sx={{ margin: 1 }}
+                  >
+                    <DeleteForeverIcon fontSize="inherit" />
+                  </IconButton>
+                </>
+              )}
             </>
           )}
         </Grid>

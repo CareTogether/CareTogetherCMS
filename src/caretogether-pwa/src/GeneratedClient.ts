@@ -14931,6 +14931,16 @@ export abstract class PersonCommand implements IPersonCommand {
             result.init(data);
             return result;
         }
+        if (data["discriminator"] === "RemovePersonEmailAddress") {
+            let result = new RemovePersonEmailAddress();
+            result.init(data);
+            return result;
+        }
+        if (data["discriminator"] === "RemovePersonPhoneNumber") {
+            let result = new RemovePersonPhoneNumber();
+            result.init(data);
+            return result;
+        }
         if (data["discriminator"] === "UndoCreatePerson") {
             let result = new UndoCreatePerson();
             result.init(data);
@@ -15233,6 +15243,74 @@ export interface ICreatePerson extends IPersonCommand {
     preferredEmailAddressId?: string | undefined;
     concerns?: string | undefined;
     notes?: string | undefined;
+}
+
+export class RemovePersonEmailAddress extends PersonCommand implements IRemovePersonEmailAddress {
+    emailAddressId!: string;
+
+    constructor(data?: IRemovePersonEmailAddress) {
+        super(data);
+        this._discriminator = "RemovePersonEmailAddress";
+    }
+
+    override init(_data?: any) {
+        super.init(_data);
+        if (_data) {
+            this.emailAddressId = _data["emailAddressId"];
+        }
+    }
+
+    static override fromJS(data: any): RemovePersonEmailAddress {
+        data = typeof data === 'object' ? data : {};
+        let result = new RemovePersonEmailAddress();
+        result.init(data);
+        return result;
+    }
+
+    override toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["emailAddressId"] = this.emailAddressId;
+        super.toJSON(data);
+        return data;
+    }
+}
+
+export interface IRemovePersonEmailAddress extends IPersonCommand {
+    emailAddressId: string;
+}
+
+export class RemovePersonPhoneNumber extends PersonCommand implements IRemovePersonPhoneNumber {
+    phoneNumberId!: string;
+
+    constructor(data?: IRemovePersonPhoneNumber) {
+        super(data);
+        this._discriminator = "RemovePersonPhoneNumber";
+    }
+
+    override init(_data?: any) {
+        super.init(_data);
+        if (_data) {
+            this.phoneNumberId = _data["phoneNumberId"];
+        }
+    }
+
+    static override fromJS(data: any): RemovePersonPhoneNumber {
+        data = typeof data === 'object' ? data : {};
+        let result = new RemovePersonPhoneNumber();
+        result.init(data);
+        return result;
+    }
+
+    override toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["phoneNumberId"] = this.phoneNumberId;
+        super.toJSON(data);
+        return data;
+    }
+}
+
+export interface IRemovePersonPhoneNumber extends IPersonCommand {
+    phoneNumberId: string;
 }
 
 export class UndoCreatePerson extends PersonCommand implements IUndoCreatePerson {

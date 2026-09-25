@@ -196,6 +196,60 @@ namespace CareTogether.Core.Test
         }
 
         [TestMethod]
+        public void ExecutePersonCommandRemovesPhoneNumberAndEmailAddress()
+        {
+            var phoneNumber = new PhoneNumber(guid2, "5551234567", PhoneNumberType.Mobile);
+            var emailAddress = new EmailAddress(
+                guid2,
+                "personal@example.com",
+                EmailAddressType.Personal
+            );
+            var dut = DirectoryModel.InitializeAsync(EventSequence()).Result;
+            var (_, _, _, createPersonCommit) = dut.ExecutePersonCommand(
+                new CreatePerson(
+                    guid1,
+                    "John",
+                    "Doe",
+                    Gender.Male,
+                    new ExactAge(new DateTime(1980, 1, 1)),
+                    null,
+                    ImmutableList<Address>.Empty,
+                    null,
+                    ImmutableList<PhoneNumber>.Empty.Add(phoneNumber),
+                    phoneNumber.Id,
+                    ImmutableList<EmailAddress>.Empty.Add(emailAddress),
+                    emailAddress.Id,
+                    null,
+                    null
+                ),
+                guid0,
+                new DateTime(2021, 7, 1)
+            );
+            createPersonCommit();
+
+            var (_, _, person, removePhoneNumberCommit) = dut.ExecutePersonCommand(
+                new RemovePersonPhoneNumber(guid1, phoneNumber.Id!.Value),
+                guid0,
+                new DateTime(2021, 7, 2)
+            );
+            removePhoneNumberCommit();
+
+            Assert.AreEqual(0, person.PhoneNumbers.Count);
+            Assert.IsNull(person.PreferredPhoneNumberId);
+
+            var (_, _, personAfterEmailRemoval, removeEmailAddressCommit) =
+                dut.ExecutePersonCommand(
+                    new RemovePersonEmailAddress(guid1, emailAddress.Id),
+                    guid0,
+                    new DateTime(2021, 7, 3)
+                );
+            removeEmailAddressCommit();
+
+            Assert.AreEqual(0, personAfterEmailRemoval.EmailAddresses.Count);
+            Assert.IsNull(personAfterEmailRemoval.PreferredEmailAddressId);
+        }
+
+        [TestMethod]
         public async Task TestInitializeAsyncWithEvenMoreEvents()
         {
             var dut = await DirectoryModel.InitializeAsync(

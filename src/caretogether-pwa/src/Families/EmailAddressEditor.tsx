@@ -6,16 +6,19 @@ import {
   FormControl,
   FormControlLabel,
   FormLabel,
+  IconButton,
   Radio,
   RadioGroup,
   TextField,
 } from '@mui/material';
 import {
   Add as AddIcon,
+  DeleteForever as DeleteForeverIcon,
   Favorite,
   FavoriteBorder,
 } from '@mui/icons-material';
 import { useDirectoryModel } from '../Model/DirectoryModel';
+import { useBackdrop } from '../Hooks/useBackdrop';
 import { useInlineEditor } from '../Hooks/useInlineEditor';
 import { PersonEditorProps } from './PersonEditorProps';
 import {
@@ -42,6 +45,7 @@ export function EmailAddressEditor({
   emailAddress,
 }: EmailAddressEditorProps) {
   const directoryModel = useDirectoryModel();
+  const withBackdrop = useBackdrop();
 
   // Automatically assume this is the person's preferred email address if it is the
   // first email address being added for that person.
@@ -89,6 +93,19 @@ export function EmailAddressEditor({
       isPreferred: isPreferred,
     });
     editor.setEditing(true);
+  }
+
+  async function handleDelete() {
+    if (!emailAddress?.id) return;
+    if (!window.confirm('Remove this email address?')) return;
+
+    await withBackdrop(() =>
+      directoryModel.removePersonEmailAddress(
+        familyId!,
+        person.id!,
+        emailAddress.id!
+      )
+    );
   }
 
   const permissions = useFamilyIdPermissions(familyId);
@@ -198,8 +215,20 @@ export function EmailAddressEditor({
                 />
               )}
               {emailAddress!.address} - {EmailAddressType[emailAddress!.type!]}
-              {permissions(Permission.EditPersonContactInfo) &&
-                editor.editButton}
+              {permissions(Permission.EditPersonContactInfo) && (
+                <>
+                  {editor.editButton}
+                  <IconButton
+                    aria-label="Remove email address"
+                    color="error"
+                    onClick={handleDelete}
+                    size="small"
+                    sx={{ margin: 1 }}
+                  >
+                    <DeleteForeverIcon fontSize="inherit" />
+                  </IconButton>
+                </>
+              )}
             </>
           )}
         </Grid>
