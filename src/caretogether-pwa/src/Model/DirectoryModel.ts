@@ -173,7 +173,9 @@ function trackNoteAuthorLookupError(note: Note, reason: string) {
   }
 
   noteAuthorLookupErrorsTracked.add(eventKey);
-  posthog.captureException(new Error('Unable to resolve note author'), {
+
+  posthog.captureException(new Error(reason), {
+    $exception_level: 'warning',
     reason,
     noteId: note.id,
     noteStatus: note.status,

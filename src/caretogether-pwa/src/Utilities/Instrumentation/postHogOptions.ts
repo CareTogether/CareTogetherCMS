@@ -16,6 +16,7 @@ const localFeatureFlagOnlyOptions: Partial<PostHogConfig> = import.meta.env.DEV
 
 export const postHogOptions: Partial<PostHogConfig> = {
   ...localFeatureFlagOnlyOptions,
+  capture_pageview: 'history_change',
   session_recording: {
     // `maskTextFn` only applies to selected elements, so make sure to set to "*" if you want this to work globally.
     maskTextSelector: '*',
