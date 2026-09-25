@@ -92,7 +92,7 @@ export function ClientArrangementAssignmentFilter({
     null;
 
   return (
-    <Stack spacing={1} sx={{ py: 0.5, width: 280 }}>
+    <Stack spacing={1} sx={{ width: 280 }}>
       <Autocomplete
         disabled={disabled}
         onChange={(_event, arrangementType) =>
