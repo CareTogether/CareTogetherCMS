@@ -14,6 +14,16 @@ import { formatCustomFieldGridValue } from '../Generic/customFieldValue';
 import { simplify } from '../Utilities/stringUtils';
 import { ClientFamilyCellV2 } from './ClientFamilyCellV2';
 import { ClientArrangementSummaryCellV2 } from './ClientArrangementSummaryCellV2';
+import {
+  ClientArrangementAssignmentFilter,
+  type ClientArrangementAssignmentFilterProps,
+} from './ClientArrangementAssignmentFilter';
+import {
+  CLIENT_ARRANGEMENT_ASSIGNMENT_FILTER_FIELD,
+  clientArrangementAssignmentFilterValue,
+  matchesClientArrangementAssignmentFilter,
+  type ClientArrangementFunctionAssignmentV2,
+} from './clientArrangementFunctions';
 import { clientsInternalSortColumns } from './clientsGridSorting';
 import type {
   ClientAssignmentRoleV2,
@@ -124,6 +134,70 @@ function arrayColumn(
         {formattedValue || '-'}
       </Typography>
     ),
+  };
+}
+
+function arrangementAssignmentFilterColumn(
+  rows: ClientBrowserRowV2[]
+): GridColDef<ClientBrowserRowV2, ClientArrangementFunctionAssignmentV2[]> {
+  const assignments = rows.flatMap(
+    (row) => row.arrangementFunctionAssignments ?? []
+  );
+  const assignmentLabels = new Map(
+    assignments.flatMap((assignment) =>
+      assignment.assignmentId && assignment.assignmentLabel
+        ? [[assignment.assignmentId, assignment.assignmentLabel] as const]
+        : []
+    )
+  );
+  const operator: GridFilterOperator<
+    ClientBrowserRowV2,
+    ClientArrangementFunctionAssignmentV2[],
+    ClientArrangementFunctionAssignmentV2[],
+    ClientArrangementAssignmentFilterProps
+  > = {
+    label: 'matches',
+    value: 'matches',
+    getApplyFilterFn: (item) => {
+      const filterValue = clientArrangementAssignmentFilterValue(item.value);
+      if (!filterValue) return null;
+      return (rowAssignments) =>
+        matchesClientArrangementAssignmentFilter(
+          rowAssignments ?? [],
+          filterValue
+        );
+    },
+    getValueAsString: (value) => {
+      const filterValue = clientArrangementAssignmentFilterValue(value);
+      if (!filterValue) return '';
+      return [
+        filterValue.arrangementType,
+        filterValue.functionName,
+        filterValue.assignmentId
+          ? assignmentLabels.get(filterValue.assignmentId)
+          : undefined,
+        filterValue.arrangementPolicyVersion
+          ? `Version ${filterValue.arrangementPolicyVersion}`
+          : undefined,
+      ]
+        .filter(Boolean)
+        .join(' · ');
+    },
+    InputComponent: ClientArrangementAssignmentFilter,
+    InputComponentProps: { assignments },
+  };
+
+  return {
+    field: CLIENT_ARRANGEMENT_ASSIGNMENT_FILTER_FIELD,
+    headerName: 'Arrangement assignment',
+    hideable: false,
+    sortable: false,
+    pinnable: false,
+    disableExport: true,
+    filterOperators: [operator],
+    getApplyQuickFilterFn: () => null,
+    valueGetter: (_value, row) => row.arrangementFunctionAssignments ?? [],
+    renderCell: () => null,
   };
 }
 
@@ -439,6 +513,7 @@ export function buildClientsColumns(
       ),
       (row) => row.arrangementTypes
     ),
+    arrangementAssignmentFilterColumn(rows),
     {
       ...arrayColumn(
         'organizationNames',
@@ -511,9 +586,14 @@ export function isOptionalClientsColumn(field: string) {
       'arrangementStatuses',
       'arrangementTypes',
     ].includes(field) ||
+    field === CLIENT_ARRANGEMENT_ASSIGNMENT_FILTER_FIELD ||
     field.startsWith('customField:') ||
     field.startsWith('caseCustomField:') ||
     field.startsWith('adultCustomField:') ||
     field.startsWith('childCustomField:')
   );
+}
+
+export function isInternalClientsColumn(field: string) {
+  return field === CLIENT_ARRANGEMENT_ASSIGNMENT_FILTER_FIELD;
 }

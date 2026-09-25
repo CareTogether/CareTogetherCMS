@@ -3,7 +3,12 @@ import type {
   GridPivotModel,
   GridRenderCellParams,
 } from '@mui/x-data-grid-premium';
-import { CustomField, CustomFieldType } from '../src/GeneratedClient';
+import {
+  Arrangement,
+  ArrangementPolicy,
+  CustomField,
+  CustomFieldType,
+} from '../src/GeneratedClient';
 import {
   buildClientCustomFieldColumns,
   buildClientsColumns,
@@ -12,7 +17,12 @@ import {
   clientsPivotRows,
   clientsPivotScope,
 } from '../src/V1Cases/clientsPivotScope';
-import type { ClientBrowserRowV2 } from '../src/V1Cases/useClientsBrowserViewModel';
+import { type ClientBrowserRowV2 } from '../src/V1Cases/useClientsBrowserViewModel';
+import {
+  CLIENT_ARRANGEMENT_ASSIGNMENT_FILTER_FIELD,
+  clientArrangementFunctionAssignmentsFor,
+  matchesClientArrangementAssignmentFilter,
+} from '../src/V1Cases/clientArrangementFunctions';
 
 function pivotModel(...fields: string[]): GridPivotModel {
   return {
@@ -88,6 +98,141 @@ test('organization is the final client grid column and supports empty filtering'
   expect(
     organizationColumn?.filterOperators?.map((operator) => operator.value)
   ).toEqual(expect.arrayContaining(['isEmpty', 'isNotEmpty']));
+});
+
+test('arrangement assignments use one structured client filter', () => {
+  const arrangement = {
+    id: 'parent-advocate-arrangement',
+    arrangementType: 'Parent advocate pairing',
+    familyVolunteerAssignments: [],
+    individualVolunteerAssignments: [
+      {
+        familyId: 'volunteer-family',
+        personId: 'volunteer-person',
+        arrangementFunction: 'Parent advocate',
+      },
+    ],
+  } as Arrangement;
+  const policy = {
+    arrangementType: 'Parent advocate pairing',
+    arrangementFunctions: [{ functionName: 'Parent advocate' }],
+  } as ArrangementPolicy;
+  const assignments = clientArrangementFunctionAssignmentsFor(
+    [arrangement],
+    [policy],
+    () => 'Parent Advocate Volunteer',
+    () => 'Volunteer Family'
+  );
+  const rows = [
+    { arrangementFunctionAssignments: assignments },
+    { arrangementFunctionAssignments: [] },
+  ] as ClientBrowserRowV2[];
+  const columns = buildClientsColumns(rows, [], [], [], [], [], []);
+  const assignmentColumn = columns.find(
+    (column) => column.field === CLIENT_ARRANGEMENT_ASSIGNMENT_FILTER_FIELD
+  );
+  const operator = assignmentColumn?.filterOperators?.[0];
+  const filterValue = {
+    arrangementType: 'Parent advocate pairing',
+    functionName: 'Parent advocate',
+    assignmentId: 'person:volunteer-family:volunteer-person',
+  };
+  const applyFilter = operator?.getApplyFilterFn(
+    {
+      field: CLIENT_ARRANGEMENT_ASSIGNMENT_FILTER_FIELD,
+      operator: 'matches',
+      value: filterValue,
+    },
+    assignmentColumn!
+  );
+
+  expect(assignmentColumn?.headerName).toBe('Arrangement assignment');
+  expect(assignmentColumn?.filterOperators?.map(({ value }) => value)).toEqual([
+    'matches',
+  ]);
+  expect(operator?.InputComponent).toBeDefined();
+  expect(applyFilter?.(assignments, rows[0], assignmentColumn!, null!)).toBe(
+    true
+  );
+});
+
+test('structured assignment matching keeps all criteria on the same arrangement', () => {
+  expect(
+    matchesClientArrangementAssignmentFilter(
+      [
+        {
+          arrangementId: 'first',
+          arrangementType: 'Parent advocate pairing',
+          arrangementPolicyVersion: null,
+          functionName: 'Other function',
+          assignmentId: 'person:family:person',
+          assignmentLabel: 'Volunteer',
+        },
+        {
+          arrangementId: 'second',
+          arrangementType: 'Other arrangement',
+          arrangementPolicyVersion: null,
+          functionName: 'Parent advocate',
+          assignmentId: 'person:family:person',
+          assignmentLabel: 'Volunteer',
+        },
+      ],
+      {
+        arrangementType: 'Parent advocate pairing',
+        functionName: 'Parent advocate',
+        assignmentId: 'person:family:person',
+      }
+    )
+  ).toBe(false);
+});
+
+test('arrangement assignment records include policy functions and assigned fallback values', () => {
+  const arrangement = {
+    id: 'hosting-arrangement',
+    arrangementType: 'Hosting',
+    arrangementPolicyVersion: 'v2',
+    familyVolunteerAssignments: [
+      { familyId: 'family', arrangementFunction: 'Legacy function' },
+    ],
+    individualVolunteerAssignments: [],
+  } as Arrangement;
+
+  const policy = {
+    arrangementType: 'Hosting',
+    arrangementFunctions: [{ functionName: 'Hosting function' }],
+    policyVersions: [
+      {
+        version: 'v2',
+        arrangementFunctions: [{ functionName: 'Versioned function' }],
+      },
+    ],
+  } as ArrangementPolicy;
+
+  const assignments = clientArrangementFunctionAssignmentsFor(
+    [arrangement],
+    [policy],
+    () => 'Person',
+    () => 'Family'
+  );
+
+  expect(assignments).toEqual([
+    {
+      arrangementId: 'hosting-arrangement',
+      arrangementType: 'Hosting',
+      arrangementPolicyVersion: 'v2',
+      functionName: 'Versioned function',
+      assignmentId: null,
+      assignmentLabel: null,
+    },
+    {
+      arrangementId: 'hosting-arrangement',
+      arrangementType: 'Hosting',
+      arrangementPolicyVersion: 'v2',
+      functionName: 'Legacy function',
+      assignmentId: 'family:family',
+      assignmentLabel: 'Family',
+    },
+  ]);
 });
 
 test('family custom fields remain available when counting adults', () => {
