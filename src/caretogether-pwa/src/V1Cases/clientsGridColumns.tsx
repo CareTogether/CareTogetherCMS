@@ -33,6 +33,7 @@ import type {
 
 type Option = { value: string; label: string };
 const maximumCategoricalReportingOptions = 50;
+const CLIENT_ARRANGEMENT_FUNCTION_COLUMN_PREFIX = 'arrangementFunction:';
 
 const multipleSelectionOperator = getGridSingleSelectOperators().find(
   (operator) => operator.value === 'isAnyOf'
@@ -199,6 +200,78 @@ function arrangementAssignmentFilterColumn(
     valueGetter: (_value, row) => row.arrangementFunctionAssignments ?? [],
     renderCell: () => null,
   };
+}
+
+function arrangementFunctionColumns(
+  rows: ClientBrowserRowV2[]
+): GridColDef<ClientBrowserRowV2>[] {
+  const definitions = new Map<
+    string,
+    Pick<
+      ClientArrangementFunctionAssignmentV2,
+      'arrangementType' | 'functionName'
+    >
+  >();
+
+  rows.forEach((row) =>
+    row.arrangementFunctionAssignments.forEach((assignment) => {
+      const key = `${assignment.arrangementType}\n${assignment.functionName}`;
+      definitions.set(key, assignment);
+    })
+  );
+
+  return Array.from(definitions.values())
+    .sort(
+      (first, second) =>
+        first.arrangementType.localeCompare(second.arrangementType) ||
+        first.functionName.localeCompare(second.functionName)
+    )
+    .map(({ arrangementType, functionName }) => {
+      const valueForRow = (row: ClientBrowserRowV2) => {
+        const matches = row.arrangementFunctionAssignments.filter(
+          (assignment) =>
+            assignment.arrangementType === arrangementType &&
+            assignment.functionName === functionName
+        );
+        if (matches.length === 0) return '';
+
+        const assignmentLabels = Array.from(
+          new Set(
+            matches.flatMap((assignment) =>
+              assignment.assignmentLabel ? [assignment.assignmentLabel] : []
+            )
+          )
+        ).sort((first, second) => first.localeCompare(second));
+        const unassignedArrangementCount = new Set(
+          matches.flatMap((assignment) =>
+            assignment.assignmentId === null ? [assignment.arrangementId] : []
+          )
+        ).size;
+        const unassignedLabel =
+          unassignedArrangementCount === 0
+            ? []
+            : [
+                unassignedArrangementCount === 1
+                  ? '1 unassigned'
+                  : `${unassignedArrangementCount} unassigned`,
+              ];
+
+        return [...assignmentLabels, ...unassignedLabel].join(', ');
+      };
+
+      return {
+        field: `${CLIENT_ARRANGEMENT_FUNCTION_COLUMN_PREFIX}${encodeURIComponent(arrangementType)}:${encodeURIComponent(functionName)}`,
+        headerName: `Function: ${arrangementType} - ${functionName}`,
+        description: `${functionName} assignments across all ${arrangementType} arrangements.`,
+        minWidth: 220,
+        flex: 1,
+        valueGetter: (_value, row) => valueForRow(row),
+        getApplyQuickFilterFn: normalizedQuickFilter,
+        renderCell: ({ value }) => (
+          <Typography {...v2Typography.browserCell}>{value || '-'}</Typography>
+        ),
+      };
+    });
 }
 
 export function buildClientCustomFieldColumns(
@@ -513,6 +586,7 @@ export function buildClientsColumns(
       ),
       (row) => row.arrangementTypes
     ),
+    ...arrangementFunctionColumns(rows),
     arrangementAssignmentFilterColumn(rows),
     {
       ...arrayColumn(
@@ -569,6 +643,7 @@ function isIndividualClientsColumn(field: string) {
     field === 'arrangements' ||
     field === 'arrangementStatuses' ||
     field === 'arrangementTypes' ||
+    field.startsWith(CLIENT_ARRANGEMENT_FUNCTION_COLUMN_PREFIX) ||
     field.startsWith('adultCustomField:') ||
     field.startsWith('childCustomField:')
   );
@@ -587,6 +662,7 @@ export function isOptionalClientsColumn(field: string) {
       'arrangementTypes',
     ].includes(field) ||
     field === CLIENT_ARRANGEMENT_ASSIGNMENT_FILTER_FIELD ||
+    field.startsWith(CLIENT_ARRANGEMENT_FUNCTION_COLUMN_PREFIX) ||
     field.startsWith('customField:') ||
     field.startsWith('caseCustomField:') ||
     field.startsWith('adultCustomField:') ||
