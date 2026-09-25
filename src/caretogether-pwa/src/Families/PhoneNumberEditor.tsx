@@ -6,17 +6,11 @@ import {
   FormControl,
   FormControlLabel,
   FormLabel,
-  IconButton,
   Radio,
   RadioGroup,
   TextField,
 } from '@mui/material';
-import {
-  Add as AddIcon,
-  DeleteForever as DeleteForeverIcon,
-  Favorite,
-  FavoriteBorder,
-} from '@mui/icons-material';
+import { Add as AddIcon, Favorite, FavoriteBorder } from '@mui/icons-material';
 import { useDirectoryModel } from '../Model/DirectoryModel';
 import { useBackdrop } from '../Hooks/useBackdrop';
 import { useInlineEditor } from '../Hooks/useInlineEditor';
@@ -28,6 +22,7 @@ import {
   Permission,
 } from '../GeneratedClient';
 import { useFamilyIdPermissions } from '../Model/SessionModel';
+import { FamilyMemberDrawerContactRowV2 } from './FamilyMemberDrawerPresentationV2';
 
 type PhoneNumberEditorProps = PersonEditorProps & {
   add?: boolean;
@@ -109,6 +104,7 @@ export function PhoneNumberEditor({
   }
 
   const permissions = useFamilyIdPermissions(familyId);
+  const canEdit = permissions(Permission.EditPersonContactInfo);
 
   return (
     <Grid container rowSpacing={0} columnSpacing={2}>
@@ -205,36 +201,16 @@ export function PhoneNumberEditor({
               Add
             </Button>
           ) : (
-            <>
-              {isPreferred ? (
-                <Favorite
-                  fontSize="small"
-                  color="disabled"
-                  sx={{ verticalAlign: 'middle', marginRight: 1 }}
-                />
-              ) : (
-                <FavoriteBorder
-                  fontSize="small"
-                  color="disabled"
-                  sx={{ verticalAlign: 'middle', marginRight: 1 }}
-                />
-              )}
-              {phoneNumber!.number} - {PhoneNumberType[phoneNumber!.type!]}
-              {permissions(Permission.EditPersonContactInfo) && (
-                <>
-                  {editor.editButton}
-                  <IconButton
-                    aria-label="Remove phone number"
-                    color="error"
-                    onClick={handleDelete}
-                    size="small"
-                    sx={{ margin: 1 }}
-                  >
-                    <DeleteForeverIcon fontSize="inherit" />
-                  </IconButton>
-                </>
-              )}
-            </>
+            <FamilyMemberDrawerContactRowV2
+              editLabel="Edit phone number"
+              isPreferred={isPreferred}
+              onEdit={canEdit ? () => editor.setEditing(true) : undefined}
+              onRemove={canEdit ? () => void handleDelete() : undefined}
+              removeLabel="Remove phone number"
+              type={PhoneNumberType[phoneNumber!.type!]}
+            >
+              {phoneNumber!.number}
+            </FamilyMemberDrawerContactRowV2>
           )}
         </Grid>
       )}
