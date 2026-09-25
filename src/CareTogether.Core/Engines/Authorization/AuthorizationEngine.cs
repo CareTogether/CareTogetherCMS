@@ -118,8 +118,10 @@ namespace CareTogether.Engines.Authorization
                     UpdatePersonAddress => Permission.EditPersonContactInfo,
                     AddPersonPhoneNumber => Permission.EditPersonContactInfo,
                     UpdatePersonPhoneNumber => Permission.EditPersonContactInfo,
+                    RemovePersonPhoneNumber => Permission.EditPersonContactInfo,
                     AddPersonEmailAddress => Permission.EditPersonContactInfo,
                     UpdatePersonEmailAddress => Permission.EditPersonContactInfo,
+                    RemovePersonEmailAddress => Permission.EditPersonContactInfo,
                     UpdateCustomFamilyMemberField => Permission.EditFamilyInfo,
                     _ => throw new NotImplementedException(
                         $"The command type '{command.GetType().FullName}' has not been implemented."
