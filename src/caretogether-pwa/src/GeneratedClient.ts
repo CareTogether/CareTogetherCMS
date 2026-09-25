@@ -12560,6 +12560,11 @@ export abstract class VolunteerFamilyCommand implements IVolunteerFamilyCommand 
             result.init(data);
             return result;
         }
+        if (data["discriminator"] === "CompleteVolunteerRequirements") {
+            let result = new CompleteVolunteerRequirements();
+            result.init(data);
+            return result;
+        }
         if (data["discriminator"] === "ExemptVolunteerFamilyRequirement") {
             let result = new ExemptVolunteerFamilyRequirement();
             result.init(data);
@@ -12681,6 +12686,71 @@ export class CompleteVolunteerFamilyRequirement extends VolunteerFamilyCommand i
 }
 
 export interface ICompleteVolunteerFamilyRequirement extends IVolunteerFamilyCommand {
+    completedRequirementId: string;
+    requirementName: string;
+    completedAtUtc: Date;
+    uploadedDocumentId?: string | undefined;
+    noteId?: string | undefined;
+}
+
+export class CompleteVolunteerRequirements extends VolunteerFamilyCommand implements ICompleteVolunteerRequirements {
+    personIds!: string[];
+    completedRequirementId!: string;
+    requirementName!: string;
+    completedAtUtc!: Date;
+    uploadedDocumentId?: string | undefined;
+    noteId?: string | undefined;
+
+    constructor(data?: ICompleteVolunteerRequirements) {
+        super(data);
+        if (!data) {
+            this.personIds = [];
+        }
+        this._discriminator = "CompleteVolunteerRequirements";
+    }
+
+    override init(_data?: any) {
+        super.init(_data);
+        if (_data) {
+            if (Array.isArray(_data["personIds"])) {
+                this.personIds = [] as any;
+                for (let item of _data["personIds"])
+                    this.personIds!.push(item);
+            }
+            this.completedRequirementId = _data["completedRequirementId"];
+            this.requirementName = _data["requirementName"];
+            this.completedAtUtc = _data["completedAtUtc"] ? new Date(_data["completedAtUtc"].toString()) : undefined as any;
+            this.uploadedDocumentId = _data["uploadedDocumentId"];
+            this.noteId = _data["noteId"];
+        }
+    }
+
+    static override fromJS(data: any): CompleteVolunteerRequirements {
+        data = typeof data === 'object' ? data : {};
+        let result = new CompleteVolunteerRequirements();
+        result.init(data);
+        return result;
+    }
+
+    override toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        if (Array.isArray(this.personIds)) {
+            data["personIds"] = [];
+            for (let item of this.personIds)
+                data["personIds"].push(item);
+        }
+        data["completedRequirementId"] = this.completedRequirementId;
+        data["requirementName"] = this.requirementName;
+        data["completedAtUtc"] = this.completedAtUtc ? this.completedAtUtc.toISOString() : undefined as any;
+        data["uploadedDocumentId"] = this.uploadedDocumentId;
+        data["noteId"] = this.noteId;
+        super.toJSON(data);
+        return data;
+    }
+}
+
+export interface ICompleteVolunteerRequirements extends IVolunteerFamilyCommand {
+    personIds: string[];
     completedRequirementId: string;
     requirementName: string;
     completedAtUtc: Date;

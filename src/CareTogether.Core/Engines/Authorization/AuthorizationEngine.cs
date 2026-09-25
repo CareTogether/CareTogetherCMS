@@ -716,6 +716,8 @@ namespace CareTogether.Engines.Authorization
                     ActivateVolunteerFamily => Permission.ActivateVolunteerFamily,
                     CompleteVolunteerFamilyRequirement =>
                         Permission.EditApprovalRequirementCompletion,
+                    CompleteVolunteerRequirements =>
+                        Permission.EditApprovalRequirementCompletion,
                     MarkVolunteerFamilyRequirementIncomplete =>
                         Permission.EditApprovalRequirementCompletion,
                     ExemptVolunteerFamilyRequirement => Permission.EditApprovalRequirementExemption,
