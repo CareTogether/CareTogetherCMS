@@ -16,7 +16,7 @@ import { personNameString } from '../Families/PersonName';
 import { usePersonAndFamilyLookup } from '../Model/DirectoryModel';
 import { usePartneringFamilies } from '../Model/V1CasesModel';
 import { usePolicy } from '../Model/PolicyModel';
-import { useVisibleReferrals } from '../Model/Data';
+import { useVisibleCommunities, useVisibleReferrals } from '../Model/Data';
 import { getFamilyCounty } from '../Utilities/getFamilyCounty';
 import {
   assignmentNamesForRole,
@@ -30,6 +30,7 @@ import {
   customFieldGridValues,
   type CustomFieldGridValue,
 } from '../Generic/customFieldValue';
+import { organizationNamesByFamilyId } from '../Volunteers/volunteerOrganizationModel';
 
 export type ClientCustomFieldValue = CustomFieldGridValue;
 export type ClientAssignmentRoleV2 = {
@@ -69,6 +70,7 @@ export type ClientBrowserRowV2 = {
   caseCustomFieldValues: Record<string, ClientCustomFieldValue>;
   adultCustomFieldValues: Record<string, ClientCustomFieldValue>;
   childCustomFieldValues: Record<string, ClientCustomFieldValue>;
+  organizationNames: string[];
 };
 export type ClientArrangementSummaryItemV2 = {
   arrangementType: string;
@@ -205,6 +207,7 @@ export function useClientsBrowserViewModel({
   canViewFunctionAssignments = false,
 }: { canViewFunctionAssignments?: boolean } = {}) {
   const families = usePartneringFamilies();
+  const communities = useVisibleCommunities();
   const referralRecords = useVisibleReferrals();
   const policy = usePolicy();
   const lookup = usePersonAndFamilyLookup();
@@ -228,6 +231,13 @@ export function useClientsBrowserViewModel({
   const childCustomFields = useMemo(
     () => policy.customFields?.partneringFamily?.child ?? [],
     [policy.customFields?.partneringFamily?.child]
+  );
+  const organizationNamesByFamily = useMemo(
+    () =>
+      organizationNamesByFamilyId(
+        communities.map((communityInfo) => communityInfo.community)
+      ),
+    [communities]
   );
   const assignmentRoles = useMemo<ClientAssignmentRoleV2[]>(() => {
     if (!canViewFunctionAssignments) return [];
@@ -382,6 +392,7 @@ export function useClientsBrowserViewModel({
           ),
           adultCustomFieldValues: {},
           childCustomFieldValues: {},
+          organizationNames: organizationNamesByFamily.get(familyId) ?? [],
         };
         const memberRows: ClientBrowserRowV2[] = [
           ...adults.map((person) => ({
@@ -422,6 +433,7 @@ export function useClientsBrowserViewModel({
       caseCustomFields,
       adultCustomFields,
       childCustomFields,
+      organizationNamesByFamily,
     ]
   );
   const counties = useMemo(

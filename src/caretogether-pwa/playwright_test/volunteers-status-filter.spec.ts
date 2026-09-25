@@ -4,16 +4,18 @@ import type {
   GridMultiSelectColDef,
   GridSingleSelectColDef,
 } from '@mui/x-data-grid-premium';
-import { CombinedFamilyInfo } from '../src/GeneratedClient';
+import { CombinedFamilyInfo, Community } from '../src/GeneratedClient';
 import { roleFilterValues } from '../src/Volunteers/roleFilterValues';
 import { buildVolunteersGridColumns } from '../src/Volunteers/volunteersGridColumns';
 import type { VolunteerBrowserRowV2 } from '../src/Volunteers/useVolunteersBrowserViewModel';
+import { organizationNamesByFamilyId } from '../src/Volunteers/volunteerOrganizationModel';
 import { getFamilyCounty } from '../src/Utilities/getFamilyCounty';
 
 function row(
   id: string,
   statusFilterValues: string[],
-  county: string | null = null
+  county: string | null = null,
+  organizationNames: string[] = []
 ): VolunteerBrowserRowV2 {
   return {
     arrangementAssignmentValues: {},
@@ -23,6 +25,7 @@ function row(
     familyLastName: id,
     id,
     missingRequirementGroups: [],
+    organizationNames,
     primaryContact: '',
     requirementFilterValues: ['__complete__'],
     roleFilterValues: [],
@@ -87,6 +90,24 @@ function statusColumn(): GridMultiSelectColDef<VolunteerBrowserRowV2> {
   return column;
 }
 
+function organizationColumn(
+  rows: VolunteerBrowserRowV2[]
+): GridMultiSelectColDef<VolunteerBrowserRowV2> {
+  const column = buildVolunteersGridColumns({
+    arrangementTypes: [],
+    familyCustomFields: [],
+    roleNames: [],
+    rows,
+    volunteerCustomFields: [],
+  }).find((item) => item.field === 'organizationNames');
+
+  if (!column || !isMultiSelectColumn(column)) {
+    throw new Error('Organization multi-select column was not found.');
+  }
+
+  return column;
+}
+
 test('Status configures the native membership operator for raw multi-value statuses', () => {
   const approved = row('approved', ['2']);
   const prospectiveAndApproved = row('prospective-approved', ['1', '2']);
@@ -124,6 +145,42 @@ test('Status remains a non-sortable, non-analytical native multi-select column',
   expect(column.pivotable).toBe(false);
   expect(column.chartable).toBe(false);
   expect(column.getApplyQuickFilterFn).toBeDefined();
+});
+
+test('Organization uses community membership names as a native multi-select filter', () => {
+  const church = row('church', [], null, ['Downtown Church']);
+  const twoChurches = row('two-churches', [], null, [
+    'Downtown Church',
+    'Northside Church',
+  ]);
+  const column = organizationColumn([church, twoChurches]);
+
+  expect(column.valueOptions).toEqual(['Downtown Church', 'Northside Church']);
+  expect(column.valueGetter?.(undefined, twoChurches)).toEqual([
+    'Downtown Church',
+    'Northside Church',
+  ]);
+  expect(column.filterOperators?.map((operator) => operator.value)).toEqual(
+    expect.arrayContaining(['contains', 'isEmpty', 'isNotEmpty'])
+  );
+});
+
+test('Organization names are derived from member family IDs', () => {
+  const downtownChurch = new Community();
+  downtownChurch.name = 'Downtown Church';
+  downtownChurch.memberFamilies = ['family-1', 'family-2'];
+  const northsideChurch = new Community();
+  northsideChurch.name = 'Northside Church';
+  northsideChurch.memberFamilies = ['family-1'];
+
+  expect(
+    organizationNamesByFamilyId([downtownChurch, northsideChurch])
+  ).toEqual(
+    new Map([
+      ['family-1', ['Downtown Church', 'Northside Church']],
+      ['family-2', ['Downtown Church']],
+    ])
+  );
 });
 
 test('County uses the native single-select filter with safe missing values', () => {
