@@ -16,13 +16,16 @@ import type { EventCalendarPreferences } from '@mui/x-scheduler/models';
 import { usePartneringFamilies } from '../Model/V1CasesModel';
 import { useFamilyLookup } from '../Model/DirectoryModel';
 import { useAppNavigate } from '../Hooks/useAppNavigate';
+import { useLocalStorage } from '../Hooks/useLocalStorage';
 import {
   buildDashboardCalendarEventGroups,
   CalendarFilters,
   DashboardCalendarEvent,
 } from './dashboardCalendarEvents';
 
-const DASHBOARD_CALENDAR_VIEW_KEY = 'dashboardCalendarView';
+const DASHBOARD_CALENDAR_VIEW_KEY = 'caretogether:dashboardCalendarView';
+const DASHBOARD_CALENDAR_EVENT_TYPE_FILTERS_KEY =
+  'caretogether:dashboardCalendarEventTypeFilters';
 const DASHBOARD_CALENDAR_AGENDA_DAYS = 12;
 const DASHBOARD_CALENDAR_EVENT_COLORS = {
   teal: {
@@ -229,10 +232,15 @@ export function DashboardCalendar() {
   const appNavigate = useAppNavigate();
   const [view, setView] = useState<CalendarView>(getSavedInitialView);
   const [visibleDate, setVisibleDate] = useState(() => startOfDay(new Date()));
-  const [selectedEventTypeFilterKeys, setSelectedEventTypeFilterKeys] =
-    useState<Set<string>>(
-      () => new Set(calendarEventTypeFilters.map((filter) => filter.key))
+  const [storedEventTypeFilterKeys, setStoredEventTypeFilterKeys] =
+    useLocalStorage(
+      DASHBOARD_CALENDAR_EVENT_TYPE_FILTERS_KEY,
+      calendarEventTypeFilters.map((filter) => filter.key)
     );
+  const selectedEventTypeFilterKeys = useMemo(
+    () => new Set(storedEventTypeFilterKeys),
+    [storedEventTypeFilterKeys]
+  );
 
   const visibleDateRange = useMemo(
     () => getVisibleDateRange(view, visibleDate),
@@ -304,24 +312,23 @@ export function DashboardCalendar() {
   function handleEventTypeFilterToggle(
     eventTypeFilter: CalendarEventTypeFilter
   ) {
-    setSelectedEventTypeFilterKeys((currentSelectedKeys) => {
-      const nextSelectedKeys = new Set(currentSelectedKeys);
+    const nextSelectedKeys = new Set(selectedEventTypeFilterKeys);
 
-      if (nextSelectedKeys.has(eventTypeFilter.key)) {
-        nextSelectedKeys.delete(eventTypeFilter.key);
-        return nextSelectedKeys;
-      }
-
+    if (nextSelectedKeys.has(eventTypeFilter.key)) {
+      nextSelectedKeys.delete(eventTypeFilter.key);
+    } else {
       nextSelectedKeys.add(eventTypeFilter.key);
-      return nextSelectedKeys;
-    });
+    }
+
+    setStoredEventTypeFilterKeys(
+      calendarEventTypeFilters
+        .filter((filter) => nextSelectedKeys.has(filter.key))
+        .map((filter) => filter.key)
+    );
   }
 
   return (
-    <Grid
-      container
-      sx={{ flex: 1, flexDirection: 'column', minHeight: 0 }}
-    >
+    <Grid container sx={{ flex: 1, flexDirection: 'column', minHeight: 0 }}>
       <Grid item sx={{ marginBottom: 1 }}>
         <Box
           aria-label="Filter event types"

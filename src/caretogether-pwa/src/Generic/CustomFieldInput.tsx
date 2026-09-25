@@ -24,12 +24,14 @@ type CustomFieldInputProps = {
   customFieldPolicy: CustomField;
   value: CustomFieldValue;
   onChange: (value: CustomFieldValue) => void;
+  multilineText?: boolean;
 };
 
 export function CustomFieldInput({
   customFieldPolicy,
   value,
   onChange,
+  multilineText = false,
 }: CustomFieldInputProps) {
   const type = customFieldPolicy.type!;
 
@@ -115,10 +117,23 @@ export function CustomFieldInput({
 
   return (
     <TextField
+      fullWidth={multilineText}
+      minRows={multilineText ? 4 : undefined}
+      multiline={multilineText}
       variant="outlined"
       size="medium"
       value={(value as string) || ''}
       onChange={(e) => onChange(e.target.value)}
+      sx={
+        multilineText
+          ? {
+              '& .MuiInputBase-inputMultiline': {
+                minHeight: '6rem',
+                resize: 'vertical',
+              },
+            }
+          : undefined
+      }
     />
   );
 }
