@@ -13,6 +13,7 @@ export type RequirementManagementMode = ApprovalRequirementManagementMode;
 type RequirementManagementDrawerV2Props = {
   mode: RequirementManagementMode | null;
   occurrence: ApprovalLedgerOccurrence | undefined;
+  relatedOccurrences?: ApprovalLedgerOccurrence[];
   open: boolean;
   onClose: () => void;
   onSuccess?: () => void;
@@ -34,6 +35,7 @@ function familyIdFromOccurrence(
 export function RequirementManagementDrawerV2({
   mode,
   occurrence,
+  relatedOccurrences,
   open,
   onClose,
   onSuccess,
@@ -72,6 +74,7 @@ export function RequirementManagementDrawerV2({
                 permissions(Permission.EditApprovalRequirementExemption)
               }
               mode={mode}
+              relatedOccurrences={relatedOccurrences}
               onSuccess={onWorkflowSuccess}
             />
           )}

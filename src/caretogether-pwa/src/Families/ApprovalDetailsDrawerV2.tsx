@@ -103,6 +103,7 @@ export function ApprovalDetailsDrawerV2({
       <RequirementManagementDrawerV2
         mode={managementMode}
         occurrence={workflowOccurrence}
+        relatedOccurrences={row?.occurrences}
         open={managementMode !== null}
         onClose={closeManagement}
       />

@@ -3,6 +3,7 @@ import type { CustomFieldValue } from '../Generic/customFieldValue';
 import {
   ActionRequirement,
   CompleteVolunteerFamilyRequirement,
+  CompleteVolunteerRequirements,
   CompleteVolunteerRequirement,
   CustomField,
   VolunteerCommand,
@@ -77,6 +78,29 @@ export function useVolunteersModel() {
           familyId: volunteerFamilyId,
           completedRequirementId: crypto.randomUUID(),
           requirementName: requirementName,
+          completedAtUtc: completedAtLocal,
+          uploadedDocumentId: documentId ?? undefined,
+          noteId: noteId ?? undefined,
+        });
+        return command;
+      }
+    );
+  const completeIndividualRequirements =
+    useVolunteerFamilyCommandCallbackWithLocation(
+      async (
+        volunteerFamilyId,
+        personIds: string[],
+        requirementName: string,
+        _requirement: ActionRequirement,
+        completedAtLocal: Date,
+        documentId: string | null,
+        noteId: string | null
+      ) => {
+        const command = commandFactory(CompleteVolunteerRequirements, {
+          familyId: volunteerFamilyId,
+          personIds,
+          completedRequirementId: crypto.randomUUID(),
+          requirementName,
           completedAtUtc: completedAtLocal,
           uploadedDocumentId: documentId ?? undefined,
           noteId: noteId ?? undefined,
@@ -298,6 +322,7 @@ export function useVolunteersModel() {
 
   return {
     completeFamilyRequirement,
+    completeIndividualRequirements,
     markFamilyRequirementIncomplete,
     exemptVolunteerFamilyRequirement,
     unexemptVolunteerFamilyRequirement,
