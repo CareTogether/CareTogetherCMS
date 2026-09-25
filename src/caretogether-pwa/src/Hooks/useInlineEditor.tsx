@@ -1,4 +1,4 @@
-import { Button, IconButton } from '@mui/material';
+import { Button, IconButton, Tooltip } from '@mui/material';
 import {
   Edit as EditIcon,
   Save as SaveIcon,
@@ -44,14 +44,16 @@ export function useInlineEditor<T, U>(
     editing,
     setEditing,
     editButton: !editing && (
-      <IconButton
-        onClick={() => setEditing(true)}
-        size="small"
-        sx={{ margin: 1 }}
-        color="primary"
-      >
-        <EditIcon fontSize="inherit" />
-      </IconButton>
+      <Tooltip enterDelay={800} title="Edit">
+        <IconButton
+          aria-label="Edit"
+          onClick={() => setEditing(true)}
+          size="small"
+          sx={{ height: 44, width: 44 }}
+        >
+          <EditIcon fontSize="small" />
+        </IconButton>
+      </Tooltip>
     ),
     cancelButton: editing && (
       <Button
