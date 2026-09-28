@@ -1,8 +1,33 @@
-import { Box, Table, TableBody, TableCell, TableContainer, TableHead, TableRow } from '@mui/material';
-import { useMemo, useState } from 'react';
-import { ActionRequirement, DocumentLinkRequirement, EffectiveLocationPolicy, NoteEntryRequirement } from '../../../../GeneratedClient';
+import { Box, Typography, useTheme } from '@mui/material';
+import { DataGridPremium, type GridRowParams } from '@mui/x-data-grid-premium';
+import { useCallback, useMemo, useState } from 'react';
+import {
+  ActionRequirement,
+  EffectiveLocationPolicy,
+} from '../../../../GeneratedClient';
+import { v2DataGridStyles } from '../../../../Families/v2DataGridStyles';
 import { useSidePanel } from '../../../../Hooks/useSidePanel';
-import { ActionDefinitionSidePanel, DeleteRowAction, EditableActions, EmptyRow, SectionHeader, ValuesText, clonePolicyWithActionDefinition, enumName, formatValidity, getRequirementUsage } from './shared';
+import {
+  ActionDefinitionSidePanel,
+  DeleteRowAction,
+  EditableActions,
+  SectionHeader,
+  clonePolicyWithActionDefinition,
+  getRequirementUsage,
+} from './shared';
+import {
+  buildActionDefinitionGridColumns,
+  buildActionDefinitionGridRows,
+  type ActionDefinitionGridRow,
+} from './actionDefinitionsDataGrid';
+
+function NoActionDefinitionsOverlay() {
+  return (
+    <Typography color="text.secondary" variant="body2">
+      No action definitions configured.
+    </Typography>
+  );
+}
 
 export function ActionDefinitionsTab({
   policy,
@@ -11,8 +36,12 @@ export function ActionDefinitionsTab({
   policy: EffectiveLocationPolicy;
   onPolicyChange: (policy: EffectiveLocationPolicy) => void;
 }) {
+  const theme = useTheme();
   const usage = useMemo(() => getRequirementUsage(policy), [policy]);
-  const rows = Object.entries(policy.actionDefinitions ?? {});
+  const rows = useMemo(
+    () => buildActionDefinitionGridRows(policy, usage),
+    [policy, usage]
+  );
   const {
     SidePanel: ActionSidePanel,
     openSidePanel,
@@ -32,13 +61,26 @@ export function ActionDefinitionsTab({
     openSidePanel();
   }
 
-  function deleteAction(actionName: string) {
-    const actionDefinitions = { ...(policy.actionDefinitions ?? {}) };
-    delete actionDefinitions[actionName];
-    onPolicyChange(
-      new EffectiveLocationPolicy({ ...policy, actionDefinitions })
-    );
-  }
+  const deleteAction = useCallback(
+    (actionName: string) => {
+      const actionDefinitions = { ...(policy.actionDefinitions ?? {}) };
+      delete actionDefinitions[actionName];
+      onPolicyChange(
+        new EffectiveLocationPolicy({ ...policy, actionDefinitions })
+      );
+    },
+    [onPolicyChange, policy]
+  );
+  const columns = useMemo(
+    () =>
+      buildActionDefinitionGridColumns((row) => (
+        <DeleteRowAction
+          label={row.actionName}
+          onClick={() => deleteAction(row.actionName)}
+        />
+      )),
+    [deleteAction]
+  );
 
   return (
     <Box>
@@ -47,65 +89,32 @@ export function ActionDefinitionsTab({
         actions={<EditableActions onAdd={openAddAction} />}
       />
 
-      <TableContainer>
-        <Table size="small">
-          <TableHead>
-            <TableRow>
-              <TableCell>Action Name</TableCell>
-              <TableCell>Document</TableCell>
-              <TableCell>Note</TableCell>
-              <TableCell>Instructions</TableCell>
-              <TableCell>URL</TableCell>
-              <TableCell>Validity</TableCell>
-              <TableCell>Alternate Names</TableCell>
-              <TableCell>Usage</TableCell>
-              <TableCell align="right">Actions</TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {rows.length === 0 ? (
-              <EmptyRow colSpan={9} label="No action definitions configured." />
-            ) : (
-              rows.map(([actionName, action]) => (
-                <TableRow
-                  key={actionName}
-                  hover
-                  sx={{ cursor: 'pointer' }}
-                  onClick={() => openEditAction(actionName, action)}
-                >
-                  <TableCell>{actionName}</TableCell>
-                  <TableCell>
-                    {enumName(DocumentLinkRequirement, action.documentLink)}
-                  </TableCell>
-                  <TableCell>
-                    {enumName(NoteEntryRequirement, action.noteEntry)}
-                  </TableCell>
-                  <TableCell>{action.instructions ?? '-'}</TableCell>
-                  <TableCell>{action.infoLink ?? '-'}</TableCell>
-                  <TableCell>{formatValidity(action.validity)}</TableCell>
-                  <TableCell>
-                    <ValuesText values={action.alternateNames} />
-                  </TableCell>
-                  <TableCell>{usage.get(actionName)?.length ?? 0}</TableCell>
-                  <TableCell align="right">
-                    <DeleteRowAction
-                      label={actionName}
-                      onClick={() => deleteAction(actionName)}
-                    />
-                  </TableCell>
-                </TableRow>
-              ))
-            )}
-          </TableBody>
-        </Table>
-      </TableContainer>
+      <Box sx={v2DataGridStyles(theme)}>
+        <DataGridPremium
+          showToolbar
+          autoHeight
+          rows={rows}
+          columns={columns}
+          rowHeight={56}
+          columnHeaderHeight={42}
+          disableRowSelectionOnClick
+          disableAggregation
+          disablePivoting
+          disableRowGrouping
+          hideFooter
+          slots={{ noRowsOverlay: NoActionDefinitionsOverlay }}
+          onRowClick={({ row }: GridRowParams<ActionDefinitionGridRow>) =>
+            openEditAction(row.actionName, row.action)
+          }
+        />
+      </Box>
 
       <ActionSidePanel>
         <ActionDefinitionSidePanel
           key={workingAction?.actionName ?? 'new-action-definition'}
           actionName={workingAction?.actionName}
           action={workingAction?.action}
-          existingActionNames={rows.map(([actionName]) => actionName)}
+          existingActionNames={rows.map((row) => row.actionName)}
           onClose={closeSidePanel}
           onSave={(previousName, actionName, action) => {
             onPolicyChange(
@@ -123,4 +132,3 @@ export function ActionDefinitionsTab({
     </Box>
   );
 }
-

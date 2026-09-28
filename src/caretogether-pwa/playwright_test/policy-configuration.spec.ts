@@ -1,21 +1,31 @@
 import { expect, test } from '@playwright/test';
 import {
   ActionRequirement,
+  DocumentLinkRequirement,
   EffectiveLocationPolicy,
+  NoteEntryRequirement,
 } from '../src/GeneratedClient';
+import {
+  buildActionDefinitionGridColumns,
+  buildActionDefinitionGridRows,
+} from '../src/Settings/Locations/Tabs/PolicyConfiguration/actionDefinitionsDataGrid';
 import {
   clonePolicyWithActionDefinition,
   clonePolicyWithActionDefinitionOrder,
 } from '../src/Settings/Locations/Tabs/PolicyConfiguration/policyUtils';
+import { getRequirementUsage } from '../src/Settings/Locations/Tabs/PolicyConfiguration/policyReferences';
 
 function action() {
-  return new ActionRequirement({});
+  return ActionRequirement.fromJS({
+    documentLink: DocumentLinkRequirement.None,
+    noteEntry: NoteEntryRequirement.None,
+  });
 }
 
 function policyWithActionDefinitions(actionNames: string[]) {
-  return new EffectiveLocationPolicy({
+  return EffectiveLocationPolicy.fromJS({
     actionDefinitions: Object.fromEntries(
-      actionNames.map((actionName) => [actionName, action()])
+      actionNames.map((actionName) => [actionName, action().toJSON()])
     ),
   });
 }
@@ -79,4 +89,72 @@ test('restores the editor order after the server reorders action definitions', (
     'Background check',
     'Home visit',
   ]);
+});
+
+test('projects action definitions into human-readable grid rows', () => {
+  const policy = EffectiveLocationPolicy.fromJS({
+    actionDefinitions: {
+      'Background check': {
+        alternateNames: ['Criminal check', 'Screening'],
+        documentLink: DocumentLinkRequirement.Required,
+        infoLink: 'https://example.test/background-check',
+        instructions: 'Request a current report.',
+        noteEntry: NoteEntryRequirement.Allowed,
+        validity: '365.00:00:00',
+      },
+    },
+  });
+
+  expect(
+    buildActionDefinitionGridRows(policy, getRequirementUsage(policy))
+  ).toEqual([
+    expect.objectContaining({
+      id: 'Background check',
+      actionName: 'Background check',
+      alternateNames: 'Criminal check, Screening',
+      document: 'Required',
+      instructions: 'Request a current report.',
+      note: 'Allowed',
+      url: 'https://example.test/background-check',
+      usage: 0,
+      validity: '1 year',
+    }),
+  ]);
+});
+
+test('keeps action-definition grid columns operational', () => {
+  const columns = buildActionDefinitionGridColumns(() => undefined);
+  const columnsByField = new Map(
+    columns.map((column) => [column.field, column])
+  );
+
+  expect(columns.map((column) => column.field)).toEqual([
+    'actionName',
+    'document',
+    'note',
+    'instructions',
+    'url',
+    'validity',
+    'alternateNames',
+    'usage',
+    'actions',
+  ]);
+  expect(columns.find((column) => column.field === 'usage')).toMatchObject({
+    type: 'number',
+    aggregable: false,
+    chartable: false,
+    groupable: false,
+    pivotable: false,
+  });
+  expect(columns.find((column) => column.field === 'actions')).toMatchObject({
+    disableExport: true,
+    filterable: false,
+    sortable: false,
+  });
+  ['actionName', 'instructions', 'url', 'alternateNames'].forEach((field) => {
+    expect(columnsByField.get(field)).toMatchObject({
+      flex: expect.any(Number),
+      minWidth: expect.any(Number),
+    });
+  });
 });

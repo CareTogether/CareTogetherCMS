@@ -27,7 +27,15 @@ export function PolicyConfiguration({
   section,
 }: PolicyConfigurationProps) {
   return (
-    <Stack spacing={2} sx={{ maxWidth: 1200, pb: 4 }}>
+    <Stack
+      spacing={2}
+      sx={{
+        maxWidth: section === 'actionDefinitions' ? 'none' : 1200,
+        minWidth: 0,
+        pb: 4,
+        width: '100%',
+      }}
+    >
       {section === 'actionDefinitions' && (
         <ActionDefinitionsTab policy={policy} onPolicyChange={onPolicyChange} />
       )}
