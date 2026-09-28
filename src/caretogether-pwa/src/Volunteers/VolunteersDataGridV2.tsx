@@ -12,7 +12,10 @@ import {
   type ChartsRendererProps,
 } from '@mui/x-charts-premium/ChartsRenderer';
 import { useCallback, useMemo } from 'react';
-import { v2DataGridStyles } from '../Families/v2DataGridStyles';
+import {
+  v2DataGridFocusStyles,
+  v2DataGridStyles,
+} from '../Families/v2DataGridStyles';
 import {
   buildVolunteersGridColumns,
   VOLUNTEERS_SEARCH_FIELD,
@@ -21,6 +24,7 @@ import type { VolunteerBrowserRowV2 } from './useVolunteersBrowserViewModel';
 import { VolunteersChartsPanel } from './VolunteersChartsPanel';
 import { usePersistedGridFilterModel } from '../Hooks/usePersistedGridFilterModel';
 import { PersistedFilterDataGridPremium } from '../Hooks/PersistedFilterDataGridPremium';
+import { notAppliedRoleFilterValue } from './roleFilterValues';
 
 type Props = {
   arrangementTypes: string[];
@@ -84,6 +88,9 @@ export function VolunteersDataGridV2({
           `arrangementAssignment:${type}`,
           false,
         ]),
+        ...roleNames
+          .filter((roleName) => roleName !== notAppliedRoleFilterValue)
+          .map((roleName) => [`roleStatus:${roleName}`, false]),
         ...familyCustomFields.map((field) => [
           `familyCustomField:${field.name}`,
           false,
@@ -93,7 +100,7 @@ export function VolunteersDataGridV2({
           false,
         ]),
       ]),
-    [arrangementTypes, familyCustomFields, volunteerCustomFields]
+    [arrangementTypes, familyCustomFields, roleNames, volunteerCustomFields]
   );
   const gridConfigurationKey = useMemo(
     () =>
@@ -161,6 +168,7 @@ export function VolunteersDataGridV2({
           onRowSelectionModelChange={onRowSelectionModelChange}
           pageSizeOptions={[25, 50, 100]}
           rowSelectionModel={rowSelectionModel}
+          sx={v2DataGridFocusStyles(theme)}
           initialState={{
             pagination: { paginationModel: { pageSize: 100 } },
             sorting: { sortModel: [{ field: 'family', sort: 'asc' }] },

@@ -3086,6 +3086,8 @@ export enum CustomFieldType {
     Boolean = 0,
     String = 1,
     StringArray = 2,
+    DateOnly = 3,
+    DateTime = 4,
 }
 
 export enum CustomFieldValidation {
@@ -10299,6 +10301,11 @@ export abstract class ArrangementsCommand implements IArrangementsCommand {
             result.init(data);
             return result;
         }
+        if (data["discriminator"] === "ChangeArrangementType") {
+            let result = new ChangeArrangementType();
+            result.init(data);
+            return result;
+        }
         if (data["discriminator"] === "CompleteArrangementRequirement") {
             let result = new CompleteArrangementRequirement();
             result.init(data);
@@ -10597,6 +10604,44 @@ export class CancelArrangementsSetup extends ArrangementsCommand implements ICan
 
 export interface ICancelArrangementsSetup extends IArrangementsCommand {
     cancelledAtUtc: Date;
+}
+
+export class ChangeArrangementType extends ArrangementsCommand implements IChangeArrangementType {
+    arrangementType!: string;
+    arrangementPolicyVersion?: string | undefined;
+
+    constructor(data?: IChangeArrangementType) {
+        super(data);
+        this._discriminator = "ChangeArrangementType";
+    }
+
+    override init(_data?: any) {
+        super.init(_data);
+        if (_data) {
+            this.arrangementType = _data["arrangementType"];
+            this.arrangementPolicyVersion = _data["arrangementPolicyVersion"];
+        }
+    }
+
+    static override fromJS(data: any): ChangeArrangementType {
+        data = typeof data === 'object' ? data : {};
+        let result = new ChangeArrangementType();
+        result.init(data);
+        return result;
+    }
+
+    override toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["arrangementType"] = this.arrangementType;
+        data["arrangementPolicyVersion"] = this.arrangementPolicyVersion;
+        super.toJSON(data);
+        return data;
+    }
+}
+
+export interface IChangeArrangementType extends IArrangementsCommand {
+    arrangementType: string;
+    arrangementPolicyVersion?: string | undefined;
 }
 
 export class CompleteArrangementRequirement extends ArrangementsCommand implements ICompleteArrangementRequirement {
@@ -14886,6 +14931,16 @@ export abstract class PersonCommand implements IPersonCommand {
             result.init(data);
             return result;
         }
+        if (data["discriminator"] === "RemovePersonEmailAddress") {
+            let result = new RemovePersonEmailAddress();
+            result.init(data);
+            return result;
+        }
+        if (data["discriminator"] === "RemovePersonPhoneNumber") {
+            let result = new RemovePersonPhoneNumber();
+            result.init(data);
+            return result;
+        }
         if (data["discriminator"] === "UndoCreatePerson") {
             let result = new UndoCreatePerson();
             result.init(data);
@@ -15188,6 +15243,74 @@ export interface ICreatePerson extends IPersonCommand {
     preferredEmailAddressId?: string | undefined;
     concerns?: string | undefined;
     notes?: string | undefined;
+}
+
+export class RemovePersonEmailAddress extends PersonCommand implements IRemovePersonEmailAddress {
+    emailAddressId!: string;
+
+    constructor(data?: IRemovePersonEmailAddress) {
+        super(data);
+        this._discriminator = "RemovePersonEmailAddress";
+    }
+
+    override init(_data?: any) {
+        super.init(_data);
+        if (_data) {
+            this.emailAddressId = _data["emailAddressId"];
+        }
+    }
+
+    static override fromJS(data: any): RemovePersonEmailAddress {
+        data = typeof data === 'object' ? data : {};
+        let result = new RemovePersonEmailAddress();
+        result.init(data);
+        return result;
+    }
+
+    override toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["emailAddressId"] = this.emailAddressId;
+        super.toJSON(data);
+        return data;
+    }
+}
+
+export interface IRemovePersonEmailAddress extends IPersonCommand {
+    emailAddressId: string;
+}
+
+export class RemovePersonPhoneNumber extends PersonCommand implements IRemovePersonPhoneNumber {
+    phoneNumberId!: string;
+
+    constructor(data?: IRemovePersonPhoneNumber) {
+        super(data);
+        this._discriminator = "RemovePersonPhoneNumber";
+    }
+
+    override init(_data?: any) {
+        super.init(_data);
+        if (_data) {
+            this.phoneNumberId = _data["phoneNumberId"];
+        }
+    }
+
+    static override fromJS(data: any): RemovePersonPhoneNumber {
+        data = typeof data === 'object' ? data : {};
+        let result = new RemovePersonPhoneNumber();
+        result.init(data);
+        return result;
+    }
+
+    override toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["phoneNumberId"] = this.phoneNumberId;
+        super.toJSON(data);
+        return data;
+    }
+}
+
+export interface IRemovePersonPhoneNumber extends IPersonCommand {
+    phoneNumberId: string;
 }
 
 export class UndoCreatePerson extends PersonCommand implements IUndoCreatePerson {

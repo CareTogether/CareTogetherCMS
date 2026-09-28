@@ -58,12 +58,12 @@ export function FunctionAssignmentFieldV2({
       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
         <Typography>{name || 'Not assigned'}</Typography>
         {canEditRole && (
-          <Tooltip title={editorTitle}>
+          <Tooltip enterDelay={800} title={editorTitle}>
             <IconButton
               size="small"
-              color="primary"
               aria-label={editorTitle}
               onClick={() => setOpen(true)}
+              sx={{ height: 44, width: 44 }}
             >
               <EditIcon fontSize="small" />
             </IconButton>

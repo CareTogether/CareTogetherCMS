@@ -74,6 +74,7 @@ import {
   volunteerRequirementDraftToRequirement,
   volunteerRolePolicyVersionToDraft,
 } from './policyUtils';
+import { supportsCustomFieldSuggestions } from '../../../../Generic/customFieldValue';
 
 export function ActionDefinitionSidePanel({
   actionName,
@@ -374,11 +375,13 @@ export function CustomFieldSidePanel({
       new CustomField({
         name: trimmedName,
         type: draft.type,
-        validation: draft.validationEnabled
-          ? CustomFieldValidation.SuggestOnly
-          : undefined,
+        validation:
+          supportsCustomFieldSuggestions(draft.type) && draft.validationEnabled
+            ? CustomFieldValidation.SuggestOnly
+            : undefined,
         validValues:
-          draft.type === CustomFieldType.Boolean || validValues.length === 0
+          !supportsCustomFieldSuggestions(draft.type) ||
+          validValues.length === 0
             ? undefined
             : validValues,
       })
@@ -425,14 +428,16 @@ export function CustomFieldSidePanel({
             setDraft((current) => ({
               ...current,
               type: Number(event.target.value) as CustomFieldType,
-              validationEnabled:
-                Number(event.target.value) === CustomFieldType.Boolean
-                  ? false
-                  : current.validationEnabled,
-              validValues:
-                Number(event.target.value) === CustomFieldType.Boolean
-                  ? []
-                  : current.validValues,
+              validationEnabled: supportsCustomFieldSuggestions(
+                Number(event.target.value) as CustomFieldType
+              )
+                ? current.validationEnabled
+                : false,
+              validValues: supportsCustomFieldSuggestions(
+                Number(event.target.value) as CustomFieldType
+              )
+                ? current.validValues
+                : [],
             }))
           }
         >
@@ -444,7 +449,7 @@ export function CustomFieldSidePanel({
         </TextField>
       </Grid>
 
-      {draft.type !== CustomFieldType.Boolean && (
+      {supportsCustomFieldSuggestions(draft.type) && (
         <>
           <Grid item xs={12}>
             <FormControlLabel

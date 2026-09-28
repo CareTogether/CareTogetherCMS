@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Box, Divider, Tab, Tabs } from '@mui/material';
+import { Box, Divider, Stack, Tab, Tabs } from '@mui/material';
 import { CompletedCustomFieldInfo, CustomField } from '../GeneratedClient';
 import { CustomFieldEditor } from '../Generic/CustomFieldEditor';
 import { useDirectoryModel } from '../Model/DirectoryModel';
@@ -111,11 +111,8 @@ export function FamilyMemberCustomFields({
       ? selectedSectionIndex
       : 0;
 
-  console.log(customFieldSections, selectedTab, selectedSectionIndex);
-
   return (
-    <Box sx={{ clear: 'both', mt: 1.5 }}>
-      <Divider sx={{ mb: 1 }} />
+    <Box sx={{ clear: 'both' }}>
       <Tabs
         value={selectedTab}
         onChange={(_, nextTab) => setSelectedSectionIndex(nextTab)}
@@ -180,7 +177,7 @@ function FamilyMemberCustomFieldList({
   customFields,
 }: FamilyMemberCustomFieldListProps) {
   return (
-    <>
+    <Stack divider={<Divider flexItem />}>
       {customFields.map((customField) => (
         <FamilyMemberCustomField
           key={customFieldName(customField)}
@@ -190,7 +187,7 @@ function FamilyMemberCustomFieldList({
           customField={customField}
         />
       ))}
-    </>
+    </Stack>
   );
 }
 
@@ -225,6 +222,7 @@ function FamilyMemberCustomField({
     <CustomFieldEditor
       customFieldPolicy={customFieldPolicy}
       completedCustomFieldInfo={savedCustomField ?? undefined}
+      presentation="drawer"
       onSave={async (value) => {
         await directoryModel.updateCustomFamilyMemberField(
           familyId,

@@ -17,6 +17,7 @@ function RoleChipList({
         <VolunteerRoleApprovalStatusChip
           key={role.roleName}
           sx={{ margin: '.125rem .25rem .125rem 0' }}
+          currentStatus={role.currentStatus}
           roleName={role.roleName}
           status={role.status}
         />

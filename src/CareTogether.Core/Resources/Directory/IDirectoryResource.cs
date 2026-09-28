@@ -240,6 +240,9 @@ namespace CareTogether.Resources.Directory
         bool IsPreferredPhoneNumber
     ) : PersonCommand(PersonId);
 
+    public sealed record RemovePersonPhoneNumber(Guid PersonId, Guid PhoneNumberId)
+        : PersonCommand(PersonId);
+
     public sealed record AddPersonEmailAddress(
         Guid PersonId,
         EmailAddress EmailAddress,
@@ -251,6 +254,9 @@ namespace CareTogether.Resources.Directory
         EmailAddress EmailAddress,
         bool IsPreferredEmailAddress
     ) : PersonCommand(PersonId);
+
+    public sealed record RemovePersonEmailAddress(Guid PersonId, Guid EmailAddressId)
+        : PersonCommand(PersonId);
 
     public sealed record UpdateCustomFamilyMemberField(
         Guid PersonId,

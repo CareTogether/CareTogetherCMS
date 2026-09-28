@@ -16,6 +16,7 @@ import { matchingArrangements } from './arrangementHelpers';
 import { PartneringFamilyTableItemProps } from './types';
 import { getFamilyCounty } from '../../Utilities/getFamilyCounty';
 import { assignmentNamesForRole } from '../../FunctionAssignments/assignmentRoleColumns';
+import { formatCustomFieldValue } from '../../Generic/customFieldValue';
 
 function getPartneringFamilyRowGroupHeight(
   expandedView: boolean,
@@ -185,14 +186,7 @@ function PartneringFamilyTableRows(props: PartneringFamilyTableItemProps) {
           );
 
           const fieldValue = matchingField?.value;
-          const displayValue =
-            fieldValue === true
-              ? 'Yes'
-              : fieldValue === false
-                ? 'No'
-                : fieldValue === undefined || fieldValue === null
-                  ? ''
-                  : fieldValue.toString();
+          const displayValue = formatCustomFieldValue(field.type, fieldValue);
 
           return (
             <TableCell key={field.name} sx={{ textAlign: 'center' }}>

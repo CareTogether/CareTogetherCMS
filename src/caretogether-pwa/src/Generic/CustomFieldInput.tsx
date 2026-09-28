@@ -10,20 +10,28 @@ import {
   CustomFieldType,
   CustomFieldValidation,
 } from '../GeneratedClient';
+import {
+  type CustomFieldValue,
+  formatDateOnlyForApi,
+  formatDateTimeForApi,
+  parseDateOnlyApiValue,
+  parseDateTimeApiValue,
+} from './customFieldValue';
+import { ValidateDatePicker } from './Forms/ValidateDatePicker';
 import { sortByPolicyOrder } from './sortByPolicyOrder';
-
-type CustomFieldValue = string | boolean | number | string[] | null | undefined;
 
 type CustomFieldInputProps = {
   customFieldPolicy: CustomField;
   value: CustomFieldValue;
   onChange: (value: CustomFieldValue) => void;
+  multilineText?: boolean;
 };
 
 export function CustomFieldInput({
   customFieldPolicy,
   value,
   onChange,
+  multilineText = false,
 }: CustomFieldInputProps) {
   const type = customFieldPolicy.type!;
 
@@ -58,10 +66,33 @@ export function CustomFieldInput({
         options={validValues}
         value={sortByPolicyOrder(arrayValue, validValues)}
         onChange={(_, newValue) =>
-          onChange(newValue.length ? sortByPolicyOrder(newValue, validValues) : null)
+          onChange(
+            newValue.length ? sortByPolicyOrder(newValue, validValues) : null
+          )
         }
-        freeSolo={customFieldPolicy.validation === CustomFieldValidation.SuggestOnly}
+        freeSolo={
+          customFieldPolicy.validation === CustomFieldValidation.SuggestOnly
+        }
         renderInput={(params) => <TextField {...params} />}
+      />
+    );
+  }
+
+  if (type === CustomFieldType.DateOnly) {
+    return (
+      <ValidateDatePicker
+        value={parseDateOnlyApiValue(value)}
+        onChange={(date) => onChange(date ? formatDateOnlyForApi(date) : null)}
+      />
+    );
+  }
+
+  if (type === CustomFieldType.DateTime) {
+    return (
+      <ValidateDatePicker
+        includeTime
+        value={parseDateTimeApiValue(value)}
+        onChange={(date) => onChange(date ? formatDateTimeForApi(date) : null)}
       />
     );
   }
@@ -74,9 +105,11 @@ export function CustomFieldInput({
           .slice()
           .sort((a, b) => -b.localeCompare(a))}
         inputValue={(value as string) || ''}
-        onInputChange={(_, newValue) =>
-          onChange(newValue.length ? newValue : null)
-        }
+        onInputChange={(_, newValue, reason) => {
+          if (reason === 'reset') return;
+
+          onChange(newValue.length ? newValue : null);
+        }}
         renderInput={(params) => <TextField {...params} />}
       />
     );
@@ -84,10 +117,23 @@ export function CustomFieldInput({
 
   return (
     <TextField
+      fullWidth={multilineText}
+      minRows={multilineText ? 4 : undefined}
+      multiline={multilineText}
       variant="outlined"
       size="medium"
       value={(value as string) || ''}
       onChange={(e) => onChange(e.target.value)}
+      sx={
+        multilineText
+          ? {
+              '& .MuiInputBase-inputMultiline': {
+                minHeight: '6rem',
+                resize: 'vertical',
+              },
+            }
+          : undefined
+      }
     />
   );
 }

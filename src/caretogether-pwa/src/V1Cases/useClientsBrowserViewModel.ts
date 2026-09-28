@@ -1,20 +1,25 @@
 import { useMemo } from 'react';
 import { format } from 'date-fns';
-import { ArrangementPhase, CustomFieldType } from '../GeneratedClient';
+import { ArrangementPhase } from '../GeneratedClient';
 import type {
+  Age,
   Arrangement,
   CombinedFamilyInfo,
   CustomField,
   CompletedCustomFieldInfo,
+  Gender,
   V1Case,
 } from '../GeneratedClient';
 import { familyLastName } from '../Families/FamilyUtils';
 import { familyNameString } from '../Families/FamilyName';
 import { personNameString } from '../Families/PersonName';
-import { usePersonAndFamilyLookup } from '../Model/DirectoryModel';
+import {
+  useFamilyLookup,
+  usePersonAndFamilyLookup,
+} from '../Model/DirectoryModel';
 import { usePartneringFamilies } from '../Model/V1CasesModel';
 import { usePolicy } from '../Model/PolicyModel';
-import { useVisibleReferrals } from '../Model/Data';
+import { useVisibleCommunities, useVisibleReferrals } from '../Model/Data';
 import { getFamilyCounty } from '../Utilities/getFamilyCounty';
 import {
   assignmentNamesForRole,
@@ -23,16 +28,35 @@ import {
 import { matchingArrangements } from './PartneringFamilies/arrangementHelpers';
 import { openReferralByFamilyId } from './PartneringFamilies/sortPartneringFamilies';
 import { clientsOpenedAtTime } from './clientsGridSorting';
+import { clientPersonArrangements } from './clientPersonArrangements';
+import {
+  clientArrangementFunctionAssignmentsFor,
+  type ClientArrangementFunctionAssignmentV2,
+} from './clientArrangementFunctions';
+import {
+  customFieldGridValues,
+  type CustomFieldGridValue,
+} from '../Generic/customFieldValue';
+import { organizationNamesByFamilyId } from '../Volunteers/volunteerOrganizationModel';
 
-export type ClientCustomFieldValue = string | boolean | string[] | null;
+export type ClientCustomFieldValue = CustomFieldGridValue;
 export type ClientAssignmentRoleV2 = {
   role: string;
   options: { value: string; label: string }[];
 };
+export type ClientMemberSummaryV2 = {
+  memberType: 'adult' | 'child';
+  gender?: Gender;
+};
 export type ClientBrowserRowV2 = {
-  clientCount: 1;
+  reportCount: 1;
   id: string;
   familyId: string;
+  rowKind: 'family' | 'adult' | 'child';
+  personName: string;
+  personAge?: Age;
+  memberSummaries: ClientMemberSummaryV2[];
+  treePath: string[];
   family: string;
   memberNames: string;
   primaryContactFirstName: string;
@@ -44,6 +68,7 @@ export type ClientBrowserRowV2 = {
   caseStatus: 'Open' | 'Closed' | 'No case';
   arrangementStatuses: string[];
   arrangementTypes: string[];
+  arrangementFunctionAssignments: ClientArrangementFunctionAssignmentV2[];
   county: string;
   arrangementRows: ClientArrangementSummaryItemV2[];
   arrangements: string;
@@ -51,6 +76,9 @@ export type ClientBrowserRowV2 = {
   assignmentPersonIds: Record<string, string[]>;
   customFieldValues: Record<string, ClientCustomFieldValue>;
   caseCustomFieldValues: Record<string, ClientCustomFieldValue>;
+  adultCustomFieldValues: Record<string, ClientCustomFieldValue>;
+  childCustomFieldValues: Record<string, ClientCustomFieldValue>;
+  organizationNames: string[];
 };
 export type ClientArrangementSummaryItemV2 = {
   arrangementType: string;
@@ -142,6 +170,23 @@ function arrangementSummary(arrangementRows: ClientArrangementSummaryItemV2[]) {
   return `${arrangementRows.length} total`;
 }
 
+function arrangementStatusesFor(arrangements: Arrangement[]) {
+  return [
+    ...(arrangements.some(
+      (arrangement) => arrangement.phase === ArrangementPhase.Started
+    )
+      ? ['Active']
+      : []),
+    ...(arrangements.some(
+      (arrangement) =>
+        arrangement.phase === ArrangementPhase.SettingUp ||
+        arrangement.phase === ArrangementPhase.ReadyToStart
+    )
+      ? ['Setup']
+      : []),
+  ];
+}
+
 function hasIntakeStatus(
   family: CombinedFamilyInfo,
   openReferralByFamily: ReturnType<typeof openReferralByFamilyId>
@@ -154,36 +199,15 @@ function hasIntakeStatus(
   return (openCase.arrangements ?? []).length === 0;
 }
 
-function typedCustomFieldValue(
-  value: unknown,
-  type: CustomFieldType
-): ClientCustomFieldValue {
-  if (type === CustomFieldType.Boolean)
-    return typeof value === 'boolean' ? value : null;
-  if (type === CustomFieldType.StringArray) {
-    return Array.isArray(value)
-      ? value.filter((item): item is string => typeof item === 'string')
-      : null;
-  }
-  return typeof value === 'string' ? value : null;
-}
-
 function customFieldValues(
   fields: CustomField[],
   completed: CompletedCustomFieldInfo[] = [],
   missing: string[] = []
 ) {
-  return Object.fromEntries(
-    fields.map((field) => [
-      field.name,
-      missing.includes(field.name)
-        ? null
-        : typedCustomFieldValue(
-            completed.find((value) => value.customFieldName === field.name)
-              ?.value,
-            field.type
-          ),
-    ])
+  return customFieldGridValues(fields, (field) =>
+    missing.includes(field.name)
+      ? null
+      : completed.find((value) => value.customFieldName === field.name)?.value
   );
 }
 
@@ -191,8 +215,10 @@ export function useClientsBrowserViewModel({
   canViewFunctionAssignments = false,
 }: { canViewFunctionAssignments?: boolean } = {}) {
   const families = usePartneringFamilies();
+  const communities = useVisibleCommunities();
   const referralRecords = useVisibleReferrals();
   const policy = usePolicy();
+  const familyLookup = useFamilyLookup();
   const lookup = usePersonAndFamilyLookup();
   const referrals = useMemo(
     () =>
@@ -206,6 +232,21 @@ export function useClientsBrowserViewModel({
   const caseCustomFields = useMemo(
     () => policy.referralPolicy?.customFields ?? [],
     [policy.referralPolicy?.customFields]
+  );
+  const adultCustomFields = useMemo(
+    () => policy.customFields?.partneringFamily?.adult ?? [],
+    [policy.customFields?.partneringFamily?.adult]
+  );
+  const childCustomFields = useMemo(
+    () => policy.customFields?.partneringFamily?.child ?? [],
+    [policy.customFields?.partneringFamily?.child]
+  );
+  const organizationNamesByFamily = useMemo(
+    () =>
+      organizationNamesByFamilyId(
+        communities.map((communityInfo) => communityInfo.community)
+      ),
+    [communities]
   );
   const assignmentRoles = useMemo<ClientAssignmentRoleV2[]>(() => {
     if (!canViewFunctionAssignments) return [];
@@ -249,91 +290,164 @@ export function useClientsBrowserViewModel({
         const openCase = family.partneringFamilyInfo?.openV1Case;
         const currentCase = openCase ?? latestClosedCase(family);
         const assignments = openCase?.assignedIndividualVolunteers ?? [];
-        const arrangementRows = openCase
-          ? arrangementSummaryRows(
-              matchingArrangements(family.partneringFamilyInfo!, 'All').map(
-                (entry) => entry.arrangement
-              )
+        const arrangements = openCase
+          ? matchingArrangements(family.partneringFamilyInfo!, 'All').map(
+              (entry) => entry.arrangement
             )
           : [];
+        const arrangementRows = arrangementSummaryRows(arrangements);
         const openArrangements = openCase?.arrangements ?? [];
         const arrangementStatuses = [
           ...(hasIntakeStatus(family, referrals) ? ['Intake'] : []),
-          ...(openArrangements.some((a) => a.phase === ArrangementPhase.Started)
-            ? ['Active']
-            : []),
-          ...(openArrangements.some(
-            (a) =>
-              a.phase === ArrangementPhase.SettingUp ||
-              a.phase === ArrangementPhase.ReadyToStart
-          )
-            ? ['Setup']
-            : []),
+          ...arrangementStatusesFor(openArrangements),
         ];
-        return [
-          {
-            id: familyId,
-            clientCount: 1,
-            familyId,
-            family: familyNameString(family),
-            memberNames: [
-              ...(family.family?.adults?.map((adult) => adult.item1) ?? []),
-              ...(family.family?.children ?? []),
-            ]
-              .filter((person) => !!person)
-              .map((person) => personNameString(person))
-              .join(', '),
-            primaryContactFirstName:
-              contact?.firstName || 'MISSING PRIMARY CONTACT',
-            primaryContactLastName: familyLastName(family),
-            primaryContactName: contact ? personNameString(contact) : undefined,
-            phoneNumber: contact?.phoneNumbers?.[0]?.number,
-            openedAtTime: clientsOpenedAtTime(
-              openCase?.openedAtUtc,
-              referrals.get(familyId)?.createdAtUtc
-            ),
-            status: currentCaseStatusText(family),
-            caseStatus: !currentCase
-              ? 'No case'
-              : currentCase.openedAtUtc && !currentCase.closedAtUtc
-                ? 'Open'
-                : 'Closed',
-            arrangementStatuses,
+        const personArrangementValues = (personId: string) => {
+          const personArrangements = clientPersonArrangements(
+            arrangements,
+            personId
+          );
+          const personArrangementRows =
+            arrangementSummaryRows(personArrangements);
+          return {
+            arrangementRows: personArrangementRows,
+            arrangements: arrangementSummary(personArrangementRows),
             arrangementTypes: Array.from(
-              new Set(arrangementRows.map((a) => a.arrangementType))
+              new Set(personArrangementRows.map((row) => row.arrangementType))
             ),
-            county: getFamilyCounty(family) ?? '',
-            arrangementRows,
-            arrangements: arrangementSummary(arrangementRows),
-            assignmentRoleValues: Object.fromEntries(
-              assignmentRoles.map(({ role }) => [
+            arrangementFunctionAssignments:
+              clientArrangementFunctionAssignmentsFor(
+                personArrangements,
+                policy.referralPolicy?.arrangementPolicies,
+                (_familyId, personId) =>
+                  personNameString(lookup(personId).person),
+                (familyId) => familyNameString(familyLookup(familyId))
+              ),
+            arrangementStatuses: arrangementStatusesFor(
+              clientPersonArrangements(openArrangements, personId)
+            ),
+          };
+        };
+        const adults = (family.family?.adults ?? []).flatMap((entry) =>
+          entry.item1?.id ? [entry.item1] : []
+        );
+        const children = (family.family?.children ?? []).filter(
+          (person) => !!person?.id
+        );
+        const familyRow: ClientBrowserRowV2 = {
+          id: familyId,
+          reportCount: 1,
+          familyId,
+          rowKind: 'family',
+          personName: '',
+          memberSummaries: [
+            ...adults.map((person) => ({
+              memberType: 'adult' as const,
+              gender: person.gender,
+            })),
+            ...children.map((person) => ({
+              memberType: 'child' as const,
+              gender: person.gender,
+            })),
+          ],
+          treePath: [familyId],
+          family: familyNameString(family),
+          memberNames: [
+            ...(family.family?.adults?.map((adult) => adult.item1) ?? []),
+            ...(family.family?.children ?? []),
+          ]
+            .filter((person) => !!person)
+            .map((person) => personNameString(person))
+            .join(', '),
+          primaryContactFirstName:
+            contact?.firstName || 'MISSING PRIMARY CONTACT',
+          primaryContactLastName: familyLastName(family),
+          primaryContactName: contact ? personNameString(contact) : undefined,
+          phoneNumber: contact?.phoneNumbers?.[0]?.number,
+          openedAtTime: clientsOpenedAtTime(
+            openCase?.openedAtUtc,
+            referrals.get(familyId)?.createdAtUtc
+          ),
+          status: currentCaseStatusText(family),
+          caseStatus: !currentCase
+            ? 'No case'
+            : currentCase.openedAtUtc && !currentCase.closedAtUtc
+              ? 'Open'
+              : 'Closed',
+          arrangementStatuses,
+          arrangementTypes: Array.from(
+            new Set(arrangementRows.map((a) => a.arrangementType))
+          ),
+          arrangementFunctionAssignments:
+            clientArrangementFunctionAssignmentsFor(
+              arrangements,
+              policy.referralPolicy?.arrangementPolicies,
+              (_familyId, personId) =>
+                personNameString(lookup(personId).person),
+              (familyId) => familyNameString(familyLookup(familyId))
+            ),
+          county: getFamilyCounty(family) ?? '',
+          arrangementRows,
+          arrangements: arrangementSummary(arrangementRows),
+          assignmentRoleValues: Object.fromEntries(
+            assignmentRoles.map(({ role }) => [
+              role,
+              assignmentNamesForRole(
+                assignments,
                 role,
-                assignmentNamesForRole(
-                  assignments,
-                  role,
-                  (id) => lookup(id).person
-                ),
-              ])
+                (id) => lookup(id).person
+              ),
+            ])
+          ),
+          assignmentPersonIds: Object.fromEntries(
+            assignmentRoles.map(({ role }) => [
+              role,
+              assignments
+                .filter((a) => a.assignmentRole === role)
+                .map((a) => a.personId),
+            ])
+          ),
+          customFieldValues: customFieldValues(
+            familyCustomFields,
+            family.family?.completedCustomFields
+          ),
+          caseCustomFieldValues: customFieldValues(
+            caseCustomFields,
+            openCase?.completedCustomFields,
+            openCase?.missingCustomFields
+          ),
+          adultCustomFieldValues: {},
+          childCustomFieldValues: {},
+          organizationNames: organizationNamesByFamily.get(familyId) ?? [],
+        };
+        const memberRows: ClientBrowserRowV2[] = [
+          ...adults.map((person) => ({
+            ...familyRow,
+            id: `${familyId}:adult:${person.id}`,
+            rowKind: 'adult' as const,
+            personName: personNameString(person),
+            personAge: person.age,
+            treePath: [familyId, `adult:${person.id}`],
+            ...personArrangementValues(person.id),
+            adultCustomFieldValues: customFieldValues(
+              adultCustomFields,
+              person.completedCustomFields
             ),
-            assignmentPersonIds: Object.fromEntries(
-              assignmentRoles.map(({ role }) => [
-                role,
-                assignments
-                  .filter((a) => a.assignmentRole === role)
-                  .map((a) => a.personId),
-              ])
+          })),
+          ...children.map((person) => ({
+            ...familyRow,
+            id: `${familyId}:child:${person.id}`,
+            rowKind: 'child' as const,
+            personName: personNameString(person),
+            personAge: person.age,
+            treePath: [familyId, `child:${person.id}`],
+            ...personArrangementValues(person.id),
+            childCustomFieldValues: customFieldValues(
+              childCustomFields,
+              person.completedCustomFields
             ),
-            customFieldValues: customFieldValues(
-              familyCustomFields,
-              family.family?.completedCustomFields
-            ),
-            caseCustomFieldValues: customFieldValues(
-              caseCustomFields,
-              openCase?.completedCustomFields,
-              openCase?.missingCustomFields
-            ),
-          },
+          })),
         ];
+        return [familyRow, ...memberRows];
       }),
     [
       families,
@@ -342,6 +456,11 @@ export function useClientsBrowserViewModel({
       lookup,
       familyCustomFields,
       caseCustomFields,
+      adultCustomFields,
+      childCustomFields,
+      organizationNamesByFamily,
+      policy.referralPolicy?.arrangementPolicies,
+      familyLookup,
     ]
   );
   const counties = useMemo(
@@ -357,5 +476,7 @@ export function useClientsBrowserViewModel({
     assignmentRoles,
     familyCustomFields,
     caseCustomFields,
+    adultCustomFields,
+    childCustomFields,
   };
 }

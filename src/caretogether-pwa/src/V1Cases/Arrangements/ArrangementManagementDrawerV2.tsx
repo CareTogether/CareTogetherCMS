@@ -3,7 +3,11 @@ import {
   Box,
   Button,
   Drawer,
+  FormControl,
   IconButton,
+  InputLabel,
+  MenuItem,
+  Select,
   Stack,
   TextField,
   Typography,
@@ -12,18 +16,22 @@ import { useEffect, useState } from 'react';
 import { useParams } from 'react-router';
 import { ValidateDatePicker } from '../../Generic/Forms/ValidateDatePicker';
 import { useBackdrop } from '../../Hooks/useBackdrop';
-import {
-  useDirectoryModel,
-  usePersonLookup,
-} from '../../Model/DirectoryModel';
+import { useDirectoryModel, usePersonLookup } from '../../Model/DirectoryModel';
 import { useV1CasesModel } from '../../Model/V1CasesModel';
+import { usePolicy } from '../../Model/PolicyModel';
 import type { ArrangementRowV2 } from './arrangementViewModel';
+import {
+  getAvailablePolicyVersionsForParticipant,
+  hasPolicyVersions,
+  isArrangementPolicyAvailableForParticipant,
+} from './arrangementPolicyVersions';
 
 export type ArrangementManagementMode =
   | 'start'
   | 'end'
   | 'cancel'
   | 'reopen'
+  | 'change-type'
   | 'delete';
 
 type ArrangementManagementDrawerV2Props = {
@@ -38,11 +46,13 @@ function modeTitle(mode: ArrangementManagementMode) {
   if (mode === 'end') return 'End Arrangement';
   if (mode === 'cancel') return 'Cancel Arrangement';
   if (mode === 'reopen') return 'Reopen Arrangement';
+  if (mode === 'change-type') return 'Change Arrangement Type';
   return 'Delete Arrangement';
 }
 
 function primaryActionLabel(mode: ArrangementManagementMode) {
   if (mode === 'delete') return 'Delete Arrangement';
+  if (mode === 'change-type') return 'Change Type';
   return 'Save';
 }
 
@@ -71,6 +81,10 @@ function confirmationPrompt({
     return `Do you want to reopen this already-ended ${arrangementType} arrangement for ${personName}?`;
   }
 
+  if (mode === 'change-type') {
+    return 'Choose the correct arrangement type. Requirements and available volunteer roles will follow the new type; existing assignments, completions, and exemptions will be kept.';
+  }
+
   return `Are you sure you want to delete this ${arrangementType} arrangement for ${personName}?`;
 }
 
@@ -93,14 +107,20 @@ export function ArrangementManagementDrawerV2({
   row,
 }: ArrangementManagementDrawerV2Props) {
   const familyIdMaybe = useParams<{ familyId: string }>();
-  const familyId = familyIdMaybe.familyId ?? row?.partneringFamily.family?.id ?? '';
+  const familyId =
+    familyIdMaybe.familyId ?? row?.partneringFamily.family?.id ?? '';
   const v1CasesModel = useV1CasesModel();
   const directoryModel = useDirectoryModel();
   const personLookup = usePersonLookup();
+  const policy = usePolicy();
   const withBackdrop = useBackdrop();
   const [dateValue, setDateValue] = useState<Date | null>(null);
   const [dateHasError, setDateHasError] = useState(false);
   const [notes, setNotes] = useState('');
+  const [arrangementType, setArrangementType] = useState('');
+  const [arrangementPolicyVersion, setArrangementPolicyVersion] = useState<
+    string | null
+  >(null);
 
   useEffect(() => {
     if (!open) return;
@@ -108,7 +128,15 @@ export function ArrangementManagementDrawerV2({
     setDateValue(null);
     setDateHasError(false);
     setNotes('');
-  }, [mode, open, row?.id]);
+    setArrangementType(row?.source.arrangementType ?? '');
+    setArrangementPolicyVersion(row?.source.arrangementPolicyVersion ?? null);
+  }, [
+    mode,
+    open,
+    row?.id,
+    row?.source.arrangementPolicyVersion,
+    row?.source.arrangementType,
+  ]);
 
   if (!row || !mode) {
     return (
@@ -132,9 +160,60 @@ export function ArrangementManagementDrawerV2({
   });
   const earliestAllowedEndDate =
     latestChildLocationTimestamp(row) ?? arrangement.startedAtUtc;
-  const requiresDate =
-    mode === 'start' || mode === 'end' || mode === 'cancel';
+  const requiresDate = mode === 'start' || mode === 'end' || mode === 'cancel';
   const canSave = !requiresDate || (dateValue !== null && !dateHasError);
+  const participantIsAdult = row.partneringFamily.family?.adults?.some(
+    (adult) => adult.item1?.id === arrangement.partneringFamilyPersonId
+  );
+  const participantIsChild = row.partneringFamily.family?.children?.some(
+    (child) => child.id === arrangement.partneringFamilyPersonId
+  );
+  const arrangementPolicies =
+    policy.referralPolicy?.arrangementPolicies?.filter(
+      (arrangementPolicy) =>
+        arrangementPolicy.arrangementType === arrangement.arrangementType ||
+        isArrangementPolicyAvailableForParticipant(
+          arrangementPolicy,
+          !!participantIsAdult,
+          !!participantIsChild
+        )
+    ) ?? [];
+  const selectedArrangementPolicy = arrangementPolicies.find(
+    (arrangementPolicy) => arrangementPolicy.arrangementType === arrangementType
+  );
+  const availablePolicyVersions = selectedArrangementPolicy
+    ? getAvailablePolicyVersionsForParticipant(
+        selectedArrangementPolicy,
+        !!participantIsAdult,
+        !!participantIsChild
+      )
+    : [];
+  const policyVersionIsRequired = selectedArrangementPolicy
+    ? arrangementType !== arrangement.arrangementType &&
+      hasPolicyVersions(selectedArrangementPolicy)
+    : false;
+  const canChangeType =
+    arrangementType !== arrangement.arrangementType &&
+    !!selectedArrangementPolicy &&
+    (!policyVersionIsRequired || !!arrangementPolicyVersion);
+
+  const selectArrangementType = (nextType: string) => {
+    const nextPolicy = arrangementPolicies.find(
+      (arrangementPolicy) => arrangementPolicy.arrangementType === nextType
+    );
+    const compatibleVersions = nextPolicy
+      ? getAvailablePolicyVersionsForParticipant(
+          nextPolicy,
+          !!participantIsAdult,
+          !!participantIsChild
+        )
+      : [];
+
+    setArrangementType(nextType);
+    setArrangementPolicyVersion(
+      compatibleVersions.length === 1 ? compatibleVersions[0].version : null
+    );
+  };
 
   const save = async () => {
     await withBackdrop(async () => {
@@ -189,6 +268,16 @@ export function ArrangementManagementDrawerV2({
         );
       }
 
+      if (mode === 'change-type') {
+        await v1CasesModel.changeArrangementType(
+          familyId,
+          row.v1Case.id!,
+          arrangement.id!,
+          arrangementType,
+          arrangementPolicyVersion
+        );
+      }
+
       onClose();
     });
   };
@@ -233,14 +322,70 @@ export function ArrangementManagementDrawerV2({
               {arrangement.arrangementType} for {personName}
             </Typography>
           </Box>
-          <IconButton aria-label="close arrangement management" onClick={onClose}>
+          <IconButton
+            aria-label="close arrangement management"
+            onClick={onClose}
+          >
             <CloseIcon />
           </IconButton>
         </Box>
 
-        <Typography variant="body2">
-          {prompt}
-        </Typography>
+        <Typography variant="body2">{prompt}</Typography>
+
+        {mode === 'change-type' && (
+          <Stack spacing={2}>
+            <FormControl fullWidth required size="small">
+              <InputLabel id="arrangement-type-label">
+                Arrangement Type
+              </InputLabel>
+              <Select
+                labelId="arrangement-type-label"
+                label="Arrangement Type"
+                value={arrangementType}
+                onChange={(event) => selectArrangementType(event.target.value)}
+              >
+                {arrangementPolicies.map((arrangementPolicy) => (
+                  <MenuItem
+                    key={arrangementPolicy.arrangementType}
+                    value={arrangementPolicy.arrangementType}
+                  >
+                    <span className="ph-unmask">
+                      {arrangementPolicy.arrangementType}
+                    </span>
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+
+            {selectedArrangementPolicy && policyVersionIsRequired && (
+              <FormControl fullWidth required size="small">
+                <InputLabel id="arrangement-policy-version-label">
+                  Policy Version
+                </InputLabel>
+                <Select
+                  labelId="arrangement-policy-version-label"
+                  label="Policy Version"
+                  value={arrangementPolicyVersion ?? ''}
+                  onChange={(event) =>
+                    setArrangementPolicyVersion(event.target.value)
+                  }
+                >
+                  <MenuItem value="" disabled>
+                    Select a version
+                  </MenuItem>
+                  {availablePolicyVersions.map((policyVersion) => (
+                    <MenuItem
+                      key={policyVersion.version}
+                      value={policyVersion.version}
+                    >
+                      <span className="ph-unmask">{policyVersion.version}</span>
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            )}
+          </Stack>
+        )}
 
         {mode === 'start' && (
           <ValidateDatePicker
@@ -308,7 +453,7 @@ export function ArrangementManagementDrawerV2({
             onClick={save}
             variant="contained"
             color={mode === 'delete' ? 'warning' : 'primary'}
-            disabled={!canSave}
+            disabled={!canSave || (mode === 'change-type' && !canChangeType)}
           >
             {saveLabel}
           </Button>

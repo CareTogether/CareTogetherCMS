@@ -66,6 +66,15 @@ Pop-Location
 dotnet test test/CareTogether.AppHost.Tests/CareTogether.AppHost.Tests.csproj
 ```
 
+### Azure AD B2C callback configuration
+
+The frontend uses a lightweight callback document for silent token renewal and popup-based session recovery. Every deployed frontend origin must register `/silent-callback.html` as a **Single-page application** redirect URI in the Azure AD B2C app registration. The checked-in environments require:
+
+- `http://localhost:3000/silent-callback.html`
+- `https://app.caretogether.io/silent-callback.html`
+
+Register the applicable URI before deploying a build that uses it. The callback intentionally contains no application code so MSAL's hidden iframe does not start a second copy of the application.
+
 If the AppHost Playwright test fails before the browser opens, first check Docker and Azurite. The test performs preflight checks for both and should fail with a direct message when either local dependency is unavailable.
 
 ### Troubleshooting Your Local Setup

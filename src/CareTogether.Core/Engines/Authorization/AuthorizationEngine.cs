@@ -118,8 +118,10 @@ namespace CareTogether.Engines.Authorization
                     UpdatePersonAddress => Permission.EditPersonContactInfo,
                     AddPersonPhoneNumber => Permission.EditPersonContactInfo,
                     UpdatePersonPhoneNumber => Permission.EditPersonContactInfo,
+                    RemovePersonPhoneNumber => Permission.EditPersonContactInfo,
                     AddPersonEmailAddress => Permission.EditPersonContactInfo,
                     UpdatePersonEmailAddress => Permission.EditPersonContactInfo,
+                    RemovePersonEmailAddress => Permission.EditPersonContactInfo,
                     UpdateCustomFamilyMemberField => Permission.EditFamilyInfo,
                     _ => throw new NotImplementedException(
                         $"The command type '{command.GetType().FullName}' has not been implemented."
@@ -185,6 +187,7 @@ namespace CareTogether.Engines.Authorization
                 command switch
                 {
                     CreateArrangement => Permission.CreateArrangement,
+                    ChangeArrangementType => Permission.EditArrangement,
                     ArrangementAssignIndividualVolunteer => Permission.EditAssignments,
                     AssignVolunteerFamily => Permission.EditAssignments,
                     ArrangementUnassignIndividualVolunteer => Permission.EditAssignments,

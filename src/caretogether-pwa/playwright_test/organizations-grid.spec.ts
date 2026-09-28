@@ -27,7 +27,9 @@ test.beforeAll(async () => {
       jsx: { runtime: 'automatic' },
       define: {
         'process.env.NODE_ENV': JSON.stringify('production'),
-        'import.meta.env': '{}',
+        'import.meta.env': JSON.stringify({
+          VITE_APP_AUTH_REDIRECT_URI: 'http://localhost:3000/',
+        }),
       },
     },
     plugins: [

@@ -11,6 +11,7 @@ import {
 import { CustomFieldType, type CustomField } from '../GeneratedClient';
 import { TestFamilyBadge } from '../Families/TestFamilyBadge';
 import { v2Typography } from '../Families/v2Typography';
+import { formatCustomFieldGridValue } from '../Generic/customFieldValue';
 import { renderVolunteerCustomFieldValue } from './VolunteerApprovalTab/volunteerCustomFieldPresentation';
 import { VolunteerApprovalRolesCellV2 } from './VolunteerApprovalRolesCellV2';
 import {
@@ -188,7 +189,7 @@ function renderMissingRequirementsCell(row: VolunteerBrowserRowV2) {
   );
 }
 
-function customColumns(
+export function buildVolunteerCustomColumns(
   scope: 'Volunteer' | 'Family',
   fields: CustomField[],
   rows: VolunteerBrowserRowV2[]
@@ -227,6 +228,29 @@ function customColumns(
           <Typography {...v2Typography.browserCell}>
             {renderVolunteerCustomFieldValue(value, definition.validValues) ||
               '-'}
+          </Typography>
+        ),
+      };
+    }
+    if (
+      definition.type === CustomFieldType.DateOnly ||
+      definition.type === CustomFieldType.DateTime
+    ) {
+      return {
+        ...noAnalytics,
+        field,
+        headerName: `${scope}: ${definition.name}`,
+        type:
+          definition.type === CustomFieldType.DateOnly ? 'date' : 'dateTime',
+        minWidth: 180,
+        flex: 1,
+        valueGetter: (_value, row) => values(row, definition.name),
+        getApplyQuickFilterFn: () => null,
+        valueFormatter: (value) =>
+          formatCustomFieldGridValue(definition.type!, value),
+        renderCell: ({ value }) => (
+          <Typography {...v2Typography.browserCell}>
+            {formatCustomFieldGridValue(definition.type!, value) || '-'}
           </Typography>
         ),
       };
@@ -302,6 +326,13 @@ export function buildVolunteersGridColumns({
   updateTestFamilyFlagEnabled?: boolean;
   volunteerCustomFields: CustomField[];
 }): GridColDef<VolunteerBrowserRowV2>[] {
+  const counties = Array.from(
+    new Set(
+      rows
+        .map((row) => row.county)
+        .filter((county): county is string => county !== null)
+    )
+  ).sort((first, second) => first.localeCompare(second));
   const columns: GridColDef<VolunteerBrowserRowV2>[] = [
     {
       ...noAnalytics,
@@ -352,6 +383,26 @@ export function buildVolunteersGridColumns({
         ),
     },
     {
+      aggregable: false,
+      chartable: rows.every((row) => row.county !== null),
+      field: 'county',
+      headerName: 'County',
+      type: 'singleSelect',
+      minWidth: 140,
+      flex: 1,
+      pivotable: true,
+      valueOptions: counties,
+      filterOperators: [
+        ...getGridSingleSelectOperators(),
+        ...emptyOperators<string | null>(),
+      ],
+      getApplyQuickFilterFn: () => null,
+      valueFormatter: (value: string | null) => value ?? '',
+      renderCell: ({ value }) => (
+        <Typography {...v2Typography.browserCell}>{value || '-'}</Typography>
+      ),
+    },
+    {
       ...noAnalytics,
       field: 'roles',
       headerName: 'Roles',
@@ -393,6 +444,35 @@ export function buildVolunteersGridColumns({
           </Typography>
         ),
     },
+    ...roleNames
+      .filter((roleName) => roleName !== notAppliedLabel)
+      .map(
+        (roleName): GridColDef<VolunteerBrowserRowV2> => ({
+          ...noAnalytics,
+          field: `roleStatus:${roleName}`,
+          headerName: `${roleName} Status`,
+          minWidth: 180,
+          sortable: false,
+          type: 'multiSelect',
+          valueOptions: statusOptions.filter(
+            (option) => option.label !== notAppliedLabel
+          ),
+          valueGetter: (_value, row) => row.roleStatusValues[roleName] ?? [],
+          valueFormatter: (_value, row) =>
+            (row.roleStatusValues[roleName] ?? [])
+              .map(
+                (status) =>
+                  statusOptions.find((option) => option.value === status)
+                    ?.label ?? status
+              )
+              .join(', '),
+          filterOperators: [
+            ...membershipOperators,
+            ...emptyOperators<string[]>(),
+          ],
+          getApplyQuickFilterFn: () => null,
+        })
+      ),
     {
       ...noAnalytics,
       field: 'missingRequirements',
@@ -448,8 +528,32 @@ export function buildVolunteersGridColumns({
       valueGetter: (_value, row) => row.volunteerFamilyCount,
       getApplyQuickFilterFn: () => null,
     },
-    ...customColumns('Volunteer', volunteerCustomFields, rows),
-    ...customColumns('Family', familyCustomFields, rows),
+    ...buildVolunteerCustomColumns('Volunteer', volunteerCustomFields, rows),
+    ...buildVolunteerCustomColumns('Family', familyCustomFields, rows),
+    {
+      ...noAnalytics,
+      field: 'organizationNames',
+      headerName: 'Organization',
+      flex: 1,
+      minWidth: 180,
+      sortable: false,
+      type: 'multiSelect',
+      valueOptions: Array.from(
+        new Set(rows.flatMap((row) => row.organizationNames))
+      ).sort((first, second) => first.localeCompare(second)),
+      valueGetter: (_value, row) => row.organizationNames,
+      valueFormatter: (_value, row) => row.organizationNames.join(', '),
+      filterOperators: [...membershipOperators, ...emptyOperators<string[]>()],
+      getApplyQuickFilterFn: () => null,
+      renderCell: ({ row, value }) =>
+        isAutogeneratedRow(row) ? (
+          value
+        ) : (
+          <Typography noWrap {...v2Typography.browserCell}>
+            {row.organizationNames.join(', ') || '-'}
+          </Typography>
+        ),
+    },
     {
       ...noAnalytics,
       field: VOLUNTEERS_SEARCH_FIELD,

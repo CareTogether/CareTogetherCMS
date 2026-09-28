@@ -1,4 +1,5 @@
-import { Typography } from '@mui/material';
+import { Phone as PhoneIcon } from '@mui/icons-material';
+import { Chip, Stack, Typography } from '@mui/material';
 import {
   getGridBooleanOperators,
   getGridMultiSelectOperators,
@@ -9,9 +10,20 @@ import {
 } from '@mui/x-data-grid-premium';
 import { CustomFieldType, type CustomField } from '../GeneratedClient';
 import { v2Typography } from '../Families/v2Typography';
+import { formatCustomFieldGridValue } from '../Generic/customFieldValue';
 import { simplify } from '../Utilities/stringUtils';
 import { ClientFamilyCellV2 } from './ClientFamilyCellV2';
 import { ClientArrangementSummaryCellV2 } from './ClientArrangementSummaryCellV2';
+import {
+  ClientArrangementAssignmentFilter,
+  type ClientArrangementAssignmentFilterProps,
+} from './ClientArrangementAssignmentFilter';
+import {
+  CLIENT_ARRANGEMENT_ASSIGNMENT_FILTER_FIELD,
+  clientArrangementAssignmentFilterValue,
+  matchesClientArrangementAssignmentFilter,
+  type ClientArrangementFunctionAssignmentV2,
+} from './clientArrangementFunctions';
 import { clientsInternalSortColumns } from './clientsGridSorting';
 import type {
   ClientAssignmentRoleV2,
@@ -21,6 +33,7 @@ import type {
 
 type Option = { value: string; label: string };
 const maximumCategoricalReportingOptions = 50;
+const CLIENT_ARRANGEMENT_FUNCTION_COLUMN_PREFIX = 'arrangementFunction:';
 
 const multipleSelectionOperator = getGridSingleSelectOperators().find(
   (operator) => operator.value === 'isAnyOf'
@@ -72,7 +85,18 @@ function formatValue(value: ClientCustomFieldValue) {
   if (value === null) return '';
   if (Array.isArray(value)) return value.join(', ');
   if (typeof value === 'boolean') return value ? 'Yes' : 'No';
-  return value;
+  return typeof value === 'string' ? value : '';
+}
+
+function groupingValue(value: ClientCustomFieldValue) {
+  if (typeof value === 'boolean') return value;
+  if (typeof value === 'string' && value !== '') return value;
+  return '(No value)';
+}
+
+function caseStatusDetails(status: string, caseStatus: string) {
+  const prefix = `${caseStatus} `;
+  return status.startsWith(prefix) ? status.slice(prefix.length) : status;
 }
 
 function normalizedQuickFilter(value: unknown) {
@@ -114,23 +138,174 @@ function arrayColumn(
   };
 }
 
-function customFieldColumns(
+function arrangementAssignmentFilterColumn(
+  rows: ClientBrowserRowV2[]
+): GridColDef<ClientBrowserRowV2, ClientArrangementFunctionAssignmentV2[]> {
+  const assignments = rows.flatMap(
+    (row) => row.arrangementFunctionAssignments ?? []
+  );
+  const assignmentLabels = new Map(
+    assignments.flatMap((assignment) =>
+      assignment.assignmentId && assignment.assignmentLabel
+        ? [[assignment.assignmentId, assignment.assignmentLabel] as const]
+        : []
+    )
+  );
+  const operator: GridFilterOperator<
+    ClientBrowserRowV2,
+    ClientArrangementFunctionAssignmentV2[],
+    ClientArrangementFunctionAssignmentV2[],
+    ClientArrangementAssignmentFilterProps
+  > = {
+    label: 'matches',
+    value: 'matches',
+    getApplyFilterFn: (item) => {
+      const filterValue = clientArrangementAssignmentFilterValue(item.value);
+      if (!filterValue) return null;
+      return (rowAssignments) =>
+        matchesClientArrangementAssignmentFilter(
+          rowAssignments ?? [],
+          filterValue
+        );
+    },
+    getValueAsString: (value) => {
+      const filterValue = clientArrangementAssignmentFilterValue(value);
+      if (!filterValue) return '';
+      return [
+        filterValue.arrangementType,
+        filterValue.functionName,
+        filterValue.assignmentId
+          ? assignmentLabels.get(filterValue.assignmentId)
+          : undefined,
+        filterValue.arrangementPolicyVersion
+          ? `Version ${filterValue.arrangementPolicyVersion}`
+          : undefined,
+      ]
+        .filter(Boolean)
+        .join(' · ');
+    },
+    InputComponent: ClientArrangementAssignmentFilter,
+    InputComponentProps: { assignments },
+  };
+
+  return {
+    field: CLIENT_ARRANGEMENT_ASSIGNMENT_FILTER_FIELD,
+    headerName: 'Arrangement assignment',
+    hideable: false,
+    sortable: false,
+    pinnable: false,
+    disableExport: true,
+    filterOperators: [operator],
+    getApplyQuickFilterFn: () => null,
+    valueGetter: (_value, row) => row.arrangementFunctionAssignments ?? [],
+    renderCell: () => null,
+  };
+}
+
+function arrangementFunctionColumns(
+  rows: ClientBrowserRowV2[]
+): GridColDef<ClientBrowserRowV2>[] {
+  const definitions = new Map<
+    string,
+    Pick<
+      ClientArrangementFunctionAssignmentV2,
+      'arrangementType' | 'functionName'
+    >
+  >();
+
+  rows.forEach((row) =>
+    row.arrangementFunctionAssignments.forEach((assignment) => {
+      const key = `${assignment.arrangementType}\n${assignment.functionName}`;
+      definitions.set(key, assignment);
+    })
+  );
+
+  return Array.from(definitions.values())
+    .sort(
+      (first, second) =>
+        first.arrangementType.localeCompare(second.arrangementType) ||
+        first.functionName.localeCompare(second.functionName)
+    )
+    .map(({ arrangementType, functionName }) => {
+      const valueForRow = (row: ClientBrowserRowV2) => {
+        const matches = row.arrangementFunctionAssignments.filter(
+          (assignment) =>
+            assignment.arrangementType === arrangementType &&
+            assignment.functionName === functionName
+        );
+        if (matches.length === 0) return '';
+
+        const assignmentLabels = Array.from(
+          new Set(
+            matches.flatMap((assignment) =>
+              assignment.assignmentLabel ? [assignment.assignmentLabel] : []
+            )
+          )
+        ).sort((first, second) => first.localeCompare(second));
+        const unassignedArrangementCount = new Set(
+          matches.flatMap((assignment) =>
+            assignment.assignmentId === null ? [assignment.arrangementId] : []
+          )
+        ).size;
+        const unassignedLabel =
+          unassignedArrangementCount === 0
+            ? []
+            : [
+                unassignedArrangementCount === 1
+                  ? '1 unassigned'
+                  : `${unassignedArrangementCount} unassigned`,
+              ];
+
+        return [...assignmentLabels, ...unassignedLabel].join(', ');
+      };
+
+      return {
+        field: `${CLIENT_ARRANGEMENT_FUNCTION_COLUMN_PREFIX}${encodeURIComponent(arrangementType)}:${encodeURIComponent(functionName)}`,
+        headerName: `Function: ${arrangementType} - ${functionName}`,
+        description: `${functionName} assignments across all ${arrangementType} arrangements.`,
+        minWidth: 220,
+        flex: 1,
+        valueGetter: (_value, row) => valueForRow(row),
+        getApplyQuickFilterFn: normalizedQuickFilter,
+        renderCell: ({ value }) => (
+          <Typography {...v2Typography.browserCell}>{value || '-'}</Typography>
+        ),
+      };
+    });
+}
+
+export function buildClientCustomFieldColumns(
   fields: CustomField[],
-  scope: 'case' | 'family',
+  scope: 'case' | 'family' | 'adult' | 'child',
   rows: ClientBrowserRowV2[]
 ): GridColDef<ClientBrowserRowV2>[] {
   return fields.map((definition) => {
-    const field = `${scope === 'case' ? 'caseCustomField' : 'customField'}:${definition.name}`;
-    const headerName = `${scope === 'case' ? 'Case' : 'Family'}: ${definition.name}`;
-    const getValue = (row: ClientBrowserRowV2) =>
-      (scope === 'case' ? row.caseCustomFieldValues : row.customFieldValues)[
-        definition.name
-      ] ?? null;
+    const familyLevel = scope === 'family' || scope === 'case';
+    const relevantRows = rows.filter((row) =>
+      familyLevel ? row.rowKind === 'family' : row.rowKind === scope
+    );
+    const field = `${scope === 'family' ? 'customField' : `${scope}CustomField`}:${definition.name}`;
+    const headerName = `${scope[0].toUpperCase()}${scope.slice(1)}: ${definition.name}`;
+    const storedValue = (row: ClientBrowserRowV2) =>
+      (scope === 'adult'
+        ? row.adultCustomFieldValues
+        : scope === 'child'
+          ? row.childCustomFieldValues
+          : scope === 'case'
+            ? row.caseCustomFieldValues
+            : row.customFieldValues)[definition.name] ?? null;
+    const getValue = (row: ClientBrowserRowV2) => {
+      if (scope === 'adult' && row.rowKind !== 'adult') return null;
+      if (scope === 'child' && row.rowKind !== 'child') return null;
+      return storedValue(row);
+    };
+    const getGroupingValue = (row: ClientBrowserRowV2) =>
+      groupingValue(getValue(row));
     if (definition.type === CustomFieldType.StringArray) {
       const options = Array.from(
         new Set([
           ...(definition.validValues ?? []),
-          ...rows.flatMap((row) => {
+          ...relevantRows.flatMap((row) => {
             const value = getValue(row);
             return Array.isArray(value) ? value : [];
           }),
@@ -142,11 +317,36 @@ function customFieldColumns(
       });
     }
     if (
+      definition.type === CustomFieldType.DateOnly ||
+      definition.type === CustomFieldType.DateTime
+    ) {
+      return {
+        aggregable: false,
+        chartable: false,
+        field,
+        headerName,
+        minWidth: 180,
+        flex: 1,
+        pivotable: false,
+        type:
+          definition.type === CustomFieldType.DateOnly ? 'date' : 'dateTime',
+        valueGetter: (_value, row) => getValue(row),
+        valueFormatter: (value) =>
+          formatCustomFieldGridValue(definition.type!, value),
+        getApplyQuickFilterFn: () => null,
+        renderCell: ({ value }) => (
+          <Typography {...v2Typography.browserCell}>
+            {formatCustomFieldGridValue(definition.type!, value) || '-'}
+          </Typography>
+        ),
+      };
+    }
+    if (
       definition.type === CustomFieldType.String &&
       definition.validValues?.length
     ) {
       const configuredValues = new Set(definition.validValues);
-      const observedValues = rows.map(getValue);
+      const observedValues = relevantRows.map(getValue);
       const pivotable =
         configuredValues.size <= maximumCategoricalReportingOptions &&
         observedValues.every(
@@ -170,8 +370,11 @@ function customFieldColumns(
           ])
         ),
         pivotable,
-        chartable: pivotable && observedValues.every((value) => value !== null),
+        chartable:
+          pivotable &&
+          (!familyLevel || observedValues.every((value) => value !== null)),
         valueGetter: (_value, row) => getValue(row),
+        groupingValueGetter: (_value, row) => getGroupingValue(row),
         valueFormatter: (value: string | null) => value ?? '',
         filterOperators: [
           ...getGridSingleSelectOperators(),
@@ -188,7 +391,7 @@ function customFieldColumns(
       pivotable: definition.type === CustomFieldType.Boolean,
       chartable:
         definition.type === CustomFieldType.Boolean &&
-        rows.every((row) => getValue(row) !== null),
+        (!familyLevel || relevantRows.every((row) => getValue(row) !== null)),
       ...(definition.type === CustomFieldType.Boolean
         ? {
             filterOperators: [
@@ -198,6 +401,7 @@ function customFieldColumns(
           }
         : {}),
       valueGetter: (_value, row) => getValue(row),
+      groupingValueGetter: (_value, row) => getGroupingValue(row),
       valueFormatter: (value: ClientCustomFieldValue) => formatValue(value),
       renderCell: ({ value }) => (
         <Typography {...v2Typography.browserCell}>
@@ -213,6 +417,8 @@ export function buildClientsColumns(
   assignmentRoles: ClientAssignmentRoleV2[],
   familyCustomFields: CustomField[],
   caseCustomFields: CustomField[],
+  adultCustomFields: CustomField[],
+  childCustomFields: CustomField[],
   countyOptions: string[]
 ): GridColDef<ClientBrowserRowV2>[] {
   const nameComparator = clientsInternalSortColumns.find(
@@ -221,14 +427,28 @@ export function buildClientsColumns(
   const columns: GridColDef<ClientBrowserRowV2>[] = [
     ...clientsInternalSortColumns,
     {
-      field: 'clientCount',
-      headerName: 'Client count',
+      field: 'reportCount',
+      headerName: 'Count',
       type: 'number',
       width: 140,
       pivotable: true,
       aggregable: true,
       availableAggregationFunctions: ['sum'],
       getApplyQuickFilterFn: () => null,
+    },
+    {
+      field: 'memberType',
+      headerName: 'Individual type',
+      type: 'singleSelect',
+      valueOptions: ['Adult', 'Child'],
+      minWidth: 160,
+      pivotable: true,
+      valueGetter: (_value, row) =>
+        row.rowKind === 'family'
+          ? null
+          : row.rowKind === 'adult'
+            ? 'Adult'
+            : 'Child',
     },
     {
       field: 'family',
@@ -239,10 +459,24 @@ export function buildClientsColumns(
       renderCell: ({ row }) => (
         <ClientFamilyCellV2
           familyName={row.family || '-'}
-          phoneNumber={row.phoneNumber}
-          primaryContactName={row.primaryContactName}
+          memberSummaries={row.memberSummaries}
         />
       ),
+    },
+    {
+      field: 'phoneNumber',
+      headerName: 'Phone',
+      minWidth: 170,
+      getApplyQuickFilterFn: normalizedQuickFilter,
+      renderCell: ({ row }) =>
+        row.phoneNumber ? (
+          <Stack direction="row" spacing={0.5} sx={{ alignItems: 'center' }}>
+            <PhoneIcon color="action" fontSize="small" />
+            <Typography {...v2Typography.browserCell} noWrap>
+              {row.phoneNumber}
+            </Typography>
+          </Stack>
+        ) : null,
     },
     {
       field: 'memberNames',
@@ -283,9 +517,18 @@ export function buildClientsColumns(
       minWidth: 150,
       flex: 1,
       renderCell: ({ row }) => (
-        <Typography {...v2Typography.browserCell} noWrap>
-          {row.status || '-'}
-        </Typography>
+        <Chip
+          size="small"
+          color={row.caseStatus === 'Open' ? 'success' : 'default'}
+          label={[
+            row.caseStatus,
+            row.status && row.status !== row.caseStatus
+              ? caseStatusDetails(row.status, row.caseStatus)
+              : undefined,
+          ]
+            .filter(Boolean)
+            .join(' · ')}
+        />
       ),
     },
     arrayColumn(
@@ -322,8 +565,10 @@ export function buildClientsColumns(
         </Typography>
       ),
     })),
-    ...customFieldColumns(familyCustomFields, 'family', rows),
-    ...customFieldColumns(caseCustomFields, 'case', rows),
+    ...buildClientCustomFieldColumns(familyCustomFields, 'family', rows),
+    ...buildClientCustomFieldColumns(caseCustomFields, 'case', rows),
+    ...buildClientCustomFieldColumns(adultCustomFields, 'adult', rows),
+    ...buildClientCustomFieldColumns(childCustomFields, 'child', rows),
     {
       field: 'arrangements',
       headerName: 'Arrangements',
@@ -341,6 +586,20 @@ export function buildClientsColumns(
       ),
       (row) => row.arrangementTypes
     ),
+    ...arrangementFunctionColumns(rows),
+    arrangementAssignmentFilterColumn(rows),
+    {
+      ...arrayColumn(
+        'organizationNames',
+        'Organization',
+        Array.from(new Set(rows.flatMap((row) => row.organizationNames ?? [])))
+          .sort((first, second) => first.localeCompare(second))
+          .map((value) => ({ value, label: value })),
+        (row) => row.organizationNames ?? [],
+        'Unassigned'
+      ),
+      filterOperators: [...arrayFilterOperators, ...emptyOperators<string[]>()],
+    },
   ];
   return columns.map((column) => ({
     chartable: column.pivotable === true,
@@ -354,26 +613,47 @@ export function buildClientsColumns(
           ? null
           : column.valueGetter!(value, row, definition, apiRef),
     }),
-    ...(column.renderCell && {
-      renderCell: (params) => {
-        if (isAutogeneratedRow(params.row)) {
-          return typeof params.value === 'string' ||
-            typeof params.value === 'number'
-            ? params.value
-            : typeof params.value === 'boolean'
-              ? formatValue(params.value)
-              : null;
-        }
-        return column.renderCell!(params);
-      },
-    }),
+    renderCell: (params) => {
+      if (isAutogeneratedRow(params.row)) {
+        if (!column.renderCell)
+          return params.formattedValue ?? params.value ?? null;
+        return typeof params.value === 'string' ||
+          typeof params.value === 'number'
+          ? params.value
+          : typeof params.value === 'boolean'
+            ? formatValue(params.value)
+            : null;
+      }
+      if (
+        params.row.rowKind !== 'family' &&
+        !isIndividualClientsColumn(column.field)
+      )
+        return null;
+      return column.renderCell
+        ? column.renderCell(params)
+        : (params.formattedValue ?? params.value ?? null);
+    },
   }));
+}
+
+function isIndividualClientsColumn(field: string) {
+  return (
+    field === 'memberType' ||
+    field === 'reportCount' ||
+    field === 'arrangements' ||
+    field === 'arrangementStatuses' ||
+    field === 'arrangementTypes' ||
+    field.startsWith(CLIENT_ARRANGEMENT_FUNCTION_COLUMN_PREFIX) ||
+    field.startsWith('adultCustomField:') ||
+    field.startsWith('childCustomField:')
+  );
 }
 
 export function isOptionalClientsColumn(field: string) {
   return (
     [
-      'clientCount',
+      'reportCount',
+      'memberType',
       'memberNames',
       'firstName',
       'lastName',
@@ -381,7 +661,15 @@ export function isOptionalClientsColumn(field: string) {
       'arrangementStatuses',
       'arrangementTypes',
     ].includes(field) ||
+    field === CLIENT_ARRANGEMENT_ASSIGNMENT_FILTER_FIELD ||
+    field.startsWith(CLIENT_ARRANGEMENT_FUNCTION_COLUMN_PREFIX) ||
     field.startsWith('customField:') ||
-    field.startsWith('caseCustomField:')
+    field.startsWith('caseCustomField:') ||
+    field.startsWith('adultCustomField:') ||
+    field.startsWith('childCustomField:')
   );
+}
+
+export function isInternalClientsColumn(field: string) {
+  return field === CLIENT_ARRANGEMENT_ASSIGNMENT_FILTER_FIELD;
 }

@@ -6,6 +6,7 @@ import {
   Person,
 } from '../GeneratedClient';
 import { sortByPolicyOrder } from '../Generic/sortByPolicyOrder';
+import { formatCustomFieldValue as formatTypedCustomFieldValue } from '../Generic/customFieldValue';
 
 export type PrintableFamilyMember = {
   kind: 'adult' | 'child';
@@ -49,6 +50,13 @@ function formatCustomFieldValue(
           customFieldPolicy?.validValues ?? []
         ).join(', ')
       : String(value);
+  }
+
+  if (
+    fieldType === CustomFieldType.DateOnly ||
+    fieldType === CustomFieldType.DateTime
+  ) {
+    return formatTypedCustomFieldValue(fieldType, value);
   }
 
   if (Array.isArray(value)) {
