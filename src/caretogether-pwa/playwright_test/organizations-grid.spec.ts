@@ -25,7 +25,10 @@ test.beforeAll(async () => {
     tsconfig: false,
     transform: {
       jsx: { runtime: 'automatic' },
-      define: { 'process.env.NODE_ENV': JSON.stringify('production') },
+      define: {
+        'process.env.NODE_ENV': JSON.stringify('production'),
+        'import.meta.env': '{}',
+      },
     },
     plugins: [
       {
@@ -46,12 +49,40 @@ test.beforeAll(async () => {
   bundle = output.code;
 });
 
+async function openOrganizationsGridHarnessPage(
+  page: import('@playwright/test').Page
+) {
+  await page.route('**/organizations-grid-harness', (route) =>
+    route.fulfill({
+      contentType: 'text/html',
+      body: '<html><body><div id="root"></div></body></html>',
+    })
+  );
+  await page.goto('/organizations-grid-harness');
+}
+
 async function mountOrganizationsGrid(page: import('@playwright/test').Page) {
-  await page.goto('/');
-  await page.setContent('<html><body><div id="root"></div></body></html>');
+  await openOrganizationsGridHarnessPage(page);
   await page.addScriptTag({ content: bundle });
   await expect(page.getByRole('grid')).toBeVisible();
 }
+
+test('shows the quick filter when its saved value arrives after the grid mounts', async ({
+  page,
+}) => {
+  await openOrganizationsGridHarnessPage(page);
+  await page.evaluate(() =>
+    window.localStorage.setItem('organizations-grid-quick-filter', 'Beta')
+  );
+  await page.addScriptTag({ content: bundle });
+
+  const search = page.getByRole('searchbox').first();
+  await expect(search).toBeVisible();
+  await expect(search).toHaveValue('Beta');
+  await expect(
+    page.getByRole('gridcell', { name: 'Alpha Organization', exact: true })
+  ).toHaveCount(0);
+});
 
 function community({
   id,

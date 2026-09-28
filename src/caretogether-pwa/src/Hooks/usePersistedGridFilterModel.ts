@@ -113,12 +113,11 @@ export function usePersistedGridFilterModel({
   const savedPreferences = preferencesLoaded
     ? loadedPreferences.preferences
     : null;
-  const [keyedFilterModel, setKeyedFilterModel] = useState<KeyedGridFilterModel>(
-    () => ({
+  const [keyedFilterModel, setKeyedFilterModel] =
+    useState<KeyedGridFilterModel>(() => ({
       filterModel: emptyGridFilterModel,
       storageKey: null,
-    })
-  );
+    }));
   const filterModel =
     keyedFilterModel.storageKey === storageKey
       ? keyedFilterModel.filterModel
@@ -232,6 +231,8 @@ export function usePersistedGridFilterModel({
 
   return {
     filterModel,
+    filterModelRestored:
+      storageKey !== null && keyedFilterModel.storageKey === storageKey,
     onFilterModelChange,
   };
 }

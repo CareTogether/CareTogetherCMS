@@ -7,7 +7,6 @@ import {
   useTheme,
 } from '@mui/material';
 import {
-  DataGridPremium,
   GridChartsIntegrationContextProvider,
   GridChartsRendererProxy,
   type GridChartsPanelProps,
@@ -34,6 +33,7 @@ import { ORGANIZATION_CATEGORIES_FEATURE_FLAG } from '../featureFlags';
 import { v2DataGridStyles } from '../Families/v2DataGridStyles';
 import { v2Typography } from '../Families/v2Typography';
 import { usePersistedGridFilterModel } from '../Hooks/usePersistedGridFilterModel';
+import { PersistedFilterDataGridPremium } from '../Hooks/PersistedFilterDataGridPremium';
 import {
   buildOrganizationsGridColumns,
   canNavigateOrganizationRow,
@@ -50,6 +50,7 @@ import { OrganizationsChartsPanel } from './OrganizationsChartsPanel';
 type OrganizationsDataGridProps = {
   columns: GridColDef<OrganizationGridRow>[];
   filterModel: GridFilterModel;
+  filterModelRestored: boolean;
   onFilterModelChange: (model: GridFilterModel) => void;
   onRowClick: (row: OrganizationGridRow) => void;
   rows: OrganizationGridRow[];
@@ -68,6 +69,7 @@ function isInteractiveElement(target: EventTarget | null) {
 export function OrganizationsDataGrid({
   columns,
   filterModel,
+  filterModelRestored,
   onFilterModelChange,
   onRowClick,
   rows,
@@ -87,6 +89,7 @@ export function OrganizationsDataGrid({
       key={reportingSessionKey}
       columns={columns}
       filterModel={filterModel}
+      filterModelRestored={filterModelRestored}
       onFilterModelChange={onFilterModelChange}
       onRowClick={onRowClick}
       rows={rows}
@@ -97,6 +100,7 @@ export function OrganizationsDataGrid({
 function OrganizationsDataGridSession({
   columns,
   filterModel,
+  filterModelRestored,
   onFilterModelChange,
   onRowClick,
   rows,
@@ -124,7 +128,7 @@ function OrganizationsDataGridSession({
   return (
     <GridChartsIntegrationContextProvider>
       <Box sx={v2DataGridStyles(theme)}>
-        <DataGridPremium
+        <PersistedFilterDataGridPremium
           {...organizationGridFeatureProps}
           showToolbar
           chartsIntegration
@@ -136,6 +140,7 @@ function OrganizationsDataGridSession({
           rows={rows}
           columns={columns}
           filterModel={filterModel}
+          filterModelRestored={filterModelRestored}
           onFilterModelChange={onFilterModelChange}
           rowHeight={56}
           columnHeaderHeight={42}
@@ -214,10 +219,11 @@ export function CommunitiesList() {
     () => buildOrganizationsGridColumns({ organizationCategoriesEnabled }),
     [organizationCategoriesEnabled]
   );
-  const { filterModel, onFilterModelChange } = usePersistedGridFilterModel({
-    columns,
-    namespace: 'organizations',
-  });
+  const { filterModel, filterModelRestored, onFilterModelChange } =
+    usePersistedGridFilterModel({
+      columns,
+      namespace: 'organizations',
+    });
 
   const appNavigate = useAppNavigate();
   function openCommunity(row: OrganizationGridRow) {
@@ -266,6 +272,7 @@ export function CommunitiesList() {
         <OrganizationsDataGrid
           columns={columns}
           filterModel={filterModel}
+          filterModelRestored={filterModelRestored}
           onFilterModelChange={onFilterModelChange}
           onRowClick={openCommunity}
           rows={rows}

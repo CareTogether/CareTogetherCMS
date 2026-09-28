@@ -1,5 +1,5 @@
 import { createRoot } from 'react-dom/client';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import type { GridFilterModel } from '@mui/x-data-grid-premium';
 import { OrganizationsDataGrid } from '../src/Communities/CommunitiesList';
 import { buildOrganizationsGridColumns } from '../src/Communities/organizationsGridColumns';
@@ -34,12 +34,24 @@ export function Harness() {
   const [filterModel, setFilterModel] = useState<GridFilterModel>({
     items: [],
   });
+  const [filterModelRestored, setFilterModelRestored] = useState(false);
+
+  useEffect(() => {
+    const savedQuickFilter = window.localStorage.getItem(
+      'organizations-grid-quick-filter'
+    );
+    if (savedQuickFilter) {
+      setFilterModel({ items: [], quickFilterValues: [savedQuickFilter] });
+    }
+    setFilterModelRestored(true);
+  }, []);
 
   return (
     <div style={{ width: '100%' }}>
       <OrganizationsDataGrid
         columns={columns}
         filterModel={filterModel}
+        filterModelRestored={filterModelRestored}
         onFilterModelChange={setFilterModel}
         onRowClick={(row) => {
           window.history.pushState(

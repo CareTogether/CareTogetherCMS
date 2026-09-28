@@ -1,6 +1,5 @@
 import { Box, useTheme } from '@mui/material';
 import {
-  DataGridPremium,
   type GridInitialState,
   type GridRowParams,
 } from '@mui/x-data-grid-premium';
@@ -13,6 +12,7 @@ import {
 import type { AssignmentBrowserRowV2 } from './volunteerAssignmentViewModel';
 import { v2DataGridStyles } from './v2DataGridStyles';
 import { usePersistedGridFilterModel } from '../Hooks/usePersistedGridFilterModel';
+import { PersistedFilterDataGridPremium } from '../Hooks/PersistedFilterDataGridPremium';
 
 type VolunteerAssignmentsDataGridV2Props = {
   filterScopeId?: string;
@@ -47,15 +47,16 @@ export function VolunteerAssignmentsDataGridV2({
     () => buildVolunteerAssignmentsGridColumns(rows),
     [rows]
   );
-  const { filterModel, onFilterModelChange } = usePersistedGridFilterModel({
-    columns,
-    entityId: filterScopeId,
-    namespace: 'volunteerAssignments',
-  });
+  const { filterModel, filterModelRestored, onFilterModelChange } =
+    usePersistedGridFilterModel({
+      columns,
+      entityId: filterScopeId,
+      namespace: 'volunteerAssignments',
+    });
 
   return (
     <Box sx={v2DataGridStyles(theme)}>
-      <DataGridPremium
+      <PersistedFilterDataGridPremium
         showToolbar
         autoHeight
         disableAggregation
@@ -64,6 +65,7 @@ export function VolunteerAssignmentsDataGridV2({
         rows={rows}
         columns={columns}
         filterModel={filterModel}
+        filterModelRestored={filterModelRestored}
         onFilterModelChange={onFilterModelChange}
         rowHeight={56}
         columnHeaderHeight={42}
