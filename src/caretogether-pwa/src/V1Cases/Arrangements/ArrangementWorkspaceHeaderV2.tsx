@@ -1,9 +1,18 @@
 import CloseIcon from '@mui/icons-material/Close';
-import { Box, Button, Chip, IconButton, Stack, Typography } from '@mui/material';
+import {
+  Box,
+  Button,
+  Chip,
+  IconButton,
+  Stack,
+  Typography,
+} from '@mui/material';
 import { ArrangementPhase, Permission } from '../../GeneratedClient';
 import { useFamilyIdPermissions } from '../../Model/SessionModel';
+import { usePolicy } from '../../Model/PolicyModel';
 import { ArrangementRowV2 } from './arrangementViewModel';
 import { ArrangementManagementMode } from './ArrangementManagementDrawerV2';
+import { isArrangementPolicyAvailableForParticipant } from './arrangementPolicyVersions';
 
 type ArrangementWorkspaceHeaderV2Props = {
   onClose: () => void;
@@ -17,9 +26,30 @@ export function ArrangementWorkspaceHeaderV2({
   row,
 }: ArrangementWorkspaceHeaderV2Props) {
   const arrangement = row.source;
+  const policy = usePolicy();
   const permissions = useFamilyIdPermissions(row.partneringFamily.family!.id!);
   const canEdit = permissions(Permission.EditArrangement);
   const canDelete = permissions(Permission.DeleteArrangement);
+  const participantIsAdult = row.partneringFamily.family?.adults?.some(
+    (adult) => adult.item1?.id === arrangement.partneringFamilyPersonId
+  );
+  const participantIsChild = row.partneringFamily.family?.children?.some(
+    (child) => child.id === arrangement.partneringFamilyPersonId
+  );
+  const hasAlternativeArrangementType =
+    policy.referralPolicy?.arrangementPolicies?.some(
+      (arrangementPolicy) =>
+        arrangementPolicy.arrangementType !== arrangement.arrangementType &&
+        isArrangementPolicyAvailableForParticipant(
+          arrangementPolicy,
+          !!participantIsAdult,
+          !!participantIsChild
+        )
+    ) ?? false;
+  const canChangeType =
+    !arrangement.startedAtUtc &&
+    !arrangement.endedAtUtc &&
+    !arrangement.cancelledAtUtc;
 
   return (
     <Box
@@ -61,14 +91,20 @@ export function ArrangementWorkspaceHeaderV2({
             sx={{ alignItems: 'center', flexWrap: 'wrap' }}
           >
             <Chip label={row.statusLabel} size="small" />
-            <Typography
-              color="text.secondary"
-              variant="body2"
-            >
+            <Typography color="text.secondary" variant="body2">
               {row.childOrPersonLabel}
             </Typography>
           </Stack>
           <Stack direction="row" spacing={1} sx={{ flexWrap: 'wrap' }}>
+            {canEdit && canChangeType && hasAlternativeArrangementType && (
+              <Button
+                variant="outlined"
+                size="small"
+                onClick={() => onManage('change-type')}
+              >
+                Change Type
+              </Button>
+            )}
             {arrangement.phase === ArrangementPhase.SettingUp && canEdit && (
               <Button
                 variant="outlined"

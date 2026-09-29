@@ -10,6 +10,7 @@ import {
 } from '@mui/x-data-grid-premium';
 import { CustomFieldType, type CustomField } from '../GeneratedClient';
 import { v2Typography } from '../Families/v2Typography';
+import { formatCustomFieldGridValue } from '../Generic/customFieldValue';
 import type {
   ReferralAssignmentRoleV2,
   ReferralBrowserRowV2,
@@ -87,7 +88,7 @@ function formatCustomFieldValue(value: ReferralCustomFieldValue) {
   if (value === null) return '';
   if (Array.isArray(value)) return value.join(', ');
   if (typeof value === 'boolean') return value ? 'Yes' : 'No';
-  return value;
+  return typeof value === 'string' ? value : '';
 }
 
 function arrayColumn(
@@ -156,7 +157,7 @@ function assignmentColumns(
   });
 }
 
-function customFieldColumns(
+export function buildReferralCustomFieldColumns(
   fields: CustomField[],
   rows: ReferralBrowserRowV2[]
 ): GridColDef<ReferralBrowserRowV2>[] {
@@ -179,6 +180,42 @@ function customFieldColumns(
         const value = getValue(row);
         return Array.isArray(value) ? value : null;
       });
+    }
+
+    if (
+      definition.type === CustomFieldType.DateOnly ||
+      definition.type === CustomFieldType.DateTime
+    ) {
+      return {
+        aggregable: false,
+        chartable: false,
+        field,
+        headerName: definition.name,
+        minWidth: 180,
+        flex: 1,
+        pivotable: false,
+        type:
+          definition.type === CustomFieldType.DateOnly ? 'date' : 'dateTime',
+        valueGetter: (_value, row) => getValue(row),
+        valueFormatter: (value) =>
+          formatCustomFieldGridValue(definition.type!, value),
+        getApplyQuickFilterFn: () => null,
+        renderCell: ({ value }) => (
+          <Box
+            sx={{
+              alignItems: 'center',
+              display: 'flex',
+              minHeight: REFERRALS_CELL_MIN_HEIGHT,
+              minWidth: 0,
+              width: '100%',
+            }}
+          >
+            <Typography {...v2Typography.browserCell}>
+              {formatCustomFieldGridValue(definition.type!, value) || '-'}
+            </Typography>
+          </Box>
+        ),
+      };
     }
 
     if (
@@ -432,7 +469,7 @@ export function buildReferralsColumns(
       getApplyQuickFilterFn: () => null,
     },
     ...assignmentColumns(assignmentRoles),
-    ...customFieldColumns(customFields, rows),
+    ...buildReferralCustomFieldColumns(customFields, rows),
   ];
 
   return columns.map((column) => ({

@@ -1056,6 +1056,43 @@ namespace CareTogether.Managers.Records
             }
         }
 
+        private async Task ValidateArrangementTypeChangeAsync(
+            Guid organizationId,
+            Guid locationId,
+            ArrangementsCommand command
+        )
+        {
+            if (command is not ChangeArrangementType changeType)
+                return;
+
+            var policy = await policiesResource.GetCurrentPolicy(organizationId, locationId);
+            var arrangementPolicy = policy.ReferralPolicy.ArrangementPolicies.SingleOrDefault(
+                candidate => candidate.ArrangementType == changeType.ArrangementType
+            );
+
+            if (arrangementPolicy == null)
+                throw new InvalidOperationException(
+                    $"The arrangement type '{changeType.ArrangementType}' does not exist in the current policy."
+                );
+
+            var policyVersions =
+                arrangementPolicy.PolicyVersions ?? ImmutableList<ArrangementPolicyVersion>.Empty;
+            if (policyVersions.IsEmpty && changeType.ArrangementPolicyVersion == null)
+                return;
+
+            if (
+                changeType.ArrangementPolicyVersion != null
+                && policyVersions.Any(version =>
+                    version.Version == changeType.ArrangementPolicyVersion
+                )
+            )
+                return;
+
+            throw new InvalidOperationException(
+                $"The arrangement policy version '{changeType.ArrangementPolicyVersion}' does not exist for arrangement type '{changeType.ArrangementType}'."
+            );
+        }
+
         private Task ValidateCommandAsync(
             Guid organizationId,
             Guid locationId,
@@ -1085,6 +1122,8 @@ namespace CareTogether.Managers.Records
                         locationId,
                         c.Command
                     ),
+                ArrangementRecordsCommand c =>
+                    ValidateArrangementTypeChangeAsync(organizationId, locationId, c.Command),
                 _ => Task.CompletedTask,
             };
 

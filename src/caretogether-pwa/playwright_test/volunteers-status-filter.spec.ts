@@ -2,20 +2,30 @@ import { expect, test } from '@playwright/test';
 import type {
   GridColDef,
   GridMultiSelectColDef,
+  GridSingleSelectColDef,
 } from '@mui/x-data-grid-premium';
-import { CombinedFamilyInfo } from '../src/GeneratedClient';
+import { CombinedFamilyInfo, Community } from '../src/GeneratedClient';
 import { roleFilterValues } from '../src/Volunteers/roleFilterValues';
 import { buildVolunteersGridColumns } from '../src/Volunteers/volunteersGridColumns';
 import type { VolunteerBrowserRowV2 } from '../src/Volunteers/useVolunteersBrowserViewModel';
+import { organizationNamesByFamilyId } from '../src/Volunteers/volunteerOrganizationModel';
+import { getFamilyCounty } from '../src/Utilities/getFamilyCounty';
 
-function row(id: string, statusFilterValues: string[]): VolunteerBrowserRowV2 {
+function row(
+  id: string,
+  statusFilterValues: string[],
+  county: string | null = null,
+  organizationNames: string[] = []
+): VolunteerBrowserRowV2 {
   return {
     arrangementAssignmentValues: {},
+    county,
     family: `Family ${id}`,
     familyCustomFieldValues: {},
     familyLastName: id,
     id,
     missingRequirementGroups: [],
+    organizationNames,
     primaryContact: '',
     requirementFilterValues: ['__complete__'],
     roleFilterValues: [],
@@ -28,6 +38,30 @@ function row(id: string, statusFilterValues: string[]): VolunteerBrowserRowV2 {
     volunteerFamilyCount: 1,
     volunteerCustomFieldValues: {},
   };
+}
+
+function isSingleSelectColumn(
+  column: GridColDef<VolunteerBrowserRowV2>
+): column is GridSingleSelectColDef<VolunteerBrowserRowV2, string | null> {
+  return column.type === 'singleSelect';
+}
+
+function countyColumn(
+  rows: VolunteerBrowserRowV2[]
+): GridSingleSelectColDef<VolunteerBrowserRowV2, string | null> {
+  const column = buildVolunteersGridColumns({
+    arrangementTypes: [],
+    familyCustomFields: [],
+    roleNames: [],
+    rows,
+    volunteerCustomFields: [],
+  }).find((item) => item.field === 'county');
+
+  if (!column || !isSingleSelectColumn(column)) {
+    throw new Error('County single-select column was not found.');
+  }
+
+  return column;
 }
 
 function isMultiSelectColumn(
@@ -51,6 +85,24 @@ function statusColumn(): GridMultiSelectColDef<VolunteerBrowserRowV2> {
 
   if (!isMultiSelectColumn(column)) {
     throw new Error('Expected Status to be a multiSelect column.');
+  }
+
+  return column;
+}
+
+function organizationColumn(
+  rows: VolunteerBrowserRowV2[]
+): GridMultiSelectColDef<VolunteerBrowserRowV2> {
+  const column = buildVolunteersGridColumns({
+    arrangementTypes: [],
+    familyCustomFields: [],
+    roleNames: [],
+    rows,
+    volunteerCustomFields: [],
+  }).find((item) => item.field === 'organizationNames');
+
+  if (!column || !isMultiSelectColumn(column)) {
+    throw new Error('Organization multi-select column was not found.');
   }
 
   return column;
@@ -95,8 +147,103 @@ test('Status remains a non-sortable, non-analytical native multi-select column',
   expect(column.getApplyQuickFilterFn).toBeDefined();
 });
 
+test('Organization uses community membership names as a native multi-select filter', () => {
+  const church = row('church', [], null, ['Downtown Church']);
+  const twoChurches = row('two-churches', [], null, [
+    'Downtown Church',
+    'Northside Church',
+  ]);
+  const column = organizationColumn([church, twoChurches]);
+
+  expect(column.valueOptions).toEqual(['Downtown Church', 'Northside Church']);
+  expect(column.valueGetter?.(undefined, twoChurches)).toEqual([
+    'Downtown Church',
+    'Northside Church',
+  ]);
+  expect(column.filterOperators?.map((operator) => operator.value)).toEqual(
+    expect.arrayContaining(['contains', 'isEmpty', 'isNotEmpty'])
+  );
+});
+
+test('Organization names are derived from member family IDs', () => {
+  const downtownChurch = new Community();
+  downtownChurch.name = 'Downtown Church';
+  downtownChurch.memberFamilies = ['family-1', 'family-2'];
+  const northsideChurch = new Community();
+  northsideChurch.name = 'Northside Church';
+  northsideChurch.memberFamilies = ['family-1'];
+
+  expect(
+    organizationNamesByFamilyId([downtownChurch, northsideChurch])
+  ).toEqual(
+    new Map([
+      ['family-1', ['Downtown Church', 'Northside Church']],
+      ['family-2', ['Downtown Church']],
+    ])
+  );
+});
+
+test('County uses the native single-select filter with safe missing values', () => {
+  const wakeCounty = row('wake', [], 'Wake');
+  const durhamCounty = row('durham', [], 'Durham');
+  const missingCounty = row('missing', []);
+  const column = countyColumn([wakeCounty, durhamCounty, missingCounty]);
+  const isOperator = column.filterOperators?.find(
+    (operator) => operator.value === 'is'
+  );
+
+  if (!isOperator) throw new Error('County is operator was not found.');
+
+  const matchesWake = isOperator.getApplyFilterFn(
+    { field: 'county', operator: 'is', value: 'Wake' },
+    column
+  );
+
+  if (!matchesWake) throw new Error('County filter function was not created.');
+
+  expect(column.type).toBe('singleSelect');
+  expect(column.valueOptions).toEqual(['Durham', 'Wake']);
+  expect(column.filterable).not.toBe(false);
+  expect(column.pivotable).toBe(true);
+  expect(column.chartable).toBe(false);
+  expect(column.aggregable).toBe(false);
+  expect(column.getApplyQuickFilterFn).toBeDefined();
+  expect(column.valueFormatter).toBeDefined();
+});
+
+test('County resolves from the volunteer family primary contact current address', () => {
+  const family = CombinedFamilyInfo.fromJS({
+    family: {
+      id: 'family-1',
+      primaryFamilyContactPersonId: 'person-1',
+      adults: [
+        {
+          item1: {
+            id: 'person-1',
+            firstName: 'Leia',
+            lastName: 'Organa',
+            currentAddressId: 'current-address',
+            addresses: [
+              { id: 'former-address', county: 'Durham' },
+              { id: 'current-address', county: 'Wake' },
+            ],
+          },
+        },
+      ],
+    },
+    volunteerFamilyInfo: {
+      familyRoleApprovals: {},
+      individualVolunteers: {},
+      assignments: [],
+      completedCustomFields: [],
+    },
+  });
+
+  expect(getFamilyCounty(family)).toBe('Wake');
+});
+
 test('Role filter values ignore un-applied role entries', () => {
-  const family = {
+  const family = CombinedFamilyInfo.fromJS({
     volunteerFamilyInfo: {
       familyRoleApprovals: {
         'Family Coach': { currentStatus: 2 },
@@ -110,19 +257,19 @@ test('Role filter values ignore un-applied role entries', () => {
         },
       },
     },
-  } as CombinedFamilyInfo;
+  });
 
   expect(roleFilterValues(family)).toEqual(['Family Coach']);
 });
 
 test('Role filter values expose Not Applied when no roles are current', () => {
-  const family = {
+  const family = CombinedFamilyInfo.fromJS({
     volunteerFamilyInfo: {
       familyRoleApprovals: {
         'Host Family': { currentStatus: null },
       },
     },
-  } as CombinedFamilyInfo;
+  });
 
   expect(roleFilterValues(family)).toEqual(['Not Applied']);
 });

@@ -10,20 +10,28 @@ import {
   CustomFieldType,
   CustomFieldValidation,
 } from '../GeneratedClient';
+import {
+  type CustomFieldValue,
+  formatDateOnlyForApi,
+  formatDateTimeForApi,
+  parseDateOnlyApiValue,
+  parseDateTimeApiValue,
+} from './customFieldValue';
+import { ValidateDatePicker } from './Forms/ValidateDatePicker';
 import { sortByPolicyOrder } from './sortByPolicyOrder';
-
-type CustomFieldValue = string | boolean | number | string[] | null | undefined;
 
 type CustomFieldInputProps = {
   customFieldPolicy: CustomField;
   value: CustomFieldValue;
   onChange: (value: CustomFieldValue) => void;
+  multilineText?: boolean;
 };
 
 export function CustomFieldInput({
   customFieldPolicy,
   value,
   onChange,
+  multilineText = false,
 }: CustomFieldInputProps) {
   const type = customFieldPolicy.type!;
 
@@ -70,6 +78,25 @@ export function CustomFieldInput({
     );
   }
 
+  if (type === CustomFieldType.DateOnly) {
+    return (
+      <ValidateDatePicker
+        value={parseDateOnlyApiValue(value)}
+        onChange={(date) => onChange(date ? formatDateOnlyForApi(date) : null)}
+      />
+    );
+  }
+
+  if (type === CustomFieldType.DateTime) {
+    return (
+      <ValidateDatePicker
+        includeTime
+        value={parseDateTimeApiValue(value)}
+        onChange={(date) => onChange(date ? formatDateTimeForApi(date) : null)}
+      />
+    );
+  }
+
   if (customFieldPolicy.validation === CustomFieldValidation.SuggestOnly) {
     return (
       <Autocomplete
@@ -90,10 +117,23 @@ export function CustomFieldInput({
 
   return (
     <TextField
+      fullWidth={multilineText}
+      minRows={multilineText ? 4 : undefined}
+      multiline={multilineText}
       variant="outlined"
       size="medium"
       value={(value as string) || ''}
       onChange={(e) => onChange(e.target.value)}
+      sx={
+        multilineText
+          ? {
+              '& .MuiInputBase-inputMultiline': {
+                minHeight: '6rem',
+                resize: 'vertical',
+              },
+            }
+          : undefined
+      }
     />
   );
 }

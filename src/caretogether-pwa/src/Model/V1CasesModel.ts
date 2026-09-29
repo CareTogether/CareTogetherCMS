@@ -1,10 +1,12 @@
 import { atom, useAtomValue } from 'jotai';
+import type { CustomFieldValue } from '../Generic/customFieldValue';
 import {
   V1CaseCommand,
   ArrangementsCommand,
   ActionRequirement,
   CompleteReferralRequirement as CompleteV1CaseRequirement,
   CreateArrangement,
+  ChangeArrangementType,
   CompleteArrangementRequirement,
   StartArrangements,
   EndArrangements,
@@ -169,7 +171,7 @@ export function useV1CasesModel() {
       partneringFamilyId: string,
       v1CaseId: string,
       customField: CustomField,
-      value: boolean | string | null
+      value: CustomFieldValue
     ) => {
       const command = commandFactory(UpdateCustomV1CaseField, {
         familyId: partneringFamilyId,
@@ -543,6 +545,24 @@ export function useV1CasesModel() {
         arrangementPolicyVersion: arrangementPolicyVersion || undefined,
       });
       return command;
+    }
+  );
+
+  const changeArrangementType = useArrangementsCommandCallbackWithLocation(
+    async (
+      partneringFamilyId: string,
+      v1CaseId: string,
+      arrangementId: string,
+      arrangementType: string,
+      arrangementPolicyVersion?: string | null
+    ) => {
+      return commandFactory(ChangeArrangementType, {
+        familyId: partneringFamilyId,
+        referralId: v1CaseId,
+        arrangementIds: [arrangementId],
+        arrangementType,
+        arrangementPolicyVersion: arrangementPolicyVersion || undefined,
+      });
     }
   );
 
@@ -975,20 +995,21 @@ export function useV1CasesModel() {
     await openV1CaseCommand(partneringFamilyId, openedAtLocal);
   };
 
-  const assignIndividualVolunteerToV1Case = useV1CaseCommandCallbackWithLocation(
-    async (
-      partneringFamilyId: string,
-      v1CaseId: string,
-      personId: string,
-      assignmentRole: string
-    ) =>
-      commandFactory(AssignCaseIndividualVolunteer, {
-        familyId: partneringFamilyId,
-        referralId: v1CaseId,
-        personId,
-        assignmentRole,
-      })
-  );
+  const assignIndividualVolunteerToV1Case =
+    useV1CaseCommandCallbackWithLocation(
+      async (
+        partneringFamilyId: string,
+        v1CaseId: string,
+        personId: string,
+        assignmentRole: string
+      ) =>
+        commandFactory(AssignCaseIndividualVolunteer, {
+          familyId: partneringFamilyId,
+          referralId: v1CaseId,
+          personId,
+          assignmentRole,
+        })
+    );
   const unassignIndividualVolunteerFromV1Case =
     useV1CaseCommandCallbackWithLocation(
       async (
@@ -1025,6 +1046,7 @@ export function useV1CasesModel() {
     exemptIndividualVolunteerAssignmentRequirement,
     unexemptIndividualVolunteerAssignmentRequirement,
     createArrangement,
+    changeArrangementType,
     planArrangementStart,
     startArrangement,
     editArrangementStartTime,

@@ -1,7 +1,6 @@
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import { Box, Chip, Tooltip, Typography, useTheme } from '@mui/material';
 import {
-  DataGridPremium,
   type DataGridPremiumProps,
   type GridColDef,
   GridFilterInputSingleSelect,
@@ -34,6 +33,7 @@ import {
 import { v2DataGridStyles } from '../Families/v2DataGridStyles';
 import { v2Typography } from '../Families/v2Typography';
 import { usePersistedGridFilterModel } from '../Hooks/usePersistedGridFilterModel';
+import { PersistedFilterDataGridPremium } from '../Generic/PersistedFilterDataGridPremium';
 
 type ApprovalsDataGridV2Props = {
   groupByMember?: boolean;
@@ -606,10 +606,11 @@ export function ApprovalsDataGridV2({
       })
     );
   }, [groupByMember, neededForRoleOptions, userLookup]);
-  const { filterModel, onFilterModelChange } = usePersistedGridFilterModel({
-    columns,
-    namespace: 'approvalsLedger',
-  });
+  const { filterModel, filterModelRestored, onFilterModelChange } =
+    usePersistedGridFilterModel({
+      columns,
+      namespace: 'approvalsLedger',
+    });
 
   const clearGridFocus = () => {
     const activeElement = document.activeElement;
@@ -665,11 +666,12 @@ export function ApprovalsDataGridV2({
         },
       ]}
     >
-      <DataGridPremium
+      <PersistedFilterDataGridPremium
         autoHeight
         rows={rows}
         columns={columns}
         filterModel={filterModel}
+        filterModelRestored={filterModelRestored}
         onFilterModelChange={onFilterModelChange}
         rowGroupingModel={groupByMember ? memberGroupingModel : undefined}
         groupingColDef={groupByMember ? groupingColDef : undefined}

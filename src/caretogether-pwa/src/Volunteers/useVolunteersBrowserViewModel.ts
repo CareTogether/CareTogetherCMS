@@ -2,8 +2,14 @@ import { useMemo } from 'react';
 import { CombinedFamilyInfo, CustomField } from '../GeneratedClient';
 import { familyNameString } from '../Families/FamilyName';
 import { personNameString } from '../Families/PersonName';
+import { useVisibleCommunities } from '../Model/Data';
 import { usePolicy } from '../Model/PolicyModel';
 import { useVolunteerFamilies } from '../Model/VolunteersModel';
+import { getFamilyCounty } from '../Utilities/getFamilyCounty';
+import {
+  toCustomFieldGridValue,
+  type CustomFieldGridValue,
+} from '../Generic/customFieldValue';
 import {
   buildVolunteerApprovalRolesPresentation,
   type VolunteerApprovalRolesPresentation,
@@ -20,15 +26,17 @@ import {
   roleFilterValues,
 } from './roleFilterValues';
 import { roleApprovalStatusFilterOptions } from './roleApprovalStatusPresentation';
-
-export type VolunteerCustomFieldValue = boolean | string | string[] | null;
+import { organizationNamesByFamilyId } from './volunteerOrganizationModel';
+export type VolunteerCustomFieldValue = CustomFieldGridValue;
 export type VolunteerBrowserRowV2 = {
   arrangementAssignmentValues: Record<string, 'assigned' | 'unassigned'>;
+  county: string | null;
   family: string;
   familyCustomFieldValues: Record<string, VolunteerCustomFieldValue>;
   familyLastName: string;
   id: string;
   missingRequirementGroups: VolunteerMissingRequirementGroup[];
+  organizationNames: string[];
   primaryContact: string;
   requirementFilterValues: string[];
   roleFilterValues: string[];
@@ -54,14 +62,25 @@ function primaryContact(family: CombinedFamilyInfo) {
   )?.item1;
 }
 function valuesByName(
-  values: { customFieldName?: string; value?: unknown }[] | undefined
+  values: { customFieldName?: string; value?: unknown }[] | undefined,
+  fields: CustomField[]
 ) {
+  const fieldTypes = new Map(fields.map((field) => [field.name, field.type]));
+
   return Object.fromEntries(
-    (values ?? []).flatMap((value) =>
-      value.customFieldName
-        ? [[value.customFieldName, value.value ?? null]]
-        : []
-    )
+    (values ?? []).flatMap((value) => {
+      if (!value.customFieldName) return [];
+
+      const customFieldType = fieldTypes.get(value.customFieldName);
+      if (typeof customFieldType === 'undefined') return [];
+
+      return [
+        [
+          value.customFieldName,
+          toCustomFieldGridValue(value.value, customFieldType),
+        ],
+      ];
+    })
   ) as Record<string, VolunteerCustomFieldValue>;
 }
 function statusValues(family: CombinedFamilyInfo) {
@@ -134,8 +153,9 @@ function searchText(family: CombinedFamilyInfo) {
   ].join('\n');
 }
 
-function toRow(
+export function buildVolunteerBrowserRow(
   family: CombinedFamilyInfo,
+  organizationNames: string[],
   familyCustomFields: CustomField[],
   volunteerCustomFields: CustomField[],
   arrangementTypes: string[],
@@ -154,12 +174,17 @@ function toRow(
     (group) => group.requirements
   );
   const statuses = statusValues(family);
-  const familyValues = valuesByName(family.family?.completedCustomFields);
+  const familyValues = valuesByName(
+    family.family?.completedCustomFields,
+    familyCustomFields
+  );
   const volunteerValues = valuesByName(
-    family.volunteerFamilyInfo?.completedCustomFields
+    family.volunteerFamilyInfo?.completedCustomFields,
+    volunteerCustomFields
   );
   return {
     arrangementAssignmentValues: assignmentValues(family, arrangementTypes),
+    county: getFamilyCounty(family),
     family: familyNameString(family),
     familyCustomFieldValues: Object.fromEntries(
       familyCustomFields.map((field) => [
@@ -170,6 +195,7 @@ function toRow(
     familyLastName: contact?.lastName ?? '⚠ MISSING PRIMARY CONTACT',
     id: family.family!.id!,
     missingRequirementGroups,
+    organizationNames,
     primaryContact: contact ? personNameString(contact) : '',
     requirementFilterValues: requirementNames.length
       ? Array.from(
@@ -197,6 +223,7 @@ function toRow(
 
 export function useVolunteersBrowserViewModel(): VolunteersBrowserViewModel {
   const families = useVolunteerFamilies();
+  const communities = useVisibleCommunities();
   const policy = usePolicy();
   const familyCustomFields = useMemo(
     () => policy.customFamilyFields ?? [],
@@ -239,11 +266,19 @@ export function useVolunteersBrowserViewModel(): VolunteersBrowserViewModel {
       ),
     []
   );
+  const organizationNamesByFamily = useMemo(
+    () =>
+      organizationNamesByFamilyId(
+        communities.map((communityInfo) => communityInfo.community)
+      ),
+    [communities]
+  );
   const rows = useMemo(
     () =>
       families.map((family) =>
-        toRow(
+        buildVolunteerBrowserRow(
           family,
+          organizationNamesByFamily.get(family.family!.id!) ?? [],
           familyCustomFields,
           volunteerCustomFields,
           arrangementTypes,
@@ -257,6 +292,7 @@ export function useVolunteersBrowserViewModel(): VolunteersBrowserViewModel {
       familyCustomFields,
       roleNamesForPresentation,
       statusLabelsByValue,
+      organizationNamesByFamily,
       volunteerCustomFields,
     ]
   );

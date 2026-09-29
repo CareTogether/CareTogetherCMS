@@ -2396,12 +2396,16 @@
         "x-enumNames": [
           "Boolean",
           "String",
-          "StringArray"
+          "StringArray",
+          "DateOnly",
+          "DateTime"
         ],
         "enum": [
           0,
           1,
-          2
+          2,
+          3,
+          4
         ]
       },
       "CustomFieldValidation": {
@@ -6338,6 +6342,7 @@
             "AssignIndividualVolunteer": "#/components/schemas/AssignIndividualVolunteer",
             "AssignVolunteerFamily": "#/components/schemas/AssignVolunteerFamily",
             "CancelArrangementsSetup": "#/components/schemas/CancelArrangementsSetup",
+            "ChangeArrangementType": "#/components/schemas/ChangeArrangementType",
             "CompleteArrangementRequirement": "#/components/schemas/CompleteArrangementRequirement",
             "CompleteIndividualVolunteerAssignmentRequirement": "#/components/schemas/CompleteIndividualVolunteerAssignmentRequirement",
             "CompleteVolunteerFamilyAssignmentRequirement": "#/components/schemas/CompleteVolunteerFamilyAssignmentRequirement",
@@ -6476,6 +6481,29 @@
               "cancelledAtUtc": {
                 "type": "string",
                 "format": "date-time"
+              }
+            }
+          }
+        ]
+      },
+      "ChangeArrangementType": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/ArrangementsCommand"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "arrangementType"
+            ],
+            "properties": {
+              "arrangementType": {
+                "type": "string"
+              },
+              "arrangementPolicyVersion": {
+                "type": "string",
+                "nullable": true
               }
             }
           }
@@ -9094,6 +9122,8 @@
             "AddPersonEmailAddress": "#/components/schemas/AddPersonEmailAddress",
             "AddPersonPhoneNumber": "#/components/schemas/AddPersonPhoneNumber",
             "CreatePerson": "#/components/schemas/CreatePerson",
+            "RemovePersonEmailAddress": "#/components/schemas/RemovePersonEmailAddress",
+            "RemovePersonPhoneNumber": "#/components/schemas/RemovePersonPhoneNumber",
             "UndoCreatePerson": "#/components/schemas/UndoCreatePerson",
             "UpdateCustomFamilyMemberField": "#/components/schemas/UpdateCustomFamilyMemberField",
             "UpdatePersonAddress": "#/components/schemas/UpdatePersonAddress",
@@ -9274,6 +9304,46 @@
               "notes": {
                 "type": "string",
                 "nullable": true
+              }
+            }
+          }
+        ]
+      },
+      "RemovePersonEmailAddress": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/PersonCommand"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "emailAddressId"
+            ],
+            "properties": {
+              "emailAddressId": {
+                "type": "string",
+                "format": "guid"
+              }
+            }
+          }
+        ]
+      },
+      "RemovePersonPhoneNumber": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/PersonCommand"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "phoneNumberId"
+            ],
+            "properties": {
+              "phoneNumberId": {
+                "type": "string",
+                "format": "guid"
               }
             }
           }

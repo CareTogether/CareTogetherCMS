@@ -3,6 +3,8 @@ import {
   Arrangement,
   ArrangementFunction,
   ArrangementPhase,
+  ArrangementPolicy,
+  ChildInvolvement,
   CombinedFamilyInfo,
   Family,
   FunctionRequirement,
@@ -20,6 +22,7 @@ import {
 } from '../src/V1Cases/Arrangements/arrangementsGridColumns';
 import {
   arrangementFunctionFieldId,
+  buildArrangementRowsV2,
   type ArrangementBrowserRowV2,
 } from '../src/V1Cases/Arrangements/arrangementViewModel';
 
@@ -204,4 +207,50 @@ test('keeps arrangement browser values typed and reporting disabled', () => {
   expect(columns.every((column) => column.aggregable === false)).toBe(true);
   expect(columns.every((column) => column.pivotable === false)).toBe(true);
   expect(columns.every((column) => column.groupable === false)).toBe(true);
+});
+
+test('uses the configured arrangement type instead of child involvement for Type', () => {
+  const arrangement = new Arrangement({
+    ...sourceArrangement,
+    arrangementType: 'Day Hosting',
+  });
+  const arrangementPolicy = new ArrangementPolicy();
+  arrangementPolicy.arrangementType = 'Day Hosting';
+  arrangementPolicy.childInvolvement = ChildInvolvement.DaytimeChildCareOnly;
+  arrangementPolicy.arrangementFunctions = [];
+
+  const [arrangementRow] = buildArrangementRowsV2({
+    arrangements: [arrangement],
+    arrangementPolicies: [arrangementPolicy],
+    family: partneringFamily,
+    familyLabel: () => 'Organa Family',
+    personLabel: () => 'Leia Organa',
+    v1Case,
+  });
+  const typeColumn = requireColumn(
+    buildArrangementsGridColumns([arrangementRow]),
+    'arrangementType'
+  );
+
+  expect(arrangementRow.arrangementType).toBe('Day Hosting');
+  expect(arrangementRow.searchableText).toContain('Day Hosting');
+  expect(typeColumn.valueOptions).toEqual(['Day Hosting']);
+});
+
+test('preserves an arrangement type when its policy is unavailable', () => {
+  const arrangement = new Arrangement({
+    ...sourceArrangement,
+    arrangementType: 'Retired Type',
+  });
+
+  const [arrangementRow] = buildArrangementRowsV2({
+    arrangements: [arrangement],
+    arrangementPolicies: [],
+    family: partneringFamily,
+    familyLabel: () => 'Organa Family',
+    personLabel: () => 'Leia Organa',
+    v1Case,
+  });
+
+  expect(arrangementRow.arrangementType).toBe('Retired Type');
 });

@@ -6,7 +6,6 @@ import {
   assignmentRolesForColumns,
 } from '../FunctionAssignments/assignmentRoleColumns';
 import {
-  CustomFieldType,
   Permission,
   type CustomField,
   type V1Referral,
@@ -20,6 +19,7 @@ import { useVisibleReferrals } from '../Model/Data';
 import { useGlobalPermissions } from '../Model/SessionModel';
 import { FUNCTION_ASSIGNMENTS_FEATURE_FLAG } from '../featureFlags';
 import { familyNameString } from '../Families/FamilyName';
+import { customFieldGridValues } from '../Generic/customFieldValue';
 import { personNameString } from '../Families/PersonName';
 import { getFamilyCounty } from '../Utilities/getFamilyCounty';
 import type {
@@ -30,7 +30,6 @@ import type { ReferralStatusFilter } from './referralStatusFilter';
 import type {
   ReferralAssignmentRoleV2,
   ReferralBrowserRowV2,
-  ReferralCustomFieldValue,
 } from './referralBrowserTypes';
 import {
   buildLegacyReferralRows,
@@ -54,29 +53,13 @@ type UseReferralsBrowserViewModelParameters = {
 const emptyAssignmentFilters: ReferralAssignmentGridFilter[] = [];
 const emptyCountyFilter: (string | null)[] = [];
 
-function typedCustomFieldValue(
-  value: unknown,
-  type: CustomFieldType
-): ReferralCustomFieldValue {
-  if (type === CustomFieldType.Boolean)
-    return typeof value === 'boolean' ? value : null;
-  if (type === CustomFieldType.StringArray) {
-    return Array.isArray(value)
-      ? value.filter((item): item is string => typeof item === 'string')
-      : null;
-  }
-  return typeof value === 'string' ? value : null;
-}
-
 function referralCustomFieldValues(
   fields: CustomField[],
   completed: V1Referral['completedCustomFields']
 ) {
-  return Object.fromEntries(
-    fields.map((field) => [
-      field.name,
-      typedCustomFieldValue(completed?.[field.name]?.value, field.type),
-    ])
+  return customFieldGridValues(
+    fields,
+    (field) => completed?.[field.name]?.value
   );
 }
 
@@ -230,35 +213,32 @@ export function useReferralsBrowserViewModel({
       ).sort((first, second) => first.localeCompare(second)),
     [rows]
   );
-  const legacyRows = useMemo(
-    () => {
-      if (legacyAssignmentFilters) {
-        return buildLegacyReferralRows({
-          assignmentFilters: legacyAssignmentFilters,
-          assignmentRoles,
-          canViewFunctionAssignments,
-          familyLookup,
-          personAndFamilyLookup,
-          referrals,
-        });
-      }
-
-      return buildReferralRows({
+  const legacyRows = useMemo(() => {
+    if (legacyAssignmentFilters) {
+      return buildLegacyReferralRows({
+        assignmentFilters: legacyAssignmentFilters,
         assignmentRoles,
+        canViewFunctionAssignments,
         familyLookup,
         personAndFamilyLookup,
         referrals,
       });
-    },
-    [
+    }
+
+    return buildReferralRows({
       assignmentRoles,
-      canViewFunctionAssignments,
       familyLookup,
-      legacyAssignmentFilters,
       personAndFamilyLookup,
       referrals,
-    ]
-  );
+    });
+  }, [
+    assignmentRoles,
+    canViewFunctionAssignments,
+    familyLookup,
+    legacyAssignmentFilters,
+    personAndFamilyLookup,
+    referrals,
+  ]);
   const normalizedFilterText = filterText.trim().toLowerCase();
   const filteredRows = useMemo(
     () =>

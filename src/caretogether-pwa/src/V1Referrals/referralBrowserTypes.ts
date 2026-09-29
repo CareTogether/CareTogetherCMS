@@ -11,7 +11,9 @@ export interface ReferralRowModel {
   assignmentNamesByRole: Record<string, string>;
 }
 
-export type ReferralCustomFieldValue = string | boolean | string[] | null;
+import type { CustomFieldGridValue } from '../Generic/customFieldValue';
+
+export type ReferralCustomFieldValue = CustomFieldGridValue;
 
 export type ReferralAssignmentRoleV2 = {
   role: string;

@@ -51,6 +51,8 @@ const enumLabelOverrides = new Map<object, Record<string, string>>([
       String: 'Text',
       Boolean: 'Yes/No',
       StringArray: 'Selection',
+      DateOnly: 'Date',
+      DateTime: 'Date and Time',
     },
   ],
   [
@@ -368,9 +370,10 @@ export function volunteerRolePolicyVersionToDraft(
           (version as OrganizationRolePolicyVersion | undefined)
             ?.requirements ?? []
         )
-    : volunteerRequirementsToDraft(
-        (version as VolunteerRolePolicyVersion | undefined)?.requirements ?? []
-      );
+      : volunteerRequirementsToDraft(
+          (version as VolunteerRolePolicyVersion | undefined)?.requirements ??
+            []
+        );
 
   return {
     roleName: roleName ?? '',
