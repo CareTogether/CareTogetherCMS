@@ -6,7 +6,7 @@ import {
 import { useCallback, useMemo, useState } from 'react';
 import { v2DataGridStyles } from '../../Families/v2DataGridStyles';
 import { usePersistedGridFilterModel } from '../../Hooks/usePersistedGridFilterModel';
-import { PersistedFilterDataGridPremium } from '../../Hooks/PersistedFilterDataGridPremium';
+import { PersistedFilterDataGridPremium } from '../../Generic/PersistedFilterDataGridPremium';
 import {
   arrangementsInitialSortModel,
   arrangementsDefaultColumnVisibility,

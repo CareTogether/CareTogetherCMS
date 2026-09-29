@@ -29,7 +29,7 @@ import {
 import { referralsInitialSortModel } from './referralsGridSorting';
 import { ReferralsChartsPanel } from './ReferralsChartsPanel';
 import { usePersistedGridFilterModel } from '../Hooks/usePersistedGridFilterModel';
-import { PersistedFilterDataGridPremium } from '../Hooks/PersistedFilterDataGridPremium';
+import { PersistedFilterDataGridPremium } from '../Generic/PersistedFilterDataGridPremium';
 
 type ReferralsDataGridV2Props = {
   assignmentRoles?: ReferralAssignmentRoleV2[];

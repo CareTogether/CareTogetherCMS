@@ -33,7 +33,7 @@ import {
 } from './clientsGridColumns';
 import { ClientsChartsPanel } from './ClientsChartsPanel';
 import { usePersistedGridFilterModel } from '../Hooks/usePersistedGridFilterModel';
-import { PersistedFilterDataGridPremium } from '../Hooks/PersistedFilterDataGridPremium';
+import { PersistedFilterDataGridPremium } from '../Generic/PersistedFilterDataGridPremium';
 import { usePersistedGridColumnPreferences } from '../Hooks/usePersistedGridColumnPreferences';
 import { v2DataGridFocusStyles } from '../Families/v2DataGridStyles';
 import { AgeText } from '../Families/AgeText';

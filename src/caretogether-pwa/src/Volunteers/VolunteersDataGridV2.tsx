@@ -23,7 +23,7 @@ import {
 import type { VolunteerBrowserRowV2 } from './useVolunteersBrowserViewModel';
 import { VolunteersChartsPanel } from './VolunteersChartsPanel';
 import { usePersistedGridFilterModel } from '../Hooks/usePersistedGridFilterModel';
-import { PersistedFilterDataGridPremium } from '../Hooks/PersistedFilterDataGridPremium';
+import { PersistedFilterDataGridPremium } from '../Generic/PersistedFilterDataGridPremium';
 import { notAppliedRoleFilterValue } from './roleFilterValues';
 
 type Props = {

@@ -33,7 +33,7 @@ import {
 import { v2DataGridStyles } from '../Families/v2DataGridStyles';
 import { v2Typography } from '../Families/v2Typography';
 import { usePersistedGridFilterModel } from '../Hooks/usePersistedGridFilterModel';
-import { PersistedFilterDataGridPremium } from '../Hooks/PersistedFilterDataGridPremium';
+import { PersistedFilterDataGridPremium } from '../Generic/PersistedFilterDataGridPremium';
 
 type ApprovalsDataGridV2Props = {
   groupByMember?: boolean;

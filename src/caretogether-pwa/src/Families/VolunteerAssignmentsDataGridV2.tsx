@@ -12,7 +12,7 @@ import {
 import type { AssignmentBrowserRowV2 } from './volunteerAssignmentViewModel';
 import { v2DataGridStyles } from './v2DataGridStyles';
 import { usePersistedGridFilterModel } from '../Hooks/usePersistedGridFilterModel';
-import { PersistedFilterDataGridPremium } from '../Hooks/PersistedFilterDataGridPremium';
+import { PersistedFilterDataGridPremium } from '../Generic/PersistedFilterDataGridPremium';
 
 type VolunteerAssignmentsDataGridV2Props = {
   filterScopeId?: string;
