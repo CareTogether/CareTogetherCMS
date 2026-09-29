@@ -9,3 +9,15 @@
   border: none;
   display: block;
 }
+
+.reportV2 {
+  flex: 1;
+  min-height: 0;
+  width: 100%;
+  background: rgb(246, 252, 252);
+}
+
+.reportV2 iframe {
+  border: none;
+  display: block;
+}

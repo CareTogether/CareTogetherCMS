@@ -1,10 +1,5 @@
-import {
-  Box,
-  Chip,
-  IconButton,
-  Tooltip,
-  Typography,
-} from '@mui/material';
+import { TestFamilyBadge } from './TestFamilyBadge';
+import { Box, Chip, IconButton, Tooltip, Typography } from '@mui/material';
 import {
   Check as CheckIcon,
   ContentCopy as ContentCopyIcon,
@@ -101,6 +96,7 @@ export function FamilyPrimaryHeaderInfoV2({
             Family
           </Box>
         </Typography>
+        <TestFamilyBadge family={family} />
         {familyTypeChip}
       </Box>
       <Box

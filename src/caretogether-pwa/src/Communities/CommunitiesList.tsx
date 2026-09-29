@@ -29,7 +29,10 @@ import { useVisibleCommunities } from '../Model/Data';
 import { useAppNavigate } from '../Hooks/useAppNavigate';
 import { useOrganizationConfigurationLoadable } from '../Model/ConfigurationModel';
 import { useFeatureFlagEnabled } from 'posthog-js/react';
-import { ORGANIZATION_CATEGORIES_FEATURE_FLAG } from '../featureFlags';
+import {
+  FAMILY_SCREEN_V2_EARLY_ACCESS_FEATURE_FLAG,
+  ORGANIZATION_CATEGORIES_FEATURE_FLAG,
+} from '../featureFlags';
 import { v2DataGridStyles } from '../Families/v2DataGridStyles';
 import { v2Typography } from '../Families/v2Typography';
 import { usePersistedGridFilterModel } from '../Hooks/usePersistedGridFilterModel';
@@ -193,6 +196,8 @@ function OrganizationsDataGridSession({
 }
 
 export function CommunitiesList() {
+  const isV2 =
+    useFeatureFlagEnabled(FAMILY_SCREEN_V2_EARLY_ACCESS_FEATURE_FLAG) === true;
   useScreenTitle('Organizations');
 
   const organizationCategoriesEnabled =
@@ -236,22 +241,25 @@ export function CommunitiesList() {
   return (
     <>
       <Stack spacing={2} sx={{ flex: 1, minHeight: 0 }}>
-        <Box>
-          <Typography
-            className="ph-unmask"
-            {...v2Typography.pageTitle}
-            sx={{ mt: 2 }}
-          >
-            Organizations
-          </Typography>
-          <Typography
-            className="ph-unmask"
-            {...v2Typography.secondaryValue}
-            sx={{ ...v2Typography.secondaryValue.sx, mt: 0.5 }}
-          >
-            Browse and manage organizations.
-          </Typography>
-        </Box>
+        {isV2 && (
+          <Box>
+            <Typography
+              className="ph-unmask"
+              {...v2Typography.pageTitle}
+              component="h1"
+              sx={{ mt: 2 }}
+            >
+              Organizations
+            </Typography>
+            <Typography
+              className="ph-unmask"
+              {...v2Typography.secondaryValue}
+              sx={{ ...v2Typography.secondaryValue.sx, mt: 0.5 }}
+            >
+              Browse and manage organizations.
+            </Typography>
+          </Box>
+        )}
 
         <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
           <Button

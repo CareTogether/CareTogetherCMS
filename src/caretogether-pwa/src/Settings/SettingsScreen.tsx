@@ -1,3 +1,4 @@
+import { v2Typography } from '../Families/v2Typography';
 import Grid from '@mui/material/Grid';
 import {
   Box,
@@ -15,9 +16,14 @@ import {
 import { useAppNavigate } from '../Hooks/useAppNavigate';
 import { useUserIsOrganizationAdministrator } from '../Model/SessionModel';
 import { useFeatureFlagEnabled } from 'posthog-js/react';
-import { ORGANIZATION_CATEGORIES_FEATURE_FLAG } from '../featureFlags';
+import {
+  FAMILY_SCREEN_V2_EARLY_ACCESS_FEATURE_FLAG,
+  ORGANIZATION_CATEGORIES_FEATURE_FLAG,
+} from '../featureFlags';
 
 export function SettingsScreen() {
+  const isV2 =
+    useFeatureFlagEnabled(FAMILY_SCREEN_V2_EARLY_ACCESS_FEATURE_FLAG) === true;
   useScreenTitle('Settings');
   const appNavigate = useAppNavigate();
   const isOrganizationAdministrator =
@@ -28,8 +34,23 @@ export function SettingsScreen() {
   return (
     <Box
       className="ph-unmask"
-      sx={{ paddingTop: 4, display: 'flex', justifyContent: 'flex-start' }}
+      sx={{
+        paddingTop: isV2 ? 0 : 4,
+        display: 'flex',
+        flexDirection: isV2 ? 'column' : 'row',
+        justifyContent: 'flex-start',
+      }}
     >
+      {isV2 && (
+        <Typography
+          className="ph-unmask"
+          {...v2Typography.pageTitle}
+          component="h1"
+          sx={{ mt: 2, mb: 2 }}
+        >
+          Settings
+        </Typography>
+      )}
       <Grid container spacing={3} sx={{ width: '100%' }}>
         <Grid size={{ xs: 12, sm: 6, md: 4 }}>
           <Card variant="outlined">
