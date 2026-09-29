@@ -24,6 +24,7 @@ function Dashboard() {
 
   return (
     <Container
+      disableGutters
       maxWidth={false}
       sx={{
         boxSizing: 'border-box',
@@ -32,7 +33,6 @@ function Dashboard() {
           sm: `calc(100dvh - ${SHELL_APP_BAR_HEIGHT.sm} - ${MOBILE_BOTTOM_SAFE_AREA}px)`,
           md: `calc(100dvh - ${SHELL_APP_BAR_HEIGHT.md} - ${DESKTOP_BOTTOM_SAFE_AREA}px)`,
         },
-        paddingLeft: '12px',
       }}
     >
       <Stack direction="column" sx={{ height: '100%', minHeight: 0 }}>

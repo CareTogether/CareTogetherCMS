@@ -180,7 +180,7 @@ export function InboxScreen() {
   useScreenTitle('Inbox');
 
   return (
-    <Container maxWidth={false} sx={{ paddingLeft: '12px' }}>
+    <Container disableGutters maxWidth={false} sx={{ display: 'flow-root' }}>
       {isV2 && (
         <Typography
           className="ph-unmask"

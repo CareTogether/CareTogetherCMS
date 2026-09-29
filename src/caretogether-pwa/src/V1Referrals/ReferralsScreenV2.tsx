@@ -19,11 +19,8 @@ export function ReferralsScreenV2() {
   useScreenTitle('Referrals');
 
   const appNavigate = useAppNavigate();
-  const {
-    shouldRedirect,
-    shouldShowLoading,
-    shouldShowReferrals,
-  } = useReferralsAccessGate();
+  const { shouldRedirect, shouldShowLoading, shouldShowReferrals } =
+    useReferralsAccessGate();
 
   useEffect(() => {
     if (shouldRedirect) {
@@ -70,14 +67,15 @@ function ReferralsScreenV2Content() {
     <Box
       sx={{
         ...wideTablePageSx(hasFeaturebaseChat),
-        boxSizing: 'border-box',
-        px: { xs: 2, md: 3 },
-        py: { xs: 2, md: 3 },
       }}
     >
       <Stack spacing={2} sx={{ flex: 1, minHeight: 0 }}>
         <Box>
-          <Typography className="ph-unmask" {...v2Typography.pageTitle}>
+          <Typography
+            className="ph-unmask"
+            {...v2Typography.pageTitle}
+            sx={{ mt: 2 }}
+          >
             Referrals
           </Typography>
           <Typography

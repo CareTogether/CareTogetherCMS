@@ -3,6 +3,41 @@ import { ATLANTIS_ROUTE } from './support/constants';
 import { FAMILY_SCREEN_V2_EARLY_ACCESS_FEATURE_FLAG } from '../src/featureFlags';
 
 test.describe('V2 shell', () => {
+  test('aligns page headings with the Clients content edge', async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 1280, height: 800 });
+
+    async function headingBounds(route: string, title: string) {
+      await page.goto(`${ATLANTIS_ROUTE}${route}`);
+      const heading = page.getByRole('heading', { name: title, exact: true });
+      await expect(heading).toBeVisible();
+      return heading.boundingBox();
+    }
+
+    const clients = await headingBounds('clients', 'Clients');
+    expect(clients).not.toBeNull();
+
+    for (const [route, title] of [
+      ['', 'Dashboard'],
+      ['inbox', 'Inbox'],
+      ['organizations', 'Organizations'],
+      ['referrals', 'Referrals'],
+      ['settings', 'Settings'],
+    ]) {
+      const heading = await headingBounds(route, title);
+      expect(heading).not.toBeNull();
+      expect(
+        Math.abs(heading!.x - clients!.x),
+        `${title} left edge`
+      ).toBeLessThan(1);
+      expect(
+        Math.abs(heading!.y - clients!.y),
+        `${title} top edge`
+      ).toBeLessThan(1);
+    }
+  });
+
   test('keeps application context and toggle position when collapsing the sidebar', async ({
     page,
   }) => {

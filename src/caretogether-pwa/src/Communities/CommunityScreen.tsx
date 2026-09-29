@@ -159,7 +159,7 @@ export function CommunityScreen() {
   }
 
   return (
-    <Container maxWidth={false} sx={{ paddingLeft: '12px' }}>
+    <Container disableGutters maxWidth={false}>
       <Toolbar
         disableGutters
         variant={isDesktop ? 'dense' : 'regular'}

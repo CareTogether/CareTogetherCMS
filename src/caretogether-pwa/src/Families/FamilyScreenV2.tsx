@@ -733,7 +733,7 @@ export function FamilyScreenV2() {
   }));
 
   return (
-    <Container maxWidth={false} sx={{ paddingLeft: '12px' }}>
+    <Container disableGutters maxWidth={false}>
       {familyMemberPrintInformationEnabled && (
         <Box
           sx={{
