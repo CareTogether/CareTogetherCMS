@@ -11,16 +11,13 @@ import {
   Delete as DeleteIcon,
   Download as DownloadIcon,
 } from '@mui/icons-material';
-import {
-  DataGridPremium,
-  GridColDef,
-  GridToolbar,
-} from '@mui/x-data-grid-premium';
+import { GridColDef, GridToolbar } from '@mui/x-data-grid-premium';
 import { useMemo } from 'react';
 import { FamilyDocumentRowV2 } from './familyDocumentsViewModelV2';
 import { v2DataGridStyles } from './v2DataGridStyles';
 import { v2Typography } from './v2Typography';
 import { usePersistedGridFilterModel } from '../Hooks/usePersistedGridFilterModel';
+import { PersistedFilterDataGridPremium } from '../Generic/PersistedFilterDataGridPremium';
 
 type FamilyDocumentsDataGridV2Props = {
   filterScopeId?: string;
@@ -189,19 +186,21 @@ export function FamilyDocumentsDataGridV2({
     () => buildColumns({ onDelete, onDownload }),
     [onDelete, onDownload]
   );
-  const { filterModel, onFilterModelChange } = usePersistedGridFilterModel({
-    columns,
-    entityId: filterScopeId,
-    namespace: 'familyDocuments',
-  });
+  const { filterModel, filterModelRestored, onFilterModelChange } =
+    usePersistedGridFilterModel({
+      columns,
+      entityId: filterScopeId,
+      namespace: 'familyDocuments',
+    });
 
   return (
     <Box sx={v2DataGridStyles(theme)}>
-      <DataGridPremium
+      <PersistedFilterDataGridPremium
         autoHeight
         rows={rows}
         columns={columns}
         filterModel={filterModel}
+        filterModelRestored={filterModelRestored}
         onFilterModelChange={onFilterModelChange}
         rowHeight={56}
         columnHeaderHeight={42}

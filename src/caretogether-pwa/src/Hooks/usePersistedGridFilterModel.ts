@@ -236,6 +236,8 @@ export function usePersistedGridFilterModel({
 
   return {
     filterModel,
+    filterModelRestored:
+      storageKey !== null && keyedFilterModel.storageKey === storageKey,
     onFilterModelChange,
   };
 }

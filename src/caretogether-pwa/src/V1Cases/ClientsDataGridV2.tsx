@@ -1,6 +1,5 @@
 import { Alert, Box, Stack, Typography, useTheme } from '@mui/material';
 import {
-  DataGridPremium,
   GridChartsIntegrationContextProvider,
   GridChartsRendererProxy,
   GridTreeDataGroupingCell,
@@ -34,6 +33,7 @@ import {
 } from './clientsGridColumns';
 import { ClientsChartsPanel } from './ClientsChartsPanel';
 import { usePersistedGridFilterModel } from '../Hooks/usePersistedGridFilterModel';
+import { PersistedFilterDataGridPremium } from '../Generic/PersistedFilterDataGridPremium';
 import { usePersistedGridColumnPreferences } from '../Hooks/usePersistedGridColumnPreferences';
 import { v2DataGridFocusStyles } from '../Families/v2DataGridStyles';
 import { AgeText } from '../Families/AgeText';
@@ -276,10 +276,11 @@ export function ClientsDataGridV2({
     }),
     [treeRows]
   );
-  const { filterModel, onFilterModelChange } = usePersistedGridFilterModel({
-    columns,
-    namespace: 'clients',
-  });
+  const { filterModel, filterModelRestored, onFilterModelChange } =
+    usePersistedGridFilterModel({
+      columns,
+      namespace: 'clients',
+    });
   const pivotScope = clientsPivotScope(
     pivotModel,
     filterModel.items.map((item) => item.field)
@@ -320,7 +321,7 @@ export function ClientsDataGridV2({
           </Alert>
         )}
         <Box sx={{ height: '100%', minHeight: 360 }}>
-          <DataGridPremium
+          <PersistedFilterDataGridPremium
             key={pivotActive ? 'clients-pivot-grid' : 'clients-tree-grid'}
             showToolbar
             chartsIntegration
@@ -342,6 +343,7 @@ export function ClientsDataGridV2({
             sortModel={pivotActive ? undefined : sortModel}
             onSortModelChange={pivotActive ? undefined : onSortModelChange}
             filterModel={filterModel}
+            filterModelRestored={filterModelRestored}
             onFilterModelChange={onFilterModelChange}
             filterDebounceMs={200}
             columnVisibilityModel={visibleColumns}

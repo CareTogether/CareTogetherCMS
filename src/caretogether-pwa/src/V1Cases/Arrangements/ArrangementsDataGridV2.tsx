@@ -1,12 +1,12 @@
 import { Box, useTheme } from '@mui/material';
 import {
-  DataGridPremium,
   type GridColumnVisibilityModel,
   type GridRowParams,
 } from '@mui/x-data-grid-premium';
 import { useCallback, useMemo, useState } from 'react';
 import { v2DataGridStyles } from '../../Families/v2DataGridStyles';
 import { usePersistedGridFilterModel } from '../../Hooks/usePersistedGridFilterModel';
+import { PersistedFilterDataGridPremium } from '../../Generic/PersistedFilterDataGridPremium';
 import {
   arrangementsInitialSortModel,
   arrangementsDefaultColumnVisibility,
@@ -29,11 +29,12 @@ export function ArrangementsDataGridV2({
 }: ArrangementsDataGridV2Props) {
   const theme = useTheme();
   const columns = useMemo(() => buildArrangementsGridColumns(rows), [rows]);
-  const { filterModel, onFilterModelChange } = usePersistedGridFilterModel({
-    columns,
-    entityId: filterScopeId,
-    namespace: 'arrangements',
-  });
+  const { filterModel, filterModelRestored, onFilterModelChange } =
+    usePersistedGridFilterModel({
+      columns,
+      entityId: filterScopeId,
+      namespace: 'arrangements',
+    });
   const [columnVisibilityModel, setColumnVisibilityModel] =
     useState<GridColumnVisibilityModel>({});
   const visibleColumns = useMemo(
@@ -57,7 +58,7 @@ export function ArrangementsDataGridV2({
         highlightedRowColor: theme.palette.primary.main,
       })}
     >
-      <DataGridPremium
+      <PersistedFilterDataGridPremium
         showToolbar
         autoHeight
         density="comfortable"
@@ -67,6 +68,7 @@ export function ArrangementsDataGridV2({
         rows={rows}
         columns={columns}
         filterModel={filterModel}
+        filterModelRestored={filterModelRestored}
         onFilterModelChange={onFilterModelChange}
         columnVisibilityModel={visibleColumns}
         onColumnVisibilityModelChange={setColumnVisibilityModel}
