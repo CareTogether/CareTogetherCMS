@@ -1,13 +1,21 @@
-import { useScreenTitle } from '../../Shell/ShellScreenTitle';
-import { Box } from '@mui/system';
-import { LocationsSection } from './LocationsSection';
+import { useEffect } from 'react';
+import { useAppNavigate } from '../../Hooks/useAppNavigate';
+import { useRequiredSelectedLocationContext } from '../../Model/Data';
+import { ProgressBackdrop } from '../../Shell/ProgressBackdrop';
 
 export function LocationsScreen() {
-  useScreenTitle('Locations');
+  const { locationId } = useRequiredSelectedLocationContext();
+  const appNavigate = useAppNavigate();
+
+  useEffect(() => {
+    appNavigate.locationEdit(locationId, {
+      navigateOptions: { replace: true },
+    });
+  }, [appNavigate, locationId]);
 
   return (
-    <Box className="ph-unmask" sx={{ paddingTop: 2 }}>
-      <LocationsSection />
-    </Box>
+    <ProgressBackdrop opaque>
+      <p className="ph-unmask">Opening location configuration...</p>
+    </ProgressBackdrop>
   );
 }

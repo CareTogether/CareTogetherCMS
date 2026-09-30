@@ -23,15 +23,21 @@ import { Box } from '@mui/system';
 import BasicConfiguration from './Tabs/BasicConfiguration';
 import SettingsTabMenu from './SettingsTabMenu';
 import {
+  Add as AddIcon,
   ChevronLeft as ChevronLeftIcon,
   ChevronRight as ChevronRightIcon,
 } from '@mui/icons-material';
-import { useGlobalPermissions } from '../../Model/SessionModel';
+import {
+  useGlobalPermissions,
+  useUserIsOrganizationAdministrator,
+} from '../../Model/SessionModel';
 import { useAppNavigate } from '../../Hooks/useAppNavigate';
 import AccessLevels from './Tabs/AccessLevels/AccessLevels';
 import { Breadcrumbs } from '../../Generic/Breadcrumbs';
 import { useSearchParams } from 'react-router-dom';
 import { PolicyConfiguration } from './Tabs/PolicyConfiguration';
+import { useSidePanel } from '../../Hooks/useSidePanel';
+import { AddLocation } from './AddLocationSidePanel';
 import {
   ApiException,
   EffectiveLocationPolicy,
@@ -197,10 +203,16 @@ export function LocationEdit() {
 
   const permissions = useGlobalPermissions();
   const canAccessSettings = permissions(Permission.AccessSettingsScreen);
+  const isOrganizationAdministrator = useUserIsOrganizationAdministrator();
 
   const appNavigate = useAppNavigate();
   const withBackdrop = useBackdrop();
   const refreshPolicy = useRefreshPolicyForLocation(targetLocationContext);
+  const {
+    SidePanel: AddLocationSidePanel,
+    openSidePanel: openAddLocationSidePanel,
+    closeSidePanel: closeAddLocationSidePanel,
+  } = useSidePanel();
 
   const policyTabIds = [
     'actionDefinitions',
@@ -299,24 +311,47 @@ export function LocationEdit() {
         pt: 2,
       }}
     >
-      <Box sx={isV2 ? { flexShrink: 0 } : undefined}>
-        <Breadcrumbs
-          items={[
-            {
-              label: 'Settings',
-              to: `/org/${organizationId}/${locationId}/settings`,
-            },
-            {
-              label: 'Locations',
-              to: `/org/${organizationId}/${locationId}/settings/locations`,
-            },
-          ]}
-          currentPageLabel={location.name || ''}
-        />
-        {isV2 && (
-          <Typography {...v2Typography.pageTitle} component="h1" sx={{ my: 2 }}>
-            Editing {location.name} configuration
-          </Typography>
+      <Box
+        sx={{
+          alignItems: 'flex-start',
+          display: 'flex',
+          flexShrink: isV2 ? 0 : undefined,
+          gap: 2,
+          justifyContent: 'space-between',
+        }}
+      >
+        <Box>
+          <Breadcrumbs
+            items={[
+              {
+                label: 'Settings',
+                to: `/org/${organizationId}/${locationId}/settings`,
+              },
+              {
+                label: 'Locations',
+                to: `/org/${organizationId}/${locationId}/settings/locations`,
+              },
+            ]}
+            currentPageLabel={location.name || ''}
+          />
+          {isV2 && (
+            <Typography
+              {...v2Typography.pageTitle}
+              component="h1"
+              sx={{ my: 2 }}
+            >
+              Editing {location.name} configuration
+            </Typography>
+          )}
+        </Box>
+        {isOrganizationAdministrator && (
+          <Button
+            startIcon={<AddIcon />}
+            variant="contained"
+            onClick={openAddLocationSidePanel}
+          >
+            Add new location
+          </Button>
         )}
       </Box>
 
@@ -364,7 +399,15 @@ export function LocationEdit() {
           )}
         </Box>
 
-        <Box sx={{ flex: 1, paddingLeft: 4, paddingTop: 2, overflow: 'auto' }}>
+        <Box
+          sx={{
+            flex: 1,
+            minWidth: 0,
+            overflow: 'auto',
+            paddingLeft: 4,
+            paddingTop: 2,
+          }}
+        >
           {isPolicyTabActive && policySaveErrors.length > 0 && (
             <Alert severity="error" sx={{ mb: 2 }}>
               <Stack spacing={0.5}>
@@ -467,6 +510,10 @@ export function LocationEdit() {
             )}
         </Box>
       </Box>
+
+      <AddLocationSidePanel>
+        <AddLocation onClose={closeAddLocationSidePanel} />
+      </AddLocationSidePanel>
     </Stack>
   );
 }
