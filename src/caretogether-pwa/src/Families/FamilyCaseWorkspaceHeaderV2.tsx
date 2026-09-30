@@ -27,6 +27,10 @@ export type ActiveCaseArrangementSummaryV2 = {
   id: string;
   arrangementType: string;
   arrangedPersonLabel: string;
+  assignedFunctions: Array<{
+    functionName: string;
+    assignmentLabels: string[];
+  }>;
   childInvolvement: boolean;
   currentLocationLabel?: string;
   phase: ArrangementPhase;
@@ -292,6 +296,19 @@ export function FamilyCaseWorkspaceHeaderV2({
                           >
                             {arrangement.arrangedPersonLabel}
                           </Typography>
+                          {arrangement.assignedFunctions.map(
+                            (assignedFunction) => (
+                              <Typography
+                                key={assignedFunction.functionName}
+                                color="text.secondary"
+                                {...v2Typography.browserSecondary}
+                                noWrap
+                              >
+                                {assignedFunction.functionName}:{' '}
+                                {assignedFunction.assignmentLabels.join(', ')}
+                              </Typography>
+                            )
+                          )}
                           {arrangement.relevantDateLabel && (
                             <Typography
                               color="text.secondary"
