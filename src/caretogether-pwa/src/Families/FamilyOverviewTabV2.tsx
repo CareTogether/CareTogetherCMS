@@ -34,6 +34,7 @@ type PersonNamePerson = ComponentProps<typeof PersonName>['person'];
 type CommunityOverviewRowV2 = {
   id?: string;
   name?: string;
+  roleAssignments: string[];
 };
 
 type FamilyOverviewTabV2Props = {
@@ -247,12 +248,22 @@ export function FamilyOverviewTabV2({
                   <Diversity3Icon color="primary" />
                 </ListItemIcon>
                 <ListItemText
-                  sx={{ alignSelf: 'baseline' }}
+                  sx={{ alignSelf: 'baseline', minWidth: 0 }}
                   primary={communityInfo.name}
+                  secondary={
+                    communityInfo.roleAssignments.length > 0
+                      ? `${communityInfo.roleAssignments[0]}${
+                          communityInfo.roleAssignments.length > 1
+                            ? ` · +${communityInfo.roleAssignments.length - 1} more`
+                            : ''
+                        }`
+                      : undefined
+                  }
                   slotProps={{
                     primary: {
                       color: communityNameColor,
                     },
+                    secondary: { noWrap: true },
                   }}
                 />
               </ListItemButton>
