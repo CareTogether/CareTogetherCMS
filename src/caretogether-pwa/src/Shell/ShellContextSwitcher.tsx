@@ -1,4 +1,8 @@
+import { Add as AddIcon } from '@mui/icons-material';
 import {
+  Divider,
+  Button,
+  ListSubheader,
   MenuItem,
   Select,
   Skeleton,
@@ -8,6 +12,7 @@ import {
   useTheme,
 } from '@mui/material';
 import { alpha } from '@mui/material/styles';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   useLocationConfigurationLoadable,
@@ -17,6 +22,9 @@ import {
   useCurrentOrganizationLoadable,
   useSelectedLocationContext,
 } from '../Model/Data';
+import { useUserIsOrganizationAdministrator } from '../Model/SessionModel';
+import { useSidePanel } from '../Hooks/useSidePanel';
+import { AddLocation } from '../Settings/Locations/AddLocationSidePanel';
 
 interface ShellContextSwitcherProps {
   contained?: boolean;
@@ -31,6 +39,13 @@ export function ShellContextSwitcher({
   const locationConfiguration = useLocationConfigurationLoadable();
   const selectedLocationContext = useSelectedLocationContext();
   const currentOrganization = useCurrentOrganizationLoadable();
+  const isOrganizationAdministrator = useUserIsOrganizationAdministrator();
+  const [isLocationMenuOpen, setIsLocationMenuOpen] = useState(false);
+  const {
+    SidePanel: AddLocationSidePanel,
+    openSidePanel: openAddLocationSidePanel,
+    closeSidePanel: closeAddLocationSidePanel,
+  } = useSidePanel();
 
   const navigate = useNavigate();
 
@@ -51,6 +66,11 @@ export function ShellContextSwitcher({
 
   function switchLocation(locationId: string) {
     navigate(`/org/${currentOrganization!.organizationId!}/${locationId}/`);
+  }
+
+  function openAddLocation() {
+    setIsLocationMenuOpen(false);
+    openAddLocationSidePanel();
   }
 
   return (
@@ -164,8 +184,11 @@ export function ShellContextSwitcher({
                 },
               },
             }}
+            open={isLocationMenuOpen}
             value={selectedLocationContext.locationId}
             onChange={(e) => switchLocation(e.target.value as string)}
+            onClose={() => setIsLocationMenuOpen(false)}
+            onOpen={() => setIsLocationMenuOpen(true)}
           >
             {locations.map((location) => (
               <MenuItem
@@ -176,6 +199,45 @@ export function ShellContextSwitcher({
                 {location.name}
               </MenuItem>
             ))}
+            {isOrganizationAdministrator && (
+              <ListSubheader
+                disableGutters
+                disableSticky
+                sx={{ backgroundColor: 'inherit', color: 'inherit', px: 0 }}
+              >
+                <Divider
+                  sx={{
+                    borderColor: alpha(
+                      theme.palette.primary.contrastText,
+                      theme.palette.action.disabledOpacity
+                    ),
+                    my: 0.5,
+                  }}
+                />
+                <Button
+                  color="inherit"
+                  fullWidth
+                  startIcon={<AddIcon />}
+                  sx={{
+                    '&:hover': {
+                      backgroundColor: alpha(
+                        theme.palette.primary.contrastText,
+                        theme.palette.action.hoverOpacity
+                      ),
+                    },
+                    justifyContent: 'flex-start',
+                    px: 2,
+                    py: 1,
+                  }}
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    openAddLocation();
+                  }}
+                >
+                  Add New Location
+                </Button>
+              </ListSubheader>
+            )}
           </Select>
         ) : (
           <Typography
@@ -204,6 +266,9 @@ export function ShellContextSwitcher({
           sx={{ marginLeft: 1 }}
         />
       )}
+      <AddLocationSidePanel>
+        <AddLocation onClose={closeAddLocationSidePanel} />
+      </AddLocationSidePanel>
     </Stack>
   );
 }
