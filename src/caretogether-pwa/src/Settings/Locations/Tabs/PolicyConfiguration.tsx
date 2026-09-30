@@ -20,14 +20,33 @@ type PolicyConfigurationProps = {
     | 'organizationPolicy';
 };
 
+const tableBasedSections = new Set<PolicyConfigurationProps['section']>([
+  'actionDefinitions',
+  'customFamilyFields',
+  'casePolicy',
+  'v1ReferralPolicy',
+  'volunteerPolicy',
+  'organizationPolicy',
+]);
+
 export function PolicyConfiguration({
   policy,
   locationRoles,
   onPolicyChange,
   section,
 }: PolicyConfigurationProps) {
+  const isTableBasedSection = tableBasedSections.has(section);
+
   return (
-    <Stack spacing={2} sx={{ maxWidth: 1200, pb: 4 }}>
+    <Stack
+      spacing={2}
+      sx={{
+        maxWidth: isTableBasedSection ? undefined : 1200,
+        minWidth: 0,
+        pb: 4,
+        width: '100%',
+      }}
+    >
       {section === 'actionDefinitions' && (
         <ActionDefinitionsTab policy={policy} onPolicyChange={onPolicyChange} />
       )}
