@@ -243,7 +243,11 @@ export function FamilyOverviewTabV2({
                 }
               >
                 <ListItemIcon
-                  sx={{ alignSelf: 'center', justifyContent: 'center' }}
+                  sx={{
+                    alignSelf: 'flex-start',
+                    justifyContent: 'center',
+                    mt: 0.5,
+                  }}
                 >
                   <Diversity3Icon color="primary" />
                 </ListItemIcon>
@@ -251,19 +255,13 @@ export function FamilyOverviewTabV2({
                   sx={{ alignSelf: 'baseline', minWidth: 0 }}
                   primary={communityInfo.name}
                   secondary={
-                    communityInfo.roleAssignments.length > 0
-                      ? `${communityInfo.roleAssignments[0]}${
-                          communityInfo.roleAssignments.length > 1
-                            ? ` · +${communityInfo.roleAssignments.length - 1} more`
-                            : ''
-                        }`
-                      : undefined
+                    communityInfo.roleAssignments.join('\n') || undefined
                   }
                   slotProps={{
                     primary: {
                       color: communityNameColor,
                     },
-                    secondary: { noWrap: true },
+                    secondary: { sx: { whiteSpace: 'pre-line' } },
                   }}
                 />
               </ListItemButton>
