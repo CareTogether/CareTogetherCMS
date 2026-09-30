@@ -133,6 +133,12 @@ export function useFamilyCaseViewModel({
           id: row.id,
           arrangementType: row.arrangementType,
           arrangedPersonLabel: row.childOrPersonLabel || 'Unassigned',
+          assignedFunctions: row.functionSummaries
+            .filter((summary) => summary.assignmentLabels.length > 0)
+            .map(({ functionName, assignmentLabels }) => ({
+              functionName,
+              assignmentLabels,
+            })),
           childInvolvement,
           currentLocationLabel: childInvolvement
             ? row.currentLocationLabel || 'not yet placed'
