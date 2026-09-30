@@ -2,8 +2,12 @@ import {
   Alert,
   Box,
   Button,
+  Checkbox,
   Divider,
   FormControl,
+  FormControlLabel,
+  FormGroup,
+  FormLabel,
   InputLabel,
   Link,
   MenuItem,
@@ -13,7 +17,7 @@ import {
   Typography,
 } from '@mui/material';
 import { add, format, formatDuration, isValid } from 'date-fns';
-import { useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
   ActionRequirement,
   DocumentLinkRequirement,
@@ -33,12 +37,15 @@ import type {
 } from '../Requirements/RequirementContext';
 import type { ApprovalLedgerOccurrence } from '../Approvals/approvalLedgerViewModel';
 import { approvalRequirementName } from '../Approvals/approvalDetails';
+import { personNameString } from './PersonName';
+import { volunteerRequirementCompletionPersonIds } from './volunteerRequirementCompletionTargets';
 
 type ApprovalWorkflowMissingSectionV2Props = {
   occurrence: ApprovalLedgerOccurrence;
   context: RequirementContext;
   canComplete: boolean;
   canExempt: boolean;
+  relatedOccurrences?: ApprovalLedgerOccurrence[];
   mode?: 'both' | 'complete' | 'grantExemption';
   onSuccess?: () => void;
 };
@@ -79,6 +86,7 @@ export function ApprovalWorkflowMissingSectionV2({
   context,
   canComplete,
   canExempt,
+  relatedOccurrences = [],
   mode = 'both',
   onSuccess,
 }: ApprovalWorkflowMissingSectionV2Props) {
@@ -110,6 +118,61 @@ export function ApprovalWorkflowMissingSectionV2({
   const [savingAction, setSavingAction] = useState<
     'complete' | 'exempt' | null
   >(null);
+  const supportedApprovalContext = isSupportedApprovalContext(context)
+    ? context
+    : null;
+  const familyId = supportedApprovalContext?.volunteerFamilyId ?? '';
+  const family = familyLookup(familyId);
+  const volunteerCompletionTargets = useMemo(() => {
+    const personIds = volunteerRequirementCompletionPersonIds({
+      individualVolunteers:
+        family?.volunteerFamilyInfo?.individualVolunteers ?? {},
+      occurrence,
+      relatedOccurrences,
+      requirementName,
+    });
+
+    return personIds.map((personId) => {
+      const person = family?.family?.adults?.find(
+        (adult) => adult.item1?.id === personId
+      )?.item1;
+      return {
+        personId,
+        label: personNameString(person) || 'Volunteer',
+      };
+    });
+  }, [
+    family?.family?.adults,
+    family?.volunteerFamilyInfo?.individualVolunteers,
+    occurrence,
+    relatedOccurrences,
+    requirementName,
+  ]);
+  const [selectedVolunteerPersonIds, setSelectedVolunteerPersonIds] = useState<
+    string[]
+  >([]);
+
+  useEffect(() => {
+    if (volunteerCompletionTargets.length === 0) {
+      setSelectedVolunteerPersonIds([]);
+      return;
+    }
+
+    if (context.kind === 'Individual Volunteer') {
+      setSelectedVolunteerPersonIds(
+        volunteerCompletionTargets.some(
+          (target) => target.personId === context.personId
+        )
+          ? [context.personId]
+          : []
+      );
+      return;
+    }
+
+    setSelectedVolunteerPersonIds(
+      volunteerCompletionTargets.map((target) => target.personId)
+    );
+  }, [context, volunteerCompletionTargets]);
 
   if (!isSupportedApprovalContext(context)) {
     return (
@@ -121,8 +184,6 @@ export function ApprovalWorkflowMissingSectionV2({
   }
 
   const approvalContext = context;
-  const familyId = approvalContext.volunteerFamilyId;
-  const family = familyLookup(familyId);
 
   if (!requirementPolicy) {
     return (
@@ -153,7 +214,9 @@ export function ApprovalWorkflowMissingSectionV2({
     ((documentId === UPLOAD_NEW && documentFile !== null) ||
       (documentId !== UPLOAD_NEW && documentId !== '') ||
       !documentRequired) &&
-    (notes.trim() !== '' || !notesRequired);
+    (notes.trim() !== '' || !notesRequired) &&
+    (volunteerCompletionTargets.length === 0 ||
+      selectedVolunteerPersonIds.length > 0);
   const canSaveExemption =
     !isSaving &&
     canExempt &&
@@ -213,7 +276,20 @@ export function ApprovalWorkflowMissingSectionV2({
         const uploadedDocumentId = await resolveDocumentId();
         const noteId = await createCompletionNote();
 
-        if (approvalContext.kind === 'Volunteer Family') {
+        if (
+          volunteerCompletionTargets.length > 0 &&
+          selectedVolunteerPersonIds.length > 0
+        ) {
+          await volunteers.completeIndividualRequirements(
+            familyId,
+            selectedVolunteerPersonIds,
+            requirementName,
+            requirementPolicy,
+            completedAtLocal,
+            uploadedDocumentId,
+            noteId
+          );
+        } else if (approvalContext.kind === 'Volunteer Family') {
           await volunteers.completeFamilyRequirement(
             familyId,
             requirementName,
@@ -295,6 +371,35 @@ export function ApprovalWorkflowMissingSectionV2({
             >
               {requirementPolicy.infoLink}
             </Link>
+          )}
+          {volunteerCompletionTargets.length > 0 && (
+            <FormControl component="fieldset" variant="standard">
+              <FormLabel component="legend">Complete for</FormLabel>
+              <FormGroup>
+                {volunteerCompletionTargets.map((target) => (
+                  <FormControlLabel
+                    key={target.personId}
+                    control={
+                      <Checkbox
+                        checked={selectedVolunteerPersonIds.includes(
+                          target.personId
+                        )}
+                        onChange={(_, checked) => {
+                          setSelectedVolunteerPersonIds((current) =>
+                            checked
+                              ? [...new Set([...current, target.personId])]
+                              : current.filter(
+                                  (personId) => personId !== target.personId
+                                )
+                          );
+                        }}
+                      />
+                    }
+                    label={target.label}
+                  />
+                ))}
+              </FormGroup>
+            </FormControl>
           )}
           <ValidateDatePicker
             label="Completion Date"

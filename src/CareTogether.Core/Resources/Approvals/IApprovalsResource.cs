@@ -58,6 +58,16 @@ namespace CareTogether.Resources.Approvals
         Guid? NoteId
     ) : VolunteerFamilyCommand(FamilyId);
 
+    public sealed record CompleteVolunteerRequirements(
+        Guid FamilyId,
+        ImmutableList<Guid> PersonIds,
+        Guid CompletedRequirementId,
+        string RequirementName,
+        DateTime CompletedAtUtc,
+        Guid? UploadedDocumentId,
+        Guid? NoteId
+    ) : VolunteerFamilyCommand(FamilyId);
+
     public sealed record MarkVolunteerFamilyRequirementIncomplete(
         Guid FamilyId,
         Guid CompletedRequirementId,

@@ -83,6 +83,12 @@ namespace CareTogether.Resources.Approvals
                         )
                     ),
                 },
+                CompleteVolunteerRequirements c => CompleteVolunteerRequirementsForPeople(
+                    volunteerFamilyEntry,
+                    c,
+                    userId,
+                    timestampUtc
+                ),
                 MarkVolunteerFamilyRequirementIncomplete c => volunteerFamilyEntry with
                 {
                     CompletedRequirements = volunteerFamilyEntry.CompletedRequirements.RemoveAll(
@@ -190,6 +196,60 @@ namespace CareTogether.Resources.Approvals
                     );
                 }
             );
+        }
+
+        private static VolunteerFamilyEntry CompleteVolunteerRequirementsForPeople(
+            VolunteerFamilyEntry volunteerFamilyEntry,
+            CompleteVolunteerRequirements command,
+            Guid userId,
+            DateTime timestampUtc
+        )
+        {
+            var completedRequirement = new CompletedRequirementInfo(
+                userId,
+                timestampUtc,
+                command.CompletedRequirementId,
+                command.RequirementName,
+                command.CompletedAtUtc,
+                ExpiresAtUtc: null,
+                command.UploadedDocumentId,
+                command.NoteId
+            );
+
+            var entriesToUpsert = command
+                .PersonIds
+                .Distinct()
+                .Select(personId =>
+                {
+                    var volunteerEntry = volunteerFamilyEntry.IndividualEntries.TryGetValue(
+                        personId,
+                        out var existingEntry
+                    )
+                        ? existingEntry
+                        : new VolunteerEntry(
+                            personId,
+                            true,
+                            "",
+                            ImmutableList<CompletedRequirementInfo>.Empty,
+                            ImmutableList<ExemptedRequirementInfo>.Empty,
+                            ImmutableList<RoleRemoval>.Empty
+                        );
+
+                    return new KeyValuePair<Guid, VolunteerEntry>(
+                        personId,
+                        volunteerEntry with
+                        {
+                            CompletedRequirements = volunteerEntry.CompletedRequirements.Add(
+                                completedRequirement
+                            ),
+                        }
+                    );
+                });
+
+            return volunteerFamilyEntry with
+            {
+                IndividualEntries = volunteerFamilyEntry.IndividualEntries.SetItems(entriesToUpsert),
+            };
         }
 
         public (

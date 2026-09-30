@@ -21,6 +21,7 @@ type CompleteRequirementInput = {
   policy: ActionRequirement;
   requirementName: string;
   selectedArrangementIds: string[];
+  selectedVolunteerPersonIds?: string[];
 };
 
 type ExemptRequirementInput = {
@@ -70,6 +71,7 @@ export function useRequirementCommands() {
     policy,
     requirementName,
     selectedArrangementIds,
+    selectedVolunteerPersonIds = [],
   }: CompleteRequirementInput) {
     switch (context.kind) {
       case 'V1Case': {
@@ -151,29 +153,53 @@ export function useRequirementCommands() {
       case 'Volunteer Family': {
         const familyId = requireFamilyId(context);
 
-        await volunteers.completeFamilyRequirement(
-          familyId,
-          requirementName,
-          policy,
-          completedAtLocal,
-          document,
-          noteId
-        );
+        if (selectedVolunteerPersonIds.length > 0) {
+          await volunteers.completeIndividualRequirements(
+            familyId,
+            selectedVolunteerPersonIds,
+            requirementName,
+            policy,
+            completedAtLocal,
+            document,
+            noteId
+          );
+        } else {
+          await volunteers.completeFamilyRequirement(
+            familyId,
+            requirementName,
+            policy,
+            completedAtLocal,
+            document,
+            noteId
+          );
+        }
         break;
       }
 
       case 'Individual Volunteer': {
         const familyId = requireFamilyId(context);
 
-        await volunteers.completeIndividualRequirement(
-          familyId,
-          context.personId,
-          requirementName,
-          policy,
-          completedAtLocal,
-          document,
-          noteId
-        );
+        if (selectedVolunteerPersonIds.length > 0) {
+          await volunteers.completeIndividualRequirements(
+            familyId,
+            selectedVolunteerPersonIds,
+            requirementName,
+            policy,
+            completedAtLocal,
+            document,
+            noteId
+          );
+        } else {
+          await volunteers.completeIndividualRequirement(
+            familyId,
+            context.personId,
+            requirementName,
+            policy,
+            completedAtLocal,
+            document,
+            noteId
+          );
+        }
         break;
       }
     }

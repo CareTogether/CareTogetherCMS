@@ -7752,6 +7752,7 @@
           "mapping": {
             "ActivateVolunteerFamily": "#/components/schemas/ActivateVolunteerFamily",
             "CompleteVolunteerFamilyRequirement": "#/components/schemas/CompleteVolunteerFamilyRequirement",
+            "CompleteVolunteerRequirements": "#/components/schemas/CompleteVolunteerRequirements",
             "ExemptVolunteerFamilyRequirement": "#/components/schemas/ExemptVolunteerFamilyRequirement",
             "MarkVolunteerFamilyRequirementIncomplete": "#/components/schemas/MarkVolunteerFamilyRequirementIncomplete",
             "RemoveVolunteerFamilyRole": "#/components/schemas/RemoveVolunteerFamilyRole",
@@ -7802,6 +7803,53 @@
               "completedAtUtc"
             ],
             "properties": {
+              "completedRequirementId": {
+                "type": "string",
+                "format": "guid"
+              },
+              "requirementName": {
+                "type": "string"
+              },
+              "completedAtUtc": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "uploadedDocumentId": {
+                "type": "string",
+                "format": "guid",
+                "nullable": true
+              },
+              "noteId": {
+                "type": "string",
+                "format": "guid",
+                "nullable": true
+              }
+            }
+          }
+        ]
+      },
+      "CompleteVolunteerRequirements": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/VolunteerFamilyCommand"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "personIds",
+              "completedRequirementId",
+              "requirementName",
+              "completedAtUtc"
+            ],
+            "properties": {
+              "personIds": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "format": "guid"
+                }
+              },
               "completedRequirementId": {
                 "type": "string",
                 "format": "guid"
