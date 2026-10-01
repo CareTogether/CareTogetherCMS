@@ -10,7 +10,7 @@ import type {
   Gender,
   V1Case,
 } from '../GeneratedClient';
-import { familyLastName } from '../Families/FamilyUtils';
+import { familyLastName, getFamilyName } from '../Families/FamilyUtils';
 import { familyNameString } from '../Families/FamilyName';
 import { personNameString } from '../Families/PersonName';
 import {
@@ -350,7 +350,7 @@ export function useClientsBrowserViewModel({
             })),
           ],
           treePath: [familyId],
-          family: familyNameString(family),
+          family: getFamilyName(family),
           memberNames: [
             ...(family.family?.adults?.map((adult) => adult.item1) ?? []),
             ...(family.family?.children ?? []),
@@ -425,6 +425,7 @@ export function useClientsBrowserViewModel({
             id: `${familyId}:adult:${person.id}`,
             rowKind: 'adult' as const,
             personName: personNameString(person),
+            primaryContactName: undefined,
             personAge: person.age,
             treePath: [familyId, `adult:${person.id}`],
             ...personArrangementValues(person.id),
@@ -438,6 +439,7 @@ export function useClientsBrowserViewModel({
             id: `${familyId}:child:${person.id}`,
             rowKind: 'child' as const,
             personName: personNameString(person),
+            primaryContactName: undefined,
             personAge: person.age,
             treePath: [familyId, `child:${person.id}`],
             ...personArrangementValues(person.id),

@@ -14,6 +14,7 @@ type VolunteerRoleApprovalStatusChipProps = {
   currentStatus?: RoleApprovalStatus;
   personName?: string;
   roleName: string;
+  statusLabel?: string;
   status?: DateOnlyTimelineOfRoleApprovalStatus;
   sx?: SxProps<Theme> | undefined;
 };
@@ -24,6 +25,7 @@ export function VolunteerRoleApprovalStatusChip({
   currentStatus,
   personName,
   roleName,
+  statusLabel,
   status,
   sx,
 }: VolunteerRoleApprovalStatusChipProps) {
@@ -42,8 +44,8 @@ export function VolunteerRoleApprovalStatusChip({
   const expiresAt = currentStatusRange?.end;
   const label =
     expiresAt && expiresAt < FUTURE_CUTOFF
-      ? `${roleApprovalStatusLabel(currentStatusValue)} ${roleName} until ${format(expiresAt, 'M/d/yy')}`
-      : `${roleApprovalStatusLabel(currentStatusValue)} ${roleName}`;
+      ? `${statusLabel ?? `${roleApprovalStatusLabel(currentStatusValue)} ${roleName}`} until ${format(expiresAt, 'M/d/yy')}`
+      : (statusLabel ?? `${roleApprovalStatusLabel(currentStatusValue)} ${roleName}`);
 
   return (
     <Chip

@@ -20,6 +20,7 @@ function RoleChipList({
           currentStatus={role.currentStatus}
           personName={role.personName}
           roleName={role.roleName}
+          statusLabel={role.statusLabel}
           status={role.status}
         />
       ))}

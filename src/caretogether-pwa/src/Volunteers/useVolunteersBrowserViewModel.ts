@@ -3,9 +3,10 @@ import {
   Age,
   CombinedFamilyInfo,
   CustomField,
-  type RoleApprovalStatus,
+  RoleApprovalStatus,
+  RoleRemovalReason,
 } from '../GeneratedClient';
-import { familyNameString } from '../Families/FamilyName';
+import { getFamilyName } from '../Families/FamilyUtils';
 import { personNameString } from '../Families/PersonName';
 import { useVisibleCommunities } from '../Model/Data';
 import { usePolicy } from '../Model/PolicyModel';
@@ -31,7 +32,10 @@ import {
   roleFilterValues,
 } from './roleFilterValues';
 import { organizationNamesByFamilyId } from './volunteerOrganizationModel';
-import { isRoleApprovalStatusVisibleInSummary } from './roleApprovalStatusPresentation';
+import {
+  isRoleApprovalStatusVisibleInSummary,
+  optedOutRoleStatusValue,
+} from './roleApprovalStatusPresentation';
 export type VolunteerCustomFieldValue = CustomFieldGridValue;
 export type VolunteerBrowserRowV2 = {
   arrangementAssignmentValues: Record<string, 'assigned' | 'unassigned'>;
@@ -93,6 +97,24 @@ function valuesByName(
   ) as Record<string, VolunteerCustomFieldValue>;
 }
 function roleStatusValues(family: CombinedFamilyInfo, roleNames: string[]) {
+  const now = new Date();
+  const removals = [
+    ...(family.volunteerFamilyInfo?.roleRemovals ?? []),
+    ...Object.values(
+      family.volunteerFamilyInfo?.individualVolunteers ?? {}
+    ).flatMap((volunteer) => volunteer.roleRemovals ?? []),
+  ].filter(
+    (removal) =>
+      removal.reason === RoleRemovalReason.OptOut &&
+      (!removal.effectiveUntil || removal.effectiveUntil > now)
+  );
+  const hasOptOut = (roleName: string) =>
+    removals.some(
+      (removal) =>
+        removal.roleName.trim().replace(/\s+/g, ' ').toLocaleLowerCase() ===
+        roleName.trim().replace(/\s+/g, ' ').toLocaleLowerCase()
+    );
+
   return Object.fromEntries(
     roleNames.map((roleName) => [
       roleName,
@@ -111,9 +133,13 @@ function roleStatusValues(family: CombinedFamilyInfo, roleNames: string[]) {
             .filter(
               (status): status is RoleApprovalStatus =>
                 status != null &&
-                isRoleApprovalStatusVisibleInSummary(status)
+                isRoleApprovalStatusVisibleInSummary(status) &&
+                !(status === RoleApprovalStatus.Inactive && hasOptOut(roleName))
             )
             .map(String)
+            .concat(
+              hasOptOut(roleName) ? [optedOutRoleStatusValue] : []
+            )
         )
       ),
     ])
@@ -149,6 +175,17 @@ function searchText(family: CombinedFamilyInfo) {
   ].join('\n');
 }
 
+function requirementFilterValues(
+  groups: VolunteerMissingRequirementGroup[]
+) {
+  const requirementNames = groups.flatMap((group) => group.requirements);
+  return requirementNames.length
+    ? Array.from(
+        new Set([missingRequirementFilterValue, ...requirementNames])
+      )
+    : [completeRequirementFilterValue];
+}
+
 export function buildVolunteerBrowserRow(
   family: CombinedFamilyInfo,
   organizationNames: string[],
@@ -165,9 +202,6 @@ export function buildVolunteerBrowserRow(
     family,
     roleFilters
   );
-  const requirementNames = missingRequirementGroups.flatMap(
-    (group) => group.requirements
-  );
   const familyValues = valuesByName(
     family.family?.completedCustomFields,
     familyCustomFields
@@ -180,7 +214,7 @@ export function buildVolunteerBrowserRow(
   const familyRow: VolunteerBrowserRowV2 = {
     arrangementAssignmentValues: assignmentValues(family, arrangementTypes),
     county: getFamilyCounty(family),
-    family: familyNameString(family),
+    family: getFamilyName(family),
     familyId,
     familyCustomFieldValues: Object.fromEntries(
       familyCustomFields.map((field) => [
@@ -196,11 +230,7 @@ export function buildVolunteerBrowserRow(
     personName: '',
     rowKind: 'family',
     treePath: [`family:${familyId}`],
-    requirementFilterValues: requirementNames.length
-      ? Array.from(
-          new Set([missingRequirementFilterValue, ...requirementNames])
-        )
-      : [completeRequirementFilterValue],
+    requirementFilterValues: requirementFilterValues(missingRequirementGroups),
     roleFilterValues: roleFilterValues(family),
     roleStatusValues: roleStatusValues(family, roleNamesForPresentation),
     roles: buildVolunteerApprovalRolesPresentation(family, roleFilters),
@@ -224,6 +254,17 @@ export function buildVolunteerBrowserRow(
   const children = (family.family?.children ?? []).filter(
     (child) => !!child?.id
   );
+  const memberRequirements = (personId: string) => {
+    const groups = buildVolunteerMissingRequirementGroups(
+      family,
+      roleFilters,
+      personId
+    );
+    return {
+      missingRequirementGroups: groups,
+      requirementFilterValues: requirementFilterValues(groups),
+    };
+  };
   const memberRows: VolunteerBrowserRowV2[] = [
     ...adults.map((person) => ({
       ...familyRow,
@@ -240,6 +281,7 @@ export function buildVolunteerBrowserRow(
         roleFilters,
         person.id
       ),
+      ...memberRequirements(person.id),
       userRoles: Array.from(
         new Set(
           (family.users ?? [])
@@ -264,6 +306,7 @@ export function buildVolunteerBrowserRow(
         roleFilters,
         person.id!
       ),
+      ...memberRequirements(person.id!),
       userRoles: Array.from(
         new Set(
           (family.users ?? [])

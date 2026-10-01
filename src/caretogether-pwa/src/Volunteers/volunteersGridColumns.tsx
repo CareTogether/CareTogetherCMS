@@ -20,7 +20,10 @@ import {
   type VolunteerMissingRequirementGroup,
 } from './VolunteerApprovalTab/volunteerMissingRequirementsPresentation';
 import { notAppliedLabel } from './VolunteerApprovalTab/catchAllLabel';
-import { roleApprovalStatusFilterOptions } from './roleApprovalStatusPresentation';
+import {
+  optedOutRoleStatusValue,
+  roleApprovalStatusFilterOptions,
+} from './roleApprovalStatusPresentation';
 import type {
   VolunteerBrowserRowV2,
   VolunteerCustomFieldValue,
@@ -53,7 +56,10 @@ const emptyOperators = <V,>(): GridFilterOperator<
   },
 ];
 const membershipOperators = getGridMultiSelectOperators();
-const statusOptions = roleApprovalStatusFilterOptions(notAppliedLabel);
+const statusOptions = [
+  ...roleApprovalStatusFilterOptions(notAppliedLabel),
+  { value: optedOutRoleStatusValue, label: 'Opted out' },
+];
 
 export function requirementFilterLabel(value: string) {
   if (value === missingRequirementFilterValue) return 'Missing';

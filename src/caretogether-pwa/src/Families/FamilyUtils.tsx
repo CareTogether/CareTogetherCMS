@@ -11,6 +11,10 @@ export function familyLastName(family: CombinedFamilyInfo) {
   return primaryContact.lastName?.trim() || '⚠ MISSING LAST NAME';
 }
 
+export function getFamilyName(family: CombinedFamilyInfo) {
+  return `${familyLastName(family)} Family`;
+}
+
 export type FamilyNameSortMode =
   | 'lastNameAsc'
   | 'lastNameDesc'
