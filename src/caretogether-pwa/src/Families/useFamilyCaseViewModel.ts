@@ -133,12 +133,23 @@ export function useFamilyCaseViewModel({
           id: row.id,
           arrangementType: row.arrangementType,
           arrangedPersonLabel: row.childOrPersonLabel || 'Unassigned',
-          assignedFunctions: row.functionSummaries
-            .filter((summary) => summary.assignmentLabels.length > 0)
-            .map(({ functionName, assignmentLabels }) => ({
-              functionName,
-              assignmentLabels,
-            })),
+          assignedFunctions: row.functionSummaries.flatMap((summary) =>
+            summary.assignments.map((assignment) => ({
+              key: JSON.stringify([
+                summary.functionName,
+                assignment.familyId,
+                'personId' in assignment ? assignment.personId : null,
+                assignment.arrangementFunctionVariant,
+              ]),
+              functionLabel:
+                assignment.arrangementFunctionVariant?.trim() ||
+                summary.functionName,
+              volunteerLabel:
+                'personId' in assignment
+                  ? personLabel(assignment.familyId, assignment.personId)
+                  : familyLabel(assignment.familyId),
+            }))
+          ),
           childInvolvement,
           currentLocationLabel: childInvolvement
             ? row.currentLocationLabel || 'not yet placed'
@@ -152,7 +163,7 @@ export function useFamilyCaseViewModel({
           statusLabel: activeArrangementStatusLabel(row.source.phase),
         };
       });
-  }, [selectedCaseArrangementRows]);
+  }, [familyLabel, personLabel, selectedCaseArrangementRows]);
 
   return {
     activeCaseArrangements,
