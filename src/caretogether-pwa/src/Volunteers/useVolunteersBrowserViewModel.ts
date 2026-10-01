@@ -1,5 +1,10 @@
 import { useMemo } from 'react';
-import { Age, CombinedFamilyInfo, CustomField } from '../GeneratedClient';
+import {
+  Age,
+  CombinedFamilyInfo,
+  CustomField,
+  type RoleApprovalStatus,
+} from '../GeneratedClient';
 import { familyNameString } from '../Families/FamilyName';
 import { personNameString } from '../Families/PersonName';
 import { useVisibleCommunities } from '../Model/Data';
@@ -26,6 +31,7 @@ import {
   roleFilterValues,
 } from './roleFilterValues';
 import { organizationNamesByFamilyId } from './volunteerOrganizationModel';
+import { isRoleApprovalStatusVisibleInSummary } from './roleApprovalStatusPresentation';
 export type VolunteerCustomFieldValue = CustomFieldGridValue;
 export type VolunteerBrowserRowV2 = {
   arrangementAssignmentValues: Record<string, 'assigned' | 'unassigned'>;
@@ -102,7 +108,11 @@ function roleStatusValues(family: CombinedFamilyInfo, roleNames: string[]) {
                 volunteer.approvalStatusByRole?.[roleName]?.currentStatus
             ),
           ]
-            .filter((status) => status !== null && status !== undefined)
+            .filter(
+              (status): status is RoleApprovalStatus =>
+                status != null &&
+                isRoleApprovalStatusVisibleInSummary(status)
+            )
             .map(String)
         )
       ),

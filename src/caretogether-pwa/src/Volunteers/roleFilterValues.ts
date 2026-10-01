@@ -1,13 +1,18 @@
-import type { CombinedFamilyInfo } from '../GeneratedClient';
+import type {
+  CombinedFamilyInfo,
+  RoleApprovalStatus,
+} from '../GeneratedClient';
+import { isRoleApprovalStatusVisibleInSummary } from './roleApprovalStatusPresentation';
 
 export const notAppliedRoleFilterValue = 'Not Applied';
 
 function roleHasCurrentStatus(
   roleApproval: { currentStatus?: unknown } | null | undefined
 ) {
+  const status = roleApproval?.currentStatus;
   return (
-    roleApproval?.currentStatus !== null &&
-    roleApproval?.currentStatus !== undefined
+    typeof status === 'number' &&
+    isRoleApprovalStatusVisibleInSummary(status as RoleApprovalStatus)
   );
 }
 

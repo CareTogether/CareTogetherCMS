@@ -5,6 +5,7 @@ import {
   RoleApprovalStatus,
 } from '../GeneratedClient';
 import {
+  isRoleApprovalStatusVisibleInSummary,
   roleApprovalStatusChipColor,
   roleApprovalStatusLabel,
 } from './roleApprovalStatusPresentation';
@@ -31,7 +32,12 @@ export function VolunteerRoleApprovalStatusChip({
     (r) => r.start && r.start <= now && (!r.end || r.end >= now)
   );
   const currentStatusValue = currentStatus ?? currentStatusRange?.tag;
-  if (currentStatusValue == null) return null;
+  if (
+    currentStatusValue == null ||
+    !isRoleApprovalStatusVisibleInSummary(currentStatusValue)
+  ) {
+    return null;
+  }
 
   const expiresAt = currentStatusRange?.end;
   const label =

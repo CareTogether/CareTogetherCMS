@@ -5,6 +5,7 @@ import {
 } from '../../GeneratedClient';
 import { personNameString } from '../../Families/PersonName';
 import { filterOption } from './filterOption';
+import { isRoleApprovalStatusVisibleInSummary } from '../roleApprovalStatusPresentation';
 
 export type VolunteerApprovalRoleChipPresentation = {
   currentStatus?: RoleApprovalStatus;
@@ -29,7 +30,12 @@ export function buildVolunteerApprovalRolesPresentation(
     : roleFilters.flatMap((roleFilter) => {
         const approval =
           family.volunteerFamilyInfo?.familyRoleApprovals?.[roleFilter.key];
-        if (approval?.currentStatus == null) return [];
+        if (
+          approval?.currentStatus == null ||
+          !isRoleApprovalStatusVisibleInSummary(approval.currentStatus)
+        ) {
+          return [];
+        }
 
         return [
           {
@@ -61,7 +67,14 @@ export function buildVolunteerApprovalRolesPresentation(
   volunteersWithIds.forEach(([individualPersonId, volunteer]) => {
     Object.entries(volunteer.approvalStatusByRole ?? {}).forEach(
       ([roleName, roleApprovalStatus]) => {
-        if (roleApprovalStatus.currentStatus == null) return;
+        if (
+          roleApprovalStatus.currentStatus == null ||
+          !isRoleApprovalStatusVisibleInSummary(
+            roleApprovalStatus.currentStatus
+          )
+        ) {
+          return;
+        }
 
         individualRoles.push({
           currentStatus: roleApprovalStatus.currentStatus,
