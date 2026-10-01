@@ -18,23 +18,33 @@ export type VolunteerApprovalRolesPresentation = {
 
 export function buildVolunteerApprovalRolesPresentation(
   family: CombinedFamilyInfo,
-  roleFilters: Pick<filterOption, 'key'>[]
+  roleFilters: Pick<filterOption, 'key'>[],
+  personId?: string
 ): VolunteerApprovalRolesPresentation {
-  const familyRoles = roleFilters.map((roleFilter) => ({
-    currentStatus:
-      family.volunteerFamilyInfo?.familyRoleApprovals?.[roleFilter.key]
-        ?.currentStatus,
-    roleName: roleFilter.key,
-    status:
-      family.volunteerFamilyInfo?.familyRoleApprovals?.[roleFilter.key]
-        ?.effectiveRoleApprovalStatus,
-  }));
+  const familyRoles = personId
+    ? []
+    : roleFilters.map((roleFilter) => ({
+        currentStatus:
+          family.volunteerFamilyInfo?.familyRoleApprovals?.[roleFilter.key]
+            ?.currentStatus,
+        roleName: roleFilter.key,
+        status:
+          family.volunteerFamilyInfo?.familyRoleApprovals?.[roleFilter.key]
+            ?.effectiveRoleApprovalStatus,
+      }));
   const individualRolesByName = new Map<
     string,
     VolunteerApprovalRoleChipPresentation
   >();
 
-  Object.values(family.volunteerFamilyInfo?.individualVolunteers ?? {}).forEach(
+  const volunteers = family.volunteerFamilyInfo?.individualVolunteers ?? {};
+  const individualVolunteers = personId
+    ? volunteers[personId]
+      ? [volunteers[personId]]
+      : []
+    : Object.values(volunteers);
+
+  individualVolunteers.forEach(
     (volunteer) => {
       Object.entries(volunteer.approvalStatusByRole ?? {}).forEach(
         ([roleName, roleApprovalStatus]) => {

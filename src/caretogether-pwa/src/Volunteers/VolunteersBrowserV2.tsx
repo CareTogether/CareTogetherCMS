@@ -48,7 +48,14 @@ export function VolunteersBrowserV2() {
   const canUseBulkSms =
     permissions(Permission.SendBulkSms) &&
     Boolean(smsSourcePhoneNumbers && smsSourcePhoneNumbers.length > 0);
-  const visibleRowIds = useMemo(() => rows.map((row) => row.id), [rows]);
+  const familyRows = useMemo(
+    () => rows.filter((row) => row.rowKind === 'family'),
+    [rows]
+  );
+  const visibleRowIds = useMemo(
+    () => familyRows.map((row) => row.id),
+    [familyRows]
+  );
   const rowSelectionModel = useMemo<GridRowSelectionModel>(
     () => ({
       type: 'include',
@@ -62,10 +69,10 @@ export function VolunteersBrowserV2() {
   const selectedVolunteerFamilies = useMemo(() => {
     const selectedFamilyIdSet = new Set(selectedFamilyIds);
 
-    return rows
+    return familyRows
       .map((row) => row.sourceFamily)
       .filter((family) => selectedFamilyIdSet.has(family.family!.id!));
-  }, [rows, selectedFamilyIds]);
+  }, [familyRows, selectedFamilyIds]);
 
   function selectedFamilyContactEmails() {
     return selectedVolunteerFamilies
@@ -162,7 +169,7 @@ export function VolunteersBrowserV2() {
         <VolunteersDataGridV2
           arrangementTypes={arrangementTypes}
           familyCustomFields={familyCustomFields}
-          onRowClick={(row) => appNavigate.family(row.id)}
+          onRowClick={(row) => appNavigate.family(row.familyId)}
           onPivotActiveChange={(active) => {
             setPivotActive(active);
             if (active) setSelectedFamilyIds([]);

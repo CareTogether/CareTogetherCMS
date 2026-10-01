@@ -12,7 +12,7 @@ function roleHasCurrentStatus(
 }
 
 export function roleFilterValues(family: CombinedFamilyInfo) {
-  const names = new Set([
+  const volunteerRoleNames = new Set([
     ...Object.entries(family.volunteerFamilyInfo?.familyRoleApprovals ?? {})
       .filter(([, roleApproval]) => roleHasCurrentStatus(roleApproval))
       .map(([roleName]) => roleName),
@@ -25,5 +25,7 @@ export function roleFilterValues(family: CombinedFamilyInfo) {
     ),
   ]);
 
-  return names.size > 0 ? Array.from(names) : [notAppliedRoleFilterValue];
+  return volunteerRoleNames.size > 0
+    ? Array.from(volunteerRoleNames)
+    : [notAppliedRoleFilterValue];
 }

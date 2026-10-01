@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { CombinedFamilyInfo, CustomField } from '../GeneratedClient';
+import { Age, CombinedFamilyInfo, CustomField } from '../GeneratedClient';
 import { familyNameString } from '../Families/FamilyName';
 import { personNameString } from '../Families/PersonName';
 import { useVisibleCommunities } from '../Model/Data';
@@ -32,12 +32,17 @@ export type VolunteerBrowserRowV2 = {
   arrangementAssignmentValues: Record<string, 'assigned' | 'unassigned'>;
   county: string | null;
   family: string;
+  familyId: string;
   familyCustomFieldValues: Record<string, VolunteerCustomFieldValue>;
   familyLastName: string;
   id: string;
   missingRequirementGroups: VolunteerMissingRequirementGroup[];
   organizationNames: string[];
   primaryContact: string;
+  personName: string;
+  personAge?: Age;
+  rowKind: 'family' | 'adult' | 'child';
+  treePath: string[];
   requirementFilterValues: string[];
   roleFilterValues: string[];
   roleStatusValues: Record<string, string[]>;
@@ -46,6 +51,7 @@ export type VolunteerBrowserRowV2 = {
   sourceFamily: CombinedFamilyInfo;
   statusFilterValues: string[];
   statusLabels: string[];
+  userRoles: string[];
   volunteerFamilyCount: number;
   volunteerCustomFieldValues: Record<string, VolunteerCustomFieldValue>;
 };
@@ -161,7 +167,7 @@ export function buildVolunteerBrowserRow(
   arrangementTypes: string[],
   statusLabelsByValue: Map<string, string>,
   roleNamesForPresentation: string[]
-): VolunteerBrowserRowV2 {
+): VolunteerBrowserRowV2[] {
   const contact = primaryContact(family);
   const roleFilters = roleNamesForPresentation.map(
     (key): filterOption => ({ key, selected: false, value: undefined })
@@ -182,10 +188,12 @@ export function buildVolunteerBrowserRow(
     family.volunteerFamilyInfo?.completedCustomFields,
     volunteerCustomFields
   );
-  return {
+  const familyId = family.family!.id!;
+  const familyRow: VolunteerBrowserRowV2 = {
     arrangementAssignmentValues: assignmentValues(family, arrangementTypes),
     county: getFamilyCounty(family),
     family: familyNameString(family),
+    familyId,
     familyCustomFieldValues: Object.fromEntries(
       familyCustomFields.map((field) => [
         field.name,
@@ -193,10 +201,13 @@ export function buildVolunteerBrowserRow(
       ])
     ),
     familyLastName: contact?.lastName ?? '⚠ MISSING PRIMARY CONTACT',
-    id: family.family!.id!,
+    id: familyId,
     missingRequirementGroups,
     organizationNames,
     primaryContact: contact ? personNameString(contact) : '',
+    personName: '',
+    rowKind: 'family',
+    treePath: [`family:${familyId}`],
     requirementFilterValues: requirementNames.length
       ? Array.from(
           new Set([missingRequirementFilterValue, ...requirementNames])
@@ -211,6 +222,9 @@ export function buildVolunteerBrowserRow(
     statusLabels: statuses.map(
       (status) => statusLabelsByValue.get(status) ?? status
     ),
+    userRoles: Array.from(
+      new Set((family.users ?? []).flatMap((user) => user.locationRoles ?? []))
+    ),
     volunteerCustomFieldValues: Object.fromEntries(
       volunteerCustomFields.map((field) => [
         field.name,
@@ -219,6 +233,63 @@ export function buildVolunteerBrowserRow(
     ),
     volunteerFamilyCount: 1,
   };
+
+  const adults = (family.family?.adults ?? []).flatMap((adult) =>
+    adult.item1?.id ? [adult.item1] : []
+  );
+  const children = (family.family?.children ?? []).filter(
+    (child) => !!child?.id
+  );
+  const memberRows: VolunteerBrowserRowV2[] = [
+    ...adults.map((person) => ({
+      ...familyRow,
+      id: `${familyId}:adult:${person.id}`,
+      personName: personNameString(person),
+      personAge: person.age,
+      rowKind: 'adult' as const,
+      treePath: [
+        familyRow.treePath[0],
+        `adult:${personNameString(person)}:${person.id}`,
+      ],
+      roles: buildVolunteerApprovalRolesPresentation(
+        family,
+        roleFilters,
+        person.id
+      ),
+      userRoles: Array.from(
+        new Set(
+          (family.users ?? [])
+            .filter((user) => user.personId === person.id)
+            .flatMap((user) => user.locationRoles ?? [])
+        )
+      ),
+    })),
+    ...children.map((person) => ({
+      ...familyRow,
+      id: `${familyId}:child:${person.id}`,
+      personName: personNameString(person),
+      personAge: person.age,
+      rowKind: 'child' as const,
+      treePath: [
+        familyRow.treePath[0],
+        `child:${personNameString(person)}:${person.id}`,
+      ],
+      roles: buildVolunteerApprovalRolesPresentation(
+        family,
+        roleFilters,
+        person.id!
+      ),
+      userRoles: Array.from(
+        new Set(
+          (family.users ?? [])
+            .filter((user) => user.personId === person.id)
+            .flatMap((user) => user.locationRoles ?? [])
+        )
+      ),
+    })),
+  ];
+
+  return [familyRow, ...memberRows];
 }
 
 export function useVolunteersBrowserViewModel(): VolunteersBrowserViewModel {
@@ -275,7 +346,7 @@ export function useVolunteersBrowserViewModel(): VolunteersBrowserViewModel {
   );
   const rows = useMemo(
     () =>
-      families.map((family) =>
+      families.flatMap((family) =>
         buildVolunteerBrowserRow(
           family,
           organizationNamesByFamily.get(family.family!.id!) ?? [],
