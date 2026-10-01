@@ -25,7 +25,6 @@ import {
   notAppliedRoleFilterValue,
   roleFilterValues,
 } from './roleFilterValues';
-import { roleApprovalStatusFilterOptions } from './roleApprovalStatusPresentation';
 import { organizationNamesByFamilyId } from './volunteerOrganizationModel';
 export type VolunteerCustomFieldValue = CustomFieldGridValue;
 export type VolunteerBrowserRowV2 = {
@@ -49,8 +48,6 @@ export type VolunteerBrowserRowV2 = {
   roles: VolunteerApprovalRolesPresentation;
   searchableText: string;
   sourceFamily: CombinedFamilyInfo;
-  statusFilterValues: string[];
-  statusLabels: string[];
   userRoles: string[];
   volunteerFamilyCount: number;
   volunteerCustomFieldValues: Record<string, VolunteerCustomFieldValue>;
@@ -89,23 +86,6 @@ function valuesByName(
     })
   ) as Record<string, VolunteerCustomFieldValue>;
 }
-function statusValues(family: CombinedFamilyInfo) {
-  return Array.from(
-    new Set(
-      [
-        ...Object.values(family.volunteerFamilyInfo?.familyRoleApprovals ?? {}),
-        ...Object.values(
-          family.volunteerFamilyInfo?.individualVolunteers ?? {}
-        ).flatMap((volunteer) =>
-          Object.values(volunteer.approvalStatusByRole ?? {})
-        ),
-      ].map((approval) =>
-        approval.currentStatus == null ? '0' : String(approval.currentStatus)
-      )
-    )
-  );
-}
-
 function roleStatusValues(family: CombinedFamilyInfo, roleNames: string[]) {
   return Object.fromEntries(
     roleNames.map((roleName) => [
@@ -165,7 +145,6 @@ export function buildVolunteerBrowserRow(
   familyCustomFields: CustomField[],
   volunteerCustomFields: CustomField[],
   arrangementTypes: string[],
-  statusLabelsByValue: Map<string, string>,
   roleNamesForPresentation: string[]
 ): VolunteerBrowserRowV2[] {
   const contact = primaryContact(family);
@@ -179,7 +158,6 @@ export function buildVolunteerBrowserRow(
   const requirementNames = missingRequirementGroups.flatMap(
     (group) => group.requirements
   );
-  const statuses = statusValues(family);
   const familyValues = valuesByName(
     family.family?.completedCustomFields,
     familyCustomFields
@@ -218,10 +196,6 @@ export function buildVolunteerBrowserRow(
     roles: buildVolunteerApprovalRolesPresentation(family, roleFilters),
     searchableText: searchText(family),
     sourceFamily: family,
-    statusFilterValues: statuses,
-    statusLabels: statuses.map(
-      (status) => statusLabelsByValue.get(status) ?? status
-    ),
     userRoles: Array.from(
       new Set((family.users ?? []).flatMap((user) => user.locationRoles ?? []))
     ),
@@ -263,6 +237,7 @@ export function buildVolunteerBrowserRow(
             .flatMap((user) => user.locationRoles ?? [])
         )
       ),
+      primaryContact: '',
     })),
     ...children.map((person) => ({
       ...familyRow,
@@ -286,6 +261,7 @@ export function buildVolunteerBrowserRow(
             .flatMap((user) => user.locationRoles ?? [])
         )
       ),
+      primaryContact: '',
     })),
   ];
 
@@ -328,15 +304,6 @@ export function useVolunteersBrowserViewModel(): VolunteersBrowserViewModel {
       policy.volunteerPolicy?.volunteerRoles,
     ]
   );
-  const statusLabelsByValue = useMemo(
-    () =>
-      new Map(
-        roleApprovalStatusFilterOptions(notAppliedRoleFilterValue).map(
-          ({ value, label }) => [value, label]
-        )
-      ),
-    []
-  );
   const organizationNamesByFamily = useMemo(
     () =>
       organizationNamesByFamilyId(
@@ -353,7 +320,6 @@ export function useVolunteersBrowserViewModel(): VolunteersBrowserViewModel {
           familyCustomFields,
           volunteerCustomFields,
           arrangementTypes,
-          statusLabelsByValue,
           roleNamesForPresentation
         )
       ),
@@ -362,7 +328,6 @@ export function useVolunteersBrowserViewModel(): VolunteersBrowserViewModel {
       families,
       familyCustomFields,
       roleNamesForPresentation,
-      statusLabelsByValue,
       organizationNamesByFamily,
       volunteerCustomFields,
     ]
