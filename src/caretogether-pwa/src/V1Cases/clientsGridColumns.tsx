@@ -464,6 +464,18 @@ export function buildClientsColumns(
       ),
     },
     {
+      field: 'primaryContactName',
+      headerName: 'Primary Contact',
+      flex: 0.8,
+      minWidth: 180,
+      getApplyQuickFilterFn: normalizedQuickFilter,
+      renderCell: ({ value }) => (
+        <Typography noWrap {...v2Typography.browserCell}>
+          {value || '-'}
+        </Typography>
+      ),
+    },
+    {
       field: 'phoneNumber',
       headerName: 'Phone',
       minWidth: 170,

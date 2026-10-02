@@ -76,6 +76,31 @@ function getMessageProps(
         secondaryContent: <FamilyName family={item.family} />,
       };
 
+    case 'MissingLastName':
+      return {
+        icon: <EmojiPeople color="warning" />,
+        onClick: () => {
+          const familyId = item.family.family?.id;
+          const familyMemberId = item.person.id;
+
+          if (familyId && familyMemberId) {
+            appNavigate.family(familyId, { familyMemberId });
+          }
+        },
+        primaryContent: (
+          <>
+            <Typography
+              variant="body1"
+              sx={{ display: 'inline', fontWeight: 'bold' }}
+            >
+              Missing last name:{' '}
+            </Typography>
+            <PersonName person={item.person} />
+          </>
+        ),
+        secondaryContent: <FamilyName family={item.family} />,
+      };
+
     case 'ChildNotReturned':
       return {
         icon: <EmojiPeople sx={{ color: 'red' }} />,

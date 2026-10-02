@@ -7,15 +7,13 @@ import {
 } from '../GeneratedClient';
 import { mapLoadedValue, visibleFamiliesAtom } from './Data';
 import { differenceInYears, endOfDay } from 'date-fns';
-import {
-  ChildLocationPlan,
-  ArrangementPhase,
-} from '../GeneratedClient';
+import { ChildLocationPlan, ArrangementPhase } from '../GeneratedClient';
 import { useJotaiLoadable } from '../State/jotai/useJotaiLoadable';
 
 export type QueueItem =
   | ChildOver18
   | MissingPrimaryContact
+  | MissingLastName
   | ChildNotReturned
   | ArrangementDueToStart;
 
@@ -28,6 +26,12 @@ export interface ChildOver18 {
 export interface MissingPrimaryContact {
   type: 'MissingPrimaryContact';
   family: CombinedFamilyInfo;
+}
+
+export interface MissingLastName {
+  type: 'MissingLastName';
+  family: CombinedFamilyInfo;
+  person: Person;
 }
 
 export interface ChildNotReturned {
@@ -92,6 +96,30 @@ const missingPrimaryContactsAtom = atom((get) => {
           )
       )
       .map((family) => ({ type: 'MissingPrimaryContact' as const, family }))
+  );
+});
+
+const missingLastNamesAtom = atom((get) => {
+  const visibleFamilies = get(visibleFamiliesAtom);
+
+  return mapLoadedValue(visibleFamilies, (families) =>
+    families.flatMap((family) => {
+      const activeAdults = (family.family?.adults ?? [])
+        .map((adult) => adult.item1)
+        .filter(
+          (person): person is Person =>
+            !!person?.id && person.active && !person.lastName?.trim()
+        );
+      const activeChildren = (family.family?.children ?? []).filter(
+        (person) => person.id && person.active && !person.lastName?.trim()
+      );
+
+      return [...activeAdults, ...activeChildren].map((person) => ({
+        type: 'MissingLastName' as const,
+        family,
+        person,
+      }));
+    })
   );
 });
 
@@ -201,6 +229,7 @@ function combineQueueItems(
   missingPrimaryContacts:
     | MissingPrimaryContact[]
     | Promise<MissingPrimaryContact[]>,
+  missingLastNames: MissingLastName[] | Promise<MissingLastName[]>,
   childNotReturned: ChildNotReturned[] | Promise<ChildNotReturned[]>,
   arrangementsDueToStart:
     | ArrangementDueToStart[]
@@ -209,23 +238,27 @@ function combineQueueItems(
   if (
     childrenOver18 instanceof Promise ||
     missingPrimaryContacts instanceof Promise ||
+    missingLastNames instanceof Promise ||
     childNotReturned instanceof Promise ||
     arrangementsDueToStart instanceof Promise
   ) {
     return Promise.all([
       childrenOver18,
       missingPrimaryContacts,
+      missingLastNames,
       childNotReturned,
       arrangementsDueToStart,
     ]).then(
       ([
         childrenOver18,
         missingPrimaryContacts,
+        missingLastNames,
         childNotReturned,
         arrangementsDueToStart,
       ]) => [
         ...childrenOver18,
         ...missingPrimaryContacts,
+        ...missingLastNames,
         ...childNotReturned,
         ...arrangementsDueToStart,
       ]
@@ -235,6 +268,7 @@ function combineQueueItems(
   return [
     ...childrenOver18,
     ...missingPrimaryContacts,
+    ...missingLastNames,
     ...childNotReturned,
     ...arrangementsDueToStart,
   ];
@@ -243,11 +277,13 @@ function combineQueueItems(
 const queueItemsAtom = atom((get) => {
   const childrenOver18 = get(childrenOver18Atom);
   const missingPrimaryContacts = get(missingPrimaryContactsAtom);
+  const missingLastNames = get(missingLastNamesAtom);
   const childNotReturned = get(childNotReturnedAtom);
   const arrangementsDueToStart = get(arrangementsDueToStartAtom);
   return combineQueueItems(
     childrenOver18,
     missingPrimaryContacts,
+    missingLastNames,
     childNotReturned,
     arrangementsDueToStart
   );

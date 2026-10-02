@@ -76,11 +76,32 @@ function columnOrderFor(fields: string[], columns: GridColDef[]): string[] {
   const currentFieldSet = new Set(currentFields);
   const savedFields = fields.filter((field) => currentFieldSet.has(field));
   const savedFieldSet = new Set(savedFields);
+  if (savedFields.length === 0) return currentFields;
 
-  return [
-    ...savedFields,
-    ...currentFields.filter((field) => !savedFieldSet.has(field)),
-  ];
+  const order = [...savedFields];
+  currentFields.forEach((field, index) => {
+    if (savedFieldSet.has(field)) return;
+
+    const precedingField = currentFields
+      .slice(0, index)
+      .reverse()
+      .find((candidate) => order.includes(candidate));
+    if (precedingField) {
+      order.splice(order.indexOf(precedingField) + 1, 0, field);
+      return;
+    }
+
+    const followingField = currentFields
+      .slice(index + 1)
+      .find((candidate) => order.includes(candidate));
+    order.splice(
+      followingField ? order.indexOf(followingField) : order.length,
+      0,
+      field
+    );
+  });
+
+  return order;
 }
 
 function writePreferences(

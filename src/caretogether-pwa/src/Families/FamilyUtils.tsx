@@ -2,11 +2,17 @@ import { CombinedFamilyInfo } from '../GeneratedClient';
 import { simplify } from '../Utilities/stringUtils';
 
 export function familyLastName(family: CombinedFamilyInfo) {
-  return (
-    family.family!.adults?.filter(
-      (adult) => family.family!.primaryFamilyContactPersonId === adult.item1?.id
-    )[0]?.item1?.lastName || '⚠ MISSING PRIMARY CONTACT'
-  );
+  const primaryContact = family.family?.adults?.find(
+    (adult) => adult.item1?.id === family.family?.primaryFamilyContactPersonId
+  )?.item1;
+
+  if (!primaryContact) return '⚠ MISSING PRIMARY CONTACT';
+
+  return primaryContact.lastName?.trim() || '⚠ MISSING LAST NAME';
+}
+
+export function getFamilyName(family: CombinedFamilyInfo) {
+  return `${familyLastName(family)} Family`;
 }
 
 export type FamilyNameSortMode =

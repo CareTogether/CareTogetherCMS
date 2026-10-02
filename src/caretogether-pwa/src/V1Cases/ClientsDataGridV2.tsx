@@ -88,6 +88,9 @@ const clientsGridSlotProps = {
 function clientsGridSx(theme: Parameters<typeof v2DataGridFocusStyles>[0]) {
   return {
     ...v2DataGridFocusStyles(theme),
+    '& .MuiDataGrid-columnHeaderDraggableContainer[draggable="true"]': {
+      cursor: 'grab',
+    },
     '& .MuiDataGrid-row': { cursor: 'pointer', minHeight: 56 },
     '& .MuiDataGrid-cell': { alignItems: 'center', display: 'flex', py: 1 },
   };
@@ -223,6 +226,22 @@ export function ClientsDataGridV2({
       hideable: false,
       minWidth: 240,
       flex: 1,
+      sortable: true,
+      sortComparator: (firstValue, secondValue) => {
+        const first = treeRows.get(String(firstValue));
+        const second = treeRows.get(String(secondValue));
+        const firstName =
+          first?.rowKind === 'family' ? first.family : (first?.personName ?? '');
+        const secondName =
+          second?.rowKind === 'family'
+            ? second.family
+            : (second?.personName ?? '');
+        return (
+          firstName.localeCompare(secondName, undefined, {
+            sensitivity: 'base',
+          }) || String(firstValue).localeCompare(String(secondValue))
+        );
+      },
       valueFormatter: (value) => {
         const row = treeRows.get(String(value));
         return row?.rowKind === 'family' ? row.family : (row?.personName ?? '');
@@ -329,6 +348,7 @@ export function ClientsDataGridV2({
             getTreeDataPath={getClientsTreePath}
             groupingColDef={pivotActive ? undefined : groupingColDef}
             disableChildrenSorting
+            keepColumnPositionIfDraggedOutside
             disableAggregation
             pivotActive={pivotActive}
             onPivotActiveChange={setPivotActive}

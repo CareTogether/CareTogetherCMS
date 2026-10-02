@@ -12,6 +12,8 @@ export const roleApprovalStatusesForFilters = [
   RoleApprovalStatus.Denied,
 ] as const;
 
+export const optedOutRoleStatusValue = 'optedOut';
+
 export function roleApprovalStatusLabel(status: RoleApprovalStatus) {
   return RoleApprovalStatus[status];
 }
