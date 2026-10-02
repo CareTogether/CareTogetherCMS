@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
 using System.Threading.Tasks;
@@ -111,7 +112,7 @@ namespace CareTogether.Resources.Policies
     public sealed record OrganizationSecrets(string ApiKey);
 
     public sealed record EffectiveLocationPolicy(
-        ImmutableDictionary<string, ActionRequirement> ActionDefinitions,
+        IReadOnlyDictionary<string, ActionRequirement> ActionDefinitions,
         ImmutableList<CustomField> CustomFamilyFields,
         V1CasePolicy ReferralPolicy,
         VolunteerPolicy VolunteerPolicy

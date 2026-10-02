@@ -18,7 +18,7 @@ namespace CareTogether.Engines.PolicyEvaluation
             string requiredAction
         )
         {
-            var actionDefinitions = locationPolicy.ActionDefinitions.ToImmutableDictionary();
+            var actionDefinitions = locationPolicy.ActionDefinitions;
 
             // First, try to find an exact match by key (primary name).
             // This takes priority over alternate name matches to ensure
