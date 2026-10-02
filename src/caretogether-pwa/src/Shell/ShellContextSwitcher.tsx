@@ -22,7 +22,7 @@ import {
   useCurrentOrganizationLoadable,
   useSelectedLocationContext,
 } from '../Model/Data';
-import { useUserIsOrganizationAdministrator } from '../Model/SessionModel';
+import { useUserIsOrganizationAdministratorLoadable } from '../Model/SessionModel';
 import { useSidePanel } from '../Hooks/useSidePanel';
 import { AddLocation } from '../Settings/Locations/AddLocationSidePanel';
 
@@ -39,7 +39,8 @@ export function ShellContextSwitcher({
   const locationConfiguration = useLocationConfigurationLoadable();
   const selectedLocationContext = useSelectedLocationContext();
   const currentOrganization = useCurrentOrganizationLoadable();
-  const isOrganizationAdministrator = useUserIsOrganizationAdministrator();
+  const isOrganizationAdministrator =
+    useUserIsOrganizationAdministratorLoadable();
   const [isLocationMenuOpen, setIsLocationMenuOpen] = useState(false);
   const {
     SidePanel: AddLocationSidePanel,
