@@ -4,6 +4,7 @@ import {
   Event as EventIcon,
   LocationPin as LocationPinIcon,
   PermPhoneMsg as PermPhoneMsgIcon,
+  People as PeopleIcon,
 } from '@mui/icons-material';
 import { KeyboardEvent } from 'react';
 import { format } from 'date-fns';
@@ -28,8 +29,9 @@ export type ActiveCaseArrangementSummaryV2 = {
   arrangementType: string;
   arrangedPersonLabel: string;
   assignedFunctions: Array<{
-    functionName: string;
-    assignmentLabels: string[];
+    key: string;
+    functionLabel: string;
+    volunteerLabel: string;
   }>;
   childInvolvement: boolean;
   currentLocationLabel?: string;
@@ -299,13 +301,19 @@ export function FamilyCaseWorkspaceHeaderV2({
                           {arrangement.assignedFunctions.map(
                             (assignedFunction) => (
                               <Typography
-                                key={assignedFunction.functionName}
+                                key={assignedFunction.key}
                                 color="text.secondary"
                                 {...v2Typography.browserSecondary}
                                 noWrap
                               >
-                                {assignedFunction.functionName}:{' '}
-                                {assignedFunction.assignmentLabels.join(', ')}
+                                <PeopleIcon
+                                  fontSize="inherit"
+                                  sx={{ verticalAlign: 'text-top' }}
+                                />{' '}
+                                {assignedFunction.functionLabel}:{' '}
+                                <Box component="span" sx={{ fontWeight: 600 }}>
+                                  {assignedFunction.volunteerLabel}
+                                </Box>
                               </Typography>
                             )
                           )}
