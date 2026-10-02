@@ -2,7 +2,7 @@ import { expect, test } from './support/fixtures';
 import { openAtlantisHome, sideNavigation } from './support/navigation';
 
 test.describe('volunteer grid filters @pr', () => {
-  test('Roles is not Host Family retains non-host volunteer families', async ({
+  test('Volunteer Roles excludes Host Family when filtering', async ({
     page,
   }) => {
     await openAtlantisHome(page);
@@ -13,11 +13,13 @@ test.describe('volunteer grid filters @pr', () => {
       page.getByRole('heading', { name: 'Volunteers', level: 4 })
     ).toBeVisible();
     const grid = page.getByRole('grid');
-    const rolesHeader = grid.getByRole('columnheader', { name: /^Roles/ });
+    const rolesHeader = grid.getByRole('columnheader', {
+      name: /^Volunteer Roles/,
+    });
 
     await rolesHeader.hover();
     await rolesHeader
-      .getByRole('button', { name: 'Roles column menu' })
+      .getByRole('button', { name: 'Volunteer Roles column menu' })
       .click();
     await page.getByRole('menuitem', { name: 'Filter', exact: true }).click();
     const operator = page.getByRole('combobox', { name: 'Operator' });
