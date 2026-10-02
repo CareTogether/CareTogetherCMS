@@ -1,6 +1,12 @@
 import { useMemo } from 'react';
-import { CombinedFamilyInfo, CustomField } from '../GeneratedClient';
-import { familyNameString } from '../Families/FamilyName';
+import {
+  Age,
+  CombinedFamilyInfo,
+  CustomField,
+  RoleApprovalStatus,
+  RoleRemovalReason,
+} from '../GeneratedClient';
+import { getFamilyName } from '../Families/FamilyUtils';
 import { personNameString } from '../Families/PersonName';
 import { useVisibleCommunities } from '../Model/Data';
 import { usePolicy } from '../Model/PolicyModel';
@@ -25,27 +31,34 @@ import {
   notAppliedRoleFilterValue,
   roleFilterValues,
 } from './roleFilterValues';
-import { roleApprovalStatusFilterOptions } from './roleApprovalStatusPresentation';
 import { organizationNamesByFamilyId } from './volunteerOrganizationModel';
+import {
+  isRoleApprovalStatusVisibleInSummary,
+  optedOutRoleStatusValue,
+} from './roleApprovalStatusPresentation';
 export type VolunteerCustomFieldValue = CustomFieldGridValue;
 export type VolunteerBrowserRowV2 = {
   arrangementAssignmentValues: Record<string, 'assigned' | 'unassigned'>;
   county: string | null;
   family: string;
+  familyId: string;
   familyCustomFieldValues: Record<string, VolunteerCustomFieldValue>;
   familyLastName: string;
   id: string;
   missingRequirementGroups: VolunteerMissingRequirementGroup[];
   organizationNames: string[];
   primaryContact: string;
+  personName: string;
+  personAge?: Age;
+  rowKind: 'family' | 'adult' | 'child';
+  treePath: string[];
   requirementFilterValues: string[];
   roleFilterValues: string[];
   roleStatusValues: Record<string, string[]>;
   roles: VolunteerApprovalRolesPresentation;
   searchableText: string;
   sourceFamily: CombinedFamilyInfo;
-  statusFilterValues: string[];
-  statusLabels: string[];
+  userRoles: string[];
   volunteerFamilyCount: number;
   volunteerCustomFieldValues: Record<string, VolunteerCustomFieldValue>;
 };
@@ -83,24 +96,25 @@ function valuesByName(
     })
   ) as Record<string, VolunteerCustomFieldValue>;
 }
-function statusValues(family: CombinedFamilyInfo) {
-  return Array.from(
-    new Set(
-      [
-        ...Object.values(family.volunteerFamilyInfo?.familyRoleApprovals ?? {}),
-        ...Object.values(
-          family.volunteerFamilyInfo?.individualVolunteers ?? {}
-        ).flatMap((volunteer) =>
-          Object.values(volunteer.approvalStatusByRole ?? {})
-        ),
-      ].map((approval) =>
-        approval.currentStatus == null ? '0' : String(approval.currentStatus)
-      )
-    )
-  );
-}
-
 function roleStatusValues(family: CombinedFamilyInfo, roleNames: string[]) {
+  const now = new Date();
+  const removals = [
+    ...(family.volunteerFamilyInfo?.roleRemovals ?? []),
+    ...Object.values(
+      family.volunteerFamilyInfo?.individualVolunteers ?? {}
+    ).flatMap((volunteer) => volunteer.roleRemovals ?? []),
+  ].filter(
+    (removal) =>
+      removal.reason === RoleRemovalReason.OptOut &&
+      (!removal.effectiveUntil || removal.effectiveUntil > now)
+  );
+  const hasOptOut = (roleName: string) =>
+    removals.some(
+      (removal) =>
+        removal.roleName.trim().replace(/\s+/g, ' ').toLocaleLowerCase() ===
+        roleName.trim().replace(/\s+/g, ' ').toLocaleLowerCase()
+    );
+
   return Object.fromEntries(
     roleNames.map((roleName) => [
       roleName,
@@ -116,8 +130,16 @@ function roleStatusValues(family: CombinedFamilyInfo, roleNames: string[]) {
                 volunteer.approvalStatusByRole?.[roleName]?.currentStatus
             ),
           ]
-            .filter((status) => status !== null && status !== undefined)
+            .filter(
+              (status): status is RoleApprovalStatus =>
+                status != null &&
+                isRoleApprovalStatusVisibleInSummary(status) &&
+                !(status === RoleApprovalStatus.Inactive && hasOptOut(roleName))
+            )
             .map(String)
+            .concat(
+              hasOptOut(roleName) ? [optedOutRoleStatusValue] : []
+            )
         )
       ),
     ])
@@ -153,15 +175,25 @@ function searchText(family: CombinedFamilyInfo) {
   ].join('\n');
 }
 
+function requirementFilterValues(
+  groups: VolunteerMissingRequirementGroup[]
+) {
+  const requirementNames = groups.flatMap((group) => group.requirements);
+  return requirementNames.length
+    ? Array.from(
+        new Set([missingRequirementFilterValue, ...requirementNames])
+      )
+    : [completeRequirementFilterValue];
+}
+
 export function buildVolunteerBrowserRow(
   family: CombinedFamilyInfo,
   organizationNames: string[],
   familyCustomFields: CustomField[],
   volunteerCustomFields: CustomField[],
   arrangementTypes: string[],
-  statusLabelsByValue: Map<string, string>,
   roleNamesForPresentation: string[]
-): VolunteerBrowserRowV2 {
+): VolunteerBrowserRowV2[] {
   const contact = primaryContact(family);
   const roleFilters = roleNamesForPresentation.map(
     (key): filterOption => ({ key, selected: false, value: undefined })
@@ -170,10 +202,6 @@ export function buildVolunteerBrowserRow(
     family,
     roleFilters
   );
-  const requirementNames = missingRequirementGroups.flatMap(
-    (group) => group.requirements
-  );
-  const statuses = statusValues(family);
   const familyValues = valuesByName(
     family.family?.completedCustomFields,
     familyCustomFields
@@ -182,10 +210,12 @@ export function buildVolunteerBrowserRow(
     family.volunteerFamilyInfo?.completedCustomFields,
     volunteerCustomFields
   );
-  return {
+  const familyId = family.family!.id!;
+  const familyRow: VolunteerBrowserRowV2 = {
     arrangementAssignmentValues: assignmentValues(family, arrangementTypes),
     county: getFamilyCounty(family),
-    family: familyNameString(family),
+    family: getFamilyName(family),
+    familyId,
     familyCustomFieldValues: Object.fromEntries(
       familyCustomFields.map((field) => [
         field.name,
@@ -193,23 +223,21 @@ export function buildVolunteerBrowserRow(
       ])
     ),
     familyLastName: contact?.lastName ?? '⚠ MISSING PRIMARY CONTACT',
-    id: family.family!.id!,
+    id: familyId,
     missingRequirementGroups,
     organizationNames,
     primaryContact: contact ? personNameString(contact) : '',
-    requirementFilterValues: requirementNames.length
-      ? Array.from(
-          new Set([missingRequirementFilterValue, ...requirementNames])
-        )
-      : [completeRequirementFilterValue],
+    personName: '',
+    rowKind: 'family',
+    treePath: [`family:${familyId}`],
+    requirementFilterValues: requirementFilterValues(missingRequirementGroups),
     roleFilterValues: roleFilterValues(family),
     roleStatusValues: roleStatusValues(family, roleNamesForPresentation),
     roles: buildVolunteerApprovalRolesPresentation(family, roleFilters),
     searchableText: searchText(family),
     sourceFamily: family,
-    statusFilterValues: statuses,
-    statusLabels: statuses.map(
-      (status) => statusLabelsByValue.get(status) ?? status
+    userRoles: Array.from(
+      new Set((family.users ?? []).flatMap((user) => user.locationRoles ?? []))
     ),
     volunteerCustomFieldValues: Object.fromEntries(
       volunteerCustomFields.map((field) => [
@@ -219,6 +247,78 @@ export function buildVolunteerBrowserRow(
     ),
     volunteerFamilyCount: 1,
   };
+
+  const adults = (family.family?.adults ?? []).flatMap((adult) =>
+    adult.item1?.id ? [adult.item1] : []
+  );
+  const children = (family.family?.children ?? []).filter(
+    (child) => !!child?.id
+  );
+  const memberRequirements = (personId: string) => {
+    const groups = buildVolunteerMissingRequirementGroups(
+      family,
+      roleFilters,
+      personId
+    );
+    return {
+      missingRequirementGroups: groups,
+      requirementFilterValues: requirementFilterValues(groups),
+    };
+  };
+  const memberRows: VolunteerBrowserRowV2[] = [
+    ...adults.map((person) => ({
+      ...familyRow,
+      id: `${familyId}:adult:${person.id}`,
+      personName: personNameString(person),
+      personAge: person.age,
+      rowKind: 'adult' as const,
+      treePath: [
+        familyRow.treePath[0],
+        `adult:${personNameString(person)}:${person.id}`,
+      ],
+      roles: buildVolunteerApprovalRolesPresentation(
+        family,
+        roleFilters,
+        person.id
+      ),
+      ...memberRequirements(person.id),
+      userRoles: Array.from(
+        new Set(
+          (family.users ?? [])
+            .filter((user) => user.personId === person.id)
+            .flatMap((user) => user.locationRoles ?? [])
+        )
+      ),
+      primaryContact: '',
+    })),
+    ...children.map((person) => ({
+      ...familyRow,
+      id: `${familyId}:child:${person.id}`,
+      personName: personNameString(person),
+      personAge: person.age,
+      rowKind: 'child' as const,
+      treePath: [
+        familyRow.treePath[0],
+        `child:${personNameString(person)}:${person.id}`,
+      ],
+      roles: buildVolunteerApprovalRolesPresentation(
+        family,
+        roleFilters,
+        person.id!
+      ),
+      ...memberRequirements(person.id!),
+      userRoles: Array.from(
+        new Set(
+          (family.users ?? [])
+            .filter((user) => user.personId === person.id)
+            .flatMap((user) => user.locationRoles ?? [])
+        )
+      ),
+      primaryContact: '',
+    })),
+  ];
+
+  return [familyRow, ...memberRows];
 }
 
 export function useVolunteersBrowserViewModel(): VolunteersBrowserViewModel {
@@ -257,15 +357,6 @@ export function useVolunteersBrowserViewModel(): VolunteersBrowserViewModel {
       policy.volunteerPolicy?.volunteerRoles,
     ]
   );
-  const statusLabelsByValue = useMemo(
-    () =>
-      new Map(
-        roleApprovalStatusFilterOptions(notAppliedRoleFilterValue).map(
-          ({ value, label }) => [value, label]
-        )
-      ),
-    []
-  );
   const organizationNamesByFamily = useMemo(
     () =>
       organizationNamesByFamilyId(
@@ -275,14 +366,13 @@ export function useVolunteersBrowserViewModel(): VolunteersBrowserViewModel {
   );
   const rows = useMemo(
     () =>
-      families.map((family) =>
+      families.flatMap((family) =>
         buildVolunteerBrowserRow(
           family,
           organizationNamesByFamily.get(family.family!.id!) ?? [],
           familyCustomFields,
           volunteerCustomFields,
           arrangementTypes,
-          statusLabelsByValue,
           roleNamesForPresentation
         )
       ),
@@ -291,7 +381,6 @@ export function useVolunteersBrowserViewModel(): VolunteersBrowserViewModel {
       families,
       familyCustomFields,
       roleNamesForPresentation,
-      statusLabelsByValue,
       organizationNamesByFamily,
       volunteerCustomFields,
     ]

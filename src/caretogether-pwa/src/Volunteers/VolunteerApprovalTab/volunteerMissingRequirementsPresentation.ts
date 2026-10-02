@@ -88,24 +88,29 @@ function shouldIncludeIndividualRequirements(
 
 export function buildVolunteerMissingRequirementGroups(
   family: CombinedFamilyInfo,
-  roleFilters: filterOption[]
+  roleFilters: filterOption[],
+  personId?: string
 ): VolunteerMissingRequirementGroup[] {
   const familyRoleNames = selectedFamilyRoleNames(roleFilters);
   const individualRoleNames = selectedIndividualRoleNames(roleFilters);
-  const familyRequirements = shouldIncludeFamilyRequirements(
-    family,
-    familyRoleNames,
-    individualRoleNames
-  )
-    ? requirementNames(family.volunteerFamilyInfo?.missingRequirements)
-    : [];
+  const familyRequirements =
+    !personId &&
+    shouldIncludeFamilyRequirements(
+      family,
+      familyRoleNames,
+      individualRoleNames
+    )
+      ? requirementNames(family.volunteerFamilyInfo?.missingRequirements)
+      : [];
   const familyGroups: VolunteerMissingRequirementGroup[] =
     familyRequirements.length > 0
       ? [{ label: 'Family', requirements: familyRequirements }]
       : [];
   const individualGroups = Object.entries(
     family.volunteerFamilyInfo?.individualVolunteers ?? {}
-  ).flatMap(([personId, volunteer]) => {
+  ).flatMap(([volunteerPersonId, volunteer]) => {
+    if (personId && volunteerPersonId !== personId) return [];
+
     const requirements = shouldIncludeIndividualRequirements(
       volunteer.approvalStatusByRole,
       familyRoleNames,
@@ -119,7 +124,7 @@ export function buildVolunteerMissingRequirementGroups(
     }
 
     const person = family.family?.adults?.find(
-      (adult) => adult.item1?.id === personId
+      (adult) => adult.item1?.id === volunteerPersonId
     )?.item1;
 
     return [

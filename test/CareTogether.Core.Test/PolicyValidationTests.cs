@@ -1,8 +1,11 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Linq;
 using CareTogether.Resources.Policies;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 namespace CareTogether.Core.Test
 {
@@ -20,6 +23,39 @@ namespace CareTogether.Core.Test
             var errors = EffectiveLocationPolicyValidator.Validate(policy, Configuration);
 
             Assert.AreEqual(0, errors.Count);
+        }
+
+        [TestMethod]
+        public void ActionDefinitionsKeepStoredJsonOrderAfterPolicyReadAndWrite()
+        {
+            string[] actionNames =
+            [
+                "Information Meeting Attended",
+                "Host Family Application",
+                "Navigator Application",
+                "Ministry Captain Application",
+                "Family Support Application",
+            ];
+            var storedPolicy = JObject.FromObject(ValidPolicy());
+            var action = JObject.FromObject(
+                ValidPolicy().ActionDefinitions["Background Check"]
+            );
+            storedPolicy["ActionDefinitions"] = new JObject(
+                actionNames.Select(actionName => new JProperty(actionName, action.DeepClone()))
+            );
+
+            var policy = JsonConvert.DeserializeObject<EffectiveLocationPolicy>(
+                storedPolicy.ToString()
+            )!;
+            var response = JObject.Parse(JsonConvert.SerializeObject(policy));
+
+            CollectionAssert.AreEqual(
+                actionNames,
+                ((JObject)response["ActionDefinitions"]!)
+                    .Properties()
+                    .Select(property => property.Name)
+                    .ToArray()
+            );
         }
 
         [TestMethod]
@@ -95,7 +131,7 @@ namespace CareTogether.Core.Test
             var policy = ValidPolicy() with
             {
                 ActionDefinitions = ValidPolicy()
-                    .ActionDefinitions.Add(
+                    .ActionDefinitions.ToImmutableDictionary().Add(
                         "Medical POA",
                         new ActionRequirement(
                             DocumentLinkRequirement.None,

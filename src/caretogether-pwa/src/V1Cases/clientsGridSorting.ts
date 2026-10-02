@@ -1,4 +1,8 @@
-import type { GridColDef, GridSortModel } from '@mui/x-data-grid-premium';
+import {
+  GRID_TREE_DATA_GROUPING_FIELD,
+  type GridColDef,
+  type GridSortModel,
+} from '@mui/x-data-grid-premium';
 import type { ClientBrowserRowV2 } from './useClientsBrowserViewModel';
 import type { PartneringFamiliesSortMode } from './PartneringFamilies/sortPartneringFamilies';
 
@@ -13,14 +17,8 @@ export const clientsSortPresets = {
     { field: 'primaryContactLastName', sort: 'desc' },
     { field: 'familyId', sort: 'desc' },
   ],
-  lastNameAsc: [
-    { field: 'lastName', sort: 'asc' },
-    { field: 'familyId', sort: 'asc' },
-  ],
-  lastNameDesc: [
-    { field: 'lastName', sort: 'desc' },
-    { field: 'familyId', sort: 'desc' },
-  ],
+  lastNameAsc: [{ field: GRID_TREE_DATA_GROUPING_FIELD, sort: 'asc' }],
+  lastNameDesc: [{ field: GRID_TREE_DATA_GROUPING_FIELD, sort: 'desc' }],
   dateOpenedAsc: [
     { field: 'dateOpened', sort: 'asc' },
     { field: 'primaryContactLastName', sort: 'desc' },

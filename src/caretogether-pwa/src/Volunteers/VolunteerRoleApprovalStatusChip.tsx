@@ -5,13 +5,16 @@ import {
   RoleApprovalStatus,
 } from '../GeneratedClient';
 import {
+  isRoleApprovalStatusVisibleInSummary,
   roleApprovalStatusChipColor,
   roleApprovalStatusLabel,
 } from './roleApprovalStatusPresentation';
 
 type VolunteerRoleApprovalStatusChipProps = {
   currentStatus?: RoleApprovalStatus;
+  personName?: string;
   roleName: string;
+  statusLabel?: string;
   status?: DateOnlyTimelineOfRoleApprovalStatus;
   sx?: SxProps<Theme> | undefined;
 };
@@ -20,7 +23,9 @@ const FUTURE_CUTOFF = new Date(3000, 0, 1);
 
 export function VolunteerRoleApprovalStatusChip({
   currentStatus,
+  personName,
   roleName,
+  statusLabel,
   status,
   sx,
 }: VolunteerRoleApprovalStatusChipProps) {
@@ -29,20 +34,25 @@ export function VolunteerRoleApprovalStatusChip({
     (r) => r.start && r.start <= now && (!r.end || r.end >= now)
   );
   const currentStatusValue = currentStatus ?? currentStatusRange?.tag;
-  const expiresAt = currentStatusRange?.end;
+  if (
+    currentStatusValue == null ||
+    !isRoleApprovalStatusVisibleInSummary(currentStatusValue)
+  ) {
+    return null;
+  }
 
-  return currentStatusValue != null ? (
+  const expiresAt = currentStatusRange?.end;
+  const label =
+    expiresAt && expiresAt < FUTURE_CUTOFF
+      ? `${statusLabel ?? `${roleApprovalStatusLabel(currentStatusValue)} ${roleName}`} until ${format(expiresAt, 'M/d/yy')}`
+      : (statusLabel ?? `${roleApprovalStatusLabel(currentStatusValue)} ${roleName}`);
+
+  return (
     <Chip
       size="small"
       color={roleApprovalStatusChipColor(currentStatusValue)}
       sx={sx}
-      label={
-        expiresAt && expiresAt < FUTURE_CUTOFF
-          ? `${roleApprovalStatusLabel(currentStatusValue)} ${roleName} until ${format(expiresAt, 'M/d/yy')}`
-          : `${roleApprovalStatusLabel(currentStatusValue)} ${roleName}`
-      }
+      label={personName ? `${personName}: ${label}` : label}
     />
-  ) : (
-    <></>
   );
 }

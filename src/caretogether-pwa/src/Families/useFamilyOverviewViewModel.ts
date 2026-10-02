@@ -22,6 +22,8 @@ import {
 import { combineCustomFieldPolicies } from './familyMemberCustomFieldPolicies';
 import { buildFamilyMemberRowsV2 } from './familyMemberViewModel';
 import { RecentOverviewTimelineItem } from './FamilyRecentOverviewV2';
+import { usePersonAndFamilyLookup } from '../Model/DirectoryModel';
+import { personNameString } from './PersonName';
 
 type CustomFieldRenderInfo = CompletedCustomFieldInfo | string;
 type ReferralNoteEntry = NonNullable<V1Referral['notes']>[number];
@@ -128,6 +130,7 @@ export function useFamilyOverviewViewModel({
   policy,
   selectedV1Case,
 }: UseFamilyOverviewViewModelParameters) {
+  const personAndFamilyLookup = usePersonAndFamilyLookup();
   const activeAdults = useMemo<PrintableFamilyMember[]>(() => {
     return (family?.family?.adults ?? []).flatMap((adult) =>
       adult.item1?.id && adult.item1.active && adult.item2
@@ -346,12 +349,8 @@ export function useFamilyOverviewViewModel({
           (a instanceof CompletedCustomFieldInfo ? a.customFieldName! : a) <
           (b instanceof CompletedCustomFieldInfo ? b.customFieldName! : b)
             ? -1
-            : (a instanceof CompletedCustomFieldInfo
-                  ? a.customFieldName!
-                  : a) >
-                (b instanceof CompletedCustomFieldInfo
-                  ? b.customFieldName!
-                  : b)
+            : (a instanceof CompletedCustomFieldInfo ? a.customFieldName! : a) >
+                (b instanceof CompletedCustomFieldInfo ? b.customFieldName! : b)
               ? 1
               : 0
         )
@@ -360,6 +359,14 @@ export function useFamilyOverviewViewModel({
   const overviewCommunityRows = familyCommunityInfo.map((communityInfo) => ({
     id: communityInfo.community?.id,
     name: communityInfo.community?.name,
+    roleAssignments: (
+      communityInfo.community?.communityRoleAssignments ?? []
+    ).map(
+      (assignment) =>
+        `${assignment.communityRole} · ${personNameString(
+          personAndFamilyLookup(assignment.personId).person
+        )}`
+    ),
   }));
 
   return {

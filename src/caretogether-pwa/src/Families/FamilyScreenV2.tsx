@@ -390,6 +390,10 @@ export function FamilyScreenV2() {
       null,
     [familyMemberRows, selectedFamilyMemberRowId]
   );
+  // Keep the effect dependency stable while the drawer closes and the URL updates.
+  const familyMemberFromQueryExists = familyMemberRows.some(
+    (row) => row.id === familyMemberIdFromQuery
+  );
   const {
     approvalAttentionCounts,
     approvalLedgerRows,
@@ -444,11 +448,7 @@ export function FamilyScreenV2() {
       return;
     }
 
-    const matchingFamilyMemberRow = familyMemberRows.find(
-      (row) => row.id === familyMemberIdFromQuery
-    );
-
-    if (!matchingFamilyMemberRow) {
+    if (!familyMemberFromQueryExists) {
       setSelectedFamilyMemberRowId(null);
       return;
     }
@@ -456,7 +456,7 @@ export function FamilyScreenV2() {
     setSelectedFamilyMemberRowId((current) =>
       current === familyMemberIdFromQuery ? current : familyMemberIdFromQuery
     );
-  }, [familyMemberIdFromQuery, familyMemberRows]);
+  }, [familyMemberIdFromQuery, familyMemberFromQueryExists]);
 
   function removeSearchParam(paramName: string) {
     const nextSearchParams = new URLSearchParams(location.search);
