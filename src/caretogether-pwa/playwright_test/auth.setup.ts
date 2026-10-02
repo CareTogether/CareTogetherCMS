@@ -10,6 +10,96 @@ import { createBrowserFailureCollector } from './support/browserFailures';
 import { sideNavigation } from './support/navigation';
 
 const authFilePath = path.resolve(AUTH_FILE);
+const maxBootstrapFailures = 20;
+
+function sanitizedUrl(value: string): string {
+  try {
+    const url = new URL(value);
+    return `${url.origin}${url.pathname}`;
+  } catch {
+    return value.split('?')[0];
+  }
+}
+
+function sanitizedErrorMessage(value: string): string {
+  return value
+    .replace(
+      /([?&](?:code|state|token|access_token|refresh_token|id_token)=)[^&\s]+/gi,
+      '$1[REDACTED]'
+    )
+    .replace(/(bearer\s+)[^\s]+/gi, '$1[REDACTED]')
+    .replace(
+      /((?:access_token|refresh_token|id_token|password)\s*[:=]\s*)[^\s,}]+/gi,
+      '$1[REDACTED]'
+    );
+}
+
+function addBootstrapFailure(failures: string[], failure: string): void {
+  if (failures.length < maxBootstrapFailures) {
+    failures.push(failure);
+  }
+}
+
+async function visibleApplicationState(
+  page: Parameters<typeof sideNavigation>[0]
+) {
+  const knownStates = [
+    ['Keycloak sign-in', page.locator('#username')],
+    ['Signing in', page.getByText(/^signing in/i)],
+    ['Loading access', page.getByText(/^loading access/i)],
+    ['Setting location', page.getByText(/^setting location/i)],
+    ['No organization access', page.getByText(/no organization access/i)],
+    [
+      'Application error',
+      page.getByText(
+        /unexpected error|something went wrong|application error/i
+      ),
+    ],
+  ] as const;
+
+  for (const [description, locator] of knownStates) {
+    if (
+      await locator
+        .first()
+        .isVisible()
+        .catch(() => false)
+    ) {
+      return description;
+    }
+  }
+
+  return 'No known authentication or application state is visible';
+}
+
+async function authenticatedShellDiagnostics({
+  browserFailures,
+  bootstrapFailures,
+  page,
+}: {
+  browserFailures: ReturnType<typeof createBrowserFailureCollector>;
+  bootstrapFailures: string[];
+  page: Parameters<typeof sideNavigation>[0];
+}): Promise<string> {
+  const title = await page.title().catch(() => '(title unavailable)');
+  const applicationState = await visibleApplicationState(page);
+  const errors = browserFailures
+    .getFailures()
+    .slice(-maxBootstrapFailures)
+    .map(
+      (failure) => `${failure.type}: ${sanitizedErrorMessage(failure.message)}`
+    );
+
+  return [
+    'Authenticated shell diagnostics',
+    `URL: ${sanitizedUrl(page.url())}`,
+    `Title: ${title}`,
+    `Visible state: ${applicationState}`,
+    `Browser errors: ${errors.length ? errors.join(' | ') : 'none'}`,
+    `Bootstrap request failures: ${
+      bootstrapFailures.length ? bootstrapFailures.join(' | ') : 'none'
+    }`,
+  ].join('\n');
+}
 
 test('login as administrator @auth', async ({ page, baseURL, request }) => {
   test.setTimeout(420_000);
@@ -21,6 +111,25 @@ test('login as administrator @auth', async ({ page, baseURL, request }) => {
   }
 
   const browserFailures = createBrowserFailureCollector(page);
+  const bootstrapFailures: string[] = [];
+
+  page.on('requestfailed', (request) => {
+    addBootstrapFailure(
+      bootstrapFailures,
+      `${request.method()} ${sanitizedUrl(request.url())} failed: ${sanitizedErrorMessage(
+        request.failure()?.errorText ?? 'unknown error'
+      )}`
+    );
+  });
+  page.on('response', (response) => {
+    if (response.status() >= 400) {
+      addBootstrapFailure(
+        bootstrapFailures,
+        `${response.request().method()} ${sanitizedUrl(response.url())} returned ${response.status()}`
+      );
+    }
+  });
+
   fs.mkdirSync(path.dirname(authFilePath), { recursive: true });
   const navigation = sideNavigation(page);
 
@@ -179,7 +288,21 @@ test('login as administrator @auth', async ({ page, baseURL, request }) => {
     await temporaryError.first().waitFor({ state: 'hidden', timeout: 240_000 });
   }
 
-  await expect(navigation).toBeVisible({ timeout: 240_000 });
+  try {
+    await expect(navigation).toBeVisible({ timeout: 240_000 });
+  } catch (error) {
+    const diagnostics = await authenticatedShellDiagnostics({
+      browserFailures,
+      bootstrapFailures,
+      page,
+    });
+    await test.info().attach('authenticated-shell-diagnostics', {
+      body: diagnostics,
+      contentType: 'text/plain',
+    });
+    console.error(diagnostics);
+    throw error;
+  }
 
   await page.context().storageState({ path: authFilePath });
 });
