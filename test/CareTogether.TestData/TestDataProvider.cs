@@ -2845,7 +2845,7 @@ namespace CareTogether.TestData
                         null,
                         null
                     ),
-                }.ToImmutableDictionary(),
+                },
                 [
                     new(
                         "Home Church",

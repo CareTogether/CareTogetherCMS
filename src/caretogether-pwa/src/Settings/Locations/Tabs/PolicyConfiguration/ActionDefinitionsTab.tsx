@@ -98,6 +98,7 @@ export function ActionDefinitionsTab({
           rowHeight={56}
           columnHeaderHeight={42}
           disableRowSelectionOnClick
+          disableColumnSorting
           disableAggregation
           disablePivoting
           disableRowGrouping
