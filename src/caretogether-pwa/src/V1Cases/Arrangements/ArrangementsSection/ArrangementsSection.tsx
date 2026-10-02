@@ -105,7 +105,7 @@ export function ArrangementsSection({
             </ToggleButtonGroup>
           </Box>
         </Box>
-        {permissions(Permission.CreateArrangement) && (
+        {!v1Case.closedAtUtc && permissions(Permission.CreateArrangement) && (
           <Box
             sx={{
               textAlign: 'center',
@@ -122,8 +122,7 @@ export function ArrangementsSection({
                 ?.filter((arrangementPolicy) =>
                   isArrangementPolicyAvailable(arrangementPolicy)
                 )
-                .map(
-                (arrangementPolicy) => (
+                .map((arrangementPolicy) => (
                   <Box key={arrangementPolicy.arrangementType}>
                     <Button
                       className="ph-unmask"
@@ -137,8 +136,7 @@ export function ArrangementsSection({
                       {arrangementPolicy.arrangementType}
                     </Button>
                   </Box>
-                )
-              )}
+                ))}
           </Box>
         )}
       </Box>

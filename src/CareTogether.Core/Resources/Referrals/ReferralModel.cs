@@ -234,19 +234,15 @@ namespace CareTogether.Resources.V1Cases
                             timestampUtc
                         ),
                         CloseReferral c => (
-                            v1CaseEntry with
-                            {
-                                CloseReason = FormatV1CaseCloseReason(c.CloseReason),
-                                ClosedAtUtc = c.ClosedAtUtc,
-                            },
+                            CloseCase(
+                                v1CaseEntry,
+                                FormatV1CaseCloseReason(c.CloseReason),
+                                c.ClosedAtUtc
+                            ),
                             null
                         ),
                         CloseReferralWithReason c => (
-                            v1CaseEntry with
-                            {
-                                CloseReason = c.CloseReason,
-                                ClosedAtUtc = c.ClosedAtUtc,
-                            },
+                            CloseCase(v1CaseEntry, c.CloseReason, c.ClosedAtUtc),
                             null
                         ),
                         ReopenReferral c => (ReopenCase(v1CaseEntry, c), null),
@@ -905,6 +901,8 @@ namespace CareTogether.Resources.V1Cases
                         .Cast<Activity>()
                 ),
             };
+            EnsureClosedCaseHasNoInProgressArrangements(v1CaseEntryToUpsert);
+
             return (
                 Event: new ArrangementsCommandExecuted(userId, timestampUtc, command),
                 SequenceNumber: LastKnownSequenceNumber + 1,
@@ -946,6 +944,35 @@ namespace CareTogether.Resources.V1Cases
                 ArrangementPolicyVersion = command.ArrangementPolicyVersion,
             };
         }
+
+        private static V1CaseEntry CloseCase(
+            V1CaseEntry v1CaseEntry,
+            string closeReason,
+            DateTime closedAtUtc
+        )
+        {
+            if (HasInProgressArrangements(v1CaseEntry))
+                throw new InvalidOperationException(
+                    "A case cannot be closed while it has arrangements in setup, ready to start, or active."
+                );
+
+            return v1CaseEntry with { CloseReason = closeReason, ClosedAtUtc = closedAtUtc };
+        }
+
+        private static void EnsureClosedCaseHasNoInProgressArrangements(V1CaseEntry v1CaseEntry)
+        {
+            if (v1CaseEntry.ClosedAtUtc != null && HasInProgressArrangements(v1CaseEntry))
+                throw new InvalidOperationException(
+                    "An arrangement in setup, ready to start, or active requires an open case."
+                );
+        }
+
+        private static bool HasInProgressArrangements(V1CaseEntry v1CaseEntry) =>
+            v1CaseEntry.Arrangements.Values.Any(arrangement =>
+                arrangement.Active
+                && arrangement.EndedAtUtc == null
+                && arrangement.CancelledAtUtc == null
+            );
 
         private static (V1CaseEntry V1CaseEntry, Activity? Activity) AssignIndividualVolunteer(
             V1CaseEntry v1CaseEntry,
