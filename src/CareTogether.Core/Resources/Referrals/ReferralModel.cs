@@ -1286,7 +1286,7 @@ namespace CareTogether.Resources.V1Cases
                     referralCommandExecuted.Command,
                     referralCommandExecuted.UserId,
                     referralCommandExecuted.TimestampUtc,
-                    validate: true
+                    validate: false
                 );
                 onCommit();
             }
@@ -1296,7 +1296,7 @@ namespace CareTogether.Resources.V1Cases
                     arrangementCommandExecuted.Command,
                     arrangementCommandExecuted.UserId,
                     arrangementCommandExecuted.TimestampUtc,
-                    validate: true
+                    validate: false
                 );
                 onCommit();
             }
