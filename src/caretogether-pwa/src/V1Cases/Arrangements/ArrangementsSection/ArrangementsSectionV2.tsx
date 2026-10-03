@@ -59,7 +59,7 @@ export function ArrangementsSection({
           </Typography>
         )}
 
-        {permissions(Permission.CreateArrangement) && (
+        {!v1Case.closedAtUtc && permissions(Permission.CreateArrangement) && (
           <Box
             sx={{
               display: 'flex',

@@ -105,7 +105,7 @@ export function ArrangementsSection({
             </ToggleButtonGroup>
           </Box>
         </Box>
-        {permissions(Permission.CreateArrangement) && (
+        {!v1Case.closedAtUtc && permissions(Permission.CreateArrangement) && (
           <Box
             sx={{
               textAlign: 'center',
