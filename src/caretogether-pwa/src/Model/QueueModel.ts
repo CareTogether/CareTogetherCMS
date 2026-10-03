@@ -6,16 +6,22 @@ import {
   RoleApprovalStatus,
 } from '../GeneratedClient';
 import { mapLoadedValue, visibleFamiliesAtom } from './Data';
-import { differenceInYears, endOfDay } from 'date-fns';
+import { differenceInYears } from 'date-fns';
 import { ChildLocationPlan, ArrangementPhase } from '../GeneratedClient';
 import { useJotaiLoadable } from '../State/jotai/useJotaiLoadable';
+import {
+  arrangementInboxItemsForFamilies,
+  type ArrangementDueToStart,
+  type ClosedCaseInvalidArrangementStatus,
+} from './arrangementInboxItems';
 
 export type QueueItem =
   | ChildOver18
   | MissingPrimaryContact
   | MissingLastName
   | ChildNotReturned
-  | ArrangementDueToStart;
+  | ArrangementDueToStart
+  | ClosedCaseInvalidArrangementStatus;
 
 export interface ChildOver18 {
   type: 'ChildOver18';
@@ -40,16 +46,6 @@ export interface ChildNotReturned {
   child: Person;
   v1CaseId: string;
   arrangementId: string;
-}
-
-export interface ArrangementDueToStart {
-  type: 'ArrangementDueToStart';
-  family: CombinedFamilyInfo;
-  child: Person;
-  v1CaseId: string;
-  arrangementId: string;
-  arrangementType: string;
-  plannedStartUtc: Date;
 }
 
 const childrenOver18Atom = atom((get) => {
@@ -187,41 +183,15 @@ const childNotReturnedAtom = atom((get) => {
   });
 });
 
-const arrangementsDueToStartAtom = atom((get) => {
+const arrangementInboxItemsAtom = atom((get) => {
   const visibleFamilies = get(visibleFamiliesAtom);
-
-  return mapLoadedValue(visibleFamilies, (families) => {
-    const allArrangements = partneringFamilyArrangements(families);
-    const endOfToday = endOfDay(new Date());
-
-    return allArrangements
-      .filter(
-        ({ arrangement }) =>
-          (arrangement.phase === ArrangementPhase.SettingUp ||
-            arrangement.phase === ArrangementPhase.ReadyToStart) &&
-          arrangement.plannedStartUtc !== undefined &&
-          arrangement.plannedStartUtc! <= endOfToday
-      )
-      .sort(
-        ({ arrangement: first }, { arrangement: second }) =>
-          first.plannedStartUtc!.getTime() - second.plannedStartUtc!.getTime()
-      )
-      .map(({ arrangement, family, v1Case }) => {
-        const child = family.family?.children?.find(
-          (child) => child.id === arrangement.partneringFamilyPersonId
-        );
-
-        return {
-          type: 'ArrangementDueToStart' as const,
-          family: family,
-          child: child ?? ({} as Person),
-          v1CaseId: v1Case?.id ?? '',
-          arrangementId: arrangement.id ?? '',
-          arrangementType: arrangement.arrangementType,
-          plannedStartUtc: arrangement.plannedStartUtc!,
-        };
-      });
-  });
+  return mapLoadedValue(visibleFamilies, (families) =>
+    arrangementInboxItemsForFamilies(families, {
+      settingUp: ArrangementPhase.SettingUp,
+      readyToStart: ArrangementPhase.ReadyToStart,
+      started: ArrangementPhase.Started,
+    })
+  );
 });
 
 function combineQueueItems(
@@ -232,8 +202,8 @@ function combineQueueItems(
   missingLastNames: MissingLastName[] | Promise<MissingLastName[]>,
   childNotReturned: ChildNotReturned[] | Promise<ChildNotReturned[]>,
   arrangementsDueToStart:
-    | ArrangementDueToStart[]
-    | Promise<ArrangementDueToStart[]>
+    | (ArrangementDueToStart | ClosedCaseInvalidArrangementStatus)[]
+    | Promise<(ArrangementDueToStart | ClosedCaseInvalidArrangementStatus)[]>
 ) {
   if (
     childrenOver18 instanceof Promise ||
@@ -279,7 +249,7 @@ const queueItemsAtom = atom((get) => {
   const missingPrimaryContacts = get(missingPrimaryContactsAtom);
   const missingLastNames = get(missingLastNamesAtom);
   const childNotReturned = get(childNotReturnedAtom);
-  const arrangementsDueToStart = get(arrangementsDueToStartAtom);
+  const arrangementsDueToStart = get(arrangementInboxItemsAtom);
   return combineQueueItems(
     childrenOver18,
     missingPrimaryContacts,

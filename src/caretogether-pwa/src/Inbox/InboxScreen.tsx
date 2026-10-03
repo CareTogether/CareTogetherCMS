@@ -159,6 +159,36 @@ function getMessageProps(
           </Typography>
         ),
       };
+
+    case 'ClosedCaseInvalidArrangementStatus':
+      return {
+        icon: <Event color="error" />,
+        onClick: () => {
+          const familyId = item.family.family?.id;
+          const v1CaseId = item.v1CaseId;
+          const arrangementId = item.arrangementId;
+
+          if (familyId && v1CaseId && arrangementId) {
+            appNavigate.family(familyId, { v1CaseId, arrangementId });
+          }
+        },
+        primaryContent: (
+          <>
+            <Typography
+              variant="body1"
+              sx={{ display: 'inline', fontWeight: 'bold' }}
+            >
+              Closed case has an ongoing arrangement:{' '}
+            </Typography>
+            <PersonName person={item.child} /> - {item.arrangementType}
+          </>
+        ),
+        secondaryContent: (
+          <Typography variant="body2" sx={{ color: 'black' }}>
+            <FamilyName family={item.family} />
+          </Typography>
+        ),
+      };
   }
 }
 
