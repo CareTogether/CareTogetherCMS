@@ -110,7 +110,23 @@ namespace CareTogether.Resources.V1Cases
             long SequenceNumber,
             V1CaseEntry V1CaseEntry,
             Action OnCommit
-        ) ExecuteV1CaseCommand(V1CaseCommand command, Guid userId, DateTime timestampUtc)
+        ) ExecuteV1CaseCommand(
+            V1CaseCommand command,
+            Guid userId,
+            DateTime timestampUtc
+        ) => ExecuteV1CaseCommand(command, userId, timestampUtc, validate: true);
+
+        private (
+            ReferralCommandExecuted Event,
+            long SequenceNumber,
+            V1CaseEntry V1CaseEntry,
+            Action OnCommit
+        ) ExecuteV1CaseCommand(
+            V1CaseCommand command,
+            Guid userId,
+            DateTime timestampUtc,
+            bool validate
+        )
         {
             (V1CaseEntry, Activity?) v1CaseEntryToUpsert = command switch
             {
@@ -234,19 +250,16 @@ namespace CareTogether.Resources.V1Cases
                             timestampUtc
                         ),
                         CloseReferral c => (
-                            v1CaseEntry with
-                            {
-                                CloseReason = FormatV1CaseCloseReason(c.CloseReason),
-                                ClosedAtUtc = c.ClosedAtUtc,
-                            },
+                            CloseCase(
+                                v1CaseEntry,
+                                FormatV1CaseCloseReason(c.CloseReason),
+                                c.ClosedAtUtc,
+                                validate
+                            ),
                             null
                         ),
                         CloseReferralWithReason c => (
-                            v1CaseEntry with
-                            {
-                                CloseReason = c.CloseReason,
-                                ClosedAtUtc = c.ClosedAtUtc,
-                            },
+                            CloseCase(v1CaseEntry, c.CloseReason, c.ClosedAtUtc, validate),
                             null
                         ),
                         ReopenReferral c => (ReopenCase(v1CaseEntry, c), null),
@@ -301,6 +314,18 @@ namespace CareTogether.Resources.V1Cases
             ArrangementsCommand command,
             Guid userId,
             DateTime timestampUtc
+        ) => ExecuteArrangementsCommand(command, userId, timestampUtc, validate: true);
+
+        private (
+            ArrangementsCommandExecuted Event,
+            long SequenceNumber,
+            V1CaseEntry V1CaseEntry,
+            Action OnCommit
+        ) ExecuteArrangementsCommand(
+            ArrangementsCommand command,
+            Guid userId,
+            DateTime timestampUtc,
+            bool validate
         )
         {
             if (!v1Cases.TryGetValue(command.ReferralId, out var v1CaseEntry))
@@ -905,6 +930,13 @@ namespace CareTogether.Resources.V1Cases
                         .Cast<Activity>()
                 ),
             };
+            if (validate)
+                EnsureNoNewInProgressArrangementsOnClosedCase(
+                    v1CaseEntry,
+                    v1CaseEntryToUpsert,
+                    command.ArrangementIds
+                );
+
             return (
                 Event: new ArrangementsCommandExecuted(userId, timestampUtc, command),
                 SequenceNumber: LastKnownSequenceNumber + 1,
@@ -946,6 +978,48 @@ namespace CareTogether.Resources.V1Cases
                 ArrangementPolicyVersion = command.ArrangementPolicyVersion,
             };
         }
+
+        private static V1CaseEntry CloseCase(
+            V1CaseEntry v1CaseEntry,
+            string closeReason,
+            DateTime closedAtUtc,
+            bool validate
+        )
+        {
+            if (validate && v1CaseEntry.Arrangements.Values.Any(IsInProgress))
+                throw new InvalidOperationException(
+                    "A case cannot be closed while it has arrangements in setup, ready to start, or active."
+                );
+
+            return v1CaseEntry with { CloseReason = closeReason, ClosedAtUtc = closedAtUtc };
+        }
+
+        private static void EnsureNoNewInProgressArrangementsOnClosedCase(
+            V1CaseEntry previousEntry,
+            V1CaseEntry nextEntry,
+            IEnumerable<Guid> affectedArrangementIds
+        )
+        {
+            if (
+                nextEntry.ClosedAtUtc != null
+                && affectedArrangementIds.Any(arrangementId =>
+                    nextEntry.Arrangements.TryGetValue(arrangementId, out var next)
+                    && IsInProgress(next)
+                    && (
+                        !previousEntry.Arrangements.TryGetValue(arrangementId, out var previous)
+                        || !IsInProgress(previous)
+                    )
+                )
+            )
+                throw new InvalidOperationException(
+                    "An arrangement in setup, ready to start, or active requires an open case."
+                );
+        }
+
+        private static bool IsInProgress(ArrangementEntry arrangement) =>
+            arrangement.Active
+            && arrangement.EndedAtUtc == null
+            && arrangement.CancelledAtUtc == null;
 
         private static (V1CaseEntry V1CaseEntry, Activity? Activity) AssignIndividualVolunteer(
             V1CaseEntry v1CaseEntry,
@@ -1211,7 +1285,8 @@ namespace CareTogether.Resources.V1Cases
                 var (_, _, _, onCommit) = ExecuteV1CaseCommand(
                     referralCommandExecuted.Command,
                     referralCommandExecuted.UserId,
-                    referralCommandExecuted.TimestampUtc
+                    referralCommandExecuted.TimestampUtc,
+                    validate: false
                 );
                 onCommit();
             }
@@ -1220,7 +1295,8 @@ namespace CareTogether.Resources.V1Cases
                 var (_, _, _, onCommit) = ExecuteArrangementsCommand(
                     arrangementCommandExecuted.Command,
                     arrangementCommandExecuted.UserId,
-                    arrangementCommandExecuted.TimestampUtc
+                    arrangementCommandExecuted.TimestampUtc,
+                    validate: false
                 );
                 onCommit();
             }
