@@ -165,7 +165,9 @@ namespace CareTogether.Api.OData
         DateOnly? Closed,
         string? ReferralSource,
         string? CloseReason,
-        string? PrimaryReasonForReferral
+        string? PrimaryReasonForReferral,
+        string? CaseManager,
+        string? CaseCoordinator
     );
 
     public sealed record Referral(
@@ -873,7 +875,7 @@ namespace CareTogether.Api.OData
                 .ToArray();
 
             var cases = familiesWithInfo
-                .SelectMany(x => RenderCases(organization, x.Item1, x.Item2))
+                .SelectMany(x => RenderCases(organization, x.Item1, x.Item2, people))
                 .ToArray();
 
             var caseIdsByReferralId = familiesWithInfo
@@ -2065,7 +2067,8 @@ namespace CareTogether.Api.OData
         private static IEnumerable<Case> RenderCases(
             Organization organization,
             CombinedFamilyInfo familyInfo,
-            Family family
+            Family family,
+            Person[] people
         )
         {
             var allReferralsInfo = (familyInfo.PartneringFamilyInfo?.ClosedV1Cases ?? []).AddRange(
@@ -2096,8 +2099,37 @@ namespace CareTogether.Api.OData
                     .CompletedCustomFields.SingleOrDefault(field =>
                         field.CustomFieldName == "Primary Reason for Referral"
                     )
-                    ?.Value as string
+                    ?.Value as string,
+                RenderCaseAssignmentNames(referralInfo, "Case Manager", family, people),
+                RenderCaseAssignmentNames(referralInfo, "Case Coordinator", family, people)
             ));
+        }
+
+        private static string? RenderCaseAssignmentNames(
+            V1Case caseInfo,
+            string assignmentRole,
+            Family family,
+            Person[] people
+        )
+        {
+            var names = caseInfo
+                .AssignedIndividualVolunteers.Where(assignment =>
+                    assignment.AssignmentRole == assignmentRole
+                )
+                .Select(assignment =>
+                    people.SingleOrDefault(person =>
+                        person.Id == assignment.PersonId
+                        && person.OrganizationId == family.OrganizationId
+                        && person.LocationId == family.LocationId
+                    )
+                )
+                // Ignore deleted people and people outside the available location data.
+                .OfType<Person>()
+                .Select(person => $"{person.FirstName} {person.LastName}".Trim())
+                .OrderBy(name => name)
+                .ToArray();
+
+            return names.Length == 0 ? null : string.Join(", ", names);
         }
 
         private static Referral RenderReferral(
