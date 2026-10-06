@@ -7,9 +7,11 @@ import {
 import { atom, useAtomValue } from 'jotai';
 import { appInsights } from '../ApplicationInsightsService';
 import posthog from 'posthog-js';
+import { requestInteractiveSignIn } from './InteractiveSignInRecovery';
 import {
   AccessTokenAcquisitionEvent,
   createAccessTokenAcquirer,
+  createSessionAccountValidator,
   createSilentRedirectUri,
   getIdentityProviderErrorCode,
   isInteractiveRecoveryRequired,
@@ -447,6 +449,11 @@ async function loginAndSetActiveAccountAsync(): Promise<AccountInfo> {
   }
 
   // Step 5: If one or more accounts was found but no active account is set, set the active account.
+  // A redirect or silent SSO may have just authenticated a different account.
+  // Use that account for subsequent API requests rather than a stale cached account.
+  if (result?.account) {
+    globalMsalInstance.setActiveAccount(result.account);
+  }
   let activeAccount = globalMsalInstance.getActiveAccount();
   trace(`Login`, `Active account is: ${activeAccount?.localAccountId}`);
   if (allAccounts.length > 0 && !activeAccount) {
@@ -560,20 +567,60 @@ export function useAccountInfo() {
   return useAtomValue(accountInfoState);
 }
 
+const validateSessionAccount = createSessionAccountValidator<
+  AuthenticationResult,
+  NonNullable<AuthenticationResult['account']>
+>({
+  getExpectedUserId: async () => {
+    const currentAccount = await accountInfoStateInitializationPromise;
+    if (!currentAccount) {
+      throw new Error('The signed-in account is unavailable.');
+    }
+    return currentAccount.userId;
+  },
+  getAccount: (result) => result.account,
+  getUserId: (account) => account.localAccountId,
+  setActiveAccount: (account) => globalMsalInstance.setActiveAccount(account),
+  reloadApplication: () => window.location.reload(),
+});
+
+export function waitForAccountSwitchIfNeeded() {
+  return validateSessionAccount.waitIfSwitchingAccounts();
+}
+
 const acquireMsalAccessToken = createAccessTokenAcquirer({
   getActiveAccount: () => globalMsalInstance.getActiveAccount(),
   acquireTokenSilently: (account) =>
-    globalMsalInstance.acquireTokenSilent({
-      account,
-      scopes,
-      redirectUri: silentRedirectUri,
-    }),
+    globalMsalInstance
+      .acquireTokenSilent({
+        account,
+        scopes,
+        redirectUri: silentRedirectUri,
+      })
+      .then(validateSessionAccount),
   acquireTokenInteractively: () =>
-    globalMsalInstance.acquireTokenPopup({
-      account: globalMsalInstance.getActiveAccount() ?? undefined,
-      scopes,
-      redirectUri: silentRedirectUri,
-    }),
+    requestInteractiveSignIn(
+      () =>
+        globalMsalInstance
+          .acquireTokenPopup({
+            account: globalMsalInstance.getActiveAccount() ?? undefined,
+            scopes,
+            redirectUri: silentRedirectUri,
+          })
+          .then(validateSessionAccount)
+          .catch((error: unknown) => {
+            trackAccessTokenAcquisition('interactive_failed', error);
+            throw error;
+          }),
+      () =>
+        globalMsalInstance.acquireTokenRedirect({
+          account: globalMsalInstance.getActiveAccount() ?? undefined,
+          scopes,
+          state:
+            new URLSearchParams(window.location.search).get('state') ??
+            undefined,
+        })
+    ),
   isInteractionRequired: isMsalInteractionRequired,
   setActiveAccount: (account) => globalMsalInstance.setActiveAccount(account),
   onEvent: trackAccessTokenAcquisition,
@@ -595,8 +642,8 @@ export async function tryAcquireAccessToken(): Promise<string | null> {
   }
 
   // This function attempts to return a current access token for the authenticated account using MSAL.js.
-  // If the identity-provider session has expired, a popup lets the user sign in without discarding
-  // unsaved work in the application window. Concurrent API requests share the same popup.
+  // If the identity-provider session has expired, ask for a click before opening a popup
+  // so browsers allow it. Concurrent API requests share the same recovery prompt.
   // https://github.com/AzureAD/microsoft-authentication-library-for-js/blob/dev/lib/msal-browser/docs/acquire-token.md
   trace(`tryAcquireAccessToken`, `Attempting to acquire an access token...`);
   return await acquireMsalAccessToken();

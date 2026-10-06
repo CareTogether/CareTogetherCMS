@@ -11,6 +11,7 @@ import { LicenseInfo } from '@mui/x-license';
 import { GlobalErrorBoundary } from './GlobalErrorBoundary';
 import { BrowserRouter as Router } from 'react-router-dom';
 import AuthenticationWrapper from './Authentication/AuthenticationWrapper';
+import { InteractiveSignInRecoveryDialog } from './Authentication/InteractiveSignInRecoveryDialog';
 import { AppRoutes } from './AppRoutes';
 import RequestBackdrop from './Shell/RequestBackdrop';
 import { ProgressBackdrop } from './Shell/ProgressBackdrop';
@@ -38,6 +39,7 @@ const app = (
     <CssBaseline enableColorScheme />
     <LocalizationProvider dateAdapter={DateAdapter}>
       <GlobalErrorBoundary>
+        <InteractiveSignInRecoveryDialog />
         <Router>
           <AuthenticationWrapper>
             <React.Suspense

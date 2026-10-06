@@ -1,13 +1,278 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import {
+  requestInteractiveSignIn,
+  continueWithPopupSignIn,
+  getInteractiveSignInRecoverySnapshot,
+} from './InteractiveSignInRecovery.ts';
+import {
   createAccessTokenAcquirer,
+  createSessionAccountValidator,
   createSilentRedirectUri,
   getIdentityProviderErrorCode,
   isInteractiveRecoveryRequired,
 } from './AccessTokenAcquirer.ts';
 
 type Account = { id: string };
+
+test('session account validator accepts the expected account', async () => {
+  const result = {
+    accessToken: 'same-user-token',
+    account: { id: 'same-user' },
+  };
+  let reloads = 0;
+  const validate = createSessionAccountValidator({
+    getExpectedUserId: async () => 'same-user',
+    getUserId: (account: Account) => account.id,
+    getAccount: (tokenResult: typeof result) => tokenResult.account,
+    setActiveAccount: () => undefined,
+    reloadApplication: () => {
+      reloads += 1;
+    },
+  });
+
+  assert.equal(await validate(result), result);
+  assert.equal(reloads, 0);
+});
+
+test('a silent account change reloads once and never returns the other account token', async () => {
+  let activeAccount: Account | null = { id: 'expected-user' };
+  let interactiveCalls = 0;
+  let reloads = 0;
+  let settled = false;
+  const validate = createSessionAccountValidator({
+    getExpectedUserId: async () => 'expected-user',
+    getUserId: (account: Account) => account.id,
+    getAccount: (result: { accessToken: string; account?: Account | null }) =>
+      result.account,
+    setActiveAccount: (account: Account) => {
+      activeAccount = account;
+    },
+    reloadApplication: () => {
+      reloads += 1;
+    },
+  });
+  const acquire = createAccessTokenAcquirer<Account>({
+    getActiveAccount: () => activeAccount,
+    acquireTokenSilently: async () =>
+      validate({
+        accessToken: 'other-user-token',
+        account: { id: 'other-user' },
+      }),
+    acquireTokenInteractively: async () => {
+      interactiveCalls += 1;
+      return {
+        accessToken: 'interactive-token',
+        account: { id: 'expected-user' },
+      };
+    },
+    isInteractionRequired: () => false,
+    setActiveAccount: (account) => {
+      activeAccount = account;
+    },
+    onEvent: () => undefined,
+  });
+
+  void acquire().then(() => {
+    settled = true;
+  });
+  await new Promise((resolve) => setTimeout(resolve, 0));
+  assert.equal(settled, false);
+  assert.equal(interactiveCalls, 0);
+  assert.deepEqual(activeAccount, { id: 'other-user' });
+  assert.equal(reloads, 1);
+});
+
+test('concurrent account changes set one active account and request one reload', async () => {
+  const expectedUser = deferred<string>();
+  const updates: Account[] = [];
+  let reloads = 0;
+  const validate = createSessionAccountValidator({
+    getExpectedUserId: () => expectedUser.promise,
+    getUserId: (account: Account) => account.id,
+    getAccount: (result: { accessToken: string; account: Account }) =>
+      result.account,
+    setActiveAccount: (account: Account) => updates.push(account),
+    reloadApplication: () => {
+      reloads += 1;
+    },
+  });
+
+  assert.equal(validate.waitIfSwitchingAccounts(), null);
+  const first = validate({ accessToken: 'token', account: { id: 'new-user' } });
+  const second = validate({
+    accessToken: 'token',
+    account: { id: 'new-user' },
+  });
+  let firstSettled = false;
+  let secondSettled = false;
+  void first.then(() => {
+    firstSettled = true;
+  });
+  void second.then(() => {
+    secondSettled = true;
+  });
+  expectedUser.resolve('old-user');
+  await new Promise((resolve) => setTimeout(resolve, 0));
+  assert.equal(reloads, 1);
+  assert.deepEqual(updates, [{ id: 'new-user' }]);
+  assert.equal(firstSettled, false);
+  assert.equal(secondSettled, false);
+  assert.ok(validate.waitIfSwitchingAccounts());
+});
+
+test('a delayed same-account result also waits after a switch has started', async () => {
+  const expectedUser = deferred<string>();
+  let reloads = 0;
+  const validate = createSessionAccountValidator({
+    getExpectedUserId: () => expectedUser.promise,
+    getUserId: (account: Account) => account.id,
+    getAccount: (result: { accessToken: string; account: Account }) =>
+      result.account,
+    setActiveAccount: () => undefined,
+    reloadApplication: () => {
+      reloads += 1;
+    },
+  });
+  let wrongResultSettled = false;
+  let sameResultSettled = false;
+  const wrongResult = validate({
+    accessToken: 'token',
+    account: { id: 'new-user' },
+  });
+  const sameResult = validate({
+    accessToken: 'token',
+    account: { id: 'old-user' },
+  });
+  void wrongResult.then(() => {
+    wrongResultSettled = true;
+  });
+  void sameResult.then(() => {
+    sameResultSettled = true;
+  });
+
+  expectedUser.resolve('old-user');
+  await new Promise((resolve) => setTimeout(resolve, 0));
+  assert.equal(reloads, 1);
+  assert.equal(wrongResultSettled, false);
+  assert.equal(sameResultSettled, false);
+});
+
+test('session account validator fails when a token result has no account', async () => {
+  const validate = createSessionAccountValidator({
+    getExpectedUserId: async () => 'expected-user',
+    getUserId: (account: Account) => account.id,
+    getAccount: () => null,
+    setActiveAccount: () => undefined,
+    reloadApplication: () => undefined,
+  });
+
+  await assert.rejects(validate({}), /signed-in account is unavailable/);
+});
+
+test('background API recovery waits for a click and survives a blocked popup', async () => {
+  let popupCalls = 0;
+  let redirectCalls = 0;
+  let requestSettled = false;
+  let activeAccountUpdates = 0;
+  const acquire = createAccessTokenAcquirer<Account>({
+    getActiveAccount: () => ({ id: 'new-account' }),
+    acquireTokenSilently: async () => {
+      throw { errorCode: 'monitor_window_timeout' };
+    },
+    acquireTokenInteractively: () =>
+      requestInteractiveSignIn(
+        async () => {
+          popupCalls += 1;
+          if (popupCalls === 1) {
+            throw { errorCode: 'popup_window_error' };
+          }
+          return {
+            accessToken: 'recovered-token',
+            account: { id: 'new-account' },
+          };
+        },
+        async () => {
+          redirectCalls += 1;
+        }
+      ),
+    isInteractionRequired: () => false,
+    setActiveAccount: () => {
+      activeAccountUpdates += 1;
+    },
+    onEvent: () => undefined,
+  });
+
+  const requests = Promise.all([acquire(), acquire()]);
+  void requests.then(() => {
+    requestSettled = true;
+  });
+  await new Promise((resolve) => setTimeout(resolve, 0));
+  assert.equal(popupCalls, 0);
+  assert.equal(getInteractiveSignInRecoverySnapshot().status, 'ready');
+
+  continueWithPopupSignIn();
+  assert.equal(popupCalls, 1);
+  await new Promise((resolve) => setTimeout(resolve, 0));
+  assert.equal(getInteractiveSignInRecoverySnapshot().status, 'popup_failed');
+  assert.equal(requestSettled, false);
+  assert.equal(redirectCalls, 0);
+
+  continueWithPopupSignIn();
+  assert.deepEqual(await requests, ['recovered-token', 'recovered-token']);
+  assert.equal(activeAccountUpdates, 1);
+  assert.equal(getInteractiveSignInRecoverySnapshot().open, false);
+});
+
+test('a popup account change reloads and keeps the old API request pending', async () => {
+  let activeAccount: Account | null = { id: 'old-user' };
+  let reloads = 0;
+  let settled = false;
+  const validate = createSessionAccountValidator({
+    getExpectedUserId: async () => 'old-user',
+    getUserId: (account: Account) => account.id,
+    getAccount: (result: { accessToken: string; account: Account }) =>
+      result.account,
+    setActiveAccount: (account: Account) => {
+      activeAccount = account;
+    },
+    reloadApplication: () => {
+      reloads += 1;
+    },
+  });
+  const acquire = createAccessTokenAcquirer<Account>({
+    getActiveAccount: () => activeAccount,
+    acquireTokenSilently: async () => {
+      throw { errorCode: 'monitor_window_timeout' };
+    },
+    acquireTokenInteractively: () =>
+      requestInteractiveSignIn(
+        async () =>
+          validate({
+            accessToken: 'new-user-token',
+            account: { id: 'new-user' },
+          }),
+        async () => undefined
+      ),
+    isInteractionRequired: () => false,
+    setActiveAccount: (account) => {
+      activeAccount = account;
+    },
+    onEvent: () => undefined,
+  });
+
+  void acquire().then(() => {
+    settled = true;
+  });
+  await new Promise((resolve) => setTimeout(resolve, 0));
+  assert.equal(getInteractiveSignInRecoverySnapshot().status, 'ready');
+  continueWithPopupSignIn();
+  await new Promise((resolve) => setTimeout(resolve, 0));
+  assert.equal(settled, false);
+  assert.equal(reloads, 1);
+  assert.deepEqual(activeAccount, { id: 'new-user' });
+  assert.equal(getInteractiveSignInRecoverySnapshot().status, 'signing_in');
+});
 
 function deferred<T>() {
   let resolve!: (value: T) => void;

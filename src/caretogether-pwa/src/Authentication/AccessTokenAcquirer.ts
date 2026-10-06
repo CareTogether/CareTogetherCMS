@@ -10,6 +10,60 @@ export function createSilentRedirectUri(applicationRedirectUri: string) {
   return new URL('/silent-callback.html', applicationRedirectUri).toString();
 }
 
+type SessionAccountValidatorDependencies<TResult, TAccount> = {
+  getExpectedUserId: () => Promise<string>;
+  getUserId: (account: TAccount) => string;
+  setActiveAccount: (account: TAccount) => void;
+  reloadApplication: () => void;
+  getAccount: (result: TResult) => TAccount | null | undefined;
+};
+
+export function createSessionAccountValidator<TResult, TAccount>(
+  dependencies: SessionAccountValidatorDependencies<TResult, TAccount>
+) {
+  let switchingAccounts = false;
+  let reloadRequested = false;
+  let pageUnloadPromise: Promise<never> | null = null;
+
+  function waitForPageUnload(): Promise<never> {
+    pageUnloadPromise ??= new Promise<never>(() => undefined);
+    return pageUnloadPromise;
+  }
+
+  const validateSessionAccount = async function (result: TResult) {
+    if (switchingAccounts) {
+      return await waitForPageUnload();
+    }
+
+    const expectedUserId = await dependencies.getExpectedUserId();
+    if (switchingAccounts) {
+      return await waitForPageUnload();
+    }
+
+    const account = dependencies.getAccount(result);
+    if (!account) {
+      throw new Error('The signed-in account is unavailable.');
+    }
+
+    if (dependencies.getUserId(account) === expectedUserId) {
+      return result;
+    }
+
+    switchingAccounts = true;
+    dependencies.setActiveAccount(account);
+    if (!reloadRequested) {
+      reloadRequested = true;
+      dependencies.reloadApplication();
+    }
+    return await waitForPageUnload();
+  };
+
+  return Object.assign(validateSessionAccount, {
+    waitIfSwitchingAccounts: () =>
+      switchingAccounts ? waitForPageUnload() : null,
+  });
+}
+
 export function getIdentityProviderErrorCode(error: unknown) {
   const message =
     error instanceof Error
