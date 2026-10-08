@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.ComponentModel.DataAnnotations;
@@ -168,6 +168,28 @@ namespace CareTogether.Api.OData
         string? PrimaryReasonForReferral
     );
 
+    public sealed record CaseRoleAssignment(
+        [property: Key] Guid CaseId,
+        [property: Key] Guid OrganizationId,
+        [property: Key] Guid LocationId,
+        [property: Key] Guid PersonId,
+        string? PersonName,
+        [property: Key] string AssignmentRole,
+        DateTime AssignedAtUtc,
+        Guid AssignedByUserId
+    );
+
+    public sealed record ReferralRoleAssignment(
+        [property: Key] Guid ReferralId,
+        [property: Key] Guid OrganizationId,
+        [property: Key] Guid LocationId,
+        [property: Key] Guid PersonId,
+        string? PersonName,
+        [property: Key] string AssignmentRole,
+        DateTime AssignedAtUtc,
+        Guid AssignedByUserId
+    );
+
     public sealed record Referral(
         [property: Key] Guid ReferralId,
         [property: Key] Guid OrganizationId,
@@ -335,6 +357,8 @@ namespace CareTogether.Api.OData
         IEnumerable<FamilyRoleRemovedIndividual> FamilyRoleRemovedIndividuals,
         IEnumerable<Case> Cases,
         IEnumerable<Referral> Referrals,
+        IEnumerable<CaseRoleAssignment> CasesRoleAssignments,
+        IEnumerable<ReferralRoleAssignment> ReferralsRoleAssignments,
         IEnumerable<Arrangement> Arrangements,
         IEnumerable<ArrangementType> ArrangementTypes,
         IEnumerable<ChildLocationRecord> ChildLocationRecords,
@@ -439,6 +463,20 @@ namespace CareTogether.Api.OData
         {
             var liveModel = await RenderLiveModelAsync();
             return liveModel.Cases;
+        }
+
+        [HttpGet("CasesRoleAssignments")]
+        public async Task<IEnumerable<CaseRoleAssignment>> GetCasesRoleAssignmentsAsync()
+        {
+            var liveModel = await RenderLiveModelAsync();
+            return liveModel.CasesRoleAssignments;
+        }
+
+        [HttpGet("ReferralsRoleAssignments")]
+        public async Task<IEnumerable<ReferralRoleAssignment>> GetReferralsRoleAssignmentsAsync()
+        {
+            var liveModel = await RenderLiveModelAsync();
+            return liveModel.ReferralsRoleAssignments;
         }
 
         [HttpGet("Referrals")]
@@ -595,6 +633,8 @@ namespace CareTogether.Api.OData
                     Enumerable.Empty<FamilyRoleRemovedIndividual>(),
                     Enumerable.Empty<Case>(),
                     Enumerable.Empty<Referral>(),
+                    Enumerable.Empty<CaseRoleAssignment>(),
+                    Enumerable.Empty<ReferralRoleAssignment>(),
                     Enumerable.Empty<Arrangement>(),
                     Enumerable.Empty<ArrangementType>(),
                     Enumerable.Empty<ChildLocationRecord>(),
@@ -619,6 +659,8 @@ namespace CareTogether.Api.OData
                         acc.FamilyRoleRemovedIndividuals.Concat(model.FamilyRoleRemovedIndividuals),
                         acc.Cases.Concat(model.Cases),
                         acc.Referrals.Concat(model.Referrals),
+                        acc.CasesRoleAssignments.Concat(model.CasesRoleAssignments),
+                        acc.ReferralsRoleAssignments.Concat(model.ReferralsRoleAssignments),
                         acc.Arrangements.Concat(model.Arrangements),
                         acc.ArrangementTypes.Concat(model.ArrangementTypes),
                         acc.ChildLocationRecords.Concat(model.ChildLocationRecords),
@@ -874,6 +916,56 @@ namespace CareTogether.Api.OData
 
             var cases = familiesWithInfo
                 .SelectMany(x => RenderCases(organization, x.Item1, x.Item2))
+                .ToArray();
+
+            var casesRoleAssignments = familiesWithInfo
+                .SelectMany(item =>
+                    (item.Item1.PartneringFamilyInfo?.ClosedV1Cases ?? []).AddRange(
+                        item.Item1.PartneringFamilyInfo?.OpenV1Case == null
+                            ? []
+                            : [item.Item1.PartneringFamilyInfo.OpenV1Case]
+                    ).SelectMany(caseInfo =>
+                        caseInfo.AssignedIndividualVolunteers.Select(assignment =>
+                            new CaseRoleAssignment(
+                                caseInfo.Id,
+                                organization.Id,
+                                item.Item2.LocationId,
+                                assignment.PersonId,
+                                RenderAssignmentPersonName(
+                                    people,
+                                    assignment.PersonId,
+                                    organization.Id,
+                                    item.Item2.LocationId
+                                ),
+                                assignment.AssignmentRole,
+                                assignment.AssignedAtUtc,
+                                assignment.AssignedByUserId
+                            )
+                        )
+                    )
+                )
+                .ToArray();
+
+            var referralsRoleAssignments = referralsByLocation
+                .SelectMany(item =>
+                    item.Referral.AssignedIndividualVolunteers.Select(assignment =>
+                        new ReferralRoleAssignment(
+                            item.Referral.ReferralId,
+                            item.location.OrganizationId,
+                            item.location.Id,
+                            assignment.PersonId,
+                            RenderAssignmentPersonName(
+                                people,
+                                assignment.PersonId,
+                                item.location.OrganizationId,
+                                item.location.Id
+                            ),
+                            assignment.AssignmentRole,
+                            assignment.AssignedAtUtc,
+                            assignment.AssignedByUserId
+                        )
+                    )
+                )
                 .ToArray();
 
             var caseIdsByReferralId = familiesWithInfo
@@ -1137,6 +1229,8 @@ namespace CareTogether.Api.OData
                 familyRoleRemovedIndividuals,
                 cases,
                 referrals,
+                casesRoleAssignments,
+                referralsRoleAssignments,
                 arrangements,
                 arrangementTypes,
                 childLocationRecords,
@@ -2098,6 +2192,22 @@ namespace CareTogether.Api.OData
                     )
                     ?.Value as string
             ));
+        }
+
+        private static string? RenderAssignmentPersonName(
+            Person[] people,
+            Guid personId,
+            Guid organizationId,
+            Guid locationId
+        )
+        {
+            // Use the rendered people so names respect the feed's anonymization.
+            var person = people.SingleOrDefault(person =>
+                person.Id == personId
+                && person.OrganizationId == organizationId
+                && person.LocationId == locationId
+            );
+            return person == null ? null : $"{person.FirstName} {person.LastName}".Trim();
         }
 
         private static Referral RenderReferral(
