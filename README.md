@@ -30,6 +30,8 @@ You will also need to allow PowerShell scripts to run on your computer (see [doc
 ## Development
 _**NOTE:** The API project comes with a basic set of test data for local development. This test data is automatically regenerated each time you start the API project._
 
+For frontend route changes, see [location routing](docs/location-routing.md).
+
 1. Clone the repository into any local directory on your device.
 2. Run the _CareTogether.Api_ project and the React client.
    * If using **Visual Studio Code** (recommended), all you need to do is open the repository folder in VS Code and hit 'F5' to start debugging _both_ the client and server. VS Code will also automatically install and run the Azurite emulator for Azure Storage in your project folder.
