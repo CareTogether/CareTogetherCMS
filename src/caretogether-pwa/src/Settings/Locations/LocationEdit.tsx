@@ -299,25 +299,35 @@ export function LocationEdit() {
         pt: 2,
       }}
     >
-      <Box sx={isV2 ? { flexShrink: 0 } : undefined}>
-        <Breadcrumbs
-          items={[
-            {
-              label: 'Settings',
-              to: `/org/${organizationId}/${locationId}/settings`,
-            },
-            {
-              label: 'Locations',
-              to: `/org/${organizationId}/${locationId}/settings/locations`,
-            },
-          ]}
-          currentPageLabel={location.name || ''}
-        />
-        {isV2 && (
-          <Typography {...v2Typography.pageTitle} component="h1" sx={{ my: 2 }}>
-            Editing {location.name} configuration
-          </Typography>
-        )}
+      <Box
+        sx={{
+          alignItems: 'flex-start',
+          display: 'flex',
+          flexShrink: isV2 ? 0 : undefined,
+          gap: 2,
+          justifyContent: 'space-between',
+        }}
+      >
+        <Box>
+          <Breadcrumbs
+            items={[
+              {
+                label: 'Settings',
+                to: `/org/${organizationId}/${locationId}/settings`,
+              },
+            ]}
+            currentPageLabel={location.name || ''}
+          />
+          {isV2 && (
+            <Typography
+              {...v2Typography.pageTitle}
+              component="h1"
+              sx={{ my: 2 }}
+            >
+              Editing {location.name} configuration
+            </Typography>
+          )}
+        </Box>
       </Box>
 
       <Box
@@ -364,7 +374,15 @@ export function LocationEdit() {
           )}
         </Box>
 
-        <Box sx={{ flex: 1, paddingLeft: 4, paddingTop: 2, overflow: 'auto' }}>
+        <Box
+          sx={{
+            flex: 1,
+            minWidth: 0,
+            overflow: 'auto',
+            paddingLeft: 4,
+            paddingTop: 2,
+          }}
+        >
           {isPolicyTabActive && policySaveErrors.length > 0 && (
             <Alert severity="error" sx={{ mb: 2 }}>
               <Stack spacing={0.5}>

@@ -29,4 +29,23 @@ export default [
       'react-refresh/only-export-components': 'warn',
     },
   }),
+  {
+    files: ['src/**/*.{ts,tsx}'],
+    ignores: ['src/AppRoutes.tsx', 'src/UserProfile/UserProfile.tsx'],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          paths: [
+            {
+              name: 'react-router-dom',
+              importNames: ['Route', 'Routes'],
+              message:
+                'Location-scoped routes must use typed LocationRoute definitions.',
+            },
+          ],
+        },
+      ],
+    },
+  },
 ];

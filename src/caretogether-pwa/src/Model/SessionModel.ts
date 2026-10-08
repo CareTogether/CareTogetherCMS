@@ -74,3 +74,8 @@ export function useUserIsOrganizationAdministrator() {
   const currentLocation = useCurrentLocation();
   return currentLocation?.roles?.includes(ORGANIZATION_ADMINISTRATOR);
 }
+
+export function useUserIsOrganizationAdministratorLoadable() {
+  const currentLocation = useCurrentLocationLoadable();
+  return currentLocation?.roles?.includes(ORGANIZATION_ADMINISTRATOR);
+}

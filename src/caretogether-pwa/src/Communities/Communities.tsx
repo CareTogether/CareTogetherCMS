@@ -1,13 +1,29 @@
-import { Navigate, Route, Routes } from 'react-router-dom';
+import { Navigate, Outlet } from 'react-router-dom';
 import { CommunitiesList } from './CommunitiesList';
 import { CommunityScreen } from './CommunityScreen';
+import type { LocationRoute } from '../Shell/LocationRoute';
 
-export function Organizations() {
-  return (
-    <Routes>
-      <Route path="" element={<CommunitiesList />} />
-      <Route path="organization/:communityId" element={<CommunityScreen />} />
-      <Route path="*" element={<Navigate to="" replace />} />
-    </Routes>
-  );
-}
+export const organizationsRoutes = [
+  {
+    path: 'organizations',
+    element: <Outlet />,
+    locationSwitch: 'same-path',
+    children: [
+      {
+        index: true,
+        element: <CommunitiesList />,
+        locationSwitch: 'same-path',
+      },
+      {
+        path: 'organization/:communityId',
+        element: <CommunityScreen />,
+        locationSwitch: 'dashboard',
+      },
+      {
+        path: '*',
+        element: <Navigate to=".." replace />,
+        locationSwitch: 'dashboard',
+      },
+    ],
+  },
+] satisfies LocationRoute[];

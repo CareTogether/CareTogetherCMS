@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using System.Net.Sockets;
+using System.Text;
 using Microsoft.Extensions.Logging;
 
 namespace CareTogether.AppHost.Tests.Tests;
@@ -7,6 +8,7 @@ namespace CareTogether.AppHost.Tests.Tests;
 public class IntegrationTest1
 {
     private static readonly TimeSpan DefaultTimeout = TimeSpan.FromMinutes(10);
+    private static readonly TimeSpan PlaywrightTimeout = TimeSpan.FromMinutes(30);
 
     [Fact]
     public async Task PlaywrightReferralWorkflowPassesAgainstAspireWeb()
@@ -88,18 +90,51 @@ public class IntegrationTest1
         startInfo.Environment["CT_ADMIN_PASSWORD"] = "P@ssw0rd";
 
         using var process = new Process { StartInfo = startInfo };
+        var stdout = new StringBuilder();
+        var stderr = new StringBuilder();
 
+        process.OutputDataReceived += (_, eventArgs) =>
+            WriteProcessOutput("Playwright stdout", eventArgs.Data, stdout);
+        process.ErrorDataReceived += (_, eventArgs) =>
+            WriteProcessOutput("Playwright stderr", eventArgs.Data, stderr);
+
+        Console.WriteLine(
+            "Starting Playwright: npx playwright test --project=chromium --workers=1 --grep @pr"
+        );
         process.Start();
+        process.BeginOutputReadLine();
+        process.BeginErrorReadLine();
 
-        var stdoutTask = process.StandardOutput.ReadToEndAsync(cancellationToken);
-        var stderrTask = process.StandardError.ReadToEndAsync(cancellationToken);
+        using var playwrightTimeout = new CancellationTokenSource(PlaywrightTimeout);
+        using var playwrightCancellation = CancellationTokenSource.CreateLinkedTokenSource(
+            cancellationToken,
+            playwrightTimeout.Token
+        );
 
-        await process
-            .WaitForExitAsync(cancellationToken)
-            .WaitAsync(DefaultTimeout, cancellationToken);
+        try
+        {
+            await process.WaitForExitAsync(playwrightCancellation.Token);
+        }
+        catch (OperationCanceledException)
+        {
+            if (!process.HasExited)
+                process.Kill(entireProcessTree: true);
 
-        var stdout = await stdoutTask;
-        var stderr = await stderrTask;
+            await process.WaitForExitAsync(CancellationToken.None);
+
+            if (!playwrightTimeout.IsCancellationRequested)
+                throw;
+
+            throw new TimeoutException(
+                $"Playwright did not exit within {PlaywrightTimeout}."
+                    + Environment.NewLine
+                    + $"BASE_URL: {baseUrl}{Environment.NewLine}"
+                    + $"STDOUT:{Environment.NewLine}{stdout}{Environment.NewLine}"
+                    + $"STDERR:{Environment.NewLine}{stderr}"
+            );
+        }
+
+        process.WaitForExit();
 
         Assert.True(
             process.ExitCode == 0,
@@ -108,6 +143,15 @@ public class IntegrationTest1
                 + $"STDOUT:{Environment.NewLine}{stdout}{Environment.NewLine}"
                 + $"STDERR:{Environment.NewLine}{stderr}"
         );
+    }
+
+    private static void WriteProcessOutput(string source, string? line, StringBuilder output)
+    {
+        if (line is null)
+            return;
+
+        output.AppendLine(line);
+        Console.WriteLine($"{source}: {line}");
     }
 
     private static async Task EnsureDockerDaemonAvailableAsync(CancellationToken cancellationToken)

@@ -76,10 +76,10 @@ export function SettingsScreen() {
               <CardContent sx={{ textAlign: 'center' }}>
                 <LocationOnIcon sx={{ fontSize: 30, color: 'primary.main' }} />
 
-                <Typography variant="h6">Locations</Typography>
+                <Typography variant="h6">Location</Typography>
                 <Typography variant="body2" color="text.secondary">
-                  Manage your locations, configure approval and arrangement
-                  policies, and set up custom fields for family and Cases.
+                  Configure settings, policies, and custom fields for the
+                  selected location.
                 </Typography>
               </CardContent>
             </CardActionArea>
