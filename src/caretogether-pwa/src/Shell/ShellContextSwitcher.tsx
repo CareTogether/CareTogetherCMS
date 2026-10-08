@@ -13,7 +13,7 @@ import {
 } from '@mui/material';
 import { alpha } from '@mui/material/styles';
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import {
   useLocationConfigurationLoadable,
   useOrganizationConfigurationLoadable,
@@ -25,6 +25,8 @@ import {
 import { useUserIsOrganizationAdministratorLoadable } from '../Model/SessionModel';
 import { useSidePanel } from '../Hooks/useSidePanel';
 import { AddLocation } from '../Settings/Locations/AddLocationSidePanel';
+import { locationScopedRoutes } from '../LocationScopedRoutes';
+import { locationSwitchTarget } from './locationSwitchTarget';
 
 interface ShellContextSwitcherProps {
   contained?: boolean;
@@ -49,6 +51,7 @@ export function ShellContextSwitcher({
   } = useSidePanel();
 
   const navigate = useNavigate();
+  const route = useLocation();
 
   const theme = useTheme();
   const isDesktop = useMediaQuery(theme.breakpoints.up('md'));
@@ -66,7 +69,21 @@ export function ShellContextSwitcher({
   }));
 
   function switchLocation(locationId: string) {
-    navigate(`/org/${currentOrganization!.organizationId!}/${locationId}/`);
+    if (!selectedLocationContext || !currentOrganization?.organizationId) {
+      return;
+    }
+
+    navigate(
+      locationSwitchTarget({
+        routes: locationScopedRoutes,
+        pathname: route.pathname,
+        search: route.search,
+        hash: route.hash,
+        organizationId: currentOrganization.organizationId,
+        currentLocationId: selectedLocationContext.locationId,
+        nextLocationId: locationId,
+      })
+    );
   }
 
   function openAddLocation() {

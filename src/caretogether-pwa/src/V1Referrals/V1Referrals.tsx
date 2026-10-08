@@ -7,13 +7,13 @@ import {
   TableHead,
   TableRow,
 } from '@mui/material';
-import { Routes, Route } from 'react-router-dom';
+import type { ReactNode } from 'react';
+import { Outlet, useOutletContext } from 'react-router-dom';
 
 import { useScreenTitle } from '../Shell/ShellScreenTitle';
 import { ReferralRow } from './ReferralRow';
 import { ReferralsFilters } from './ReferralsFilters';
 import { AddNewReferralDrawer } from './AddNewReferralDrawer';
-import { ReferralDetailsPage } from './ReferralDetailsPage';
 import { Permission } from '../GeneratedClient';
 import { ReferralStatusFilter } from './ReferralsFilters';
 import { useAppNavigate } from '../Hooks/useAppNavigate';
@@ -30,11 +30,8 @@ export function V1Referrals() {
   useScreenTitle('Referrals');
 
   const appNavigate = useAppNavigate();
-  const {
-    shouldRedirect,
-    shouldShowLoading,
-    shouldShowReferrals,
-  } = useReferralsAccessGate();
+  const { shouldRedirect, shouldShowLoading, shouldShowReferrals } =
+    useReferralsAccessGate();
 
   useEffect(() => {
     if (shouldRedirect) {
@@ -54,10 +51,14 @@ export function V1Referrals() {
     return null;
   }
 
-  return <V1ReferralsContent />;
+  return <V1ReferralsContentLayout />;
 }
 
-function V1ReferralsContent() {
+export function V1ReferralsIndex() {
+  return useOutletContext<ReactNode>();
+}
+
+function V1ReferralsContentLayout() {
   const permissions = useGlobalPermissions();
 
   const [filterText, setFilterText] = useState('');
@@ -84,98 +85,87 @@ function V1ReferralsContent() {
   });
   const hasFeaturebaseChat = permissions(Permission.AccessSupportScreen);
 
-  return (
-    <Routes>
-      <Route
-        path=""
-        element={
-          <Box sx={wideTablePageSx(hasFeaturebaseChat)}>
-            <Box sx={{ flex: '0 0 auto' }}>
-              <ReferralsFilters
-                filterText={filterText}
-                setFilterText={setFilterText}
-                expandedView={expandedView}
-                setExpandedView={setExpandedView}
-                canAddNewReferral={permissions(Permission.CreateV1Referral)}
-                onAddNewReferral={() => setOpenNewReferral(true)}
-                statusFilter={statusFilter}
-                setStatusFilter={setStatusFilter}
-                countyFilter={countyFilter}
-                setCountyFilter={setCountyFilter}
-                assignmentRoles={
-                  canViewFunctionAssignments ? assignmentRoles : []
-                }
-                assignmentsForAssignmentFilter={
-                  canViewFunctionAssignments ? assignmentFilterAssignments : []
-                }
-                assignmentFilters={assignmentFilters}
-                setAssignmentFilter={(assignmentRole, selectedValues) =>
-                  setAssignmentFilters((current) => ({
-                    ...current,
-                    [assignmentRole]: selectedValues,
-                  }))
-                }
-                assignmentPersonLookup={assignmentPersonLookup}
-                familiesForCountyFilter={familiesForCountyFilter}
-              />
-            </Box>
+  const content = (
+    <Box sx={wideTablePageSx(hasFeaturebaseChat)}>
+      <Box sx={{ flex: '0 0 auto' }}>
+        <ReferralsFilters
+          filterText={filterText}
+          setFilterText={setFilterText}
+          expandedView={expandedView}
+          setExpandedView={setExpandedView}
+          canAddNewReferral={permissions(Permission.CreateV1Referral)}
+          onAddNewReferral={() => setOpenNewReferral(true)}
+          statusFilter={statusFilter}
+          setStatusFilter={setStatusFilter}
+          countyFilter={countyFilter}
+          setCountyFilter={setCountyFilter}
+          assignmentRoles={canViewFunctionAssignments ? assignmentRoles : []}
+          assignmentsForAssignmentFilter={
+            canViewFunctionAssignments ? assignmentFilterAssignments : []
+          }
+          assignmentFilters={assignmentFilters}
+          setAssignmentFilter={(assignmentRole, selectedValues) =>
+            setAssignmentFilters((current) => ({
+              ...current,
+              [assignmentRole]: selectedValues,
+            }))
+          }
+          assignmentPersonLookup={assignmentPersonLookup}
+          familiesForCountyFilter={familiesForCountyFilter}
+        />
+      </Box>
 
-            <Box
-              sx={{
-                display: 'flex',
-                flex: 1,
-                flexDirection: 'column',
-                minHeight: 0,
-              }}
-            >
-              <WideTableContainer>
-                <Table
-                  stickyHeader
-                  size="small"
-                  sx={{
-                    ...containedStickyHeaderTableSx,
-                    minWidth: tableMinWidth,
-                  }}
-                >
-                  <TableHead>
-                    <TableRow>
-                      <TableCell>Referral Title</TableCell>
-                      <TableCell>Status</TableCell>
-                      <TableCell>Client Family</TableCell>
-                      <TableCell>County</TableCell>
-                      {canViewFunctionAssignments &&
-                        assignmentRoles.map((assignmentRole) => (
-                          <TableCell key={assignmentRole}>
-                            {assignmentRole}
-                          </TableCell>
-                        ))}
-                    </TableRow>
-                  </TableHead>
+      <Box
+        sx={{
+          display: 'flex',
+          flex: 1,
+          flexDirection: 'column',
+          minHeight: 0,
+        }}
+      >
+        <WideTableContainer>
+          <Table
+            stickyHeader
+            size="small"
+            sx={{
+              ...containedStickyHeaderTableSx,
+              minWidth: tableMinWidth,
+            }}
+          >
+            <TableHead>
+              <TableRow>
+                <TableCell>Referral Title</TableCell>
+                <TableCell>Status</TableCell>
+                <TableCell>Client Family</TableCell>
+                <TableCell>County</TableCell>
+                {canViewFunctionAssignments &&
+                  assignmentRoles.map((assignmentRole) => (
+                    <TableCell key={assignmentRole}>{assignmentRole}</TableCell>
+                  ))}
+              </TableRow>
+            </TableHead>
 
-                  <TableBody>
-                    {filteredRows.map((ref) => (
-                      <ReferralRow
-                        key={ref.id}
-                        referral={ref}
-                        assignmentRoles={
-                          canViewFunctionAssignments ? assignmentRoles : []
-                        }
-                        expanded={expandedView}
-                      />
-                    ))}
-                  </TableBody>
-                </Table>
-              </WideTableContainer>
-            </Box>
+            <TableBody>
+              {filteredRows.map((ref) => (
+                <ReferralRow
+                  key={ref.id}
+                  referral={ref}
+                  assignmentRoles={
+                    canViewFunctionAssignments ? assignmentRoles : []
+                  }
+                  expanded={expandedView}
+                />
+              ))}
+            </TableBody>
+          </Table>
+        </WideTableContainer>
+      </Box>
 
-            {openNewReferral && (
-              <AddNewReferralDrawer onClose={() => setOpenNewReferral(false)} />
-            )}
-          </Box>
-        }
-      />
-
-      <Route path=":referralId" element={<ReferralDetailsPage />} />
-    </Routes>
+      {openNewReferral && (
+        <AddNewReferralDrawer onClose={() => setOpenNewReferral(false)} />
+      )}
+    </Box>
   );
+
+  return <Outlet context={content} />;
 }

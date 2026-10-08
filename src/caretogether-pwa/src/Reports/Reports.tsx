@@ -1,12 +1,10 @@
-import { Route, Routes } from 'react-router-dom';
 import { ReportsScreen } from './ReportsScreen';
+import type { LocationRoute } from '../Shell/LocationRoute';
 
-function Reports() {
-  return (
-    <Routes>
-      <Route path="" element={<ReportsScreen />} />
-    </Routes>
-  );
-}
-
-export { Reports };
+export const reportsRoutes = [
+  {
+    path: 'reports',
+    element: <ReportsScreen />,
+    locationSwitch: 'same-path',
+  },
+] satisfies LocationRoute[];

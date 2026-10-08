@@ -1,21 +1,14 @@
+/* eslint-disable react-refresh/only-export-components */
 import { useFeatureFlagEnabled } from 'posthog-js/react';
-import { Navigate, Route, Routes, useParams } from 'react-router-dom';
+import { Navigate, Outlet, useParams } from 'react-router-dom';
 import { FAMILY_SCREEN_V2_EARLY_ACCESS_FEATURE_FLAG } from '../featureFlags';
+import type { LocationRoute } from '../Shell/LocationRoute';
 import { ProgressBackdrop } from '../Shell/ProgressBackdrop';
-import { V1Cases } from './V1Cases';
-import { ClientsScreenV2 } from './ClientsScreenV2';
 import { useFeatureFlagsLoaded } from '../Utilities/Instrumentation/useFeatureFlagsLoaded';
+import { ClientsScreenV2 } from './ClientsScreenV2';
+import { PartneringFamilies } from './PartneringFamilies';
 
-function ClientFamilyRedirect() {
-  const { familyId } = useParams<{ familyId: string }>();
-
-  return <Navigate to={`/families/${familyId}`} />;
-}
-
-export function ClientsScreenRoute() {
-  const earlyAccessEnabled = useFeatureFlagEnabled(
-    FAMILY_SCREEN_V2_EARLY_ACCESS_FEATURE_FLAG
-  );
+function ClientsRouteLayout() {
   const featureFlagsLoaded = useFeatureFlagsLoaded();
 
   if (!featureFlagsLoaded) {
@@ -26,17 +19,48 @@ export function ClientsScreenRoute() {
     );
   }
 
-  const showClientsScreenV2 = earlyAccessEnabled === true;
+  return <Outlet />;
+}
 
-  if (!showClientsScreenV2) {
-    return <V1Cases />;
-  }
+function ClientsIndexRoute() {
+  const earlyAccessEnabled = useFeatureFlagEnabled(
+    FAMILY_SCREEN_V2_EARLY_ACCESS_FEATURE_FLAG
+  );
 
-  return (
-    <Routes>
-      <Route path="" element={<ClientsScreenV2 />} />
-      <Route path="family/:familyId" element={<ClientFamilyRedirect />} />
-      <Route path="*" element={<Navigate to=".." replace />} />
-    </Routes>
+  return earlyAccessEnabled === true ? (
+    <ClientsScreenV2 />
+  ) : (
+    <PartneringFamilies />
   );
 }
+
+function ClientFamilyRedirect() {
+  const { familyId } = useParams<{ familyId: string }>();
+
+  return <Navigate to={`/families/${familyId}`} />;
+}
+
+export const clientsRoutes = [
+  {
+    path: 'clients',
+    element: <ClientsRouteLayout />,
+    locationSwitch: 'same-path',
+    children: [
+      {
+        index: true,
+        element: <ClientsIndexRoute />,
+        locationSwitch: 'same-path',
+      },
+      {
+        path: 'family/:familyId',
+        element: <ClientFamilyRedirect />,
+        locationSwitch: 'dashboard',
+      },
+      {
+        path: '*',
+        element: <Navigate to=".." replace />,
+        locationSwitch: 'dashboard',
+      },
+    ],
+  },
+] satisfies LocationRoute[];

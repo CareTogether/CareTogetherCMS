@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo } from 'react';
+import { useEffect, useMemo } from 'react';
 import {
   Navigate,
   Routes,
@@ -27,16 +27,11 @@ import {
 } from './Access/accessRouteHelpers';
 import { NoOrganizationAccessScreen } from './Access/NoOrganizationAccessScreen';
 import { RootRoute } from './Access/RootRoute';
-import { Dashboard } from './Dashboard/Dashboard';
-import { InboxScreen } from './Inbox/InboxScreen';
-import { FamilyScreenRoute } from './Families/FamilyScreenRoute';
-import { ClientsScreenRoute } from './V1Cases/ClientsScreenRoute';
-import { ReferralsScreenRoute } from './V1Referrals/ReferralsScreenRoute';
-import { VolunteersScreenRoute } from './Volunteers/VolunteersScreenRoute';
-import { Organizations } from './Communities/Communities';
-import { Reports } from './Reports/Reports';
-import { Settings } from './Settings/SettingsRoutes';
-import { Support } from './Support';
+import {
+  CasesToClientsRedirect,
+  LocationScopedRoutes,
+  RouteError,
+} from './LocationScopedRoutes';
 import { UserProfile } from './UserProfile/UserProfile';
 import { RedeemPersonInvite } from './UserProfile/RedeemPersonInvite';
 
@@ -115,34 +110,6 @@ function RouteMigrator() {
   );
 }
 
-function RouteError(): React.ReactElement {
-  throw new Error(`The URL path '${window.location.href}' is invalid.`);
-}
-
-function CasesToClientsRedirect() {
-  const location = useLocation();
-  const targetPath = location.pathname.replace('/cases', '/clients');
-
-  return (
-    <Navigate to={`${targetPath}${location.search}${location.hash}`} replace />
-  );
-}
-
-function CommunitiesToOrganizationsRedirect() {
-  const location = useLocation();
-  const targetPath = location.pathname
-    .replace('/communities/community/', '/organizations/organization/')
-    .replace('/communities', '/organizations');
-
-  return (
-    <Navigate to={`${targetPath}${location.search}${location.hash}`} replace />
-  );
-}
-
-// function RouteDisplay(): React.ReactElement {
-//   throw new Error(`The URL path '${window.location.href}' is invalid.`);
-// }
-
 type AuthorizedLocationContextWrapperProps = {
   organizationId: string;
   locationId: string;
@@ -191,24 +158,8 @@ function AuthorizedLocationContextWrapper({
       selectedLocationContext.organizationId === organizationId &&
       selectedLocationContext.locationId === locationId ? (
       <ShellRootLayout>
-        <Routes>
-          <Route index element={<Dashboard />} />
-          <Route path="inbox/*" element={<InboxScreen />} />
-          <Route path="families/:familyId" element={<FamilyScreenRoute />} />
-          <Route path="clients/*" element={<ClientsScreenRoute />} />
-          <Route path="cases/*" element={<CasesToClientsRedirect />} />
-          <Route path="referrals/*" element={<ReferralsScreenRoute />} />
-          <Route path="volunteers/*" element={<VolunteersScreenRoute />} />
-          <Route path="organizations/*" element={<Organizations />} />
-          <Route
-            path="communities/*"
-            element={<CommunitiesToOrganizationsRedirect />}
-          />
-          <Route path="reports/*" element={<Reports />} />
-          <Route path="settings/*" element={<Settings />} />
-          <Route path="support/*" element={<Support />} />
-          <Route path="*" element={<RouteError />} />
-        </Routes>
+        {/* Location pages belong in the typed route tree with a switch policy. */}
+        <LocationScopedRoutes />
       </ShellRootLayout>
     ) : (
       <ProgressBackdrop opaque>
