@@ -25,7 +25,7 @@ test.describe('location settings @smoke @pr', () => {
 
     await expect(page).toHaveURL(
       `/org/${ATLANTIS_ORGANIZATION_ID}/${ATLANTIS_LOCATION_ID}` +
-        `/settings/locations/${ATLANTIS_LOCATION_ID}?tab=basic`
+        '/settings/locations?tab=basic'
     );
     await selectedLocationPolicyRequest;
     const breadcrumb = page.getByLabel('breadcrumb');
@@ -53,7 +53,7 @@ test.describe('location settings @smoke @pr', () => {
     ).toBeVisible();
     await expect(page).toHaveURL(
       `/org/${ATLANTIS_ORGANIZATION_ID}/${ATLANTIS_LOCATION_ID}` +
-        `/settings/locations/${ATLANTIS_LOCATION_ID}?tab=basic`
+        '/settings/locations?tab=basic'
     );
 
     await page.getByRole('button', { name: 'Cancel' }).click();
