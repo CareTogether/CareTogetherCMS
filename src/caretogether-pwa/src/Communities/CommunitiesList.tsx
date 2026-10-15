@@ -3,7 +3,6 @@ import {
   Button,
   Drawer,
   Stack,
-  Typography,
   useTheme,
 } from '@mui/material';
 import {
@@ -34,7 +33,7 @@ import {
   ORGANIZATION_CATEGORIES_FEATURE_FLAG,
 } from '../featureFlags';
 import { v2DataGridStyles } from '../Families/v2DataGridStyles';
-import { v2Typography } from '../Families/v2Typography';
+import { ResponsivePageHeader } from '../Generic/ResponsivePageHeader';
 import { usePersistedGridFilterModel } from '../Hooks/usePersistedGridFilterModel';
 import { PersistedFilterDataGridPremium } from '../Generic/PersistedFilterDataGridPremium';
 import {
@@ -240,42 +239,44 @@ export function CommunitiesList() {
 
   return (
     <>
-      <Stack spacing={2} sx={{ flex: 1, minHeight: 0 }}>
-        {isV2 && (
-          <Box>
-            <Typography
-              className="ph-unmask"
-              {...v2Typography.pageTitle}
-              component="h1"
-              sx={{ mt: 2 }}
+      <Stack
+        spacing={isV2 ? { xs: 1, sm: 2 } : 2}
+        sx={{ flex: 1, minHeight: 0, minWidth: 0 }}
+      >
+        {isV2 ? (
+          <ResponsivePageHeader
+            title="Organizations"
+            titleComponent="h1"
+            description="Browse and manage organizations."
+            actions={
+              <Button
+                size="small"
+                variant="contained"
+                startIcon={<AddIcon />}
+                sx={{
+                  maxWidth: '100%',
+                }}
+                onClick={() => setAddDrawerOpen(true)}
+              >
+                ADD NEW ORGANIZATION
+              </Button>
+            }
+          />
+        ) : (
+          <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
+            <Button
+              size="small"
+              variant="contained"
+              startIcon={<AddIcon />}
+              sx={{
+                maxWidth: '100%',
+              }}
+              onClick={() => setAddDrawerOpen(true)}
             >
-              Organizations
-            </Typography>
-            <Typography
-              className="ph-unmask"
-              {...v2Typography.secondaryValue}
-              sx={{ ...v2Typography.secondaryValue.sx, mt: 0.5 }}
-            >
-              Browse and manage organizations.
-            </Typography>
+              ADD NEW ORGANIZATION
+            </Button>
           </Box>
         )}
-
-        <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
-          <Button
-            size="small"
-            variant="contained"
-            startIcon={<AddIcon />}
-            sx={{
-              alignSelf: { xs: 'stretch', md: 'center' },
-              flexShrink: 0,
-              whiteSpace: 'nowrap',
-            }}
-            onClick={() => setAddDrawerOpen(true)}
-          >
-            ADD NEW ORGANIZATION
-          </Button>
-        </Box>
 
         <OrganizationsDataGrid
           columns={columns}

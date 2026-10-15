@@ -35,7 +35,7 @@ export function SettingsScreen() {
     <Box
       className="ph-unmask"
       sx={{
-        paddingTop: isV2 ? 0 : 4,
+        paddingTop: isV2 ? 0 : { xs: 2, sm: 4 },
         display: 'flex',
         flexDirection: isV2 ? 'column' : 'row',
         justifyContent: 'flex-start',
@@ -46,12 +46,12 @@ export function SettingsScreen() {
           className="ph-unmask"
           {...v2Typography.pageTitle}
           component="h1"
-          sx={{ mt: 2, mb: 2 }}
+          sx={{ mt: { xs: 1, sm: 2 }, mb: { xs: 1, sm: 2 } }}
         >
           Settings
         </Typography>
       )}
-      <Grid container spacing={3} sx={{ width: '100%' }}>
+      <Grid container spacing={{ xs: 2, sm: 3 }} sx={{ width: '100%' }}>
         <Grid size={{ xs: 12, sm: 6, md: 4 }}>
           <Card variant="outlined">
             <CardActionArea onClick={() => appNavigate.settingsRoles()}>

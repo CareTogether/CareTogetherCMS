@@ -295,6 +295,7 @@ export function LocationEdit() {
               md: `calc(100vh - 48px - ${DESKTOP_BOTTOM_SAFE_AREA}px)`,
             },
         minHeight: 0,
+        minWidth: 0,
         ...(isV2 && { boxSizing: 'border-box' }),
         pt: 2,
       }}
@@ -335,12 +336,15 @@ export function LocationEdit() {
           display: 'flex',
           flex: 1,
           minHeight: 0,
+          minWidth: 0,
           overflow: 'auto',
         }}
       >
         <Box
           sx={{
             width: isMobile && isSidebarCollapsed ? 40 : 240,
+            maxWidth: '100%',
+            flexShrink: 0,
             minHeight: '100%',
             borderRight: '1px solid #e0e0e0',
             p: 1,
@@ -352,6 +356,12 @@ export function LocationEdit() {
           {isMobile && (
             <IconButton
               size="small"
+              aria-label={
+                isSidebarCollapsed
+                  ? 'Expand settings navigation'
+                  : 'Collapse settings navigation'
+              }
+              aria-expanded={!isSidebarCollapsed}
               onClick={() => setIsSidebarCollapsed((prev) => !prev)}
               sx={{ alignSelf: 'flex-end', mb: 1 }}
               color="primary"
@@ -379,8 +389,8 @@ export function LocationEdit() {
             flex: 1,
             minWidth: 0,
             overflow: 'auto',
-            paddingLeft: 4,
-            paddingTop: 2,
+            paddingLeft: { xs: 1, sm: 2, md: 4 },
+            paddingTop: { xs: 1, sm: 2 },
           }}
         >
           {isPolicyTabActive && policySaveErrors.length > 0 && (
