@@ -557,6 +557,30 @@ namespace CareTogether.Api.Controllers
             }
         }
 
+        [HttpPost("/api/{organizationId:guid}/{locationId:guid}/[controller]/policy/validation")]
+        public async Task<ActionResult<PolicyValidationResult>> ValidateEffectiveLocationPolicy(
+            Guid organizationId,
+            Guid locationId,
+            [FromBody] EffectiveLocationPolicy policy
+        )
+        {
+            var userContext = new SessionUserContext(User, null);
+            if (
+                !await authorizationEngine.AuthorizeLocationPolicyEditAsync(
+                    organizationId,
+                    locationId,
+                    userContext
+                )
+            )
+                return Forbid();
+
+            var result = await policiesResource.ValidateEffectiveLocationPolicyAsync(
+                organizationId,
+                policy
+            );
+            return Ok(result);
+        }
+
         [HttpGet("/api/{organizationId:guid}/{locationId:guid}/[controller]/flags")]
         public async Task<ActionResult<CurrentFeatureFlags>> GetLocationFlags(Guid organizationId)
         {

@@ -1,3 +1,4 @@
+import { Drawer } from '@mui/material';
 import { Accordion, AccordionDetails, AccordionSummary, Stack, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Typography } from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import { useState } from 'react';
@@ -51,7 +52,7 @@ export function ArrangementPolicyDetails({
   volunteerRoles: string[];
   volunteerFamilyRoles: string[];
   personOptions: PersonOption[];
-  onArrangementChange: (arrangement: ArrangementPolicy) => void;
+  onArrangementChange: (arrangement: ArrangementPolicy) => Promise<boolean>;
 }) {
   const {
     SidePanel: SetupRequirementPanel,
@@ -68,11 +69,12 @@ export function ArrangementPolicyDetails({
     openSidePanel: openCloseoutRequirementPanel,
     closeSidePanel: closeCloseoutRequirementPanel,
   } = useSidePanel();
-  const {
-    SidePanel: ArrangementFunctionPanel,
-    openSidePanel: openArrangementFunctionPanel,
-    closeSidePanel: closeArrangementFunctionPanel,
-  } = useSidePanel();
+  const [arrangementFunctionPanelOpen, setArrangementFunctionPanelOpen] =
+    useState(false);
+  const openArrangementFunctionPanel = () =>
+    setArrangementFunctionPanelOpen(true);
+  const closeArrangementFunctionPanel = () =>
+    setArrangementFunctionPanelOpen(false);
   const [workingSetupRequirement, setWorkingSetupRequirement] = useState<
     RequirementDefinition | undefined
   >();
@@ -96,7 +98,9 @@ export function ArrangementPolicyDetails({
   const arrangementFunctions = arrangement.arrangementFunctions ?? [];
 
   function updateArrangement(update: Partial<ArrangementPolicy>) {
-    onArrangementChange(new ArrangementPolicy({ ...arrangement, ...update }));
+    return onArrangementChange(
+      new ArrangementPolicy({ ...arrangement, ...update })
+    );
   }
 
   function duplicateRequirement(
@@ -220,11 +224,10 @@ export function ArrangementPolicyDetails({
               }}
               onDuplicate={(requirement) =>
                 updateArrangement({
-                  requiredMonitoringActionsNew:
-                    duplicateMonitoringRequirement(
-                      monitoringActions,
-                      requirement
-                    ),
+                  requiredMonitoringActionsNew: duplicateMonitoringRequirement(
+                    monitoringActions,
+                    requirement
+                  ),
                 })
               }
               onDelete={(requirement) =>
@@ -464,7 +467,15 @@ export function ArrangementPolicyDetails({
         />
       </CloseoutRequirementPanel>
 
-      <ArrangementFunctionPanel>
+      <Drawer
+        disableRestoreFocus
+        anchor="right"
+        open={arrangementFunctionPanelOpen}
+        onClose={closeArrangementFunctionPanel}
+        slotProps={{
+          paper: { sx: { padding: 2, paddingTop: { xs: 7, sm: 8, md: 6 } } },
+        }}
+      >
         <ArrangementFunctionSidePanel
           key={
             workingArrangementFunction?.functionName ??
@@ -478,8 +489,8 @@ export function ArrangementPolicyDetails({
           volunteerFamilyRoles={volunteerFamilyRoles}
           personOptions={personOptions}
           onClose={closeArrangementFunctionPanel}
-          onSave={(previousName, arrangementFunction) => {
-            updateArrangement({
+          onSave={async (previousName, arrangementFunction) => {
+            const saved = await updateArrangement({
               arrangementFunctions: upsertByName(
                 arrangementFunctions,
                 previousName,
@@ -487,10 +498,11 @@ export function ArrangementPolicyDetails({
                 (item) => item.functionName
               ),
             });
-            closeArrangementFunctionPanel();
+            if (saved) closeArrangementFunctionPanel();
+            return saved;
           }}
         />
-      </ArrangementFunctionPanel>
+      </Drawer>
     </Stack>
   );
 }

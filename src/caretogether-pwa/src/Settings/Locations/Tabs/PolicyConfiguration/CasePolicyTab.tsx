@@ -17,7 +17,7 @@ export function CasePolicyTab({
 }: {
   policy: EffectiveLocationPolicy;
   locationRoles: string[];
-  onPolicyChange: (policy: EffectiveLocationPolicy) => void;
+  onPolicyChange: (policy: EffectiveLocationPolicy) => Promise<boolean>;
 }) {
   const casePolicy = policy.referralPolicy;
   const arrangementPolicies = casePolicy?.arrangementPolicies ?? [];
@@ -50,7 +50,7 @@ export function CasePolicyTab({
   >();
 
   function updateCasePolicy(update: Partial<V1CasePolicy>) {
-    onPolicyChange(
+    return onPolicyChange(
       clonePolicyWithCasePolicy(
         policy,
         new V1CasePolicy({

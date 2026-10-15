@@ -7,27 +7,28 @@ namespace CareTogether.Resources.Policies
 {
     public static class EffectiveLocationPolicyValidator
     {
-        public static ImmutableList<string> Validate(
+        public static PolicyValidationResult Validate(
             EffectiveLocationPolicy? policy,
             OrganizationConfiguration organizationConfiguration
         )
         {
             var errors = ImmutableList.CreateBuilder<string>();
+            var warnings = ImmutableList.CreateBuilder<string>();
 
             if (policy == null)
             {
                 errors.Add("Policy is required.");
-                return errors.ToImmutable();
+                return new PolicyValidationResult(errors.ToImmutable(), warnings.ToImmutable());
             }
 
             var actionNames = ValidateActionDefinitions(policy, errors);
             ValidateCustomFields("Custom Family Fields", policy.CustomFamilyFields, errors);
-            ValidateCasePolicy(policy, organizationConfiguration, actionNames, errors);
+            ValidateCasePolicy(policy, organizationConfiguration, actionNames, errors, warnings);
             ValidateReferralPolicy(policy, organizationConfiguration, errors);
             ValidateVolunteerPolicy(policy, actionNames, errors);
             ValidateOrganizationApprovalPolicy(policy, actionNames, errors);
 
-            return errors.ToImmutable();
+            return new PolicyValidationResult(errors.ToImmutable(), warnings.ToImmutable());
         }
 
         private static HashSet<string> ValidateActionDefinitions(
@@ -76,7 +77,8 @@ namespace CareTogether.Resources.Policies
             EffectiveLocationPolicy policy,
             OrganizationConfiguration organizationConfiguration,
             HashSet<string> actionNames,
-            ImmutableList<string>.Builder errors
+            ImmutableList<string>.Builder errors,
+            ImmutableList<string>.Builder warnings
         )
         {
             var casePolicy = policy.ReferralPolicy;
@@ -88,7 +90,7 @@ namespace CareTogether.Resources.Policies
                 actionNames,
                 errors
             );
-            ValidateFunctionPolicies(policy, errors);
+            ValidateFunctionPolicies(policy, errors, warnings);
             ValidateFunctionAssignmentPolicies(
                 "Case Policies Function Assignment Policies",
                 casePolicy?.FunctionAssignmentPolicies,
@@ -307,7 +309,8 @@ namespace CareTogether.Resources.Policies
 
         private static void ValidateFunctionPolicies(
             EffectiveLocationPolicy policy,
-            ImmutableList<string>.Builder errors
+            ImmutableList<string>.Builder errors,
+            ImmutableList<string>.Builder warnings
         )
         {
             var functionPolicies =
@@ -326,7 +329,8 @@ namespace CareTogether.Resources.Policies
                     functionPolicy.Eligibility?.EligibleVolunteerFamilyRoles,
                     functionPolicy.Eligibility?.EligiblePeople,
                     policy,
-                    errors
+                    errors,
+                    warnings
                 );
             }
         }
@@ -360,6 +364,7 @@ namespace CareTogether.Resources.Policies
                     eligibility?.EligibleVolunteerFamilyRoles,
                     eligibility?.EligiblePeople,
                     policy,
+                    errors,
                     errors
                 );
 
@@ -394,7 +399,8 @@ namespace CareTogether.Resources.Policies
             ImmutableList<string>? eligibleVolunteerFamilyRoles,
             ImmutableList<Guid>? eligiblePeople,
             EffectiveLocationPolicy policy,
-            ImmutableList<string>.Builder errors
+            ImmutableList<string>.Builder errors,
+            ImmutableList<string>.Builder unknownIndividualRoleDiagnostics
         )
         {
             var volunteerRoleNames = new HashSet<string>(
@@ -415,7 +421,9 @@ namespace CareTogether.Resources.Policies
                 }
 
                 if (!volunteerRoleNames.Contains(role))
-                    errors.Add($"{owner} references unknown volunteer role '{role}'.");
+                    unknownIndividualRoleDiagnostics.Add(
+                        $"{owner} references unknown volunteer role '{role}'."
+                    );
             }
 
             foreach (var role in eligibleVolunteerFamilyRoles ?? ImmutableList<string>.Empty)

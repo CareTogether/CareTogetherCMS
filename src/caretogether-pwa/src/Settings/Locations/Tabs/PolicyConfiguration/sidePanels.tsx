@@ -1,5 +1,6 @@
 import { Add as AddIcon, Delete as DeleteIcon } from '@mui/icons-material';
 import {
+  Alert,
   Autocomplete,
   Button,
   FormControlLabel,
@@ -840,11 +841,13 @@ export function ArrangementFunctionSidePanel({
   onSave: (
     previousName: string | undefined,
     arrangementFunction: ArrangementFunction
-  ) => void;
+  ) => Promise<boolean>;
 }) {
   const [draft, setDraft] = useState<ArrangementFunctionDraft>(() =>
     arrangementFunctionToDraft(arrangementFunction)
   );
+  const [saving, setSaving] = useState(false);
+  const [saveFailed, setSaveFailed] = useState(false);
   const trimmedName = draft.functionName.trim();
   const duplicateName =
     trimmedName.length > 0 &&
@@ -862,26 +865,36 @@ export function ArrangementFunctionSidePanel({
   );
   const canSave = trimmedName.length > 0 && !duplicateName;
 
-  function save() {
-    if (!canSave) return;
+  async function save() {
+    if (!canSave || saving) return;
 
-    onSave(
-      arrangementFunction?.functionName,
-      new ArrangementFunction({
-        functionName: trimmedName,
-        requirement: draft.requirement,
-        eligibleIndividualVolunteerRoles:
-          eligibleIndividualVolunteerRoles.length > 0
-            ? eligibleIndividualVolunteerRoles
-            : undefined,
-        eligibleVolunteerFamilyRoles:
-          eligibleVolunteerFamilyRoles.length > 0
-            ? eligibleVolunteerFamilyRoles
-            : undefined,
-        eligiblePeople: eligiblePeople.length > 0 ? eligiblePeople : undefined,
-        variants: arrangementFunction?.variants ?? [],
-      })
-    );
+    setSaving(true);
+    setSaveFailed(false);
+    try {
+      const saved = await onSave(
+        arrangementFunction?.functionName,
+        new ArrangementFunction({
+          functionName: trimmedName,
+          requirement: draft.requirement,
+          eligibleIndividualVolunteerRoles:
+            eligibleIndividualVolunteerRoles.length > 0
+              ? eligibleIndividualVolunteerRoles
+              : undefined,
+          eligibleVolunteerFamilyRoles:
+            eligibleVolunteerFamilyRoles.length > 0
+              ? eligibleVolunteerFamilyRoles
+              : undefined,
+          eligiblePeople:
+            eligiblePeople.length > 0 ? eligiblePeople : undefined,
+          variants: arrangementFunction?.variants ?? [],
+        })
+      );
+      setSaveFailed(!saved);
+    } catch {
+      setSaveFailed(true);
+    } finally {
+      setSaving(false);
+    }
   }
 
   return (
@@ -892,7 +905,7 @@ export function ArrangementFunctionSidePanel({
       component="form"
       onSubmit={(event) => {
         event.preventDefault();
-        save();
+        void save();
       }}
     >
       <Grid item xs={12}>
@@ -1001,16 +1014,27 @@ export function ArrangementFunctionSidePanel({
         />
       </Grid>
 
+      {saveFailed && (
+        <Grid item xs={12}>
+          <Alert severity="error">
+            <span className="ph-unmask">
+              The arrangement function could not be saved. Review the policy
+              errors and try again.
+            </span>
+          </Alert>
+        </Grid>
+      )}
       <Grid item xs={12} sx={{ textAlign: 'right' }}>
         <Button
           variant="contained"
           color="secondary"
           sx={{ mr: 2 }}
+          disabled={saving}
           onClick={onClose}
         >
           Cancel
         </Button>
-        <Button type="submit" variant="contained" disabled={!canSave}>
+        <Button type="submit" variant="contained" disabled={!canSave || saving}>
           Save
         </Button>
       </Grid>

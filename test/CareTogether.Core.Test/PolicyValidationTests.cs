@@ -20,7 +20,7 @@ namespace CareTogether.Core.Test
         {
             var policy = ValidPolicy();
 
-            var errors = EffectiveLocationPolicyValidator.Validate(policy, Configuration);
+            var errors = EffectiveLocationPolicyValidator.Validate(policy, Configuration).Errors;
 
             Assert.AreEqual(0, errors.Count);
         }
@@ -69,7 +69,7 @@ namespace CareTogether.Core.Test
                 },
             };
 
-            var errors = EffectiveLocationPolicyValidator.Validate(policy, Configuration);
+            var errors = EffectiveLocationPolicyValidator.Validate(policy, Configuration).Errors;
 
             StringAssert.Contains(
                 string.Join("\n", errors),
@@ -97,7 +97,7 @@ namespace CareTogether.Core.Test
                 ),
             };
 
-            var errors = EffectiveLocationPolicyValidator.Validate(policy, Configuration);
+            var errors = EffectiveLocationPolicyValidator.Validate(policy, Configuration).Errors;
 
             StringAssert.Contains(
                 string.Join("\n", errors),
@@ -117,7 +117,7 @@ namespace CareTogether.Core.Test
                 ],
             };
 
-            var errors = EffectiveLocationPolicyValidator.Validate(policy, Configuration);
+            var errors = EffectiveLocationPolicyValidator.Validate(policy, Configuration).Errors;
 
             StringAssert.Contains(
                 string.Join("\n", errors),
@@ -146,7 +146,7 @@ namespace CareTogether.Core.Test
                     ),
             };
 
-            var errors = EffectiveLocationPolicyValidator.Validate(policy, Configuration);
+            var errors = EffectiveLocationPolicyValidator.Validate(policy, Configuration).Errors;
 
             Assert.AreEqual(0, errors.Count);
         }
@@ -169,7 +169,7 @@ namespace CareTogether.Core.Test
             };
 
             var sanitized = EffectiveLocationPolicySanitizer.Sanitize(policy);
-            var errors = EffectiveLocationPolicyValidator.Validate(sanitized, Configuration);
+            var errors = EffectiveLocationPolicyValidator.Validate(sanitized, Configuration).Errors;
 
             Assert.AreEqual(0, errors.Count);
             Assert.AreEqual(
@@ -178,7 +178,7 @@ namespace CareTogether.Core.Test
             );
         }
 
-        private static EffectiveLocationPolicy ValidPolicy() =>
+        internal static EffectiveLocationPolicy ValidPolicy() =>
             new(
                 ActionDefinitions: ImmutableDictionary<string, ActionRequirement>.Empty.Add(
                     "Background Check",
