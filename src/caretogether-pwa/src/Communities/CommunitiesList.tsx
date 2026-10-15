@@ -272,6 +272,9 @@ export function CommunitiesList() {
               whiteSpace: 'nowrap',
             }}
             onClick={() => setAddDrawerOpen(true)}
+            disabled={
+              organizationCategoriesEnabled && organizationConfiguration == null
+            }
           >
             ADD NEW ORGANIZATION
           </Button>
@@ -300,7 +303,14 @@ export function CommunitiesList() {
             },
           }}
         >
-          <AddEditCommunity onClose={() => setAddDrawerOpen(false)} />
+          <AddEditCommunity
+            availableCategories={
+              organizationCategoriesEnabled
+                ? (organizationConfiguration?.organizationCategories ?? [])
+                : undefined
+            }
+            onClose={() => setAddDrawerOpen(false)}
+          />
         </Drawer>
       )}
     </>

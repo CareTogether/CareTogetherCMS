@@ -79,6 +79,9 @@ export function AddEditCommunity({
     command.communityId = communityId;
     command.name = name;
     command.description = description;
+    command.categoryIds = organizationCategoriesEnabled
+      ? selectedCategories.map((category) => category.id)
+      : [];
     return command;
   });
 
@@ -117,7 +120,9 @@ export function AddEditCommunity({
     (name !== community.name || description !== community.description);
   const hasChanges = community
     ? detailsChanged || categoriesChanged
-    : name.length > 0 || description.length > 0;
+    : name.length > 0 ||
+      description.length > 0 ||
+      selectedCategories.length > 0;
 
   useEffect(() => {
     onDirtyChange?.(hasChanges);
@@ -194,7 +199,7 @@ export function AddEditCommunity({
           onChange={(e) => setDescription(e.target.value)}
         />
       </Grid>
-      {community && organizationCategoriesEnabled && (
+      {organizationCategoriesEnabled && (
         <Grid size={12}>
           <FormControl fullWidth size="small">
             {categoryOptions.length === 0 ? (

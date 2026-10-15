@@ -93,6 +93,11 @@ jobs:
         run: npx playwright install chromium
         working-directory: src/caretogether-pwa
 
+      # Mocked browser tests need no authentication or application services.
+      - name: Run organization category form browser tests
+        run: npx --no-install playwright test organization-category-form.spec.ts --project=chromium --no-deps --workers=1
+        working-directory: src/caretogether-pwa
+
       - name: Restore AppHost E2E dependencies
         run: dotnet restore test/CareTogether.AppHost.Tests/CareTogether.AppHost.Tests.csproj
 
@@ -100,6 +105,8 @@ jobs:
         run: dotnet build test/CareTogether.AppHost.Tests/CareTogether.AppHost.Tests.csproj --no-restore
 
       - name: Run AppHost Playwright E2E
+        env:
+          CT_E2E_DISPOSABLE_TENANT: "true"
         run: >
           dotnet test test/CareTogether.AppHost.Tests/CareTogether.AppHost.Tests.csproj
           --no-build
