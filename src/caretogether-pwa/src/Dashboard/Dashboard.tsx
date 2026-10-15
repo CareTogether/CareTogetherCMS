@@ -7,7 +7,7 @@ import {
   useOrganizationConfiguration,
 } from '../Model/ConfigurationModel';
 import { Permission } from '../GeneratedClient';
-import { useGlobalPermissions } from '../Model/SessionModel';
+import { useGlobalPermissionsLoadable } from '../Model/SessionModel';
 import { wideTablePageSx } from '../Utilities/wideTablePageSx';
 import { useScreenTitle } from '../Shell/ShellScreenTitle';
 import { DashboardCalendar } from './DashboardCalendar';
@@ -17,7 +17,7 @@ function Dashboard() {
     useFeatureFlagEnabled(FAMILY_SCREEN_V2_EARLY_ACCESS_FEATURE_FLAG) === true;
   const organizationConfiguration = useOrganizationConfiguration();
   const locationConfiguration = useLocationConfiguration();
-  const permissions = useGlobalPermissions();
+  const permissions = useGlobalPermissionsLoadable();
 
   useScreenTitle('Dashboard');
 
