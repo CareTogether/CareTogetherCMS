@@ -28,7 +28,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Update="Fixtures\asf-role-reference-policy.json" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="Fixtures/asf-role-reference-policy.json" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
   <ItemGroup>
