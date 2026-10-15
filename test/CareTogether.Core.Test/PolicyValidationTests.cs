@@ -78,7 +78,7 @@ namespace CareTogether.Core.Test
         }
 
         [TestMethod]
-        public void UnknownVolunteerRoleReferenceIsRejected()
+        public void UnknownVolunteerRoleReferenceIsWarning()
         {
             var policy = ValidPolicy() with
             {
@@ -97,10 +97,11 @@ namespace CareTogether.Core.Test
                 ),
             };
 
-            var errors = EffectiveLocationPolicyValidator.Validate(policy, Configuration).Errors;
+            var result = EffectiveLocationPolicyValidator.Validate(policy, Configuration);
 
+            Assert.AreEqual(0, result.Errors.Count);
             StringAssert.Contains(
-                string.Join("\n", errors),
+                string.Join("\n", result.Warnings),
                 "Referral Policies Function Assignment Policies 'Referral Coordinator' references unknown volunteer role 'Missing Role'."
             );
         }

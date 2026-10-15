@@ -30,18 +30,29 @@ namespace CareTogether.Core.Test
                     .Select(role => $"{function.FunctionName}: {role}"))
                 .ToArray();
 
-        private static string[] ExpectedWarnings() => new[]
-        {
-            ("Host Family or Friend", new[] { "Parent Ally", "Family Coach", "Ministry Coordinator" }),
-            ("Community Friend", new[] { "Parent Ally", "Family Coach", "Ministry Coordinator" }),
-            ("Parent Ally", new[] { "Parent Ally" }),
-            ("Family Coach", new[] { "Family Coach" }),
-            ("Community Coach", new[] { "Parent Ally", "Family Coach" }),
-            ("Ministry Coordinator", new[] { "Ministry Coordinator" }),
-            ("Community Champion", new[] { "Parent Ally", "Family Coach", "Ministry Coordinator", "Community Champion" }),
-        }.SelectMany(row => row.Item2.Select(role =>
-            $"Function Policy '{row.Item1}' references unknown volunteer role '{role}'."
-        )).ToArray();
+        private static readonly (string Function, string[] UnknownRoles)[] UnknownRoleReferences =
+        [
+            ("Host Family or Friend", ["Parent Ally", "Family Coach", "Ministry Coordinator"]),
+            ("Community Friend", ["Parent Ally", "Family Coach", "Ministry Coordinator"]),
+            ("Parent Ally", ["Parent Ally"]),
+            ("Family Coach", ["Family Coach"]),
+            ("Community Coach", ["Parent Ally", "Family Coach"]),
+            ("Ministry Coordinator", ["Ministry Coordinator"]),
+            ("Community Champion", ["Parent Ally", "Family Coach", "Ministry Coordinator", "Community Champion"]),
+        ];
+
+        // Overnight Hosting functions that inherit from a Function Policy with unknown roles.
+        private static readonly string[] OvernightHostingFunctions =
+            ["Community Friend", "Parent Ally", "Family Coach", "Ministry Coordinator", "Community Champion"];
+
+        private static string[] ExpectedWarnings() =>
+            UnknownRoleReferences.SelectMany(row => row.UnknownRoles.Select(role =>
+                $"Function Policy '{row.Function}' references unknown volunteer role '{role}'."
+            )).Concat(OvernightHostingFunctions.SelectMany(function =>
+                UnknownRoleReferences.Single(row => row.Function == function).UnknownRoles.Select(role =>
+                    $"Arrangement Policy 'Overnight Hosting' function '{function}' references unknown volunteer role '{role}'."
+                )
+            )).ToArray();
 
         [TestMethod]
         public void MinimizedFixtureAndOptionalQaInputHaveTheSameWarnings()

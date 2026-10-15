@@ -43,6 +43,51 @@ namespace CareTogether.Core.Test
         }
 
         [TestMethod]
+        public void ArrangementFunctionsWarnAboutUnknownIndividualRolesTheyAreEligibleBy()
+        {
+            var policy = WithEligibility(
+                WarningPolicy(),
+                new FunctionEligibility(["Ministry Coordinator"], [], [])
+            );
+            policy = policy with
+            {
+                ReferralPolicy = policy.ReferralPolicy with
+                {
+                    ArrangementPolicies =
+                    [
+                        // Stored form: inherits the Function Policy roles.
+                        Arrangement("Hosting", Function("Host Family or Friend", null)),
+                        // Served form: GET /policy already copied the Function Policy roles in.
+                        Arrangement("Day Hosting", Function("Host Family or Friend", ["Ministry Coordinator"])),
+                        // Own roles replace the Function Policy roles.
+                        Arrangement("Respite", Function("Host Family or Friend", ["Parent Ally [ASF]"])),
+                        Arrangement("Mentoring", Function("Mentor", ["Parent Ally [ASF]", "Missing Mentor"])),
+                    ],
+                },
+            };
+
+            var result = EffectiveLocationPolicyValidator.Validate(policy, Configuration);
+
+            CollectionAssert.AreEqual(
+                new[]
+                {
+                    "Function Policy 'Host Family or Friend' references unknown volunteer role 'Ministry Coordinator'.",
+                    "Arrangement Policy 'Hosting' function 'Host Family or Friend' references unknown volunteer role 'Ministry Coordinator'.",
+                    "Arrangement Policy 'Day Hosting' function 'Host Family or Friend' references unknown volunteer role 'Ministry Coordinator'.",
+                    "Arrangement Policy 'Mentoring' function 'Mentor' references unknown volunteer role 'Missing Mentor'.",
+                },
+                result.Warnings.ToArray()
+            );
+            Assert.AreEqual(0, result.Errors.Count);
+
+            static ArrangementFunction Function(string name, ImmutableList<string>? roles) =>
+                new(name, FunctionRequirement.ZeroOrMore, roles, null, null, []);
+
+            static ArrangementPolicy Arrangement(string type, ArrangementFunction function) =>
+                new(type, ChildInvolvement.NoChildInvolvement, [function], [], [], []);
+        }
+
+        [TestMethod]
         [DataRow("Parent Ally [ASF]")]
         [DataRow("parent ally [asf]")]
         public void KnownIndividualRolesHaveNoDiagnostics(string role)
@@ -77,7 +122,7 @@ namespace CareTogether.Core.Test
         [TestMethod]
         [DataRow(false)]
         [DataRow(true)]
-        public void FunctionAssignmentUnknownIndividualRolesRemainErrors(bool referral)
+        public void FunctionAssignmentUnknownIndividualRolesAreWarnings(bool referral)
         {
             var policy = PolicyValidationTests.ValidPolicy();
             ImmutableList<FunctionAssignmentPolicy> assignments =
@@ -98,12 +143,12 @@ namespace CareTogether.Core.Test
                 };
             var result = EffectiveLocationPolicyValidator.Validate(policy, Configuration);
 
-            Assert.AreEqual(1, result.Errors.Count);
+            Assert.AreEqual(0, result.Errors.Count);
+            Assert.AreEqual(1, result.Warnings.Count);
             StringAssert.Contains(
-                result.Errors[0],
+                result.Warnings[0],
                 "references unknown volunteer role 'Missing Role'."
             );
-            Assert.AreEqual(0, result.Warnings.Count);
         }
 
         [TestMethod]
