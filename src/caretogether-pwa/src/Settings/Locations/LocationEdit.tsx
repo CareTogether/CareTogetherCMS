@@ -234,7 +234,15 @@ export function LocationEdit() {
   async function savePolicy(
     nextPolicy: EffectiveLocationPolicy
   ): Promise<boolean> {
-    if (!organizationId || !targetLocationId || savingRef.current) return false;
+    if (!organizationId || !targetLocationId) return false;
+    // Each change is built from the current draft, so a change made while another save
+    // is in flight would not include it. Reject it visibly instead of saving over it.
+    if (savingRef.current) {
+      setPolicySaveErrors([
+        'Another policy change is still being saved. Try again when it finishes.',
+      ]);
+      return false;
+    }
     savingRef.current = true;
     let persisted = false;
 
@@ -253,6 +261,10 @@ export function LocationEdit() {
             targetLocationId,
             nextPolicy
           );
+          // The policy is stored even if the user has switched locations meanwhile;
+          // refreshPolicy is bound to the saved location, so its cache stays current.
+          persisted = true;
+          refreshPolicy();
           if (saveScopeRef.current !== saveScope) return;
           setPolicyDraft(
             clonePolicyWithActionDefinitionOrder(
@@ -260,9 +272,9 @@ export function LocationEdit() {
               nextActionDefinitionOrder
             )
           );
-          refreshPolicy();
-          persisted = true;
         } catch (error) {
+          // After a location switch, the order ref and the errors belong to the new
+          // location, so this failure must not touch them.
           if (saveScopeRef.current !== saveScope) return;
           actionDefinitionOrderRef.current = previousActionDefinitionOrder;
           setPolicySaveErrors(getPolicySaveErrors(error));

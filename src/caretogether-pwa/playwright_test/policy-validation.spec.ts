@@ -391,6 +391,68 @@ test('saving disables duplicate submissions until persistence completes', async 
   ).toHaveValue('New Function');
 });
 
+test('save that finishes after a location switch refreshes the saved location', async ({
+  page,
+}) => {
+  await backend(page);
+  let release!: () => void;
+  const pending = new Promise<void>((resolve) => {
+    release = resolve;
+  });
+  const stored: Record<string, unknown> = { a: policy(), b: policy() };
+  await page.route('**/Configuration/policy', async (route) => {
+    const location = route.request().url().includes('/a/Configuration')
+      ? 'a'
+      : 'b';
+    if (route.request().method() === 'PUT') {
+      await pending;
+      stored[location] = route.request().postDataJSON();
+    }
+    await route.fulfill({ json: stored[location] });
+  });
+  const switchTo = (location: string) =>
+    // The open drawer is modal, so switch locations through history like the back button.
+    page.evaluate((target) => {
+      window.history.pushState({}, '', target);
+      window.dispatchEvent(new PopStateEvent('popstate'));
+    }, `/org/org/a/settings/locations/${location}?tab=casePolicy`);
+
+  await mount(page, 'casePolicy');
+  await expect(page.getByText(warning, { exact: true })).toBeVisible();
+  await addFunction(page);
+  await page.getByRole('button', { name: 'Save', exact: true }).click();
+  await expect(
+    page.getByRole('button', { name: 'Save', exact: true })
+  ).toBeDisabled();
+  await switchTo('b');
+  await expect(
+    page.getByText('Editing Location B configuration', { exact: true })
+  ).toBeVisible();
+  const saved = page.waitForResponse(
+    (response) =>
+      response.url().includes('/a/Configuration/policy') &&
+      response.request().method() === 'PUT'
+  );
+  release();
+  await saved;
+
+  await switchTo('a');
+  await expect(
+    page.getByText('Editing Location A configuration', { exact: true })
+  ).toBeVisible();
+  // The accordions keep their expanded state across the location switch.
+  for (const section of ['Arrangements', 'Hosting', 'Arrangement Functions']) {
+    const header = page
+      .locator('.MuiAccordionSummary-root')
+      .filter({ has: page.getByText(section, { exact: true }) })
+      .first();
+    if ((await header.getAttribute('aria-expanded')) !== 'true')
+      await header.click();
+  }
+  await expect(page.getByText(/^New Function -/)).toBeVisible();
+  await expect(page.getByTestId('policy-save-errors')).toHaveCount(0);
+});
+
 test('revalidation replaces warnings rather than duplicating them', async ({
   page,
 }) => {
