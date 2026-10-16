@@ -69,6 +69,7 @@ import {
   organizationRequirementDraftToRequirement,
   parseValidityAmount,
   requirementToDraft,
+  supersededDateToApi,
   toTimeSpanString,
   volunteerFamilyRequirementDraftToRequirement,
   volunteerRequirementDraftToRequirement,
@@ -1271,7 +1272,7 @@ export function ArrangementPolicySidePanel({
         requiredCloseoutActions: arrangement?.requiredCloseoutActions ?? [],
         supersededAtUtc:
           draft.superseded && draft.supersededAtUtc
-            ? new Date(draft.supersededAtUtc)
+            ? supersededDateToApi(draft.supersededAtUtc)
             : undefined,
       })
     );
@@ -1355,7 +1356,7 @@ export function ArrangementPolicySidePanel({
         <Grid item xs={12}>
           <TextField
             fullWidth
-            type="datetime-local"
+            type="date"
             label="Superseded Date"
             value={draft.supersededAtUtc}
             slotProps={{ inputLabel: { shrink: true } }}
@@ -1688,7 +1689,7 @@ export function VolunteerRolePolicyVersionSidePanel({
             version: trimmedVersion,
             supersededAtUtc:
               draft.superseded && draft.supersededAtUtc
-                ? new Date(draft.supersededAtUtc)
+                ? supersededDateToApi(draft.supersededAtUtc)
                 : undefined,
             requirements: familyRequirements,
           })
@@ -1697,7 +1698,7 @@ export function VolunteerRolePolicyVersionSidePanel({
               version: trimmedVersion,
               supersededAtUtc:
                 draft.superseded && draft.supersededAtUtc
-                  ? new Date(draft.supersededAtUtc)
+                  ? supersededDateToApi(draft.supersededAtUtc)
                   : undefined,
               requirements: organizationRequirements,
             })
@@ -1705,7 +1706,7 @@ export function VolunteerRolePolicyVersionSidePanel({
               version: trimmedVersion,
               supersededAtUtc:
                 draft.superseded && draft.supersededAtUtc
-                  ? new Date(draft.supersededAtUtc)
+                  ? supersededDateToApi(draft.supersededAtUtc)
                   : undefined,
               requirements: individualRequirements,
             })
@@ -1795,7 +1796,7 @@ export function VolunteerRolePolicyVersionSidePanel({
         <Grid item xs={12}>
           <TextField
             fullWidth
-            type="datetime-local"
+            type="date"
             label="Superseded Date"
             value={draft.supersededAtUtc}
             slotProps={{ inputLabel: { shrink: true } }}

@@ -31,6 +31,7 @@ import {
   VolunteerFamilyRolePolicyVersion,
 } from '../../../../GeneratedClient';
 import { personNameString } from '../../../../Families/PersonName';
+import { formatUtcDateOnly } from '../../../../Utilities/dateUtils';
 import type {
   ActionDefinitionDraft,
   ArrangementFunctionDraft,
@@ -107,7 +108,13 @@ export function enumOptions<T extends object>(enumType: T) {
 }
 
 export function formatDate(value?: Date) {
-  return value ? value.toLocaleString() : 'Current';
+  return value ? formatUtcDateOnly(value) : 'Current';
+}
+
+// Keep the existing UTC timestamp contract while treating this field as a
+// calendar date. Never interpret the date input in the browser's local zone.
+export function supersededDateToApi(value: string): Date | undefined {
+  return value ? new Date(`${value}T00:00:00.000Z`) : undefined;
 }
 
 export function summarizeCount(
@@ -345,7 +352,7 @@ export function arrangementPolicyToDraft(
       policy?.childInvolvement ?? ChildInvolvement.NoChildInvolvement,
     superseded: Boolean(policy?.supersededAtUtc),
     supersededAtUtc: policy?.supersededAtUtc
-      ? policy.supersededAtUtc.toISOString().slice(0, 16)
+      ? policy.supersededAtUtc.toISOString().slice(0, 10)
       : '',
   };
 }
@@ -380,7 +387,7 @@ export function volunteerRolePolicyVersionToDraft(
     version: version?.version ?? '',
     superseded: Boolean(version?.supersededAtUtc),
     supersededAtUtc: version?.supersededAtUtc
-      ? version.supersededAtUtc.toISOString().slice(0, 16)
+      ? version.supersededAtUtc.toISOString().slice(0, 10)
       : '',
     requirements,
   };
