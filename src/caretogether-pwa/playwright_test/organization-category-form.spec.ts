@@ -51,16 +51,26 @@ test.beforeEach(async ({ page }) => {
   );
 });
 
-test('Add and Edit share sorted optional multi-select options', async ({
+test('Add and Edit share visible sorted optional checkboxes', async ({
   page,
 }) => {
   for (const query of ['', '?edit']) {
     await page.goto(`/category-form${query}`);
     await page.addScriptTag({ content: bundle });
-    const selector = page.getByRole('combobox', { name: 'Categories' });
-    await selector.click();
-    await expect(page.getByRole('option')).toHaveText(['Advocacy', 'Housing']);
-    await expect(selector).not.toHaveAttribute('required');
+    const group = page.getByRole('group', { name: 'Categories', exact: true });
+    await expect(group).toBeVisible();
+    await expect(group.getByRole('checkbox')).toHaveCount(2);
+    await expect(group.locator('label')).toHaveText(['Advocacy', 'Housing']);
+    await expect(
+      group.getByRole('checkbox', { name: 'Advocacy', exact: true })
+    ).not.toBeChecked();
+    const housing = group.getByRole('checkbox', {
+      name: 'Housing',
+      exact: true,
+    });
+    if (query) await expect(housing).toBeChecked();
+    else await expect(housing).not.toBeChecked();
+    await expect(housing).not.toHaveAttribute('required');
   }
 });
 
@@ -72,9 +82,7 @@ test('creation serializes selected categories and opens Edit with them selected'
   await expect(
     page.getByRole('button', { name: 'Save', exact: true })
   ).toBeDisabled();
-  await page.getByRole('combobox', { name: 'Categories' }).click();
-  await page.getByRole('option', { name: 'Housing', exact: true }).click();
-  await page.keyboard.press('Escape');
+  await page.getByRole('checkbox', { name: 'Housing', exact: true }).check();
   await page
     .getByRole('textbox', { name: 'Name', exact: true })
     .fill('New organization');
@@ -89,7 +97,12 @@ test('creation serializes selected categories and opens Edit with them selected'
   await expect(
     page.getByRole('heading', { name: 'Edit Organization' })
   ).toBeVisible();
-  await expect(page.locator('.MuiAutocomplete-tag')).toHaveText(['Housing']);
+  await expect(
+    page.getByRole('checkbox', { name: 'Housing', exact: true })
+  ).toBeChecked();
+  await expect(
+    page.getByRole('checkbox', { name: 'Advocacy', exact: true })
+  ).not.toBeChecked();
 });
 
 test('creation without categories preserves the empty default', async ({
@@ -115,11 +128,9 @@ for (const selected of [['Housing'], ['Advocacy', 'Housing']]) {
     await page
       .getByRole('textbox', { name: 'Name', exact: true })
       .fill('New organization');
-    await page.getByRole('combobox', { name: 'Categories' }).click();
     for (const name of selected) {
-      await page.getByRole('option', { name, exact: true }).click();
+      await page.getByRole('checkbox', { name, exact: true }).check();
     }
-    await page.keyboard.press('Escape');
     await page.getByRole('button', { name: 'Save', exact: true }).click();
     await expect
       .poll(() =>
@@ -142,9 +153,7 @@ test('Edit still saves categories with the existing command', async ({
 }) => {
   await page.goto('/category-form?edit');
   await page.addScriptTag({ content: bundle });
-  await page.getByRole('combobox', { name: 'Categories' }).click();
-  await page.getByRole('option', { name: 'Advocacy', exact: true }).click();
-  await page.keyboard.press('Escape');
+  await page.getByRole('checkbox', { name: 'Advocacy', exact: true }).check();
   await page.getByRole('button', { name: 'Save', exact: true }).click();
   await expect
     .poll(() => page.evaluate(() => window.categoryFormCommands[0]))
@@ -162,7 +171,35 @@ test('empty configuration and disabled feature preserve existing behavior', asyn
   await expect(page.getByText(/No categories are configured/)).toBeVisible();
   await page.goto('/category-form?disabled');
   await page.addScriptTag({ content: bundle });
-  await expect(page.getByRole('combobox', { name: 'Categories' })).toHaveCount(
-    0
-  );
+  await expect(
+    page.getByRole('group', { name: 'Categories', exact: true })
+  ).toHaveCount(0);
+  await expect(page.getByRole('checkbox')).toHaveCount(0);
+});
+
+test('labels and keyboard toggle categories and Edit can clear all selections', async ({
+  page,
+}) => {
+  await page.goto('/category-form?edit');
+  await page.addScriptTag({ content: bundle });
+  const housing = page.getByRole('checkbox', { name: 'Housing', exact: true });
+  const save = page.getByRole('button', { name: 'Save', exact: true });
+  await expect(save).toBeDisabled();
+  await page
+    .getByRole('group', { name: 'Categories', exact: true })
+    .getByText('Housing', { exact: true })
+    .click();
+  await expect(housing).not.toBeChecked();
+  await housing.focus();
+  await page.keyboard.press('Space');
+  await expect(housing).toBeChecked();
+  await expect(save).toBeDisabled();
+  await housing.uncheck();
+  await save.click();
+  await expect
+    .poll(() => page.evaluate(() => window.categoryFormCommands[0]))
+    .toMatchObject({
+      discriminator: 'SetOrganizationCategories',
+      categoryIds: [],
+    });
 });

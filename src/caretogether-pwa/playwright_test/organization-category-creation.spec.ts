@@ -68,10 +68,8 @@ test.describe('organization category persistence @pr', () => {
       .getByRole('textbox', { name: 'Name', exact: true })
       .fill(organizationName);
     await page
-      .getByRole('combobox', { name: 'Categories', exact: true })
-      .click();
-    await page.getByRole('option', { name: categoryName, exact: true }).click();
-    await page.keyboard.press('Escape');
+      .getByRole('checkbox', { name: categoryName, exact: true })
+      .check();
     await page.getByRole('button', { name: 'Save', exact: true }).click();
     await expect(page).toHaveURL(
       new RegExp(`${organizationsRoute}/organization/[^/]+$`)
@@ -104,10 +102,7 @@ test.describe('organization category persistence @pr', () => {
     await expect(page).toHaveURL(organizationUrl);
     await page.getByRole('button', { name: 'Edit', exact: true }).click();
     await expect(
-      page.getByRole('combobox', { name: 'Categories', exact: true })
-    ).toBeVisible();
-    await expect(page.locator('.MuiAutocomplete-tag')).toHaveText([
-      categoryName,
-    ]);
+      page.getByRole('checkbox', { name: categoryName, exact: true })
+    ).toBeChecked();
   });
 });

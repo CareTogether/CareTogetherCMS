@@ -1,7 +1,9 @@
 import {
-  Autocomplete,
   Button,
+  Checkbox,
   FormControl,
+  FormControlLabel,
+  FormGroup,
   FormHelperText,
   Link,
   TextField,
@@ -201,7 +203,20 @@ export function AddEditCommunity({
       </Grid>
       {organizationCategoriesEnabled && (
         <Grid size={12}>
-          <FormControl fullWidth size="small">
+          <FormControl
+            component="fieldset"
+            fullWidth
+            size="small"
+            sx={{ minWidth: 0 }}
+          >
+            <Typography
+              component="legend"
+              variant="subtitle2"
+              className="ph-unmask"
+              sx={{ mb: 0.5 }}
+            >
+              Categories
+            </Typography>
             {categoryOptions.length === 0 ? (
               <Typography
                 className="ph-unmask"
@@ -212,18 +227,32 @@ export function AddEditCommunity({
                 administrator can add them in Settings.
               </Typography>
             ) : (
-              <Autocomplete
-                multiple
-                clearOnEscape
-                disableCloseOnSelect
-                options={categoryOptions}
-                value={selectedCategories}
-                isOptionEqualToValue={(option, value) => option.id === value.id}
-                onChange={(_event, value) => setSelectedCategories(value)}
-                renderInput={(params) => (
-                  <TextField {...params} label="Categories" />
-                )}
-              />
+              <FormGroup>
+                {categoryOptions.map((category) => (
+                  <FormControlLabel
+                    key={category.id}
+                    label={category.label}
+                    sx={{ m: 0, overflowWrap: 'anywhere' }}
+                    control={
+                      <Checkbox
+                        size="small"
+                        checked={selectedCategories.some(
+                          (selected) => selected.id === category.id
+                        )}
+                        onChange={(_event, checked) =>
+                          setSelectedCategories((current) =>
+                            checked
+                              ? [...current, category]
+                              : current.filter(
+                                  (selected) => selected.id !== category.id
+                                )
+                          )
+                        }
+                      />
+                    }
+                  />
+                ))}
+              </FormGroup>
             )}
             <FormHelperText>
               <Link
