@@ -1,13 +1,40 @@
-import { Accordion, AccordionDetails, AccordionSummary, Box, Stack, Typography } from '@mui/material';
+import {
+  Accordion,
+  AccordionDetails,
+  AccordionSummary,
+  Box,
+  Stack,
+  Typography,
+} from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import { useMemo, useState } from 'react';
-import { CustomField, EffectiveLocationPolicy, FunctionAssignmentPolicy, RequirementDefinition, V1CasePolicy, V1ReferralPolicy } from '../../../../GeneratedClient';
+import {
+  CustomField,
+  EffectiveLocationPolicy,
+  FunctionAssignmentPolicy,
+  RequirementDefinition,
+  V1CasePolicy,
+  V1ReferralPolicy,
+} from '../../../../GeneratedClient';
 import { useSidePanel } from '../../../../Hooks/useSidePanel';
 import { useVisibleFamilies } from '../../../../Model/Data';
-import { CustomFieldSidePanel, FunctionAssignmentPolicySidePanel, RequirementSidePanel } from './sidePanels';
+import {
+  CustomFieldSidePanel,
+  FunctionAssignmentPolicySidePanel,
+  RequirementSidePanel,
+} from './sidePanels';
 import { CustomFieldsTable } from './CustomFieldsTable';
 import { FunctionAssignmentPoliciesTable, RequirementsTable } from './tables';
-import { clonePolicyWithCasePolicy, clonePolicyWithV1ReferralPolicy, nextCopyName, personOptionsFromFamilies, removeByName, removeCustomField, upsertByName, upsertCustomField } from './policyUtils';
+import {
+  clonePolicyWithCasePolicy,
+  clonePolicyWithV1ReferralPolicy,
+  nextCopyName,
+  personOptionsFromFamilies,
+  removeByName,
+  removeCustomField,
+  upsertByName,
+  upsertCustomField,
+} from './policyUtils';
 import { EditableActions, SectionHeader } from './sharedUi';
 
 export function V1ReferralPolicyTab({
@@ -17,7 +44,7 @@ export function V1ReferralPolicyTab({
 }: {
   policy: EffectiveLocationPolicy;
   locationRoles: string[];
-  onPolicyChange: (policy: EffectiveLocationPolicy) => void;
+  onPolicyChange: (policy: EffectiveLocationPolicy) => Promise<boolean>;
 }) {
   const casePolicy = policy.referralPolicy;
   const intakeRequirements =
@@ -62,7 +89,7 @@ export function V1ReferralPolicyTab({
     policy.v1ReferralPolicy?.functionAssignmentPolicies ?? [];
 
   function updateCasePolicy(update: Partial<V1CasePolicy>) {
-    onPolicyChange(
+    return onPolicyChange(
       clonePolicyWithCasePolicy(
         policy,
         new V1CasePolicy({
@@ -250,8 +277,8 @@ export function V1ReferralPolicyTab({
             []
           }
           onClose={closeRequirementPanel}
-          onSave={(previousName, requirement) => {
-            updateCasePolicy({
+          onSave={async (previousName, requirement) => {
+            const saved = await updateCasePolicy({
               intakeRequirements: upsertByName(
                 casePolicy?.intakeRequirements ?? [],
                 previousName,
@@ -259,7 +286,8 @@ export function V1ReferralPolicyTab({
                 (item) => item.actionName
               ),
             });
-            closeRequirementPanel();
+            if (saved) closeRequirementPanel();
+            return saved;
           }}
         />
       </RequirementPanel>
@@ -310,8 +338,8 @@ export function V1ReferralPolicyTab({
           volunteerFamilyRoles={volunteerFamilyRoles}
           personOptions={personOptions}
           onClose={closeFunctionAssignmentPanel}
-          onSave={(previousRole, assignmentPolicy) => {
-            onPolicyChange(
+          onSave={async (previousRole, assignmentPolicy) => {
+            const saved = await onPolicyChange(
               clonePolicyWithV1ReferralPolicy(
                 policy,
                 new V1ReferralPolicy({
@@ -325,11 +353,11 @@ export function V1ReferralPolicyTab({
                 })
               )
             );
-            closeFunctionAssignmentPanel();
+            if (saved) closeFunctionAssignmentPanel();
+            return saved;
           }}
         />
       </FunctionAssignmentPanel>
     </Box>
   );
 }
-

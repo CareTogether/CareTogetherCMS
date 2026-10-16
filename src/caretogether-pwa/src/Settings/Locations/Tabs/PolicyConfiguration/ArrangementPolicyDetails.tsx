@@ -1,13 +1,46 @@
-import { Drawer } from '@mui/material';
-import { Accordion, AccordionDetails, AccordionSummary, Stack, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Typography } from '@mui/material';
+import {
+  Accordion,
+  AccordionDetails,
+  AccordionSummary,
+  Stack,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Typography,
+} from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import { useState } from 'react';
-import { ArrangementFunction, ArrangementPolicy, FunctionRequirement, MonitoringRequirement, RequirementDefinition } from '../../../../GeneratedClient';
+import {
+  ArrangementFunction,
+  ArrangementPolicy,
+  FunctionRequirement,
+  MonitoringRequirement,
+  RequirementDefinition,
+} from '../../../../GeneratedClient';
 import { useSidePanel } from '../../../../Hooks/useSidePanel';
 import type { PersonOption } from './types';
-import { ArrangementFunctionSidePanel, MonitoringRequirementSidePanel, RequirementSidePanel } from './sidePanels';
-import { enumName, nextCopyName, removeByName, summarizeCount, upsertByName } from './policyUtils';
-import { DeleteRowAction, DuplicateRowAction, EditableActions, EmptyRow, ValuesText } from './sharedUi';
+import {
+  ArrangementFunctionSidePanel,
+  MonitoringRequirementSidePanel,
+  RequirementSidePanel,
+} from './sidePanels';
+import {
+  enumName,
+  nextCopyName,
+  removeByName,
+  summarizeCount,
+  upsertByName,
+} from './policyUtils';
+import {
+  DeleteRowAction,
+  DuplicateRowAction,
+  EditableActions,
+  EmptyRow,
+  ValuesText,
+} from './sharedUi';
 import { MonitoringRequirementsTable, RequirementsTable } from './tables';
 
 function ArrangementFunctionSummary({
@@ -69,12 +102,11 @@ export function ArrangementPolicyDetails({
     openSidePanel: openCloseoutRequirementPanel,
     closeSidePanel: closeCloseoutRequirementPanel,
   } = useSidePanel();
-  const [arrangementFunctionPanelOpen, setArrangementFunctionPanelOpen] =
-    useState(false);
-  const openArrangementFunctionPanel = () =>
-    setArrangementFunctionPanelOpen(true);
-  const closeArrangementFunctionPanel = () =>
-    setArrangementFunctionPanelOpen(false);
+  const {
+    SidePanel: ArrangementFunctionPanel,
+    openSidePanel: openArrangementFunctionPanel,
+    closeSidePanel: closeArrangementFunctionPanel,
+  } = useSidePanel();
   const [workingSetupRequirement, setWorkingSetupRequirement] = useState<
     RequirementDefinition | undefined
   >();
@@ -101,6 +133,15 @@ export function ArrangementPolicyDetails({
     return onArrangementChange(
       new ArrangementPolicy({ ...arrangement, ...update })
     );
+  }
+
+  async function updateArrangementAndClose(
+    update: Partial<ArrangementPolicy>,
+    closePanel: () => void
+  ) {
+    const saved = await updateArrangement(update);
+    if (saved) closePanel();
+    return saved;
   }
 
   function duplicateRequirement(
@@ -396,17 +437,19 @@ export function ArrangementPolicyDetails({
           actionNames={actionNames}
           existingActionNames={setupActions.map((item) => item.actionName)}
           onClose={closeSetupRequirementPanel}
-          onSave={(previousName, requirement) => {
-            updateArrangement({
-              requiredSetupActions: upsertByName(
-                setupActions,
-                previousName,
-                requirement,
-                (item) => item.actionName
-              ),
-            });
-            closeSetupRequirementPanel();
-          }}
+          onSave={(previousName, requirement) =>
+            updateArrangementAndClose(
+              {
+                requiredSetupActions: upsertByName(
+                  setupActions,
+                  previousName,
+                  requirement,
+                  (item) => item.actionName
+                ),
+              },
+              closeSetupRequirementPanel
+            )
+          }
         />
       </SetupRequirementPanel>
 
@@ -425,17 +468,19 @@ export function ArrangementPolicyDetails({
           actionNames={actionNames}
           existingActionNames={monitoringActions.map(monitoringRequirementName)}
           onClose={closeMonitoringRequirementPanel}
-          onSave={(previousName, requirement) => {
-            updateArrangement({
-              requiredMonitoringActionsNew: upsertByName(
-                monitoringActions,
-                previousName,
-                requirement,
-                monitoringRequirementName
-              ),
-            });
-            closeMonitoringRequirementPanel();
-          }}
+          onSave={(previousName, requirement) =>
+            updateArrangementAndClose(
+              {
+                requiredMonitoringActionsNew: upsertByName(
+                  monitoringActions,
+                  previousName,
+                  requirement,
+                  monitoringRequirementName
+                ),
+              },
+              closeMonitoringRequirementPanel
+            )
+          }
         />
       </MonitoringRequirementPanel>
 
@@ -453,29 +498,23 @@ export function ArrangementPolicyDetails({
           actionNames={actionNames}
           existingActionNames={closeoutActions.map((item) => item.actionName)}
           onClose={closeCloseoutRequirementPanel}
-          onSave={(previousName, requirement) => {
-            updateArrangement({
-              requiredCloseoutActions: upsertByName(
-                closeoutActions,
-                previousName,
-                requirement,
-                (item) => item.actionName
-              ),
-            });
-            closeCloseoutRequirementPanel();
-          }}
+          onSave={(previousName, requirement) =>
+            updateArrangementAndClose(
+              {
+                requiredCloseoutActions: upsertByName(
+                  closeoutActions,
+                  previousName,
+                  requirement,
+                  (item) => item.actionName
+                ),
+              },
+              closeCloseoutRequirementPanel
+            )
+          }
         />
       </CloseoutRequirementPanel>
 
-      <Drawer
-        disableRestoreFocus
-        anchor="right"
-        open={arrangementFunctionPanelOpen}
-        onClose={closeArrangementFunctionPanel}
-        slotProps={{
-          paper: { sx: { padding: 2, paddingTop: { xs: 7, sm: 8, md: 6 } } },
-        }}
-      >
+      <ArrangementFunctionPanel>
         <ArrangementFunctionSidePanel
           key={
             workingArrangementFunction?.functionName ??
@@ -489,20 +528,21 @@ export function ArrangementPolicyDetails({
           volunteerFamilyRoles={volunteerFamilyRoles}
           personOptions={personOptions}
           onClose={closeArrangementFunctionPanel}
-          onSave={async (previousName, arrangementFunction) => {
-            const saved = await updateArrangement({
-              arrangementFunctions: upsertByName(
-                arrangementFunctions,
-                previousName,
-                arrangementFunction,
-                (item) => item.functionName
-              ),
-            });
-            if (saved) closeArrangementFunctionPanel();
-            return saved;
-          }}
+          onSave={(previousName, arrangementFunction) =>
+            updateArrangementAndClose(
+              {
+                arrangementFunctions: upsertByName(
+                  arrangementFunctions,
+                  previousName,
+                  arrangementFunction,
+                  (item) => item.functionName
+                ),
+              },
+              closeArrangementFunctionPanel
+            )
+          }
         />
-      </Drawer>
+      </ArrangementFunctionPanel>
     </Stack>
   );
 }

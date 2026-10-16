@@ -77,6 +77,70 @@ import {
 } from './policyUtils';
 import { supportsCustomFieldSuggestions } from '../../../../Generic/customFieldValue';
 
+// Tracks a side panel save so the panel stays open with the user's input when the
+// policy is not persisted, and so a save cannot be submitted twice.
+function usePanelSave() {
+  const [saving, setSaving] = useState(false);
+  const [saveFailed, setSaveFailed] = useState(false);
+
+  async function runSave(save: () => Promise<boolean>) {
+    if (saving) return;
+
+    setSaving(true);
+    setSaveFailed(false);
+    try {
+      setSaveFailed(!(await save()));
+    } catch {
+      setSaveFailed(true);
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  return { saving, saveFailed, runSave };
+}
+
+function SidePanelSaveActions({
+  canSave,
+  saving,
+  saveFailed,
+  onClose,
+}: {
+  canSave: boolean;
+  saving: boolean;
+  saveFailed: boolean;
+  onClose: () => void;
+}) {
+  return (
+    <>
+      {saveFailed && (
+        <Grid item xs={12}>
+          <Alert severity="error">
+            <span className="ph-unmask">
+              The changes could not be saved. Review the policy errors and try
+              again.
+            </span>
+          </Alert>
+        </Grid>
+      )}
+      <Grid item xs={12} sx={{ textAlign: 'right' }}>
+        <Button
+          variant="contained"
+          color="secondary"
+          sx={{ mr: 2 }}
+          disabled={saving}
+          onClick={onClose}
+        >
+          Cancel
+        </Button>
+        <Button type="submit" variant="contained" disabled={!canSave || saving}>
+          Save
+        </Button>
+      </Grid>
+    </>
+  );
+}
+
 export function ActionDefinitionSidePanel({
   actionName,
   action,
@@ -527,7 +591,7 @@ export function RequirementSidePanel({
   onSave: (
     previousName: string | undefined,
     requirement: RequirementDefinition
-  ) => void;
+  ) => Promise<boolean>;
 }) {
   const [draft, setDraft] = useState<RequirementDraft>(() =>
     requirementToDraft(requirement)
@@ -542,14 +606,19 @@ export function RequirementSidePanel({
   const canSave =
     trimmedActionName.length > 0 && !duplicateName && !unknownActionName;
 
+  const { saving, saveFailed, runSave } = usePanelSave();
+
   function save() {
     if (!canSave) return;
-    onSave(
-      requirement?.actionName,
-      new RequirementDefinition({
-        actionName: trimmedActionName,
-        isRequired: draft.isRequired,
-      })
+
+    void runSave(() =>
+      onSave(
+        requirement?.actionName,
+        new RequirementDefinition({
+          actionName: trimmedActionName,
+          isRequired: draft.isRequired,
+        })
+      )
     );
   }
 
@@ -611,19 +680,12 @@ export function RequirementSidePanel({
         />
       </Grid>
 
-      <Grid item xs={12} sx={{ textAlign: 'right' }}>
-        <Button
-          variant="contained"
-          color="secondary"
-          sx={{ mr: 2 }}
-          onClick={onClose}
-        >
-          Cancel
-        </Button>
-        <Button type="submit" variant="contained" disabled={!canSave}>
-          Save
-        </Button>
-      </Grid>
+      <SidePanelSaveActions
+        canSave={canSave}
+        saving={saving}
+        saveFailed={saveFailed}
+        onClose={onClose}
+      />
     </Grid>
   );
 }
@@ -644,7 +706,7 @@ export function MonitoringRequirementSidePanel({
   onSave: (
     previousName: string | undefined,
     requirement: MonitoringRequirement
-  ) => void;
+  ) => Promise<boolean>;
 }) {
   const [draft, setDraft] = useState<MonitoringRequirementDraft>(() =>
     monitoringRequirementToDraft(requirement)
@@ -666,24 +728,28 @@ export function MonitoringRequirementSidePanel({
     !unknownActionName &&
     delayAmountIsValid;
 
+  const { saving, saveFailed, runSave } = usePanelSave();
+
   function save() {
     if (!canSave) return;
 
-    onSave(
-      previousName,
-      new MonitoringRequirement({
-        action: new RequirementDefinition({
-          actionName: trimmedActionName,
-          isRequired: draft.isRequired,
-        }),
-        recurrence: new OneTimeRecurrencePolicy({
-          delay: toTimeSpanString(
-            draft.delayEnabled,
-            draft.delayAmount,
-            draft.delayUnit
-          ),
-        }),
-      })
+    void runSave(() =>
+      onSave(
+        previousName,
+        new MonitoringRequirement({
+          action: new RequirementDefinition({
+            actionName: trimmedActionName,
+            isRequired: draft.isRequired,
+          }),
+          recurrence: new OneTimeRecurrencePolicy({
+            delay: toTimeSpanString(
+              draft.delayEnabled,
+              draft.delayAmount,
+              draft.delayUnit
+            ),
+          }),
+        })
+      )
     );
   }
 
@@ -806,19 +872,12 @@ export function MonitoringRequirementSidePanel({
         </>
       )}
 
-      <Grid item xs={12} sx={{ textAlign: 'right' }}>
-        <Button
-          variant="contained"
-          color="secondary"
-          sx={{ mr: 2 }}
-          onClick={onClose}
-        >
-          Cancel
-        </Button>
-        <Button type="submit" variant="contained" disabled={!canSave}>
-          Save
-        </Button>
-      </Grid>
+      <SidePanelSaveActions
+        canSave={canSave}
+        saving={saving}
+        saveFailed={saveFailed}
+        onClose={onClose}
+      />
     </Grid>
   );
 }
@@ -846,8 +905,7 @@ export function ArrangementFunctionSidePanel({
   const [draft, setDraft] = useState<ArrangementFunctionDraft>(() =>
     arrangementFunctionToDraft(arrangementFunction)
   );
-  const [saving, setSaving] = useState(false);
-  const [saveFailed, setSaveFailed] = useState(false);
+  const { saving, saveFailed, runSave } = usePanelSave();
   const trimmedName = draft.functionName.trim();
   const duplicateName =
     trimmedName.length > 0 &&
@@ -865,13 +923,11 @@ export function ArrangementFunctionSidePanel({
   );
   const canSave = trimmedName.length > 0 && !duplicateName;
 
-  async function save() {
-    if (!canSave || saving) return;
+  function save() {
+    if (!canSave) return;
 
-    setSaving(true);
-    setSaveFailed(false);
-    try {
-      const saved = await onSave(
+    void runSave(() =>
+      onSave(
         arrangementFunction?.functionName,
         new ArrangementFunction({
           functionName: trimmedName,
@@ -888,13 +944,8 @@ export function ArrangementFunctionSidePanel({
             eligiblePeople.length > 0 ? eligiblePeople : undefined,
           variants: arrangementFunction?.variants ?? [],
         })
-      );
-      setSaveFailed(!saved);
-    } catch {
-      setSaveFailed(true);
-    } finally {
-      setSaving(false);
-    }
+      )
+    );
   }
 
   return (
@@ -905,7 +956,7 @@ export function ArrangementFunctionSidePanel({
       component="form"
       onSubmit={(event) => {
         event.preventDefault();
-        void save();
+        save();
       }}
     >
       <Grid item xs={12}>
@@ -1014,30 +1065,12 @@ export function ArrangementFunctionSidePanel({
         />
       </Grid>
 
-      {saveFailed && (
-        <Grid item xs={12}>
-          <Alert severity="error">
-            <span className="ph-unmask">
-              The arrangement function could not be saved. Review the policy
-              errors and try again.
-            </span>
-          </Alert>
-        </Grid>
-      )}
-      <Grid item xs={12} sx={{ textAlign: 'right' }}>
-        <Button
-          variant="contained"
-          color="secondary"
-          sx={{ mr: 2 }}
-          disabled={saving}
-          onClick={onClose}
-        >
-          Cancel
-        </Button>
-        <Button type="submit" variant="contained" disabled={!canSave || saving}>
-          Save
-        </Button>
-      </Grid>
+      <SidePanelSaveActions
+        canSave={canSave}
+        saving={saving}
+        saveFailed={saveFailed}
+        onClose={onClose}
+      />
     </Grid>
   );
 }
@@ -1064,7 +1097,7 @@ export function FunctionAssignmentPolicySidePanel({
   onSave: (
     previousRole: string | undefined,
     policy: FunctionAssignmentPolicy
-  ) => void;
+  ) => Promise<boolean>;
 }) {
   const [draft, setDraft] = useState<FunctionAssignmentPolicyDraft>(() =>
     functionAssignmentPolicyToDraft(policy)
@@ -1095,20 +1128,24 @@ export function FunctionAssignmentPolicySidePanel({
     0;
   const canSave = trimmedRole.length > 0 && !duplicateRole && hasEligibility;
 
+  const { saving, saveFailed, runSave } = usePanelSave();
+
   function save() {
     if (!canSave) return;
 
-    onSave(
-      policy?.assignmentRole,
-      new FunctionAssignmentPolicy({
-        assignmentRole: trimmedRole,
-        eligibility: new FunctionAssignmentEligibility({
-          eligibleLocationRoles,
-          eligibleIndividualVolunteerRoles,
-          eligibleVolunteerFamilyRoles,
-          eligiblePeople,
-        }),
-      })
+    void runSave(() =>
+      onSave(
+        policy?.assignmentRole,
+        new FunctionAssignmentPolicy({
+          assignmentRole: trimmedRole,
+          eligibility: new FunctionAssignmentEligibility({
+            eligibleLocationRoles,
+            eligibleIndividualVolunteerRoles,
+            eligibleVolunteerFamilyRoles,
+            eligiblePeople,
+          }),
+        })
+      )
     );
   }
 
@@ -1229,19 +1266,12 @@ export function FunctionAssignmentPolicySidePanel({
         </Grid>
       )}
 
-      <Grid item xs={12} sx={{ textAlign: 'right' }}>
-        <Button
-          variant="contained"
-          color="secondary"
-          sx={{ mr: 2 }}
-          onClick={onClose}
-        >
-          Cancel
-        </Button>
-        <Button type="submit" variant="contained" disabled={!canSave}>
-          Save
-        </Button>
-      </Grid>
+      <SidePanelSaveActions
+        canSave={canSave}
+        saving={saving}
+        saveFailed={saveFailed}
+        onClose={onClose}
+      />
     </Grid>
   );
 }
@@ -1258,7 +1288,7 @@ export function ArrangementPolicySidePanel({
   onSave: (
     previousType: string | undefined,
     arrangement: ArrangementPolicy
-  ) => void;
+  ) => Promise<boolean>;
 }) {
   const [draft, setDraft] = useState<ArrangementPolicyDraft>(() =>
     arrangementPolicyToDraft(arrangement)
@@ -1270,34 +1300,39 @@ export function ArrangementPolicySidePanel({
     existingArrangementTypes.includes(trimmedType);
   const canSave = trimmedType.length > 0 && !duplicateType;
 
+  const { saving, saveFailed, runSave } = usePanelSave();
+
   function save() {
     if (!canSave) return;
 
-    onSave(
-      arrangement?.arrangementType,
-      new ArrangementPolicy({
-        requiredSetupActions_PRE_MIGRATION:
-          arrangement?.requiredSetupActions_PRE_MIGRATION ?? [],
-        requiredMonitoringActions_PRE_MIGRATION:
-          arrangement?.requiredMonitoringActions_PRE_MIGRATION ?? [],
-        requiredCloseoutActionNames_PRE_MIGRATION:
-          arrangement?.requiredCloseoutActionNames_PRE_MIGRATION ?? [],
-        arrangementType: trimmedType,
-        childInvolvement: draft.childInvolvement,
-        arrangementFunctions: arrangement?.arrangementFunctions ?? [],
-        requiredSetupActionNames: arrangement?.requiredSetupActionNames ?? [],
-        requiredMonitoringActions: arrangement?.requiredMonitoringActions ?? [],
-        requiredCloseoutActionNames:
-          arrangement?.requiredCloseoutActionNames ?? [],
-        requiredSetupActions: arrangement?.requiredSetupActions ?? [],
-        requiredMonitoringActionsNew:
-          arrangement?.requiredMonitoringActionsNew ?? [],
-        requiredCloseoutActions: arrangement?.requiredCloseoutActions ?? [],
-        supersededAtUtc:
-          draft.superseded && draft.supersededAtUtc
-            ? new Date(draft.supersededAtUtc)
-            : undefined,
-      })
+    void runSave(() =>
+      onSave(
+        arrangement?.arrangementType,
+        new ArrangementPolicy({
+          requiredSetupActions_PRE_MIGRATION:
+            arrangement?.requiredSetupActions_PRE_MIGRATION ?? [],
+          requiredMonitoringActions_PRE_MIGRATION:
+            arrangement?.requiredMonitoringActions_PRE_MIGRATION ?? [],
+          requiredCloseoutActionNames_PRE_MIGRATION:
+            arrangement?.requiredCloseoutActionNames_PRE_MIGRATION ?? [],
+          arrangementType: trimmedType,
+          childInvolvement: draft.childInvolvement,
+          arrangementFunctions: arrangement?.arrangementFunctions ?? [],
+          requiredSetupActionNames: arrangement?.requiredSetupActionNames ?? [],
+          requiredMonitoringActions:
+            arrangement?.requiredMonitoringActions ?? [],
+          requiredCloseoutActionNames:
+            arrangement?.requiredCloseoutActionNames ?? [],
+          requiredSetupActions: arrangement?.requiredSetupActions ?? [],
+          requiredMonitoringActionsNew:
+            arrangement?.requiredMonitoringActionsNew ?? [],
+          requiredCloseoutActions: arrangement?.requiredCloseoutActions ?? [],
+          supersededAtUtc:
+            draft.superseded && draft.supersededAtUtc
+              ? new Date(draft.supersededAtUtc)
+              : undefined,
+        })
+      )
     );
   }
 
@@ -1393,19 +1428,12 @@ export function ArrangementPolicySidePanel({
         </Grid>
       )}
 
-      <Grid item xs={12} sx={{ textAlign: 'right' }}>
-        <Button
-          variant="contained"
-          color="secondary"
-          sx={{ mr: 2 }}
-          onClick={onClose}
-        >
-          Cancel
-        </Button>
-        <Button type="submit" variant="contained" disabled={!canSave}>
-          Save
-        </Button>
-      </Grid>
+      <SidePanelSaveActions
+        canSave={canSave}
+        saving={saving}
+        saveFailed={saveFailed}
+        onClose={onClose}
+      />
     </Grid>
   );
 }

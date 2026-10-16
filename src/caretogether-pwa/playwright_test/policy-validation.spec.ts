@@ -226,6 +226,64 @@ test('failed save keeps the drawer values and existing warnings', async ({
   expect(requests.validations()).toBe(1);
 });
 
+async function addCaseFunctionAssignment(page: Page) {
+  const section = page
+    .locator('.MuiAccordion-root')
+    .filter({ has: page.getByText('Functions', { exact: true }) })
+    .first();
+  await section.getByRole('button', { name: 'Add', exact: true }).click();
+  await page
+    .getByRole('textbox', { name: 'Function', exact: true })
+    .fill('Case Coordinator');
+  await page
+    .getByRole('combobox', { name: 'Eligible Individual Volunteer Roles' })
+    .click();
+  await page
+    .getByRole('option', { name: 'Family Friend', exact: true })
+    .click();
+  await page.getByRole('textbox', { name: 'Function', exact: true }).click();
+}
+
+test('failed function assignment save keeps the drawer open with its values', async ({
+  page,
+}) => {
+  const requests = await backend(page, true);
+  await mount(page, 'casePolicy');
+  await expect(page.getByText(warning, { exact: true })).toBeVisible();
+  await addCaseFunctionAssignment(page);
+  await page.getByRole('button', { name: 'Save', exact: true }).click();
+  await expect(page.getByTestId('policy-save-errors')).toContainText(
+    blockingError
+  );
+  await expect(
+    page.getByText(
+      'The changes could not be saved. Review the policy errors and try again.'
+    )
+  ).toBeVisible();
+  await expect(
+    page.getByRole('textbox', { name: 'Function', exact: true })
+  ).toHaveValue('Case Coordinator');
+  await expect(
+    page.getByRole('button', { name: 'Save', exact: true })
+  ).toBeEnabled();
+  expect(requests.puts()).toBe(1);
+});
+
+test('successful function assignment save closes the drawer', async ({
+  page,
+}) => {
+  const requests = await backend(page);
+  await mount(page, 'casePolicy');
+  await expect(page.getByText(warning, { exact: true })).toBeVisible();
+  await addCaseFunctionAssignment(page);
+  await page.getByRole('button', { name: 'Save', exact: true }).click();
+  await expect(
+    page.getByRole('textbox', { name: 'Function', exact: true })
+  ).not.toBeVisible();
+  await expect(page.getByText('Case Coordinator')).toBeVisible();
+  expect(requests.puts()).toBe(1);
+});
+
 test('warning-only save closes the drawer and refreshes warnings', async ({
   page,
 }) => {

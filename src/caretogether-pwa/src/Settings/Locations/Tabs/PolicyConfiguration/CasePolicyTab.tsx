@@ -1,13 +1,40 @@
-import { Accordion, AccordionDetails, AccordionSummary, Box, Button, Stack, Typography } from '@mui/material';
+import {
+  Accordion,
+  AccordionDetails,
+  AccordionSummary,
+  Box,
+  Button,
+  Stack,
+  Typography,
+} from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import { useMemo, useState } from 'react';
-import { ArrangementPolicy, EffectiveLocationPolicy, FunctionAssignmentPolicy, V1CasePolicy } from '../../../../GeneratedClient';
+import {
+  ArrangementPolicy,
+  EffectiveLocationPolicy,
+  FunctionAssignmentPolicy,
+  V1CasePolicy,
+} from '../../../../GeneratedClient';
 import { useSidePanel } from '../../../../Hooks/useSidePanel';
 import { useVisibleFamilies } from '../../../../Model/Data';
-import { ArrangementPolicySidePanel, FunctionAssignmentPolicySidePanel } from './sidePanels';
+import {
+  ArrangementPolicySidePanel,
+  FunctionAssignmentPolicySidePanel,
+} from './sidePanels';
 import { FunctionAssignmentPoliciesTable } from './tables';
-import { clonePolicyWithCasePolicy, nextCopyName, personOptionsFromFamilies, removeByName, upsertByName } from './policyUtils';
-import { DeleteRowAction, DuplicateRowAction, EditableActions, SectionHeader } from './sharedUi';
+import {
+  clonePolicyWithCasePolicy,
+  nextCopyName,
+  personOptionsFromFamilies,
+  removeByName,
+  upsertByName,
+} from './policyUtils';
+import {
+  DeleteRowAction,
+  DuplicateRowAction,
+  EditableActions,
+  SectionHeader,
+} from './sharedUi';
 import { ArrangementPolicyDetails } from './ArrangementPolicyDetails';
 
 export function CasePolicyTab({
@@ -59,6 +86,15 @@ export function CasePolicyTab({
         })
       )
     );
+  }
+
+  async function updateCasePolicyAndClose(
+    update: Partial<V1CasePolicy>,
+    closePanel: () => void
+  ) {
+    const saved = await updateCasePolicy(update);
+    if (saved) closePanel();
+    return saved;
   }
 
   function duplicateCaseFunctionAssignmentPolicy(
@@ -261,17 +297,19 @@ export function CasePolicyTab({
           volunteerFamilyRoles={volunteerFamilyRoles}
           personOptions={personOptions}
           onClose={closeFunctionAssignmentPanel}
-          onSave={(previousRole, assignmentPolicy) => {
-            updateCasePolicy({
-              functionAssignmentPolicies: upsertByName(
-                casePolicy?.functionAssignmentPolicies ?? [],
-                previousRole,
-                assignmentPolicy,
-                (item) => item.assignmentRole
-              ),
-            });
-            closeFunctionAssignmentPanel();
-          }}
+          onSave={(previousRole, assignmentPolicy) =>
+            updateCasePolicyAndClose(
+              {
+                functionAssignmentPolicies: upsertByName(
+                  casePolicy?.functionAssignmentPolicies ?? [],
+                  previousRole,
+                  assignmentPolicy,
+                  (item) => item.assignmentRole
+                ),
+              },
+              closeFunctionAssignmentPanel
+            )
+          }
         />
       </FunctionAssignmentPanel>
 
@@ -286,17 +324,19 @@ export function CasePolicyTab({
             (item) => item.arrangementType
           )}
           onClose={closeArrangementPolicyPanel}
-          onSave={(previousType, arrangement) => {
-            updateCasePolicy({
-              arrangementPolicies: upsertByName(
-                arrangementPolicies,
-                previousType,
-                arrangement,
-                (item) => item.arrangementType
-              ),
-            });
-            closeArrangementPolicyPanel();
-          }}
+          onSave={(previousType, arrangement) =>
+            updateCasePolicyAndClose(
+              {
+                arrangementPolicies: upsertByName(
+                  arrangementPolicies,
+                  previousType,
+                  arrangement,
+                  (item) => item.arrangementType
+                ),
+              },
+              closeArrangementPolicyPanel
+            )
+          }
         />
       </ArrangementPolicyPanel>
     </Box>
