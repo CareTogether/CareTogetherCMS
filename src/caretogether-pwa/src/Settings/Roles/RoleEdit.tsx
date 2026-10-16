@@ -49,6 +49,7 @@ import { Breadcrumbs } from '../../Generic/Breadcrumbs';
 import {
   DESKTOP_BOTTOM_SAFE_AREA,
   MOBILE_BOTTOM_SAFE_AREA,
+  SHELL_APP_BAR_HEIGHT,
 } from '../../Shell/shellLayoutConstants';
 import { PERMISSIONS_AUTOCOMPLETE_FEATURE_FLAG } from '../../featureFlags';
 
@@ -146,15 +147,18 @@ export function RoleEdit({
     <Stack
       className="ph-unmask"
       sx={{
-        paddingTop: 2,
+        paddingTop: { xs: 1, sm: 2 },
+        minWidth: 0,
+        minHeight: 0,
         height: {
-          xs: `calc(100vh - 48px - ${MOBILE_BOTTOM_SAFE_AREA}px)`,
-          md: `calc(100vh - 48px - ${DESKTOP_BOTTOM_SAFE_AREA}px)`,
+          xs: `calc(100dvh - ${SHELL_APP_BAR_HEIGHT.xs} - ${MOBILE_BOTTOM_SAFE_AREA}px)`,
+          sm: `calc(100dvh - ${SHELL_APP_BAR_HEIGHT.sm} - ${MOBILE_BOTTOM_SAFE_AREA}px)`,
+          md: `calc(100dvh - ${SHELL_APP_BAR_HEIGHT.md} - ${DESKTOP_BOTTOM_SAFE_AREA}px)`,
         },
       }}
       spacing={0}
     >
-      <Box>
+      <Box sx={{ flexShrink: 0 }}>
         <Breadcrumbs
           items={[
             {
@@ -171,12 +175,14 @@ export function RoleEdit({
           currentPageLabel={roleDefinition.roleName || ''}
         />
 
-        <Typography sx={{ marginY: 2 }} variant="h2">
+        <Typography sx={{ my: { xs: 1, sm: 2 } }} variant="h2">
           Editing {roleDefinition.roleName} role
         </Typography>
       </Box>
 
-      <TableContainer>
+      <TableContainer
+        sx={{ flex: 1, minHeight: 0, minWidth: 0, overflow: 'auto' }}
+      >
         <Table sx={{ minWidth: '700px' }} stickyHeader size="small">
           <colgroup>
             <col />
@@ -363,10 +369,22 @@ export function RoleEdit({
         </MenuItem>
       </Menu>
 
-      <Box sx={{ paddingTop: 2, borderTop: 1, borderColor: 'divider' }}>
+      <Box
+        sx={{
+          pt: { xs: 1, sm: 2 },
+          flexShrink: 0,
+          borderTop: 1,
+          borderColor: 'divider',
+        }}
+      >
         <Stack
           direction="row"
-          sx={{ justifyContent: 'flex-end', alignItems: 'center' }}
+          sx={{
+            justifyContent: 'flex-end',
+            alignItems: 'center',
+            flexWrap: 'wrap',
+            gap: 1,
+          }}
         >
           {dirty && (
             <Typography sx={{ fontStyle: 'italic', mr: 2 }}>

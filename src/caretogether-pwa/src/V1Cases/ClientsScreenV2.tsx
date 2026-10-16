@@ -1,10 +1,10 @@
-import { Box, Stack, Typography } from '@mui/material';
+import { Box, Stack } from '@mui/material';
 import { useCallback, useState } from 'react';
 import type { GridSortModel } from '@mui/x-data-grid-premium';
 import { useFeatureFlagEnabled } from 'posthog-js/react';
 import { Permission } from '../GeneratedClient';
 import { useScreenTitle } from '../Shell/ShellScreenTitle';
-import { v2Typography } from '../Families/v2Typography';
+import { ResponsivePageHeader } from '../Generic/ResponsivePageHeader';
 import { ClientsDataGridV2 } from './ClientsDataGridV2';
 import {
   type ClientBrowserRowV2,
@@ -86,23 +86,11 @@ export function ClientsScreenV2() {
   const hasFeaturebaseChat = globalPermissions(Permission.AccessSupportScreen);
   return (
     <Box sx={wideTablePageSx(hasFeaturebaseChat)}>
-      <Stack spacing={2.5} sx={{ flex: 1, minHeight: 0 }}>
-        <Box>
-          <Typography
-            className="ph-unmask"
-            {...v2Typography.pageTitle}
-            sx={{ mt: 2 }}
-          >
-            Clients
-          </Typography>
-          <Typography
-            className="ph-unmask"
-            {...v2Typography.secondaryValue}
-            sx={{ ...v2Typography.secondaryValue.sx, mt: 0.5 }}
-          >
-            Browse client families, open cases, and arrangement summaries.
-          </Typography>
-        </Box>
+      <Stack spacing={{ xs: 1, sm: 2 }} sx={{ flex: 1, minHeight: 0 }}>
+        <ResponsivePageHeader
+          title="Clients"
+          description="Browse client families, open cases, and arrangement summaries."
+        />
         <Box sx={{ flex: 1, minHeight: 0 }}>
           <ClientsDataGridV2
             rows={rows}

@@ -199,10 +199,19 @@ function ReferralsGridSession({
   return (
     <GridChartsIntegrationContextProvider>
       <Box
-        sx={{ height: '100%', width: '100%', minWidth: 0, overflowY: 'auto' }}
+        sx={{
+          height: '100%',
+          width: '100%',
+          minHeight: 0,
+          minWidth: 0,
+          overflowY: 'auto',
+        }}
       >
         <Box
-          sx={[v2DataGridStyles(theme, { height: '100%' }), { minHeight: 360 }]}
+          sx={[
+            v2DataGridStyles(theme, { height: '100%' }),
+            { minHeight: 'min(360px, 100%)', minWidth: 0 },
+          ]}
         >
           <PersistedFilterDataGridPremium
             showToolbar
