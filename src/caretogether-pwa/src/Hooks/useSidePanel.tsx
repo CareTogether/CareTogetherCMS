@@ -4,7 +4,7 @@ import { ReactNode, useState, useSyncExternalStore } from 'react';
 // The panel component is created once per hook instance so its identity stays stable
 // across renders. A component defined inline would be a new type on every render and
 // React would remount the panel content, discarding any state it holds (drafts, saving).
-function createSidePanel() {
+function createSidePanel(className?: string) {
   let open = false;
   const listeners = new Set<() => void>();
 
@@ -29,6 +29,8 @@ function createSidePanel() {
 
     return (
       <Drawer
+        // The drawer renders in a portal, outside the page's own ph-unmask scope.
+        className={className}
         // For some reason, without this, the text field in AddRole will not be autofocused
         disableRestoreFocus
         anchor="right"
@@ -51,7 +53,7 @@ function createSidePanel() {
   return { SidePanel, openSidePanel, closeSidePanel };
 }
 
-export function useSidePanel() {
-  const [sidePanel] = useState(createSidePanel);
+export function useSidePanel({ className }: { className?: string } = {}) {
+  const [sidePanel] = useState(() => createSidePanel(className));
   return sidePanel;
 }

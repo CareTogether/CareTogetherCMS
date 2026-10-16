@@ -91,22 +91,22 @@ export function ArrangementPolicyDetails({
     SidePanel: SetupRequirementPanel,
     openSidePanel: openSetupRequirementPanel,
     closeSidePanel: closeSetupRequirementPanel,
-  } = useSidePanel();
+  } = useSidePanel({ className: 'ph-unmask' });
   const {
     SidePanel: MonitoringRequirementPanel,
     openSidePanel: openMonitoringRequirementPanel,
     closeSidePanel: closeMonitoringRequirementPanel,
-  } = useSidePanel();
+  } = useSidePanel({ className: 'ph-unmask' });
   const {
     SidePanel: CloseoutRequirementPanel,
     openSidePanel: openCloseoutRequirementPanel,
     closeSidePanel: closeCloseoutRequirementPanel,
-  } = useSidePanel();
+  } = useSidePanel({ className: 'ph-unmask' });
   const {
     SidePanel: ArrangementFunctionPanel,
     openSidePanel: openArrangementFunctionPanel,
     closeSidePanel: closeArrangementFunctionPanel,
-  } = useSidePanel();
+  } = useSidePanel({ className: 'ph-unmask' });
   const [workingSetupRequirement, setWorkingSetupRequirement] = useState<
     RequirementDefinition | undefined
   >();

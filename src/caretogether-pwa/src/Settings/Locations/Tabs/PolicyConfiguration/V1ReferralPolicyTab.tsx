@@ -66,17 +66,17 @@ export function V1ReferralPolicyTab({
     SidePanel: RequirementPanel,
     openSidePanel: openRequirementPanel,
     closeSidePanel: closeRequirementPanel,
-  } = useSidePanel();
+  } = useSidePanel({ className: 'ph-unmask' });
   const {
     SidePanel: CustomFieldPanel,
     openSidePanel: openCustomFieldPanel,
     closeSidePanel: closeCustomFieldPanel,
-  } = useSidePanel();
+  } = useSidePanel({ className: 'ph-unmask' });
   const {
     SidePanel: FunctionAssignmentPanel,
     openSidePanel: openFunctionAssignmentPanel,
     closeSidePanel: closeFunctionAssignmentPanel,
-  } = useSidePanel();
+  } = useSidePanel({ className: 'ph-unmask' });
   const [workingRequirement, setWorkingRequirement] = useState<
     RequirementDefinition | undefined
   >();

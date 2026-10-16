@@ -116,10 +116,8 @@ function SidePanelSaveActions({
       {saveFailed && (
         <Grid item xs={12}>
           <Alert severity="error">
-            <span className="ph-unmask">
-              The changes could not be saved. Review the policy errors and try
-              again.
-            </span>
+            The changes could not be saved. Review the policy errors and try
+            again.
           </Alert>
         </Grid>
       )}

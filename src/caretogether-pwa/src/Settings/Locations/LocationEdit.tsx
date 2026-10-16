@@ -325,6 +325,7 @@ export function LocationEdit() {
 
   return (
     <Stack
+      className="ph-unmask"
       spacing={0}
       sx={{
         height: isV2
@@ -427,15 +428,21 @@ export function LocationEdit() {
           }}
         >
           {validation?.status === 'loading' && (
-            <Typography role="status" className="ph-unmask" sx={{ mb: 2 }}>
+            <Typography role="status" sx={{ mb: 2 }}>
               Checking policy configuration...
             </Typography>
           )}
           {validation?.status === 'failure' && (
-            <Alert severity="error" sx={{ mb: 2 }}>
-              <span className="ph-unmask">
-                Policy validation could not be loaded. Try reopening Settings.
-              </span>
+            <Alert
+              severity="error"
+              sx={{ mb: 2 }}
+              action={
+                <Button color="inherit" size="small" onClick={validation.retry}>
+                  Try again
+                </Button>
+              }
+            >
+              Policy validation could not be loaded.
             </Alert>
           )}
           {validation?.status === 'success' && (

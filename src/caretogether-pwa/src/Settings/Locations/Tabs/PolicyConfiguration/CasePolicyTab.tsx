@@ -64,12 +64,12 @@ export function CasePolicyTab({
     SidePanel: FunctionAssignmentPanel,
     openSidePanel: openFunctionAssignmentPanel,
     closeSidePanel: closeFunctionAssignmentPanel,
-  } = useSidePanel();
+  } = useSidePanel({ className: 'ph-unmask' });
   const {
     SidePanel: ArrangementPolicyPanel,
     openSidePanel: openArrangementPolicyPanel,
     closeSidePanel: closeArrangementPolicyPanel,
-  } = useSidePanel();
+  } = useSidePanel({ className: 'ph-unmask' });
   const [workingFunctionAssignmentPolicy, setWorkingFunctionAssignmentPolicy] =
     useState<FunctionAssignmentPolicy | undefined>();
   const [workingArrangementPolicy, setWorkingArrangementPolicy] = useState<

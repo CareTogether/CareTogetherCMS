@@ -1,5 +1,22 @@
-import { Add as AddIcon, ControlPointDuplicate as DuplicateIcon, Delete as DeleteIcon } from '@mui/icons-material';
-import { Button, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, IconButton, Stack, TableCell, TableRow, Tooltip, Typography } from '@mui/material';
+import {
+  Add as AddIcon,
+  ControlPointDuplicate as DuplicateIcon,
+  Delete as DeleteIcon,
+} from '@mui/icons-material';
+import {
+  Button,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogContentText,
+  DialogTitle,
+  IconButton,
+  Stack,
+  TableCell,
+  TableRow,
+  Tooltip,
+  Typography,
+} from '@mui/material';
 import { ReactNode, useState } from 'react';
 import { listText } from './policyUtils';
 
@@ -9,12 +26,7 @@ export function ValuesText({ values }: { values?: string[] }) {
 
 export function EditableActions({ onAdd }: { onAdd: () => void }) {
   return (
-    <Stack
-      direction="row"
-      spacing={1}
-      useFlexGap
-      sx={{ flexWrap: 'wrap' }}
-    >
+    <Stack direction="row" spacing={1} useFlexGap sx={{ flexWrap: 'wrap' }}>
       <Button
         size="small"
         variant="contained"
@@ -54,7 +66,13 @@ export function SectionHeader({
   );
 }
 
-export function EmptyRow({ colSpan, label }: { colSpan: number; label: string }) {
+export function EmptyRow({
+  colSpan,
+  label,
+}: {
+  colSpan: number;
+  label: string;
+}) {
   return (
     <TableRow>
       <TableCell colSpan={colSpan}>
@@ -108,6 +126,7 @@ export function ConfirmedRowAction({
       </Tooltip>
 
       <Dialog
+        className="ph-unmask"
         open={confirming}
         onClose={closeDialog}
         onClick={(event) => event.stopPropagation()}

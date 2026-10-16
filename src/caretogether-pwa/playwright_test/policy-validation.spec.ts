@@ -184,7 +184,7 @@ test('initial Basic Settings shows warnings once and never saves', async ({
   expect(
     await page
       .getByText(warning, { exact: true })
-      .evaluate((element) => element.closest('.ph-unmask') === null)
+      .evaluate((element) => element.closest('.ph-unmask') !== null)
   ).toBe(true);
   expect(requests.puts()).toBe(0);
   expect(requests.validations()).toBe(1);
@@ -266,6 +266,14 @@ test('failed function assignment save keeps the drawer open with its values', as
   await expect(
     page.getByRole('button', { name: 'Save', exact: true })
   ).toBeEnabled();
+  // Side panels render in a portal, so they need their own ph-unmask scope.
+  expect(
+    await page
+      .getByText(
+        'The changes could not be saved. Review the policy errors and try again.'
+      )
+      .evaluate((element) => element.closest('.ph-unmask') !== null)
+  ).toBe(true);
   expect(requests.puts()).toBe(1);
 });
 
@@ -349,6 +357,26 @@ test('validation network failure is distinct from semantic diagnostics', async (
     'Policy validation could not be loaded'
   );
   await expect(page.getByText(warning, { exact: true })).toHaveCount(0);
+});
+
+test('validation failure can be retried', async ({ page }) => {
+  await backend(page);
+  let validations = 0;
+  await page.route('**/Configuration/policy/validation', (route) =>
+    ++validations === 1
+      ? route.fulfill({ status: 503, body: 'Unavailable' })
+      : route.fulfill({ json: { errors: [], warnings: [warning] } })
+  );
+  await mount(page);
+  await expect(page.getByRole('alert')).toContainText(
+    'Policy validation could not be loaded'
+  );
+  await page.getByRole('button', { name: 'Try again', exact: true }).click();
+  await expect(page.getByText(warning, { exact: true })).toBeVisible();
+  await expect(
+    page.getByText('Policy validation could not be loaded')
+  ).toHaveCount(0);
+  expect(validations).toBe(2);
 });
 
 test('saving disables duplicate submissions until persistence completes', async ({

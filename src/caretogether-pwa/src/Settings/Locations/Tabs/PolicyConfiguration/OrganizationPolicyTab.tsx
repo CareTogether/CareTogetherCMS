@@ -54,7 +54,9 @@ export function OrganizationPolicyTab({
   const [workingRow, setWorkingRow] = useState<
     OrganizationRoleVersionRow | undefined
   >();
-  const { SidePanel, openSidePanel, closeSidePanel } = useSidePanel();
+  const { SidePanel, openSidePanel, closeSidePanel } = useSidePanel({
+    className: 'ph-unmask',
+  });
 
   function saveVersion(
     previousRoleName: string | undefined,
