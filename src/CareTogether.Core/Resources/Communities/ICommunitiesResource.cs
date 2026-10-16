@@ -23,7 +23,10 @@ namespace CareTogether.Resources.Communities
     public abstract partial record CommunityCommand(Guid CommunityId);
 
     public sealed record CreateCommunity(Guid CommunityId, string Name, string Description)
-        : CommunityCommand(CommunityId);
+        : CommunityCommand(CommunityId)
+    {
+        public ImmutableList<Guid>? CategoryIds { get; init; }
+    }
 
     public sealed record RenameCommunity(Guid CommunityId, string Name)
         : CommunityCommand(CommunityId);

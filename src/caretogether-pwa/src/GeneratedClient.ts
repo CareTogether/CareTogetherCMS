@@ -12201,6 +12201,7 @@ export interface IAddCommunityRoleAssignment extends ICommunityCommand {
 export class CreateCommunity extends CommunityCommand implements ICreateCommunity {
     name!: string;
     description!: string;
+    categoryIds?: string[] | undefined;
 
     constructor(data?: ICreateCommunity) {
         super(data);
@@ -12212,6 +12213,11 @@ export class CreateCommunity extends CommunityCommand implements ICreateCommunit
         if (_data) {
             this.name = _data["name"];
             this.description = _data["description"];
+            if (Array.isArray(_data["categoryIds"])) {
+                this.categoryIds = [] as any;
+                for (let item of _data["categoryIds"])
+                    this.categoryIds!.push(item);
+            }
         }
     }
 
@@ -12226,6 +12232,11 @@ export class CreateCommunity extends CommunityCommand implements ICreateCommunit
         data = typeof data === 'object' ? data : {};
         data["name"] = this.name;
         data["description"] = this.description;
+        if (Array.isArray(this.categoryIds)) {
+            data["categoryIds"] = [];
+            for (let item of this.categoryIds)
+                data["categoryIds"].push(item);
+        }
         super.toJSON(data);
         return data;
     }
@@ -12234,6 +12245,7 @@ export class CreateCommunity extends CommunityCommand implements ICreateCommunit
 export interface ICreateCommunity extends ICommunityCommand {
     name: string;
     description: string;
+    categoryIds?: string[] | undefined;
 }
 
 export class DeleteUploadedCommunityDocument extends CommunityCommand implements IDeleteUploadedCommunityDocument {
