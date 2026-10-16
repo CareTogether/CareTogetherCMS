@@ -46,7 +46,7 @@ export function ActionDefinitionsTab({
     SidePanel: ActionSidePanel,
     openSidePanel,
     closeSidePanel,
-  } = useSidePanel();
+  } = useSidePanel({ className: 'ph-unmask' });
   const [workingAction, setWorkingAction] = useState<
     { actionName?: string; action?: ActionRequirement } | undefined
   >();

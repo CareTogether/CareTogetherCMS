@@ -1,12 +1,46 @@
-import { Accordion, AccordionDetails, AccordionSummary, Stack, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Typography } from '@mui/material';
+import {
+  Accordion,
+  AccordionDetails,
+  AccordionSummary,
+  Stack,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Typography,
+} from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import { useState } from 'react';
-import { ArrangementFunction, ArrangementPolicy, FunctionRequirement, MonitoringRequirement, RequirementDefinition } from '../../../../GeneratedClient';
+import {
+  ArrangementFunction,
+  ArrangementPolicy,
+  FunctionRequirement,
+  MonitoringRequirement,
+  RequirementDefinition,
+} from '../../../../GeneratedClient';
 import { useSidePanel } from '../../../../Hooks/useSidePanel';
 import type { PersonOption } from './types';
-import { ArrangementFunctionSidePanel, MonitoringRequirementSidePanel, RequirementSidePanel } from './sidePanels';
-import { enumName, nextCopyName, removeByName, summarizeCount, upsertByName } from './policyUtils';
-import { DeleteRowAction, DuplicateRowAction, EditableActions, EmptyRow, ValuesText } from './sharedUi';
+import {
+  ArrangementFunctionSidePanel,
+  MonitoringRequirementSidePanel,
+  RequirementSidePanel,
+} from './sidePanels';
+import {
+  enumName,
+  nextCopyName,
+  removeByName,
+  summarizeCount,
+  upsertByName,
+} from './policyUtils';
+import {
+  DeleteRowAction,
+  DuplicateRowAction,
+  EditableActions,
+  EmptyRow,
+  ValuesText,
+} from './sharedUi';
 import { MonitoringRequirementsTable, RequirementsTable } from './tables';
 
 function ArrangementFunctionSummary({
@@ -51,28 +85,28 @@ export function ArrangementPolicyDetails({
   volunteerRoles: string[];
   volunteerFamilyRoles: string[];
   personOptions: PersonOption[];
-  onArrangementChange: (arrangement: ArrangementPolicy) => void;
+  onArrangementChange: (arrangement: ArrangementPolicy) => Promise<boolean>;
 }) {
   const {
     SidePanel: SetupRequirementPanel,
     openSidePanel: openSetupRequirementPanel,
     closeSidePanel: closeSetupRequirementPanel,
-  } = useSidePanel();
+  } = useSidePanel({ className: 'ph-unmask' });
   const {
     SidePanel: MonitoringRequirementPanel,
     openSidePanel: openMonitoringRequirementPanel,
     closeSidePanel: closeMonitoringRequirementPanel,
-  } = useSidePanel();
+  } = useSidePanel({ className: 'ph-unmask' });
   const {
     SidePanel: CloseoutRequirementPanel,
     openSidePanel: openCloseoutRequirementPanel,
     closeSidePanel: closeCloseoutRequirementPanel,
-  } = useSidePanel();
+  } = useSidePanel({ className: 'ph-unmask' });
   const {
     SidePanel: ArrangementFunctionPanel,
     openSidePanel: openArrangementFunctionPanel,
     closeSidePanel: closeArrangementFunctionPanel,
-  } = useSidePanel();
+  } = useSidePanel({ className: 'ph-unmask' });
   const [workingSetupRequirement, setWorkingSetupRequirement] = useState<
     RequirementDefinition | undefined
   >();
@@ -96,7 +130,18 @@ export function ArrangementPolicyDetails({
   const arrangementFunctions = arrangement.arrangementFunctions ?? [];
 
   function updateArrangement(update: Partial<ArrangementPolicy>) {
-    onArrangementChange(new ArrangementPolicy({ ...arrangement, ...update }));
+    return onArrangementChange(
+      new ArrangementPolicy({ ...arrangement, ...update })
+    );
+  }
+
+  async function updateArrangementAndClose(
+    update: Partial<ArrangementPolicy>,
+    closePanel: () => void
+  ) {
+    const saved = await updateArrangement(update);
+    if (saved) closePanel();
+    return saved;
   }
 
   function duplicateRequirement(
@@ -220,11 +265,10 @@ export function ArrangementPolicyDetails({
               }}
               onDuplicate={(requirement) =>
                 updateArrangement({
-                  requiredMonitoringActionsNew:
-                    duplicateMonitoringRequirement(
-                      monitoringActions,
-                      requirement
-                    ),
+                  requiredMonitoringActionsNew: duplicateMonitoringRequirement(
+                    monitoringActions,
+                    requirement
+                  ),
                 })
               }
               onDelete={(requirement) =>
@@ -393,17 +437,19 @@ export function ArrangementPolicyDetails({
           actionNames={actionNames}
           existingActionNames={setupActions.map((item) => item.actionName)}
           onClose={closeSetupRequirementPanel}
-          onSave={(previousName, requirement) => {
-            updateArrangement({
-              requiredSetupActions: upsertByName(
-                setupActions,
-                previousName,
-                requirement,
-                (item) => item.actionName
-              ),
-            });
-            closeSetupRequirementPanel();
-          }}
+          onSave={(previousName, requirement) =>
+            updateArrangementAndClose(
+              {
+                requiredSetupActions: upsertByName(
+                  setupActions,
+                  previousName,
+                  requirement,
+                  (item) => item.actionName
+                ),
+              },
+              closeSetupRequirementPanel
+            )
+          }
         />
       </SetupRequirementPanel>
 
@@ -422,17 +468,19 @@ export function ArrangementPolicyDetails({
           actionNames={actionNames}
           existingActionNames={monitoringActions.map(monitoringRequirementName)}
           onClose={closeMonitoringRequirementPanel}
-          onSave={(previousName, requirement) => {
-            updateArrangement({
-              requiredMonitoringActionsNew: upsertByName(
-                monitoringActions,
-                previousName,
-                requirement,
-                monitoringRequirementName
-              ),
-            });
-            closeMonitoringRequirementPanel();
-          }}
+          onSave={(previousName, requirement) =>
+            updateArrangementAndClose(
+              {
+                requiredMonitoringActionsNew: upsertByName(
+                  monitoringActions,
+                  previousName,
+                  requirement,
+                  monitoringRequirementName
+                ),
+              },
+              closeMonitoringRequirementPanel
+            )
+          }
         />
       </MonitoringRequirementPanel>
 
@@ -450,17 +498,19 @@ export function ArrangementPolicyDetails({
           actionNames={actionNames}
           existingActionNames={closeoutActions.map((item) => item.actionName)}
           onClose={closeCloseoutRequirementPanel}
-          onSave={(previousName, requirement) => {
-            updateArrangement({
-              requiredCloseoutActions: upsertByName(
-                closeoutActions,
-                previousName,
-                requirement,
-                (item) => item.actionName
-              ),
-            });
-            closeCloseoutRequirementPanel();
-          }}
+          onSave={(previousName, requirement) =>
+            updateArrangementAndClose(
+              {
+                requiredCloseoutActions: upsertByName(
+                  closeoutActions,
+                  previousName,
+                  requirement,
+                  (item) => item.actionName
+                ),
+              },
+              closeCloseoutRequirementPanel
+            )
+          }
         />
       </CloseoutRequirementPanel>
 
@@ -478,17 +528,19 @@ export function ArrangementPolicyDetails({
           volunteerFamilyRoles={volunteerFamilyRoles}
           personOptions={personOptions}
           onClose={closeArrangementFunctionPanel}
-          onSave={(previousName, arrangementFunction) => {
-            updateArrangement({
-              arrangementFunctions: upsertByName(
-                arrangementFunctions,
-                previousName,
-                arrangementFunction,
-                (item) => item.functionName
-              ),
-            });
-            closeArrangementFunctionPanel();
-          }}
+          onSave={(previousName, arrangementFunction) =>
+            updateArrangementAndClose(
+              {
+                arrangementFunctions: upsertByName(
+                  arrangementFunctions,
+                  previousName,
+                  arrangementFunction,
+                  (item) => item.functionName
+                ),
+              },
+              closeArrangementFunctionPanel
+            )
+          }
         />
       </ArrangementFunctionPanel>
     </Stack>

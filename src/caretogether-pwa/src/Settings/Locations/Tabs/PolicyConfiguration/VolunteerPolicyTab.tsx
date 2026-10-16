@@ -170,17 +170,17 @@ export function VolunteerPolicyTab({
     SidePanel: CustomFieldPanel,
     openSidePanel,
     closeSidePanel,
-  } = useSidePanel();
+  } = useSidePanel({ className: 'ph-unmask' });
   const {
     SidePanel: VolunteerRolePanel,
     openSidePanel: openVolunteerRolePanel,
     closeSidePanel: closeVolunteerRolePanel,
-  } = useSidePanel();
+  } = useSidePanel({ className: 'ph-unmask' });
   const {
     SidePanel: VolunteerFamilyRolePanel,
     openSidePanel: openVolunteerFamilyRolePanel,
     closeSidePanel: closeVolunteerFamilyRolePanel,
-  } = useSidePanel();
+  } = useSidePanel({ className: 'ph-unmask' });
   const [workingField, setWorkingField] = useState<CustomField | undefined>();
   const [workingVolunteerRoleVersion, setWorkingVolunteerRoleVersion] =
     useState<

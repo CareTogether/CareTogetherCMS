@@ -10,7 +10,7 @@ import { OrganizationPolicyTab } from './PolicyConfiguration/OrganizationPolicyT
 type PolicyConfigurationProps = {
   policy: EffectiveLocationPolicy;
   locationRoles: string[];
-  onPolicyChange: (policy: EffectiveLocationPolicy) => void;
+  onPolicyChange: (policy: EffectiveLocationPolicy) => Promise<boolean>;
   section:
     | 'actionDefinitions'
     | 'customFamilyFields'

@@ -52,13 +52,13 @@ export default function AccessLevels({ locationConfiguration }: Props) {
     SidePanel: SidePanelAdd,
     openSidePanel: openSidePanelAdd,
     closeSidePanel: closeSidePanelAdd,
-  } = useSidePanel();
+  } = useSidePanel({ className: 'ph-unmask' });
 
   const {
     SidePanel: SidePanelEdit,
     openSidePanel: openSidePanelEdit,
     closeSidePanel: closeSidePanelEdit,
-  } = useSidePanel();
+  } = useSidePanel({ className: 'ph-unmask' });
   const [workingAccessLevel, setWorkingAccessLevel] =
     useState<AccessLevelData | null>(null);
 
