@@ -531,6 +531,11 @@ namespace CareTogether.Resources.Policies
             EffectiveLocationPolicy EffectiveLocationPolicy
         );
 
+        Task<PolicyValidationResult> ValidateEffectiveLocationPolicyAsync(
+            Guid organizationId,
+            EffectiveLocationPolicy policy
+        );
+
         Task<OrganizationSecrets> GetOrganizationSecretsAsync(Guid organizationId);
 
         Task<EffectiveLocationPolicy> GetCurrentPolicy(Guid organizationId, Guid locationId);

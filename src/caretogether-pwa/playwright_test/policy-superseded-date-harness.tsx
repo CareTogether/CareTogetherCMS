@@ -63,7 +63,10 @@ export function Harness() {
           arrangement={editing ? (saved as ArrangementPolicy) : undefined}
           existingArrangementTypes={[]}
           onClose={() => {}}
-          onSave={(_previous, value) => save(value)}
+          onSave={async (_previous, value) => {
+            save(value);
+            return true;
+          }}
         />
       ) : (
         <VolunteerRolePolicyVersionSidePanel

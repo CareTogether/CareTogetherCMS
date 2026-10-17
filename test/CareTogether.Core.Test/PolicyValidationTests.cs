@@ -20,7 +20,7 @@ namespace CareTogether.Core.Test
         {
             var policy = ValidPolicy();
 
-            var errors = EffectiveLocationPolicyValidator.Validate(policy, Configuration);
+            var errors = EffectiveLocationPolicyValidator.Validate(policy, Configuration).Errors;
 
             Assert.AreEqual(0, errors.Count);
         }
@@ -69,7 +69,7 @@ namespace CareTogether.Core.Test
                 },
             };
 
-            var errors = EffectiveLocationPolicyValidator.Validate(policy, Configuration);
+            var errors = EffectiveLocationPolicyValidator.Validate(policy, Configuration).Errors;
 
             StringAssert.Contains(
                 string.Join("\n", errors),
@@ -78,7 +78,7 @@ namespace CareTogether.Core.Test
         }
 
         [TestMethod]
-        public void UnknownVolunteerRoleReferenceIsRejected()
+        public void UnknownVolunteerRoleReferenceIsWarning()
         {
             var policy = ValidPolicy() with
             {
@@ -97,10 +97,11 @@ namespace CareTogether.Core.Test
                 ),
             };
 
-            var errors = EffectiveLocationPolicyValidator.Validate(policy, Configuration);
+            var result = EffectiveLocationPolicyValidator.Validate(policy, Configuration);
 
+            Assert.AreEqual(0, result.Errors.Count);
             StringAssert.Contains(
-                string.Join("\n", errors),
+                string.Join("\n", result.Warnings),
                 "Referral Policies Function Assignment Policies 'Referral Coordinator' references unknown volunteer role 'Missing Role'."
             );
         }
@@ -117,7 +118,7 @@ namespace CareTogether.Core.Test
                 ],
             };
 
-            var errors = EffectiveLocationPolicyValidator.Validate(policy, Configuration);
+            var errors = EffectiveLocationPolicyValidator.Validate(policy, Configuration).Errors;
 
             StringAssert.Contains(
                 string.Join("\n", errors),
@@ -146,7 +147,7 @@ namespace CareTogether.Core.Test
                     ),
             };
 
-            var errors = EffectiveLocationPolicyValidator.Validate(policy, Configuration);
+            var errors = EffectiveLocationPolicyValidator.Validate(policy, Configuration).Errors;
 
             Assert.AreEqual(0, errors.Count);
         }
@@ -169,7 +170,7 @@ namespace CareTogether.Core.Test
             };
 
             var sanitized = EffectiveLocationPolicySanitizer.Sanitize(policy);
-            var errors = EffectiveLocationPolicyValidator.Validate(sanitized, Configuration);
+            var errors = EffectiveLocationPolicyValidator.Validate(sanitized, Configuration).Errors;
 
             Assert.AreEqual(0, errors.Count);
             Assert.AreEqual(
@@ -178,7 +179,7 @@ namespace CareTogether.Core.Test
             );
         }
 
-        private static EffectiveLocationPolicy ValidPolicy() =>
+        internal static EffectiveLocationPolicy ValidPolicy() =>
             new(
                 ActionDefinitions: ImmutableDictionary<string, ActionRequirement>.Empty.Add(
                     "Background Check",
