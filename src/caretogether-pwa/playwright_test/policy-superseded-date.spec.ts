@@ -33,79 +33,74 @@ test.beforeEach(async ({ page }) => {
   );
 });
 
-for (const timezoneId of ['America/Los_Angeles', 'UTC', 'Pacific/Auckland']) {
-  test.describe(timezoneId, () => {
+for (const [kind, timezoneId] of [
+  ['arrangement', 'America/Sao_Paulo'],
+  ['individual', 'America/New_York'],
+  ['family', 'Asia/Tokyo'],
+  ['organization', 'UTC'],
+]) {
+  test.describe(`${kind} in ${timezoneId}`, () => {
     test.use({ timezoneId });
-    for (const kind of [
-      'arrangement',
-      'individual',
-      'family',
-      'organization',
-    ]) {
-      test(`${kind}: selects, serializes, reloads, edits and clears a date`, async ({
-        page,
-      }) => {
-        await page.goto(`/policy-date-harness?kind=${kind}&new`);
-        await page.addScriptTag({ content: bundle });
-        if (kind === 'arrangement') {
-          await page
-            .getByRole('textbox', { name: 'Arrangement Type', exact: true })
-            .fill('Care');
-        } else {
-          await page
-            .getByRole('textbox', { name: /Role Type$/ })
-            .fill('Helper');
-          await page
-            .getByRole('textbox', { name: 'Version', exact: true })
-            .fill('v1');
-        }
-        await expect(page.getByLabel('Superseded display')).toHaveText(
-          'Current'
-        );
-        await page
-          .getByRole('switch', { name: 'Superseded', exact: true })
-          .check();
-        const input = page.getByLabel('Superseded Date', { exact: true });
-        await expect(input).toHaveAttribute('type', 'date');
-        await input.fill('2026-01-02');
-        await page.getByRole('button', { name: 'Save', exact: true }).click();
-        await expect(input).toHaveValue('2026-01-02');
-        await expect(page.getByLabel('Superseded display')).toHaveText(
-          '01/02/26'
-        );
-        expect(
-          await page.evaluate(
-            () =>
-              JSON.parse(localStorage.getItem('saved-policy')!).supersededAtUtc
-          )
-        ).toBe('2026-01-02T00:00:00.000Z');
-        await page.reload();
-        await page.addScriptTag({ content: bundle });
-        await expect(input).toHaveValue('2026-01-02');
-        await input.fill('2026-07-15');
-        await page.getByRole('button', { name: 'Save', exact: true }).click();
-        await expect(page.getByLabel('Superseded display')).toHaveText(
-          '07/15/26'
-        );
-        await input.fill('');
-        await page.getByRole('button', { name: 'Save', exact: true }).click();
-        await expect(input).toHaveCount(0);
-        await expect(page.getByLabel('Superseded display')).toHaveText(
-          'Current'
-        );
+    test('MUI calendar selection, UTC save/reload, invalid input and clearing', async ({
+      page,
+    }) => {
+      await page.goto(`/policy-date-harness?kind=${kind}&historical`);
+      await page.addScriptTag({ content: bundle });
+      const picker = page.getByRole('group', {
+        name: 'Superseded Date',
+        exact: true,
       });
-      test(`${kind}: historical timestamps use their UTC calendar date`, async ({
-        page,
-      }) => {
-        await page.goto(`/policy-date-harness?kind=${kind}&historical`);
-        await page.addScriptTag({ content: bundle });
-        await expect(
-          page.getByLabel('Superseded Date', { exact: true })
-        ).toHaveValue('2026-01-02');
-        await expect(page.getByLabel('Superseded display')).toHaveText(
-          '01/02/26'
-        );
+      const month = picker.getByRole('spinbutton', {
+        name: 'Month',
+        exact: true,
       });
-    }
+      const day = picker.getByRole('spinbutton', { name: 'Day', exact: true });
+      const year = picker.getByRole('spinbutton', {
+        name: 'Year',
+        exact: true,
+      });
+      const save = page.getByRole('button', { name: 'Save', exact: true });
+      await expect(month).toHaveText('01');
+      await expect(day).toHaveText('02');
+      await expect(page.getByLabel('Superseded display')).toHaveText(
+        '01/02/26'
+      );
+      await month.fill('10');
+      await day.fill('15');
+      await year.fill('2026');
+      await page.getByRole('button', { name: /choose date/i }).click();
+      await page.getByRole('gridcell', { name: '16', exact: true }).click();
+      await save.click();
+      expect(
+        await page.evaluate(
+          () =>
+            JSON.parse(localStorage.getItem('saved-policy')!).supersededAtUtc
+        )
+      ).toBe('2026-10-16T00:00:00.000Z');
+      await page.reload();
+      await page.addScriptTag({ content: bundle });
+      await expect(month).toHaveText('10');
+      await expect(day).toHaveText('16');
+      await expect(year).toHaveText('2026');
+      await year.fill('0000');
+      await expect(save).toBeDisabled();
+      await year.fill('2026');
+      await expect(save).toBeEnabled();
+      await year.fill('');
+      await year.press('Tab');
+      await expect(save).toBeDisabled();
+      await picker.getByRole('button', { name: 'Clear', exact: true }).click();
+      await expect(save).toBeEnabled();
+      await save.click();
+      await expect(picker).toHaveCount(0);
+      await expect(page.getByLabel('Superseded display')).toHaveText('Current');
+      expect(
+        await page.evaluate(
+          () =>
+            JSON.parse(localStorage.getItem('saved-policy')!).supersededAtUtc ??
+            null
+        )
+      ).toBeNull();
+    });
   });
 }

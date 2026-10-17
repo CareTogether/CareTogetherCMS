@@ -32,6 +32,10 @@ import {
 } from '../../../../GeneratedClient';
 import { personNameString } from '../../../../Families/PersonName';
 import { formatUtcDateOnly } from '../../../../Utilities/dateUtils';
+import {
+  formatDateOnlyForApi,
+  parseDateOnlyApiValue,
+} from '../../../../Generic/customFieldValue';
 import type {
   ActionDefinitionDraft,
   ArrangementFunctionDraft,
@@ -113,8 +117,9 @@ export function formatDate(value?: Date) {
 
 // Keep the existing UTC timestamp contract while treating this field as a
 // calendar date. Never interpret the date input in the browser's local zone.
-export function supersededDateToApi(value: string): Date | undefined {
-  return value ? new Date(`${value}T00:00:00.000Z`) : undefined;
+export function supersededDateToApi(value: Date | null): Date | undefined {
+  const calendarDate = value ? formatDateOnlyForApi(value) : null;
+  return calendarDate ? new Date(`${calendarDate}T00:00:00.000Z`) : undefined;
 }
 
 export function summarizeCount(
@@ -351,9 +356,9 @@ export function arrangementPolicyToDraft(
     childInvolvement:
       policy?.childInvolvement ?? ChildInvolvement.NoChildInvolvement,
     superseded: Boolean(policy?.supersededAtUtc),
-    supersededAtUtc: policy?.supersededAtUtc
-      ? policy.supersededAtUtc.toISOString().slice(0, 10)
-      : '',
+    supersededAtUtc: parseDateOnlyApiValue(
+      policy?.supersededAtUtc?.toISOString().slice(0, 10)
+    ),
   };
 }
 
@@ -386,9 +391,9 @@ export function volunteerRolePolicyVersionToDraft(
     roleName: roleName ?? '',
     version: version?.version ?? '',
     superseded: Boolean(version?.supersededAtUtc),
-    supersededAtUtc: version?.supersededAtUtc
-      ? version.supersededAtUtc.toISOString().slice(0, 10)
-      : '',
+    supersededAtUtc: parseDateOnlyApiValue(
+      version?.supersededAtUtc?.toISOString().slice(0, 10)
+    ),
     requirements,
   };
 }

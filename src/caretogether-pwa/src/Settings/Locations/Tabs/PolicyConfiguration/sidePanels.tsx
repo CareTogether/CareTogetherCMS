@@ -19,6 +19,7 @@ import {
 } from '@mui/material';
 import { useState } from 'react';
 import Grid from '../../../../Generic/GridLegacyCompat';
+import { SupersededDatePicker } from './SupersededDatePicker';
 import {
   ActionRequirement,
   ArrangementFunction,
@@ -1240,12 +1241,16 @@ export function ArrangementPolicySidePanel({
   const [draft, setDraft] = useState<ArrangementPolicyDraft>(() =>
     arrangementPolicyToDraft(arrangement)
   );
+  const [dateError, setDateError] = useState(false);
   const trimmedType = draft.arrangementType.trim();
   const duplicateType =
     trimmedType.length > 0 &&
     trimmedType !== arrangement?.arrangementType &&
     existingArrangementTypes.includes(trimmedType);
-  const canSave = trimmedType.length > 0 && !duplicateType;
+  const canSave =
+    trimmedType.length > 0 &&
+    !duplicateType &&
+    (!draft.superseded || !dateError);
 
   function save() {
     if (!canSave) return;
@@ -1340,12 +1345,13 @@ export function ArrangementPolicySidePanel({
           control={
             <Switch
               checked={draft.superseded}
-              onChange={(event) =>
+              onChange={(event) => {
+                setDateError(false);
                 setDraft((current) => ({
                   ...current,
                   superseded: event.target.checked,
-                }))
-              }
+                }));
+              }}
             />
           }
           label="Superseded"
@@ -1354,16 +1360,13 @@ export function ArrangementPolicySidePanel({
 
       {draft.superseded && (
         <Grid item xs={12}>
-          <TextField
-            fullWidth
-            type="date"
-            label="Superseded Date"
+          <SupersededDatePicker
             value={draft.supersededAtUtc}
-            slotProps={{ inputLabel: { shrink: true } }}
-            onChange={(event) =>
+            onErrorChange={setDateError}
+            onChange={(date) =>
               setDraft((current) => ({
                 ...current,
-                supersededAtUtc: event.target.value,
+                supersededAtUtc: date,
               }))
             }
           />
@@ -1637,6 +1640,7 @@ export function VolunteerRolePolicyVersionSidePanel({
   const [draft, setDraft] = useState<VolunteerRolePolicyVersionDraft>(() =>
     volunteerRolePolicyVersionToDraft(roleName, version, family, organization)
   );
+  const [dateError, setDateError] = useState(false);
   const trimmedRoleName = draft.roleName.trim();
   const trimmedVersion = draft.version.trim();
   const invalidRequirements = draft.requirements.filter((requirement) => {
@@ -1658,7 +1662,8 @@ export function VolunteerRolePolicyVersionSidePanel({
     trimmedRoleName.length > 0 &&
     trimmedVersion.length > 0 &&
     !duplicateVersion &&
-    invalidRequirements.length === 0;
+    invalidRequirements.length === 0 &&
+    (!draft.superseded || !dateError);
 
   function save() {
     if (!canSave) return;
@@ -1780,12 +1785,13 @@ export function VolunteerRolePolicyVersionSidePanel({
           control={
             <Switch
               checked={draft.superseded}
-              onChange={(event) =>
+              onChange={(event) => {
+                setDateError(false);
                 setDraft((current) => ({
                   ...current,
                   superseded: event.target.checked,
-                }))
-              }
+                }));
+              }}
             />
           }
           label="Superseded"
@@ -1794,16 +1800,13 @@ export function VolunteerRolePolicyVersionSidePanel({
 
       {draft.superseded && (
         <Grid item xs={12}>
-          <TextField
-            fullWidth
-            type="date"
-            label="Superseded Date"
+          <SupersededDatePicker
             value={draft.supersededAtUtc}
-            slotProps={{ inputLabel: { shrink: true } }}
-            onChange={(event) =>
+            onErrorChange={setDateError}
+            onChange={(date) =>
               setDraft((current) => ({
                 ...current,
-                supersededAtUtc: event.target.value,
+                supersededAtUtc: date,
               }))
             }
           />
