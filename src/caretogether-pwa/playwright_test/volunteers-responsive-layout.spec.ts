@@ -14,18 +14,31 @@ test('Volunteers keeps wide columns and Pivot contained on mobile @pr', async ({
     exact: true,
   });
   const add = page.getByRole('button', { name: 'Add Volunteer Family' });
-  const grid = page.getByRole('treegrid');
+  const grid = page.locator('.MuiDataGrid-root');
   await expect(heading).toBeVisible();
   await expect(add).toBeInViewport();
-  await expect(grid).toBeVisible();
+  await expect(grid).toBeInViewport();
+  await expect(grid.getByRole('treegrid')).toBeVisible();
+  await expect(grid.getByRole('columnheader').first()).toBeInViewport();
 
   await expectNoHorizontalOverflow(page);
-  await expect
-    .poll(async () => (await grid.boundingBox())?.height ?? 0)
-    .toBeGreaterThan(200);
-
-  // Wide columns should scroll inside the grid rather than widening the page.
   const scroller = grid.locator('.MuiDataGrid-virtualScroller');
+  await expect(scroller).toBeInViewport();
+  await expect(grid.locator('.MuiDataGrid-row').first()).toBeInViewport();
+  await expect
+    .poll(() =>
+      scroller.evaluate((element) => {
+        element.scrollTop = element.scrollHeight;
+        return (
+          Math.abs(
+            element.scrollHeight - element.clientHeight - element.scrollTop
+          ) <= 1
+        );
+      })
+    )
+    .toBe(true);
+  await expect(grid.locator('.MuiDataGrid-row').last()).toBeInViewport();
+
   await expect
     .poll(() =>
       scroller.evaluate((element) => {
@@ -36,7 +49,7 @@ test('Volunteers keeps wide columns and Pivot contained on mobile @pr', async ({
     .toBeGreaterThan(0);
   await expectNoHorizontalOverflow(page);
 
-  const pivot = page.getByRole('button', { name: 'Pivot', exact: true });
+  const pivot = grid.getByRole('button', { name: 'Pivot', exact: true });
   await pivot.focus();
   await pivot.press('Enter');
   const sidebar = page.locator('.MuiDataGrid-sidebar');
