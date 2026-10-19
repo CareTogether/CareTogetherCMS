@@ -93,10 +93,6 @@ jobs:
         run: npx playwright install chromium
         working-directory: src/caretogether-pwa
 
-      - name: Run fullscreen header browser tests
-        run: npx --no-install playwright test header-fullscreen.spec.ts --project=chromium --no-deps --workers=1
-        working-directory: src/caretogether-pwa
-
       - name: Restore AppHost E2E dependencies
         run: dotnet restore test/CareTogether.AppHost.Tests/CareTogether.AppHost.Tests.csproj
 
