@@ -222,7 +222,13 @@ export function VolunteersDataGridV2({
 
   return (
     <GridChartsIntegrationContextProvider key={gridConfigurationKey}>
-      <Box sx={v2DataGridStyles(theme, { height: '100%' })}>
+      <Box
+        sx={{
+          ...v2DataGridStyles(theme, { height: '100%' }),
+          minWidth: 0,
+          maxWidth: '100%',
+        }}
+      >
         <PersistedFilterDataGridPremium
           key={pivotActive ? 'volunteers-pivot-grid' : 'volunteers-tree-grid'}
           showToolbar
@@ -261,6 +267,7 @@ export function VolunteersDataGridV2({
           rowSelectionModel={rowSelectionModel}
           sx={{
             ...v2DataGridFocusStyles(theme),
+            minWidth: 0,
             '& .MuiDataGrid-row': { cursor: 'pointer', minHeight: 56 },
             '& .MuiDataGrid-cell': {
               alignItems: 'center',

@@ -327,7 +327,13 @@ export function ClientsDataGridV2({
   return (
     <GridChartsIntegrationContextProvider>
       <Box
-        sx={{ height: '100%', width: '100%', minWidth: 0, overflowY: 'auto' }}
+        sx={{
+          height: '100%',
+          width: '100%',
+          minHeight: 0,
+          minWidth: 0,
+          overflowY: 'auto',
+        }}
       >
         {pivotActive && pivotScope !== 'mixed' && (
           <Typography className="ph-unmask" variant="body2" sx={{ p: 1 }}>
@@ -339,7 +345,9 @@ export function ClientsDataGridV2({
             Choose adult or child custom fields in one pivot to count people.
           </Alert>
         )}
-        <Box sx={{ height: '100%', minHeight: 360 }}>
+        <Box
+          sx={{ height: '100%', minHeight: 'min(360px, 100%)', minWidth: 0 }}
+        >
           <PersistedFilterDataGridPremium
             key={pivotActive ? 'clients-pivot-grid' : 'clients-tree-grid'}
             showToolbar
