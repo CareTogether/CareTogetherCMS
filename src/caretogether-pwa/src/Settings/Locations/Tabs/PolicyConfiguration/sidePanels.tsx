@@ -20,7 +20,7 @@ import {
 } from '@mui/material';
 import { useState } from 'react';
 import Grid from '../../../../Generic/GridLegacyCompat';
-import { SupersededDatePicker } from './SupersededDatePicker';
+import { ValidateDatePicker } from '../../../../Generic/Forms/ValidateDatePicker';
 import {
   ActionRequirement,
   ArrangementFunction,
@@ -1417,7 +1417,9 @@ export function ArrangementPolicySidePanel({
 
       {draft.superseded && (
         <Grid item xs={12}>
-          <SupersededDatePicker
+          <ValidateDatePicker
+            label="Superseded Date"
+            validateIncomplete
             value={draft.supersededAtUtc}
             onErrorChange={setDateError}
             onChange={(date) =>
@@ -1850,7 +1852,9 @@ export function VolunteerRolePolicyVersionSidePanel({
 
       {draft.superseded && (
         <Grid item xs={12}>
-          <SupersededDatePicker
+          <ValidateDatePicker
+            label="Superseded Date"
+            validateIncomplete
             value={draft.supersededAtUtc}
             onErrorChange={setDateError}
             onChange={(date) =>

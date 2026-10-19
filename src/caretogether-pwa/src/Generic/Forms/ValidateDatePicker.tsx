@@ -2,7 +2,8 @@ import { DatePicker, DateTimePicker } from '@mui/x-date-pickers';
 import { TextFieldProps } from '@mui/material';
 import { DatePickerProps } from '@mui/x-date-pickers/DatePicker';
 import { DateTimePickerProps } from '@mui/x-date-pickers/DateTimePicker';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
+import type { FieldRef } from '@mui/x-date-pickers/models';
 import { isValid } from 'date-fns';
 
 const MIN_YEAR = 1900;
@@ -14,6 +15,8 @@ type BaseProps = {
   onErrorChange?: (hasError: boolean) => void;
   textFieldProps?: Partial<TextFieldProps>;
   includeTime?: boolean;
+  // Reject partially entered dates while allowing an explicit clear to null.
+  validateIncomplete?: boolean;
   label?: React.ReactNode;
 };
 
@@ -27,11 +30,18 @@ export function ValidateDatePicker({
   onErrorChange,
   textFieldProps,
   includeTime = false,
+  validateIncomplete = false,
   label,
   ...props
 }: ValidateDatePickerProps) {
   const [error, setError] = useState(false);
   const [helperText, setHelperText] = useState('');
+  const fieldRef = useRef<FieldRef<Date | null>>(null);
+  function reportError(hasError: boolean) {
+    setError(hasError);
+    setHelperText(hasError ? 'Enter a complete, valid date.' : '');
+    onErrorChange?.(hasError);
+  }
 
   useEffect(() => {
     const hasError =
@@ -48,12 +58,35 @@ export function ValidateDatePicker({
   const commonProps = {
     ...props,
     value,
-    onChange,
+    onChange: (date: Date | null, context: { validationError: unknown }) => {
+      onChange(date);
+      if (validateIncomplete) reportError(context.validationError != null);
+    },
+    ...(validateIncomplete && {
+      onError: (validationError: unknown) =>
+        reportError(validationError != null),
+    }),
     label,
     minDate: DEFAULT_MIN_DATE,
     minDateTime: DEFAULT_MIN_DATE,
     format: includeTime ? 'M/d/yyyy h:mm a' : 'MM/dd/yyyy',
     slotProps: {
+      ...(validateIncomplete && {
+        field: {
+          fieldRef,
+          clearable: true,
+          onClear: () => {
+            onChange(null);
+            reportError(false);
+          },
+          onBlur: () => {
+            const sections = fieldRef.current?.getSections() ?? [];
+            if (sections.some((section) => section.value === '')) {
+              reportError(sections.some((section) => section.value !== ''));
+            }
+          },
+        },
+      }),
       textField: {
         ...textFieldProps,
         error,
