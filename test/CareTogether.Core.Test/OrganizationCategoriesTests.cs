@@ -6,6 +6,7 @@ using System.Security.Claims;
 using System.Threading.Tasks;
 using CareTogether.Api.Controllers;
 using CareTogether.Engines.Authorization;
+using CareTogether.Managers.Records;
 using CareTogether.Resources.Accounts;
 using CareTogether.Resources.Approvals;
 using CareTogether.Resources.Communities;
@@ -218,7 +219,7 @@ namespace CareTogether.Core.Test
         [DataRow(0)]
         [DataRow(1)]
         [DataRow(2)]
-        public async Task CreateCategories_SurviveSerializationAndEventReplay(int categoryCount)
+        public async Task CreateCategories_FromApiPayloadSurviveEventReplay(int categoryCount)
         {
             var organizationId = Guid.NewGuid();
             var locationId = Guid.NewGuid();
@@ -235,8 +236,23 @@ namespace CareTogether.Core.Test
             {
                 CategoryIds = ids,
             };
-            var json = Newtonsoft.Json.JsonConvert.SerializeObject(command);
-            var received = Newtonsoft.Json.JsonConvert.DeserializeObject<CreateCommunity>(json)!;
+            // Match the generated client's nested, camel-case payload and the
+            // controller's polymorphic parameter, rather than a concrete DTO.
+            var json = Newtonsoft.Json.JsonConvert.SerializeObject(new
+            {
+                discriminator = "CommunityRecordsCommand",
+                command = new
+                {
+                    discriminator = "CreateCommunity",
+                    communityId = command.CommunityId,
+                    name = command.Name,
+                    description = command.Description,
+                    categoryIds = ids,
+                },
+            });
+            var envelope = Newtonsoft.Json.JsonConvert.DeserializeObject<AtomicRecordsCommand>(json);
+            Assert.IsInstanceOfType<CommunityRecordsCommand>(envelope);
+            var received = (CreateCommunity)((CommunityRecordsCommand)envelope!).Command;
             AssertEx.SequenceIs(received.CategoryIds!, ids.ToArray());
 
             var events = new List<CommunityCommandExecutedEvent>();
@@ -259,6 +275,16 @@ namespace CareTogether.Core.Test
             var reloaded = new CommunitiesResource(log.Object, Mock.Of<IFileStore>(), policies);
             var reopened = await reloaded.FindCommunityAsync(organizationId, locationId, command.CommunityId);
             AssertEx.SequenceIs(reopened!.CategoryIds, ids.ToArray());
+
+            // Existing Edit behavior must also remain durable after a reload.
+            await reloaded.ExecuteCommunityCommandAsync(
+                organizationId, locationId,
+                new SetOrganizationCategories(command.CommunityId, [second.Id]),
+                Guid.NewGuid()
+            );
+            var afterEdit = new CommunitiesResource(log.Object, Mock.Of<IFileStore>(), policies);
+            var edited = await afterEdit.FindCommunityAsync(organizationId, locationId, command.CommunityId);
+            AssertEx.SequenceIs(edited!.CategoryIds, second.Id);
         }
 
         private static async IAsyncEnumerable<(CommunityCommandExecutedEvent DomainEvent, long SequenceNumber)>
