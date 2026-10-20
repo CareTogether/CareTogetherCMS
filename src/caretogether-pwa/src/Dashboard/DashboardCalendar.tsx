@@ -328,13 +328,16 @@ export function DashboardCalendar() {
   }
 
   return (
-    <Grid container sx={{ flex: 1, flexDirection: 'column', minHeight: 0 }}>
-      <Grid item sx={{ marginBottom: 1 }}>
+    <Grid
+      container
+      sx={{ flex: '1 0 auto', flexDirection: 'column', minWidth: 0 }}
+    >
+      <Grid item sx={{ mb: { xs: 0.5, sm: 1 }, flexShrink: 0, minWidth: 0 }}>
         <Box
           aria-label="Filter event types"
           sx={{
             maxWidth: '100%',
-            paddingY: 1,
+            paddingY: { xs: 0.5, sm: 1 },
             width: 'fit-content',
           }}
         >
@@ -458,7 +461,7 @@ export function DashboardCalendar() {
       <Grid
         item
         onClickCapture={handleCalendarClick}
-        sx={{ flex: 1, minHeight: 0 }}
+        sx={{ flex: '1 0 520px', minHeight: 520, minWidth: 0 }}
       >
         <EventCalendar
           key={

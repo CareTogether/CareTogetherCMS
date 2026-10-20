@@ -1,0 +1,234 @@
+{
+  "actionDefinitions": {},
+  "customFamilyFields": [],
+  "referralPolicy": {
+    "requiredIntakeActionNames": [],
+    "intakeRequirements": [],
+    "customFields": [],
+    "functionPolicies": [
+      {
+        "functionName": "Host Family",
+        "eligibility": {
+          "eligibleIndividualVolunteerRoles": [],
+          "eligibleVolunteerFamilyRoles": [
+            "Host Family"
+          ],
+          "eligiblePeople": []
+        }
+      },
+      {
+        "functionName": "Host Family or Friend",
+        "eligibility": {
+          "eligibleIndividualVolunteerRoles": [
+            "Community Friend",
+            "Parent Ally",
+            "Family Coach",
+            "Community Coach",
+            "Ministry Coordinator"
+          ],
+          "eligibleVolunteerFamilyRoles": [
+            "Host Family"
+          ],
+          "eligiblePeople": []
+        }
+      },
+      {
+        "functionName": "Community Friend",
+        "eligibility": {
+          "eligibleIndividualVolunteerRoles": [
+            "Community Friend",
+            "Parent Ally",
+            "Family Coach",
+            "Community Coach",
+            "Ministry Coordinator"
+          ],
+          "eligibleVolunteerFamilyRoles": [
+            "Host Family"
+          ],
+          "eligiblePeople": []
+        }
+      },
+      {
+        "functionName": "Parent Ally",
+        "eligibility": {
+          "eligibleIndividualVolunteerRoles": [
+            "Parent Ally"
+          ],
+          "eligibleVolunteerFamilyRoles": [],
+          "eligiblePeople": []
+        }
+      },
+      {
+        "functionName": "Family Coach",
+        "eligibility": {
+          "eligibleIndividualVolunteerRoles": [
+            "Family Coach",
+            "Community Coach"
+          ],
+          "eligibleVolunteerFamilyRoles": [],
+          "eligiblePeople": []
+        }
+      },
+      {
+        "functionName": "Community Coach",
+        "eligibility": {
+          "eligibleIndividualVolunteerRoles": [
+            "Parent Ally",
+            "Family Coach",
+            "Community Coach"
+          ],
+          "eligibleVolunteerFamilyRoles": [],
+          "eligiblePeople": []
+        }
+      },
+      {
+        "functionName": "Ministry Coordinator",
+        "eligibility": {
+          "eligibleIndividualVolunteerRoles": [
+            "Ministry Coordinator"
+          ],
+          "eligibleVolunteerFamilyRoles": [],
+          "eligiblePeople": []
+        }
+      },
+      {
+        "functionName": "Community Champion",
+        "eligibility": {
+          "eligibleIndividualVolunteerRoles": [
+            "Community Friend",
+            "Parent Ally",
+            "Family Coach",
+            "Community Coach",
+            "Ministry Coordinator",
+            "Community Champion"
+          ],
+          "eligibleVolunteerFamilyRoles": [
+            "Host Family"
+          ],
+          "eligiblePeople": []
+        }
+      },
+      {
+        "functionName": "Staff Supervisor",
+        "eligibility": {
+          "eligibleIndividualVolunteerRoles": [],
+          "eligibleVolunteerFamilyRoles": [],
+          "eligiblePeople": []
+        }
+      }
+    ],
+    "functionAssignmentPolicies": [],
+    "arrangementPolicies": [
+      {
+        "arrangementType": "Overnight Hosting",
+        "childInvolvement": 0,
+        "arrangementFunctions": [
+          {
+            "functionName": "Host Family",
+            "requirement": 2,
+            "eligibleIndividualVolunteerRoles": null,
+            "eligibleVolunteerFamilyRoles": null,
+            "eligiblePeople": null,
+            "variants": []
+          },
+          {
+            "functionName": "Community Friend",
+            "requirement": 0,
+            "eligibleIndividualVolunteerRoles": null,
+            "eligibleVolunteerFamilyRoles": null,
+            "eligiblePeople": null,
+            "variants": []
+          },
+          {
+            "functionName": "Parent Ally",
+            "requirement": 0,
+            "eligibleIndividualVolunteerRoles": null,
+            "eligibleVolunteerFamilyRoles": null,
+            "eligiblePeople": null,
+            "variants": []
+          },
+          {
+            "functionName": "Family Coach",
+            "requirement": 2,
+            "eligibleIndividualVolunteerRoles": null,
+            "eligibleVolunteerFamilyRoles": null,
+            "eligiblePeople": null,
+            "variants": []
+          },
+          {
+            "functionName": "Ministry Coordinator",
+            "requirement": 0,
+            "eligibleIndividualVolunteerRoles": null,
+            "eligibleVolunteerFamilyRoles": null,
+            "eligiblePeople": null,
+            "variants": []
+          },
+          {
+            "functionName": "Community Champion",
+            "requirement": 0,
+            "eligibleIndividualVolunteerRoles": null,
+            "eligibleVolunteerFamilyRoles": null,
+            "eligiblePeople": null,
+            "variants": []
+          },
+          {
+            "functionName": "Staff Supervisor",
+            "requirement": 1,
+            "eligibleIndividualVolunteerRoles": null,
+            "eligibleVolunteerFamilyRoles": null,
+            "eligiblePeople": null,
+            "variants": []
+          }
+        ],
+        "requiredSetupActionNames": [],
+        "requiredMonitoringActions": [],
+        "requiredCloseoutActionNames": [],
+        "requiredSetupActions": [],
+        "requiredMonitoringActionsNew": [],
+        "requiredCloseoutActions": []
+      }
+    ]
+  },
+  "volunteerPolicy": {
+    "volunteerRoles": {
+      "Community Friend": {
+        "volunteerRoleType": "Community Friend",
+        "policyVersions": []
+      },
+      "Parent Ally [ASF]": {
+        "volunteerRoleType": "Parent Ally [ASF]",
+        "policyVersions": []
+      },
+      "Family Coach [ASF]": {
+        "volunteerRoleType": "Family Coach [ASF]",
+        "policyVersions": []
+      },
+      "Community Coach": {
+        "volunteerRoleType": "Community Coach",
+        "policyVersions": []
+      },
+      "Support Line [ASF]": {
+        "volunteerRoleType": "Support Line [ASF]",
+        "policyVersions": []
+      },
+      "Ministry Lead": {
+        "volunteerRoleType": "Ministry Lead",
+        "policyVersions": []
+      },
+      "Community Champion [ASF]": {
+        "volunteerRoleType": "Community Champion [ASF]",
+        "policyVersions": []
+      },
+      "Prayer Team [ASF]": {
+        "volunteerRoleType": "Prayer Team [ASF]",
+        "policyVersions": []
+      }
+    },
+    "volunteerFamilyRoles": {
+      "Host Family": {
+        "volunteerFamilyRoleType": "Host Family",
+        "policyVersions": []
+      }
+    }
+  }
+}

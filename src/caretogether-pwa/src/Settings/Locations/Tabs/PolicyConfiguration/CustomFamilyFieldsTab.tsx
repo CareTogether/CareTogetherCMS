@@ -1,9 +1,17 @@
 import { Box } from '@mui/material';
 import { useState } from 'react';
-import { CustomField, EffectiveLocationPolicy } from '../../../../GeneratedClient';
+import {
+  CustomField,
+  EffectiveLocationPolicy,
+} from '../../../../GeneratedClient';
 import { useSidePanel } from '../../../../Hooks/useSidePanel';
 import { CustomFieldSidePanel } from './sidePanels';
-import { clonePolicyWithCustomFamilyFields, nextCopyName, removeCustomField, upsertCustomField } from './policyUtils';
+import {
+  clonePolicyWithCustomFamilyFields,
+  nextCopyName,
+  removeCustomField,
+  upsertCustomField,
+} from './policyUtils';
 import { EditableActions, SectionHeader } from './sharedUi';
 import { CustomFieldsTable } from './CustomFieldsTable';
 
@@ -18,7 +26,7 @@ export function CustomFamilyFieldsTab({
     SidePanel: CustomFieldPanel,
     openSidePanel,
     closeSidePanel,
-  } = useSidePanel();
+  } = useSidePanel({ className: 'ph-unmask' });
   const [workingField, setWorkingField] = useState<CustomField | undefined>();
   const fields = policy.customFamilyFields ?? [];
 
@@ -92,4 +100,3 @@ export function CustomFamilyFieldsTab({
     </Box>
   );
 }
-

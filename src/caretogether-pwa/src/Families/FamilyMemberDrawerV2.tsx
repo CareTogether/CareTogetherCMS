@@ -184,9 +184,7 @@ export function FamilyMemberDrawerV2({
   const canConvertToAdult =
     childIsAdult && !!row && row.permissionFlags.canConvertChildToAdult;
   const hasManagementActions =
-    canManageUser ||
-    canConvertToAdult ||
-    (!!row && row.permissionFlags.canDelete);
+    canManageUser || (!!row && row.permissionFlags.canDelete);
 
   async function handleConvertToAdult() {
     if (!childSource) return;
@@ -238,286 +236,300 @@ export function FamilyMemberDrawerV2({
       >
         {row && personEditorProps && (
           <Stack spacing={2}>
-          <Box
-            sx={{
-              display: 'flex',
-              alignItems: 'flex-start',
-              justifyContent: 'space-between',
-              gap: 1,
-            }}
-          >
-            <Box sx={{ minWidth: 0, flex: 1 }}>
-              <Box
-                sx={{
-                  alignItems: 'flex-start',
-                  display: 'flex',
-                  gap: 1,
-                  justifyContent: 'flex-start',
-                }}
-              >
-                <Box sx={{ minWidth: 0 }}>
-                  <Typography
-                    color="text.secondary"
-                    sx={{ textTransform: 'uppercase' }}
-                    variant="caption"
-                  >
-                    Family Member
-                  </Typography>
-                  <Typography
-                    id="family-member-drawer-title"
-                    variant="h5"
-                  >
-                    {row.displayName}
-                  </Typography>
-                  <Box
-                    sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mt: 1 }}
-                  >
-                    <Chip label={row.personType} size="small" />
-                    {childIsAdult && (
-                      <Chip
-                        color="error"
-                        label="No longer under 18!"
-                        size="small"
-                      />
-                    )}
-                    {row.householdStatusLabel && (
-                      <Chip label={row.householdStatusLabel} size="small" />
-                    )}
-                    {row.userIndicator && (
-                      <Chip
-                        color="info"
-                        label={row.userIndicator}
-                        size="small"
-                      />
-                    )}
+            <Box
+              sx={{
+                display: 'flex',
+                alignItems: 'flex-start',
+                justifyContent: 'space-between',
+                gap: 1,
+              }}
+            >
+              <Box sx={{ minWidth: 0, flex: 1 }}>
+                <Box
+                  sx={{
+                    alignItems: 'flex-start',
+                    display: 'flex',
+                    gap: 1,
+                    justifyContent: 'flex-start',
+                  }}
+                >
+                  <Box sx={{ minWidth: 0 }}>
+                    <Typography
+                      color="text.secondary"
+                      sx={{ textTransform: 'uppercase' }}
+                      variant="caption"
+                    >
+                      Family Member
+                    </Typography>
+                    <Typography id="family-member-drawer-title" variant="h5">
+                      {row.displayName}
+                    </Typography>
+                    <Box
+                      sx={{
+                        display: 'flex',
+                        flexWrap: 'wrap',
+                        alignItems: 'center',
+                        gap: 1,
+                        mt: 1,
+                      }}
+                    >
+                      <Chip label={row.personType} size="small" />
+                      {childIsAdult && (
+                        <Chip
+                          color="error"
+                          label="No longer under 18!"
+                          size="small"
+                        />
+                      )}
+                      {canConvertToAdult && (
+                        <Button
+                          startIcon={<EmojiPeople />}
+                          size="small"
+                          variant="contained"
+                          sx={{ textTransform: 'none' }}
+                          onClick={() => void handleConvertToAdult()}
+                        >
+                          Convert to Adult
+                        </Button>
+                      )}
+                      {row.householdStatusLabel && (
+                        <Chip label={row.householdStatusLabel} size="small" />
+                      )}
+                      {row.userIndicator && (
+                        <Chip
+                          color="info"
+                          label={row.userIndicator}
+                          size="small"
+                        />
+                      )}
+                    </Box>
                   </Box>
                 </Box>
               </Box>
+              <IconButton
+                aria-label="Close family member drawer"
+                onClick={onClose}
+              >
+                <CloseIcon />
+              </IconButton>
             </Box>
-            <IconButton aria-label="Close family member drawer" onClick={onClose}>
-              <CloseIcon />
-            </IconButton>
-          </Box>
 
-          <Box
-            sx={{
-              display: 'grid',
-              gap: 2,
-              gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' },
-            }}
-          >
-            <Stack spacing={2}>
-              <DrawerSection title="Basic Information">
-                {row.permissionFlags.canEdit ? (
-                  <>
-                    <NameEditor {...personEditorProps} />
-                    <GenderEditor {...personEditorProps} />
-                    <AgeEditor {...personEditorProps} />
-                    <EthnicityEditor {...personEditorProps} />
-                  </>
-                ) : (
-                  <Stack spacing={1}>
-                    <DetailField label="Name">{row.displayName}</DetailField>
-                    <DetailField label="Age">
-                      <AgeText age={row.person.age} />
-                    </DetailField>
-                    <DateOfBirth age={row.person.age} permissions={permissions} />
-                    <DetailField label="Gender">
-                      {genderLabel(row.person.gender)}
-                    </DetailField>
-                    <DetailField label="Ethnicity">
-                      {row.person.ethnicity}
-                    </DetailField>
-                  </Stack>
-                )}
-              </DrawerSection>
-
-              {adultSource && (
-                <DrawerSection title="Relationship">
+            <Box
+              sx={{
+                display: 'grid',
+                gap: 2,
+                gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' },
+              }}
+            >
+              <Stack spacing={2}>
+                <DrawerSection title="Basic Information">
                   {row.permissionFlags.canEdit ? (
-                    <AdultFamilyRelationshipEditor
-                      relationship={adultSource.adult.item2!}
-                      {...personEditorProps}
-                    />
+                    <>
+                      <NameEditor {...personEditorProps} />
+                      <GenderEditor {...personEditorProps} />
+                      <AgeEditor {...personEditorProps} />
+                      <EthnicityEditor {...personEditorProps} />
+                    </>
                   ) : (
                     <Stack spacing={1}>
-                      <DetailField label="Relationship">
-                        {adultSource.adult.item2?.relationshipToFamily}
+                      <DetailField label="Name">{row.displayName}</DetailField>
+                      <DetailField label="Age">
+                        <AgeText age={row.person.age} />
                       </DetailField>
-                      <DetailField label="Household">
-                        {adultSource.adult.item2?.isInHousehold
-                          ? 'In Household'
-                          : 'Not in household'}
+                      <DateOfBirth
+                        age={row.person.age}
+                        permissions={permissions}
+                      />
+                      <DetailField label="Gender">
+                        {genderLabel(row.person.gender)}
+                      </DetailField>
+                      <DetailField label="Ethnicity">
+                        {row.person.ethnicity}
                       </DetailField>
                     </Stack>
                   )}
                 </DrawerSection>
-              )}
 
-              {childSource && (
-                <DrawerSection
-                  title="Custody"
-                  description="Family adults and their custodial relationship to this child."
-                >
-                  {familyAdults.length === 0 ? (
-                    <EmptyState>No active adults in this family.</EmptyState>
-                  ) : row.permissionFlags.canEdit ? (
-                    familyAdults.map((adult) => (
-                      <ChildCustodyRelationshipEditor
-                        key={adult.id!}
-                        adult={adult}
-                        relationship={childSource.custodialRelationships.find(
-                          (relationship) => relationship.personId === adult.id
-                        )}
+                {adultSource && (
+                  <DrawerSection title="Relationship">
+                    {row.permissionFlags.canEdit ? (
+                      <AdultFamilyRelationshipEditor
+                        relationship={adultSource.adult.item2!}
                         {...personEditorProps}
                       />
-                    ))
-                  ) : (
-                    <Stack spacing={1}>
-                      {familyAdults.map((adult) => (
-                        <DetailField key={adult.id!} label={personLabel(adult)}>
-                          {custodyLabel(
-                            childSource.custodialRelationships.find(
-                              (relationship) =>
-                                relationship.personId === adult.id
+                    ) : (
+                      <Stack spacing={1}>
+                        <DetailField label="Relationship">
+                          {adultSource.adult.item2?.relationshipToFamily}
+                        </DetailField>
+                        <DetailField label="Household">
+                          {adultSource.adult.item2?.isInHousehold
+                            ? 'In Household'
+                            : 'Not in household'}
+                        </DetailField>
+                      </Stack>
+                    )}
+                  </DrawerSection>
+                )}
+
+                {childSource && (
+                  <DrawerSection
+                    title="Custody"
+                    description="Family adults and their custodial relationship to this child."
+                  >
+                    {familyAdults.length === 0 ? (
+                      <EmptyState>No active adults in this family.</EmptyState>
+                    ) : row.permissionFlags.canEdit ? (
+                      familyAdults.map((adult) => (
+                        <ChildCustodyRelationshipEditor
+                          key={adult.id!}
+                          adult={adult}
+                          relationship={childSource.custodialRelationships.find(
+                            (relationship) => relationship.personId === adult.id
+                          )}
+                          {...personEditorProps}
+                        />
+                      ))
+                    ) : (
+                      <Stack spacing={1}>
+                        {familyAdults.map((adult) => (
+                          <DetailField
+                            key={adult.id!}
+                            label={personLabel(adult)}
+                          >
+                            {custodyLabel(
+                              childSource.custodialRelationships.find(
+                                (relationship) =>
+                                  relationship.personId === adult.id
+                              )
+                            )}
+                          </DetailField>
+                        ))}
+                      </Stack>
+                    )}
+                  </DrawerSection>
+                )}
+              </Stack>
+
+              <Stack spacing={2}>
+                {row.permissionFlags.canViewContactInfo && (
+                  <DrawerSection title="Contact Information">
+                    <Stack spacing={1.25}>
+                      <Box>
+                        <Typography variant="caption" color="text.secondary">
+                          Phone Numbers
+                        </Typography>
+                        <Stack spacing={1} sx={{ mt: 0.5 }}>
+                          {row.person.phoneNumbers?.map((phoneNumber) => (
+                            <PhoneNumberEditor
+                              key={phoneNumber.id!}
+                              phoneNumber={phoneNumber}
+                              {...personEditorProps}
+                            />
+                          ))}
+                          {row.permissionFlags.canEditContactInfo ? (
+                            <PhoneNumberEditor add {...personEditorProps} />
+                          ) : (
+                            (row.person.phoneNumbers?.length ?? 0) === 0 && (
+                              <EmptyState>No phone numbers.</EmptyState>
                             )
                           )}
-                        </DetailField>
-                      ))}
+                        </Stack>
+                      </Box>
+                      <Box>
+                        <Typography variant="caption" color="text.secondary">
+                          Email Addresses
+                        </Typography>
+                        <Stack spacing={1} sx={{ mt: 0.5 }}>
+                          {row.person.emailAddresses?.map((emailAddress) => (
+                            <EmailAddressEditor
+                              key={emailAddress.id!}
+                              emailAddress={emailAddress}
+                              {...personEditorProps}
+                            />
+                          ))}
+                          {row.permissionFlags.canEditContactInfo ? (
+                            <EmailAddressEditor add {...personEditorProps} />
+                          ) : (
+                            (row.person.emailAddresses?.length ?? 0) === 0 && (
+                              <EmptyState>No email addresses.</EmptyState>
+                            )
+                          )}
+                        </Stack>
+                      </Box>
+                      <Box>
+                        <Typography variant="caption" color="text.secondary">
+                          Addresses
+                        </Typography>
+                        <Stack spacing={1} sx={{ mt: 0.5 }}>
+                          {row.person.addresses?.map((address) => (
+                            <AddressEditor
+                              key={address.id!}
+                              address={address}
+                              {...personEditorProps}
+                            />
+                          ))}
+                          {row.permissionFlags.canEditContactInfo ? (
+                            <AddressEditor add {...personEditorProps} />
+                          ) : (
+                            (row.person.addresses?.length ?? 0) === 0 && (
+                              <EmptyState>No addresses.</EmptyState>
+                            )
+                          )}
+                        </Stack>
+                      </Box>
                     </Stack>
-                  )}
-                </DrawerSection>
-              )}
-            </Stack>
-
-            <Stack spacing={2}>
-              {row.permissionFlags.canViewContactInfo && (
-                <DrawerSection title="Contact Information">
-                  <Stack spacing={1.25}>
-                    <Box>
-                      <Typography variant="caption" color="text.secondary">
-                        Phone Numbers
-                      </Typography>
-                      <Stack spacing={1} sx={{ mt: 0.5 }}>
-                        {row.person.phoneNumbers?.map((phoneNumber) => (
-                          <PhoneNumberEditor
-                            key={phoneNumber.id!}
-                            phoneNumber={phoneNumber}
-                            {...personEditorProps}
-                          />
-                        ))}
-                        {row.permissionFlags.canEditContactInfo ? (
-                          <PhoneNumberEditor add {...personEditorProps} />
-                        ) : (
-                          (row.person.phoneNumbers?.length ?? 0) === 0 && (
-                            <EmptyState>No phone numbers.</EmptyState>
-                          )
-                        )}
-                      </Stack>
-                    </Box>
-                    <Box>
-                      <Typography variant="caption" color="text.secondary">
-                        Email Addresses
-                      </Typography>
-                      <Stack spacing={1} sx={{ mt: 0.5 }}>
-                        {row.person.emailAddresses?.map((emailAddress) => (
-                          <EmailAddressEditor
-                            key={emailAddress.id!}
-                            emailAddress={emailAddress}
-                            {...personEditorProps}
-                          />
-                        ))}
-                        {row.permissionFlags.canEditContactInfo ? (
-                          <EmailAddressEditor add {...personEditorProps} />
-                        ) : (
-                          (row.person.emailAddresses?.length ?? 0) === 0 && (
-                            <EmptyState>No email addresses.</EmptyState>
-                          )
-                        )}
-                      </Stack>
-                    </Box>
-                    <Box>
-                      <Typography variant="caption" color="text.secondary">
-                        Addresses
-                      </Typography>
-                      <Stack spacing={1} sx={{ mt: 0.5 }}>
-                        {row.person.addresses?.map((address) => (
-                          <AddressEditor
-                            key={address.id!}
-                            address={address}
-                            {...personEditorProps}
-                          />
-                        ))}
-                        {row.permissionFlags.canEditContactInfo ? (
-                          <AddressEditor add {...personEditorProps} />
-                        ) : (
-                          (row.person.addresses?.length ?? 0) === 0 && (
-                            <EmptyState>No addresses.</EmptyState>
-                          )
-                        )}
-                      </Stack>
-                    </Box>
-                  </Stack>
-                </DrawerSection>
-              )}
-            </Stack>
-          </Box>
-
-          {row.permissionFlags.canViewNotes && (
-            <DrawerSection title="Comments">
-              <NotesEditor label="Comments" {...personEditorProps} />
-            </DrawerSection>
-          )}
-
-          {row.permissionFlags.canViewConcerns && (
-            <DrawerSection title="Concerns">
-              <ConcernsEditor {...personEditorProps} />
-            </DrawerSection>
-          )}
-
-          {showCustomFields && (
-            <DrawerSection title="Custom Fields">
-              <FamilyMemberCustomFields
-                familyId={familyId}
-                personId={row.person.id!}
-                customFieldPolicies={customFieldPolicies}
-                completedCustomFields={row.person.completedCustomFields}
-              />
-            </DrawerSection>
-          )}
-
-          {hasManagementActions && (
-            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-              {canManageUser && (
-                <Button
-                  startIcon={<ManageAccountsIcon />}
-                  variant="contained"
-                  onClick={openManageUser}
-                >
-                  Manage User
-                </Button>
-              )}
-              {canConvertToAdult && (
-                <Button
-                  startIcon={<EmojiPeople />}
-                  variant="contained"
-                  onClick={() => void handleConvertToAdult()}
-                >
-                  Convert to Adult
-                </Button>
-              )}
-              {row.permissionFlags.canDelete && (
-                <Button
-                  color="error"
-                  startIcon={<DeleteForeverIcon />}
-                  variant="contained"
-                  onClick={deleteDialogHandle.openDialog}
-                >
-                  Delete Person
-                </Button>
-              )}
+                  </DrawerSection>
+                )}
+              </Stack>
             </Box>
-          )}
+
+            {row.permissionFlags.canViewNotes && (
+              <DrawerSection title="Comments">
+                <NotesEditor label="Comments" {...personEditorProps} />
+              </DrawerSection>
+            )}
+
+            {row.permissionFlags.canViewConcerns && (
+              <DrawerSection title="Concerns">
+                <ConcernsEditor {...personEditorProps} />
+              </DrawerSection>
+            )}
+
+            {showCustomFields && (
+              <DrawerSection title="Custom Fields">
+                <FamilyMemberCustomFields
+                  familyId={familyId}
+                  personId={row.person.id!}
+                  customFieldPolicies={customFieldPolicies}
+                  completedCustomFields={row.person.completedCustomFields}
+                />
+              </DrawerSection>
+            )}
+
+            {hasManagementActions && (
+              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+                {canManageUser && (
+                  <Button
+                    startIcon={<ManageAccountsIcon />}
+                    variant="contained"
+                    onClick={openManageUser}
+                  >
+                    Manage User
+                  </Button>
+                )}
+                {row.permissionFlags.canDelete && (
+                  <Button
+                    color="error"
+                    startIcon={<DeleteForeverIcon />}
+                    variant="contained"
+                    onClick={deleteDialogHandle.openDialog}
+                  >
+                    Delete Person
+                  </Button>
+                )}
+              </Box>
+            )}
           </Stack>
         )}
       </Drawer>
@@ -534,7 +546,9 @@ export function FamilyMemberDrawerV2({
       {adultSource &&
         manageUserRequested &&
         manageUserDrawer.drawerFor(
-          <Box sx={{ width: { xs: '100vw', sm: 560, md: 680 }, maxWidth: '100%' }}>
+          <Box
+            sx={{ width: { xs: '100vw', sm: 560, md: 680 }, maxWidth: '100%' }}
+          >
             <ManageUserDrawer
               familyId={familyId}
               adult={adultSource.adult.item1!}

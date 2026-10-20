@@ -49,6 +49,7 @@ import {
   SELF_SERVICE_POLICY_FEATURE_FLAG,
 } from '../../featureFlags';
 import { clonePolicyWithActionDefinitionOrder } from './Tabs/PolicyConfiguration/policyUtils';
+import { usePolicyValidation } from './usePolicyValidation';
 
 export function LocationEdit() {
   const isV2 =
@@ -197,6 +198,25 @@ export function LocationEdit() {
 
   const permissions = useGlobalPermissions();
   const canAccessSettings = permissions(Permission.AccessSettingsScreen);
+  const validation = usePolicyValidation(
+    organizationId,
+    targetLocationId,
+    policy,
+    featureFlagsLoaded &&
+      showPolicySelfService === true &&
+      canAccessSettings &&
+      !!location
+  );
+  const saveScopeRef = useRef<string | null>(null);
+  const savingRef = useRef(false);
+  const saveScope = `${organizationId}/${targetLocationId}`;
+  useEffect(() => {
+    saveScopeRef.current = saveScope;
+    setPolicySaveErrors([]);
+    return () => {
+      saveScopeRef.current = null;
+    };
+  }, [saveScope]);
 
   const appNavigate = useAppNavigate();
   const withBackdrop = useBackdrop();
@@ -211,8 +231,20 @@ export function LocationEdit() {
     'organizationPolicy',
   ] as const;
   const isPolicyTabActive = policyTabIds.some((tabId) => tabId === activeTab);
-  function savePolicy(nextPolicy: EffectiveLocationPolicy) {
-    if (!targetLocationId) return;
+  async function savePolicy(
+    nextPolicy: EffectiveLocationPolicy
+  ): Promise<boolean> {
+    if (!organizationId || !targetLocationId) return false;
+    // Each change is built from the current draft, so a change made while another save
+    // is in flight would not include it. Reject it visibly instead of saving over it.
+    if (savingRef.current) {
+      setPolicySaveErrors([
+        'Another policy change is still being saved. Try again when it finishes.',
+      ]);
+      return false;
+    }
+    savingRef.current = true;
+    let persisted = false;
 
     const previousActionDefinitionOrder = actionDefinitionOrderRef.current;
     const nextActionDefinitionOrder = Object.keys(
@@ -220,26 +252,38 @@ export function LocationEdit() {
     );
     actionDefinitionOrderRef.current = nextActionDefinitionOrder;
 
-    withBackdrop(async () => {
-      try {
-        setPolicySaveErrors([]);
-        const saved = await api.configuration.putEffectiveLocationPolicy(
-          organizationId,
-          targetLocationId,
-          nextPolicy
-        );
-        setPolicyDraft(
-          clonePolicyWithActionDefinitionOrder(
-            saved,
-            nextActionDefinitionOrder
-          )
-        );
-        refreshPolicy();
-      } catch (error) {
-        actionDefinitionOrderRef.current = previousActionDefinitionOrder;
-        setPolicySaveErrors(getPolicySaveErrors(error));
-      }
-    });
+    try {
+      await withBackdrop(async () => {
+        try {
+          setPolicySaveErrors([]);
+          const saved = await api.configuration.putEffectiveLocationPolicy(
+            organizationId,
+            targetLocationId,
+            nextPolicy
+          );
+          // The policy is stored even if the user has switched locations meanwhile;
+          // refreshPolicy is bound to the saved location, so its cache stays current.
+          persisted = true;
+          refreshPolicy();
+          if (saveScopeRef.current !== saveScope) return;
+          setPolicyDraft(
+            clonePolicyWithActionDefinitionOrder(
+              saved,
+              nextActionDefinitionOrder
+            )
+          );
+        } catch (error) {
+          // After a location switch, the order ref and the errors belong to the new
+          // location, so this failure must not touch them.
+          if (saveScopeRef.current !== saveScope) return;
+          actionDefinitionOrderRef.current = previousActionDefinitionOrder;
+          setPolicySaveErrors(getPolicySaveErrors(error));
+        }
+      });
+      return persisted;
+    } finally {
+      savingRef.current = false;
+    }
   }
 
   if (!featureFlagsLoaded) {
@@ -295,6 +339,7 @@ export function LocationEdit() {
               md: `calc(100vh - 48px - ${DESKTOP_BOTTOM_SAFE_AREA}px)`,
             },
         minHeight: 0,
+        minWidth: 0,
         ...(isV2 && { boxSizing: 'border-box' }),
         pt: 2,
       }}
@@ -335,12 +380,15 @@ export function LocationEdit() {
           display: 'flex',
           flex: 1,
           minHeight: 0,
+          minWidth: 0,
           overflow: 'auto',
         }}
       >
         <Box
           sx={{
             width: isMobile && isSidebarCollapsed ? 40 : 240,
+            maxWidth: '100%',
+            flexShrink: 0,
             minHeight: '100%',
             borderRight: '1px solid #e0e0e0',
             p: 1,
@@ -352,6 +400,12 @@ export function LocationEdit() {
           {isMobile && (
             <IconButton
               size="small"
+              aria-label={
+                isSidebarCollapsed
+                  ? 'Expand settings navigation'
+                  : 'Collapse settings navigation'
+              }
+              aria-expanded={!isSidebarCollapsed}
               onClick={() => setIsSidebarCollapsed((prev) => !prev)}
               sx={{ alignSelf: 'flex-end', mb: 1 }}
               color="primary"
@@ -379,12 +433,56 @@ export function LocationEdit() {
             flex: 1,
             minWidth: 0,
             overflow: 'auto',
-            paddingLeft: 4,
-            paddingTop: 2,
+            paddingLeft: { xs: 1, sm: 2, md: 4 },
+            paddingTop: { xs: 1, sm: 2 },
           }}
         >
+          {validation?.status === 'loading' && (
+            <Typography role="status" sx={{ mb: 2 }}>
+              Checking policy configuration...
+            </Typography>
+          )}
+          {validation?.status === 'failure' && (
+            <Alert
+              severity="error"
+              sx={{ mb: 2 }}
+              action={
+                <Button color="inherit" size="small" onClick={validation.retry}>
+                  Try again
+                </Button>
+              }
+            >
+              Policy validation could not be loaded.
+            </Alert>
+          )}
+          {validation?.status === 'success' && (
+            <>
+              {validation.result.errors.length > 0 && (
+                <Alert severity="error" sx={{ mb: 2 }}>
+                  {validation.result.errors.map((message, index) => (
+                    <Typography key={index} variant="body2">
+                      {message}
+                    </Typography>
+                  ))}
+                </Alert>
+              )}
+              {validation.result.warnings.length > 0 && (
+                <Alert severity="warning" sx={{ mb: 2 }}>
+                  {validation.result.warnings.map((message, index) => (
+                    <Typography key={index} variant="body2">
+                      {message}
+                    </Typography>
+                  ))}
+                </Alert>
+              )}
+            </>
+          )}
           {isPolicyTabActive && policySaveErrors.length > 0 && (
-            <Alert severity="error" sx={{ mb: 2 }}>
+            <Alert
+              severity="error"
+              sx={{ mb: 2 }}
+              data-testid="policy-save-errors"
+            >
               <Stack spacing={0.5}>
                 {policySaveErrors.map((error) => (
                   <Typography key={error} variant="body2">
@@ -435,17 +533,16 @@ export function LocationEdit() {
               </Box>
             )}
 
-          {showPolicySelfService === true &&
-            activeTab === 'casePolicy' && (
-              <Box key="casePolicy">
-                <PolicyConfiguration
-                  policy={policyDraft}
-                  locationRoles={locationRoles}
-                  onPolicyChange={savePolicy}
-                  section="casePolicy"
-                />
-              </Box>
-            )}
+          {showPolicySelfService === true && activeTab === 'casePolicy' && (
+            <Box key="casePolicy">
+              <PolicyConfiguration
+                policy={policyDraft}
+                locationRoles={locationRoles}
+                onPolicyChange={savePolicy}
+                section="casePolicy"
+              />
+            </Box>
+          )}
 
           {showPolicySelfService === true &&
             activeTab === 'v1ReferralPolicy' && (

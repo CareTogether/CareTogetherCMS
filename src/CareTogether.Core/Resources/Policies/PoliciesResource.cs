@@ -243,15 +243,13 @@ namespace CareTogether.Resources.Policies
             EffectiveLocationPolicy effectiveLocationPolicy
         )
         {
-            var sanitizedPolicy = EffectiveLocationPolicySanitizer.Sanitize(effectiveLocationPolicy);
-            var config = await configurationStore.GetAsync(organizationId, Guid.Empty, CONFIG);
-            var validationErrors = EffectiveLocationPolicyValidator.Validate(
-                sanitizedPolicy,
-                config
+            var (sanitizedPolicy, validation) = await PreparePolicyAsync(
+                organizationId,
+                effectiveLocationPolicy
             );
 
-            if (validationErrors.Count > 0)
-                throw new PolicyValidationException(validationErrors);
+            if (validation.Errors.Count > 0)
+                throw new PolicyValidationException(validation.Errors);
 
             await locationPoliciesStore.UpsertAsync(
                 organizationId,
@@ -261,6 +259,28 @@ namespace CareTogether.Resources.Policies
             );
 
             return sanitizedPolicy;
+        }
+
+        public async Task<PolicyValidationResult> ValidateEffectiveLocationPolicyAsync(
+            Guid organizationId,
+            EffectiveLocationPolicy policy
+        )
+        {
+            var (_, validation) = await PreparePolicyAsync(organizationId, policy);
+            return validation;
+        }
+
+        private async Task<(
+            EffectiveLocationPolicy Policy,
+            PolicyValidationResult Validation
+        )> PreparePolicyAsync(Guid organizationId, EffectiveLocationPolicy policy)
+        {
+            var sanitizedPolicy = EffectiveLocationPolicySanitizer.Sanitize(policy);
+            var config = await configurationStore.GetAsync(organizationId, Guid.Empty, CONFIG);
+            return (
+                sanitizedPolicy,
+                EffectiveLocationPolicyValidator.Validate(sanitizedPolicy, config)
+            );
         }
 
         public async Task<EffectiveLocationPolicy> GetCurrentPolicy(

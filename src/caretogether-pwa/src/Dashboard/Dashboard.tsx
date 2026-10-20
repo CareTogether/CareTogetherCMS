@@ -6,11 +6,9 @@ import {
   useLocationConfiguration,
   useOrganizationConfiguration,
 } from '../Model/ConfigurationModel';
-import {
-  DESKTOP_BOTTOM_SAFE_AREA,
-  MOBILE_BOTTOM_SAFE_AREA,
-  SHELL_APP_BAR_HEIGHT,
-} from '../Shell/shellLayoutConstants';
+import { Permission } from '../GeneratedClient';
+import { useGlobalPermissionsLoadable } from '../Model/SessionModel';
+import { wideTablePageSx } from '../Utilities/wideTablePageSx';
 import { useScreenTitle } from '../Shell/ShellScreenTitle';
 import { DashboardCalendar } from './DashboardCalendar';
 
@@ -19,6 +17,7 @@ function Dashboard() {
     useFeatureFlagEnabled(FAMILY_SCREEN_V2_EARLY_ACCESS_FEATURE_FLAG) === true;
   const organizationConfiguration = useOrganizationConfiguration();
   const locationConfiguration = useLocationConfiguration();
+  const permissions = useGlobalPermissionsLoadable();
 
   useScreenTitle('Dashboard');
 
@@ -28,20 +27,18 @@ function Dashboard() {
       maxWidth={false}
       sx={{
         boxSizing: 'border-box',
-        height: {
-          xs: `calc(100dvh - ${SHELL_APP_BAR_HEIGHT.xs} - ${MOBILE_BOTTOM_SAFE_AREA}px)`,
-          sm: `calc(100dvh - ${SHELL_APP_BAR_HEIGHT.sm} - ${MOBILE_BOTTOM_SAFE_AREA}px)`,
-          md: `calc(100dvh - ${SHELL_APP_BAR_HEIGHT.md} - ${DESKTOP_BOTTOM_SAFE_AREA}px)`,
-        },
+        ...wideTablePageSx(permissions(Permission.AccessSupportScreen)),
+        minWidth: 0,
+        overflow: 'auto',
       }}
     >
-      <Stack direction="column" sx={{ height: '100%', minHeight: 0 }}>
+      <Stack direction="column" sx={{ minHeight: '100%', minWidth: 0 }}>
         {isV2 && (
           <Typography
             className="ph-unmask"
             {...v2Typography.pageTitle}
             component="h1"
-            sx={{ mt: 2, mb: 2 }}
+            sx={{ mt: { xs: 1, sm: 2 }, mb: { xs: 1, sm: 2 }, flexShrink: 0 }}
           >
             Dashboard
           </Typography>

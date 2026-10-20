@@ -28,6 +28,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Content Include="Fixtures/asf-role-reference-policy.json" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\..\src\CareTogether.Api\CareTogether.Api.csproj" />
     <ProjectReference Include="..\..\src\CareTogether.Core\CareTogether.Core.csproj" />
     <ProjectReference Include="..\CareTogether.TestData\CareTogether.TestData.csproj" />

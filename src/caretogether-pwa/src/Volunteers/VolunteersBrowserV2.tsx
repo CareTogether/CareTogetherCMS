@@ -1,12 +1,12 @@
 import { Add as AddIcon } from '@mui/icons-material';
-import { Box, Button, Stack, Typography } from '@mui/material';
+import { Box, Button, Stack } from '@mui/material';
 import type { GridRowSelectionModel } from '@mui/x-data-grid-premium';
 import { useMemo, useState } from 'react';
 import { useFeatureFlagEnabled } from 'posthog-js/react';
 import { EmailAddress, Permission } from '../GeneratedClient';
 import { useAppNavigate } from '../Hooks/useAppNavigate';
 import { useGlobalSnackBar } from '../Hooks/useGlobalSnackBar';
-import { v2Typography } from '../Families/v2Typography';
+import { ResponsivePageHeader } from '../Generic/ResponsivePageHeader';
 import { useRequiredSelectedLocationContext } from '../Model/Data';
 import { useOrganizationConfiguration } from '../Model/ConfigurationModel';
 import { useAllVolunteerFamiliesPermissions } from '../Model/SessionModel';
@@ -117,55 +117,41 @@ export function VolunteersBrowserV2() {
   }
 
   return (
-    <Stack spacing={2} sx={{ flex: 1, minHeight: 0 }}>
-      <Box>
-        <Typography
-          className="ph-unmask"
-          {...v2Typography.pageTitle}
-          sx={{ mt: 2 }}
-        >
-          Volunteers
-        </Typography>
-        <Typography className="ph-unmask" {...v2Typography.secondaryValue}>
-          Review volunteer families.
-        </Typography>
-      </Box>
-      <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
-        <Stack
-          direction={{ xs: 'column', sm: 'row' }}
-          sx={{
-            alignItems: { xs: 'flex-end', sm: 'center' },
-            flexWrap: { xs: 'nowrap', sm: 'wrap' },
-            gap: 1,
-          }}
-        >
-          <VolunteersToolbarV2
-            canUseBulkEmail={canUseBulkEmail}
-            canUseBulkSms={canUseBulkSms}
-            bulkActionsDisabled={pivotActive}
-            selectedVolunteerCount={selectedVolunteerCount}
-            smsMode={smsMode}
-            onCopyEmailAddresses={copyEmailAddresses}
-            onToggleBulkSms={() => setSmsMode(!smsMode)}
-          />
-          {canCreateVolunteerFamily && (
-            <Button
-              size="small"
-              variant="contained"
-              startIcon={<AddIcon />}
-              sx={{
-                alignSelf: { xs: 'stretch', md: 'center' },
-                flexShrink: 0,
-                whiteSpace: 'nowrap',
-              }}
-              onClick={() => setCreateVolunteerFamilyDrawerOpen(true)}
-            >
-              Add Volunteer Family
-            </Button>
-          )}
-        </Stack>
-      </Box>
-      <Box sx={{ flex: 1, minHeight: 0 }}>
+    <Stack
+      spacing={{ xs: 1, sm: 2 }}
+      sx={{ flex: 1, minHeight: 0, minWidth: 0 }}
+    >
+      <ResponsivePageHeader
+        title="Volunteers"
+        description="Review volunteer families."
+        actions={
+          <>
+            <VolunteersToolbarV2
+              canUseBulkEmail={canUseBulkEmail}
+              canUseBulkSms={canUseBulkSms}
+              bulkActionsDisabled={pivotActive}
+              selectedVolunteerCount={selectedVolunteerCount}
+              smsMode={smsMode}
+              onCopyEmailAddresses={copyEmailAddresses}
+              onToggleBulkSms={() => setSmsMode(!smsMode)}
+            />
+            {canCreateVolunteerFamily && (
+              <Button
+                size="small"
+                variant="contained"
+                startIcon={<AddIcon />}
+                sx={{
+                  maxWidth: '100%',
+                }}
+                onClick={() => setCreateVolunteerFamilyDrawerOpen(true)}
+              >
+                Add Volunteer Family
+              </Button>
+            )}
+          </>
+        }
+      />
+      <Box sx={{ flex: 1, minHeight: 0, minWidth: 0 }}>
         <VolunteersDataGridV2
           arrangementTypes={arrangementTypes}
           familyCustomFields={familyCustomFields}

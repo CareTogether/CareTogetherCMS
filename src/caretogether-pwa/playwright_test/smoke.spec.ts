@@ -14,7 +14,8 @@ async function expectNoFatalErrorUi(page: Page): Promise<void> {
       /unexpected error|something went wrong|application error|monitor_window_timeout/i
     )
   ).toHaveCount(0);
-  await expect(page.getByText(/not found|404/i)).toHaveCount(0);
+  // Whole words only: the footer shows the build's short commit hash (e.g. 6440494).
+  await expect(page.getByText(/\bnot found\b|\b404\b/i)).toHaveCount(0);
 }
 
 async function expectNoBrowserFailures(
