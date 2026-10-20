@@ -1419,6 +1419,7 @@ export function ArrangementPolicySidePanel({
         <Grid item xs={12}>
           <ValidateDatePicker
             label="Superseded Date"
+            clearable
             validateIncomplete
             value={draft.supersededAtUtc}
             onErrorChange={setDateError}
@@ -1854,6 +1855,7 @@ export function VolunteerRolePolicyVersionSidePanel({
         <Grid item xs={12}>
           <ValidateDatePicker
             label="Superseded Date"
+            clearable
             validateIncomplete
             value={draft.supersededAtUtc}
             onErrorChange={setDateError}

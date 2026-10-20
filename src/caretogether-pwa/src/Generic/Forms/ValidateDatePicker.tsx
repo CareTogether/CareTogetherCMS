@@ -15,8 +15,8 @@ type BaseProps = {
   onErrorChange?: (hasError: boolean) => void;
   textFieldProps?: Partial<TextFieldProps>;
   includeTime?: boolean;
-  // Reject partially entered dates while allowing an explicit clear to null.
   validateIncomplete?: boolean;
+  clearable?: boolean;
   label?: React.ReactNode;
 };
 
@@ -31,62 +31,81 @@ export function ValidateDatePicker({
   textFieldProps,
   includeTime = false,
   validateIncomplete = false,
+  clearable = false,
   label,
   ...props
 }: ValidateDatePickerProps) {
-  const [error, setError] = useState(false);
-  const [helperText, setHelperText] = useState('');
+  const [inputValidation, setInputValidation] = useState({
+    value,
+    muiError: false,
+    incomplete: false,
+  });
   const fieldRef = useRef<FieldRef<Date | null>>(null);
-  function reportError(hasError: boolean) {
-    setError(hasError);
-    setHelperText(hasError ? 'Enter a complete, valid date.' : '');
-    onErrorChange?.(hasError);
-  }
+  const lastNotifiedError = useRef<boolean | undefined>(undefined);
+  const error =
+    (!!value && (!isValid(value) || value.getFullYear() < MIN_YEAR)) ||
+    (validateIncomplete &&
+      (inputValidation.muiError ||
+        (inputValidation.value === value && inputValidation.incomplete)));
+  const helperText = error
+    ? 'Enter a complete, valid date on or after January 1, 1900.'
+    : '';
 
   useEffect(() => {
-    const hasError =
-      !!value && (!isValid(value) || value.getFullYear() < MIN_YEAR);
-
-    setError(hasError);
-    setHelperText(
-      hasError ? 'Enter a valid date, make sure it’s after 1900.' : ''
-    );
-
-    if (onErrorChange) onErrorChange(hasError);
-  }, [value, onErrorChange]);
+    if (!onErrorChange || lastNotifiedError.current === error) return;
+    lastNotifiedError.current = error;
+    onErrorChange(error);
+  }, [error, onErrorChange]);
 
   const commonProps = {
     ...props,
     value,
     onChange: (date: Date | null, context: { validationError: unknown }) => {
       onChange(date);
-      if (validateIncomplete) reportError(context.validationError != null);
+      if (validateIncomplete) {
+        setInputValidation({
+          value: date,
+          muiError: context.validationError != null,
+          incomplete: false,
+        });
+      }
     },
     ...(validateIncomplete && {
       onError: (validationError: unknown) =>
-        reportError(validationError != null),
+        setInputValidation((current) => ({
+          value,
+          muiError: validationError != null,
+          incomplete: current.value === value && current.incomplete,
+        })),
     }),
     label,
     minDate: DEFAULT_MIN_DATE,
     minDateTime: DEFAULT_MIN_DATE,
     format: includeTime ? 'M/d/yyyy h:mm a' : 'MM/dd/yyyy',
     slotProps: {
-      ...(validateIncomplete && {
-        field: {
+      field: {
+        clearable,
+        onClear: () => {
+          setInputValidation({
+            value: null,
+            muiError: false,
+            incomplete: false,
+          });
+        },
+        ...(validateIncomplete && {
           fieldRef,
-          clearable: true,
-          onClear: () => {
-            onChange(null);
-            reportError(false);
-          },
           onBlur: () => {
             const sections = fieldRef.current?.getSections() ?? [];
-            if (sections.some((section) => section.value === '')) {
-              reportError(sections.some((section) => section.value !== ''));
-            }
+            setInputValidation((current) => ({
+              value,
+              muiError: current.value === value && current.muiError,
+              incomplete:
+                sections.some((section) => section.value === '') &&
+                sections.some((section) => section.value !== ''),
+            }));
           },
-        },
-      }),
+        }),
+      },
       textField: {
         ...textFieldProps,
         error,
