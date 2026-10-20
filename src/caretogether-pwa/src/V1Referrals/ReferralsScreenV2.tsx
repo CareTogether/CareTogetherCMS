@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Add as AddIcon } from '@mui/icons-material';
-import { Box, Button, Paper, Stack, Typography } from '@mui/material';
+import { Box, Button, Paper, Stack } from '@mui/material';
 import { useScreenTitle } from '../Shell/ShellScreenTitle';
 import { AddNewReferralDrawer } from './AddNewReferralDrawer';
 import { useRequiredSelectedLocationContext } from '../Model/Data';
@@ -12,7 +12,7 @@ import { wideTablePageSx } from '../Utilities/wideTablePageSx';
 import { useReferralsBrowserViewModel } from './useReferralsBrowserViewModel';
 import { ReferralsDataGridV2 } from './ReferralsDataGridV2';
 import type { ReferralBrowserRowV2 } from './referralBrowserTypes';
-import { v2Typography } from '../Families/v2Typography';
+import { ResponsivePageHeader } from '../Generic/ResponsivePageHeader';
 import { useReferralsAccessGate } from './useReferralsAccessGate';
 
 export function ReferralsScreenV2() {
@@ -69,46 +69,29 @@ function ReferralsScreenV2Content() {
         ...wideTablePageSx(hasFeaturebaseChat),
       }}
     >
-      <Stack spacing={2} sx={{ flex: 1, minHeight: 0 }}>
-        <Box>
-          <Typography
-            className="ph-unmask"
-            {...v2Typography.pageTitle}
-            sx={{ mt: 2 }}
-          >
-            Referrals
-          </Typography>
-          <Typography
-            className="ph-unmask"
-            {...v2Typography.secondaryValue}
-            sx={{ ...v2Typography.secondaryValue.sx, mt: 0.5 }}
-          >
-            Browse and manage referrals.
-          </Typography>
-        </Box>
-
-        {permissions(Permission.CreateV1Referral) && (
-          <Box
-            sx={{
-              display: 'flex',
-              justifyContent: 'flex-end',
-            }}
-          >
-            <Button
-              size="small"
-              variant="contained"
-              startIcon={<AddIcon />}
-              sx={{
-                alignSelf: { xs: 'stretch', md: 'center' },
-                flexShrink: 0,
-                whiteSpace: 'nowrap',
-              }}
-              onClick={() => setOpenNewReferral(true)}
-            >
-              Add new referral
-            </Button>
-          </Box>
-        )}
+      <Stack
+        spacing={{ xs: 1, sm: 2 }}
+        sx={{ flex: 1, minHeight: 0, minWidth: 0 }}
+      >
+        <ResponsivePageHeader
+          title="Referrals"
+          description="Browse and manage referrals."
+          actions={
+            permissions(Permission.CreateV1Referral) && (
+              <Button
+                size="small"
+                variant="contained"
+                startIcon={<AddIcon />}
+                sx={{
+                  maxWidth: '100%',
+                }}
+                onClick={() => setOpenNewReferral(true)}
+              >
+                Add new referral
+              </Button>
+            )
+          }
+        />
 
         <Paper
           variant="outlined"
