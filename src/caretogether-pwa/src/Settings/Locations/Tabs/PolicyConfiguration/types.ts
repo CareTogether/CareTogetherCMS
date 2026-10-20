@@ -63,14 +63,14 @@ export type ArrangementPolicyDraft = {
   arrangementType: string;
   childInvolvement: ChildInvolvement;
   superseded: boolean;
-  supersededAtUtc: string;
+  supersededAtUtc: Date | null;
 };
 
 export type VolunteerRolePolicyVersionDraft = {
   roleName: string;
   version: string;
   superseded: boolean;
-  supersededAtUtc: string;
+  supersededAtUtc: Date | null;
   requirements: VolunteerRequirementDraft[];
 };
 
