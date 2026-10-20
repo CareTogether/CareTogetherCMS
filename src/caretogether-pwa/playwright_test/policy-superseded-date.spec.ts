@@ -39,7 +39,7 @@ for (const [kind, timezoneId] of [
   ['family', 'Asia/Tokyo'],
   ['organization', 'UTC'],
 ]) {
-  test.describe(`${kind} in ${timezoneId}`, () => {
+  test.describe(`${kind} in ${timezoneId} @pr`, () => {
     test.use({ timezoneId });
     test('MUI calendar selection, UTC save/reload, invalid input and clearing', async ({
       page,
