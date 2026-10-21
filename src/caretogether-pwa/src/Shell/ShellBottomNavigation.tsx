@@ -22,7 +22,7 @@ import {
   Paper,
   useTheme,
 } from '@mui/material';
-import { Link, useLocation, useMatch } from 'react-router-dom';
+import { Link, useMatch } from 'react-router-dom';
 import { ShellContextSwitcher } from './ShellContextSwitcher';
 import { useSelectedLocationContext } from '../Model/Data';
 import { ListItemLink } from './ListItemLink';
@@ -38,25 +38,27 @@ import { useCanAccessReferrals } from './useCanAccessReferrals';
 export function ShellBottomNavigation() {
   const theme = useTheme();
 
-  const location = useLocation();
-
   const context = useSelectedLocationContext();
   const locationPrefix = `/org/${context?.organizationId}/${context?.locationId}`;
 
-  const links = [
-    new RegExp(`^$never`),
-    new RegExp(`^${locationPrefix}/inbox/*.*$`),
-    new RegExp(`^${locationPrefix}/clients/*.*$`),
-    new RegExp(`^${locationPrefix}/volunteers/*.*$`),
-  ];
-  const selectedLink = Math.max(
-    links.findIndex((link) => location.pathname.match(link) != null),
-    0
-  );
   const [drawerOpen, setDrawerOpen] = useState(false);
 
   const flags = useFeatureFlagsLoadable();
   const permissions = useGlobalPermissionsLoadable();
+  const canAccessClients = permissions(
+    Permission.AccessPartneringFamiliesScreen
+  );
+  const canAccessVolunteers = permissions(Permission.AccessVolunteersScreen);
+  const inboxMatch = useMatch(`${locationPrefix}/inbox/*`);
+  const clientsMatch = useMatch(`${locationPrefix}/clients/*`);
+  const volunteersMatch = useMatch(`${locationPrefix}/volunteers/*`);
+  const selectedLink = inboxMatch
+    ? 'inbox'
+    : canAccessClients && clientsMatch
+      ? 'clients'
+      : canAccessVolunteers && volunteersMatch
+        ? 'volunteers'
+        : 'menu';
   const canAccessReferrals = useCanAccessReferrals();
   const reportSubmenuItems = useAtomValue(reportSubmenuItemsAtom);
   const isReportsPage = useMatch(`${locationPrefix}/reports/*`) !== null;
@@ -92,12 +94,14 @@ export function ShellBottomNavigation() {
         }}
       >
         <BottomNavigationAction
+          value="menu"
           aria-label="Open navigation menu"
           aria-expanded={drawerOpen}
           icon={<MenuIcon />}
           onClick={() => setDrawerOpen(true)}
         />
         <BottomNavigationAction
+          value="inbox"
           component={Link}
           to={`${locationPrefix}/inbox`}
           label="Inbox"
@@ -107,18 +111,24 @@ export function ShellBottomNavigation() {
             </Badge>
           }
         />
-        <BottomNavigationAction
-          component={Link}
-          to={`${locationPrefix}/clients`}
-          label="Clients"
-          icon={<PermPhoneMsgIcon />}
-        />
-        <BottomNavigationAction
-          component={Link}
-          to={`${locationPrefix}/volunteers`}
-          label="Volunteers"
-          icon={<PeopleIcon />}
-        />
+        {canAccessClients && (
+          <BottomNavigationAction
+            value="clients"
+            component={Link}
+            to={`${locationPrefix}/clients`}
+            label="Clients"
+            icon={<PermPhoneMsgIcon />}
+          />
+        )}
+        {canAccessVolunteers && (
+          <BottomNavigationAction
+            value="volunteers"
+            component={Link}
+            to={`${locationPrefix}/volunteers`}
+            label="Volunteers"
+            icon={<PeopleIcon />}
+          />
+        )}
       </BottomNavigation>
       <Drawer
         sx={{
@@ -227,12 +237,14 @@ export function ShellBottomNavigation() {
                     icon={<SettingsIcon />}
                   />
                 )}
-                <ListItemLink
-                  darkColor
-                  to={`${locationPrefix}/support`}
-                  primary="Support"
-                  icon={<SupportIcon />}
-                />
+                {permissions(Permission.AccessSupportScreen) && (
+                  <ListItemLink
+                    darkColor
+                    to={`${locationPrefix}/support`}
+                    primary="Support"
+                    icon={<SupportIcon />}
+                  />
+                )}
               </>
             </List>
           )}
