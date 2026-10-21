@@ -73,7 +73,7 @@ export function ShellBottomNavigation() {
         bottom: 0,
         left: 0,
         right: 0,
-        zIndex: 9999,
+        zIndex: theme.zIndex.appBar,
       }}
     >
       <BottomNavigation
@@ -137,16 +137,30 @@ export function ShellBottomNavigation() {
         slotProps={{
           paper: {
             sx: {
-              padding: 2,
-              width: 200,
+              width: 280,
+              maxWidth: '100%',
+              boxSizing: 'border-box',
+              overflowY: 'auto',
             },
           },
         }}
         open={drawerOpen}
         onClose={() => setDrawerOpen(false)}
       >
-        <Stack spacing={1} sx={{ p: 1 }}>
-          <ShellContextSwitcher />
+        <Stack
+          spacing={2}
+          sx={{
+            p: 2,
+            '& > .MuiStack-root > .MuiTypography-root': { px: 0, top: 0 },
+            '& > .MuiStack-root > .MuiInputBase-root': {
+              width: '100%',
+              ml: 0,
+              minHeight: 44,
+            },
+            '& .MuiSelect-select.MuiInputBase-input': { pr: 4 },
+          }}
+        >
+          <ShellContextSwitcher contained />
           {flags && (
             <List
               aria-label="secondary navigation"
@@ -156,9 +170,26 @@ export function ShellBottomNavigation() {
                 }
               }}
               sx={{
-                position: 'relative',
-                top: 100,
-                zIndex: theme.zIndex.drawer + 3,
+                py: 0,
+                '& .MuiListItemButton-root': {
+                  minHeight: 48,
+                  minWidth: 0,
+                  px: 0,
+                  borderRadius: 1,
+                },
+                '& .MuiListItemIcon-root': { minWidth: 32, mr: 1 },
+                '& .MuiList-root .MuiListItemButton-root': { pl: 5 },
+                '& .MuiListItemButton-root.Mui-selected': {
+                  bgcolor: 'action.selected',
+                  color: 'primary.main',
+                  '& .MuiListItemIcon-root, & .MuiListItemText-root': {
+                    color: 'primary.main',
+                  },
+                },
+                '& .MuiListItemButton-root.Mui-focusVisible': {
+                  outline: `2px solid ${theme.palette.primary.main}`,
+                  outlineOffset: -2,
+                },
               }}
             >
               <>
