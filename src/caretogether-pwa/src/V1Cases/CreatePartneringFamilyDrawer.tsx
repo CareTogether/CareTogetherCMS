@@ -1,6 +1,5 @@
 import Grid from '../Generic/GridLegacyCompat';
-import {
-  useState } from 'react';
+import { useState } from 'react';
 import {
   Button,
   Checkbox,
@@ -138,7 +137,8 @@ export function CreatePartneringFamilyDrawer({
       slotProps={{
         paper: {
           sx: {
-            width: 600,
+            width: { xs: '100%', sm: 600 },
+            boxSizing: 'border-box',
             p: 3,
             top: 45,
           },
@@ -342,11 +342,25 @@ export function CreatePartneringFamilyDrawer({
           />
         </Grid>
 
-        <Grid item xs={12} sx={{ textAlign: 'right', mt: 2 }}>
+        <Grid
+          item
+          xs={12}
+          sx={{
+            textAlign: 'right',
+            mt: 2,
+            display: { xs: 'flex', sm: 'block' },
+            flexDirection: 'column',
+            gap: { xs: 2, sm: 0 },
+            '& > .MuiButton-root': {
+              width: { xs: '100%', sm: 'auto' },
+              minHeight: { xs: 44, sm: 'auto' },
+            },
+          }}
+        >
           <Button
             variant="contained"
             color="secondary"
-            sx={{ mr: 2 }}
+            sx={{ mr: { xs: 0, sm: 2 } }}
             onClick={() => onClose()}
           >
             Cancel

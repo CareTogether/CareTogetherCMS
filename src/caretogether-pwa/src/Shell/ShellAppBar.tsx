@@ -182,7 +182,7 @@ export function ShellAppBar({
             flexGrow: 1,
             display: 'flex',
             justifyContent: 'center',
-            ...(isV2 && isDesktop && { minWidth: 0 }),
+            ...((!isDesktop || isV2) && { minWidth: 0 }),
           }}
         >
           <ShellSearchBar
@@ -190,7 +190,13 @@ export function ShellAppBar({
             setOpenMobileSearch={setOpenMobileSearch}
           />
         </Box>
-        <Box sx={{ display: 'flex', alignItems: 'center' }}>
+        <Box
+          sx={{
+            display: 'flex',
+            alignItems: 'center',
+            flexShrink: { xs: 0, md: 1 },
+          }}
+        >
           <ShellUserProfileMenu />
         </Box>
       </Toolbar>
