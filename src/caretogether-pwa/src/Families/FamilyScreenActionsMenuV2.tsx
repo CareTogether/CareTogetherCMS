@@ -117,8 +117,8 @@ export function FamilyScreenActionsMenuV2({
                 borderRadius: 1,
                 color: 'primary.main',
                 flex: '0 0 auto',
-                width: 36,
-                height: 36,
+                width: 44,
+                height: 44,
               }}
             >
               <MoreVertIcon fontSize="small" />

@@ -1,3 +1,4 @@
+import { useId } from 'react';
 import {
   TableRow,
   TableCell,
@@ -31,6 +32,8 @@ export function ContextualPermissionSetRowAutocomplete({
   onDelete,
   onUpdate,
 }: ContextualPermissionSetRowProps) {
+  const rowId = useId();
+  const contextId = `${rowId}-context`;
   function updateContext(newContext: PermissionContext) {
     onUpdate({
       context: newContext,
@@ -64,14 +67,20 @@ export function ContextualPermissionSetRowAutocomplete({
     <TableRow>
       <TableCell>
         {editable ? (
-          <IconButton onClick={onDelete}>
+          <IconButton
+            id={`${rowId}-remove-set`}
+            aria-label="Remove permission set"
+            aria-labelledby={`${rowId}-remove-set ${contextId}`}
+            onClick={onDelete}
+            sx={{ minWidth: { xs: 44, sm: 0 }, minHeight: { xs: 44, sm: 0 } }}
+          >
             <DeleteIcon />
           </IconButton>
         ) : (
           <></>
         )}
       </TableCell>
-      <TableCell>
+      <TableCell id={contextId}>
         <PermissionContextCell
           context={permissionSet.context!}
           editable={editable}
@@ -85,6 +94,13 @@ export function ContextualPermissionSetRowAutocomplete({
               <ListItem key={permission.toString()} disablePadding>
                 {editable && (
                   <IconButton
+                    id={`${rowId}-remove-${permission}`}
+                    aria-label={`Remove ${formatPermissionName(Permission[permission])} from permission set`}
+                    aria-labelledby={`${rowId}-remove-${permission} ${contextId}`}
+                    sx={{
+                      minWidth: { xs: 44, sm: 0 },
+                      minHeight: { xs: 44, sm: 0 },
+                    }}
                     edge="start"
                     onClick={() => removePermission(permission)}
                   >

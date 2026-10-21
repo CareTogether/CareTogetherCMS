@@ -64,9 +64,14 @@ export function DateDisplayEditor(props: DateDisplayEditorProps) {
 
       {canEdit && (
         <IconButton
+          aria-label={`Edit ${label}`}
           onClick={() => setEditing(true)}
           size="small"
-          sx={{ margin: 1 }}
+          sx={{
+            margin: 1,
+            minWidth: { xs: 44, sm: 0 },
+            minHeight: { xs: 44, sm: 0 },
+          }}
           color="primary"
           disabled={!availableInCurrentPhase}
         >

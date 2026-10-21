@@ -5,6 +5,7 @@ import {
   Stack,
   Tooltip,
   Typography,
+  useMediaQuery,
   useTheme,
 } from '@mui/material';
 import {
@@ -39,13 +40,13 @@ function familyDocumentSearchText(row: FamilyDocumentRowV2) {
     .join(' ');
 }
 
-function buildColumns({
-  onDelete,
-  onDownload,
-}: Pick<
-  FamilyDocumentsDataGridV2Props,
-  'onDelete' | 'onDownload'
->): GridColDef<FamilyDocumentRowV2>[] {
+function buildColumns(
+  {
+    onDelete,
+    onDownload,
+  }: Pick<FamilyDocumentsDataGridV2Props, 'onDelete' | 'onDownload'>,
+  isMobile: boolean
+): GridColDef<FamilyDocumentRowV2>[] {
   return [
     {
       field: 'documentName',
@@ -114,7 +115,7 @@ function buildColumns({
       field: 'actions',
       headerClassName: 'ph-unmask',
       headerName: 'Actions',
-      width: 92,
+      width: isMobile ? 112 : 92,
       sortable: false,
       filterable: false,
       disableColumnMenu: true,
@@ -139,6 +140,10 @@ function buildColumns({
                 disabled={!row.permissionFlags.canDownload}
                 onClick={() => onDownload(row)}
                 size="small"
+                sx={{
+                  minWidth: { xs: 44, sm: 0 },
+                  minHeight: { xs: 44, sm: 0 },
+                }}
               >
                 <DownloadIcon fontSize="small" />
               </IconButton>
@@ -152,6 +157,10 @@ function buildColumns({
                   aria-label={`Delete ${row.documentName}`}
                   onClick={() => onDelete(row)}
                   size="small"
+                  sx={{
+                    minWidth: { xs: 44, sm: 0 },
+                    minHeight: { xs: 44, sm: 0 },
+                  }}
                 >
                   <DeleteIcon fontSize="small" />
                 </IconButton>
@@ -182,9 +191,10 @@ export function FamilyDocumentsDataGridV2({
   rows,
 }: FamilyDocumentsDataGridV2Props) {
   const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const columns = useMemo(
-    () => buildColumns({ onDelete, onDownload }),
-    [onDelete, onDownload]
+    () => buildColumns({ onDelete, onDownload }, isMobile),
+    [onDelete, onDownload, isMobile]
   );
   const { filterModel, filterModelRestored, onFilterModelChange } =
     usePersistedGridFilterModel({
@@ -194,7 +204,14 @@ export function FamilyDocumentsDataGridV2({
     });
 
   return (
-    <Box sx={v2DataGridStyles(theme)}>
+    <Box
+      sx={{
+        ...v2DataGridStyles(theme),
+        '& .MuiDataGrid-cell[data-field="actions"]': {
+          py: { xs: 0, sm: 1 },
+        },
+      }}
+    >
       <PersistedFilterDataGridPremium
         autoHeight
         rows={rows}

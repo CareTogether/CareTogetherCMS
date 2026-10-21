@@ -45,7 +45,7 @@ import {
 } from '@mui/icons-material';
 import { useBackdrop } from '../../Hooks/useBackdrop';
 import { usePersonLookup } from '../../Model/DirectoryModel';
-import { PersonName } from '../../Families/PersonName';
+import { PersonName, personNameString } from '../../Families/PersonName';
 import { format } from 'date-fns';
 import { a11yProps, TabPanel } from '../../Generic/TabPanel';
 import { isBackdropClick } from '../../Utilities/handleBackdropClick';
@@ -109,99 +109,122 @@ export function ChildLocationTimeline({
             planDescription,
           },
           i
-        ) => (
-          <AppTimelineItem
-            key={i}
-            sx={drawerPresentation ? { minHeight: 72 } : undefined}
-          >
-            <AppTimelineOppositeContent
-              sx={
-                drawerPresentation
-                  ? { flex: 0.42, pr: 1.25, py: 1, textAlign: 'right' }
-                  : undefined
-              }
+        ) => {
+          const entryLabel = `${format(entry.timestampUtc!, 'M/d/yy h:mm a')}, ${personNameString(
+            personLookup(
+              entry.childLocationFamilyId,
+              entry.childLocationReceivingAdultId
+            )
+          )}, ${planDescription}`;
+          return (
+            <AppTimelineItem
+              key={i}
+              sx={drawerPresentation ? { minHeight: 72 } : undefined}
             >
-              <Typography
-                component="span"
-                variant={drawerPresentation ? 'caption' : 'body2'}
+              <AppTimelineOppositeContent
                 sx={{
-                  fontWeight: isCurrentLocation ? 'bold' : 'normal',
+                  ...(drawerPresentation
+                    ? { flex: 0.42, pr: 1.25, py: 1, textAlign: 'right' }
+                    : {}),
+                  overflowWrap: { xs: 'anywhere', sm: 'normal' },
                 }}
               >
-                {format(entry.timestampUtc!, 'M/d/yy h:mm a')}
-              </Typography>
-              {!isHistoryEntry && (
+                <Typography
+                  component="span"
+                  variant={drawerPresentation ? 'caption' : 'body2'}
+                  sx={{
+                    fontWeight: isCurrentLocation ? 'bold' : 'normal',
+                  }}
+                >
+                  {format(entry.timestampUtc!, 'M/d/yy h:mm a')}
+                </Typography>
+                {!isHistoryEntry && (
+                  <IconButton
+                    aria-label={`Record planned location change: ${entryLabel}`}
+                    onClick={() => recordChildLocationPlan(entry)}
+                    size="small"
+                    color="primary"
+                    sx={{
+                      minWidth: { xs: 44, sm: 0 },
+                      minHeight: { xs: 44, sm: 0 },
+                    }}
+                  >
+                    <InputIcon />
+                  </IconButton>
+                )}
                 <IconButton
-                  onClick={() => recordChildLocationPlan(entry)}
+                  aria-label={`Delete ${isHistoryEntry ? 'recorded location change' : 'planned location change'}: ${entryLabel}`}
+                  onClick={() =>
+                    isHistoryEntry
+                      ? deleteChildLocationEntry(entry)
+                      : deleteChildLocationPlan(entry)
+                  }
                   size="small"
                   color="primary"
+                  sx={{
+                    minWidth: { xs: 44, sm: 0 },
+                    minHeight: { xs: 44, sm: 0 },
+                  }}
                 >
-                  <InputIcon />
+                  <DeleteIcon />
                 </IconButton>
-              )}
-              <IconButton
-                onClick={() =>
-                  isHistoryEntry
-                    ? deleteChildLocationEntry(entry)
-                    : deleteChildLocationPlan(entry)
-                }
-                size="small"
-                color="primary"
-              >
-                <DeleteIcon />
-              </IconButton>
-            </AppTimelineOppositeContent>
-            <AppTimelineSeparator>
-              <AppTimelineDot
-                color={
-                  isCurrentLocation
-                    ? 'primary'
-                    : isHistoryEntry
-                      ? 'info'
-                      : isNextPlannedChangePastDue
-                        ? 'error'
-                        : 'grey'
-                }
-                variant={isPast ? 'filled' : 'outlined'}
-              >
-                {isHistoryEntry ? (
-                  <PersonPinCircleIcon />
-                ) : (
-                  <EventIcon fontSize="small" />
-                )}
-              </AppTimelineDot>
-              <AppTimelineConnector
-                sx={{ opacity: isHistoryEntry ? 1.0 : 0.5 }}
-              />
-            </AppTimelineSeparator>
-            <AppTimelineContent
-              sx={drawerPresentation ? { py: 1 } : undefined}
-            >
-              <Typography
-                component="div"
-                variant={drawerPresentation ? 'body2' : 'body1'}
+              </AppTimelineOppositeContent>
+              <AppTimelineSeparator>
+                <AppTimelineDot
+                  color={
+                    isCurrentLocation
+                      ? 'primary'
+                      : isHistoryEntry
+                        ? 'info'
+                        : isNextPlannedChangePastDue
+                          ? 'error'
+                          : 'grey'
+                  }
+                  variant={isPast ? 'filled' : 'outlined'}
+                >
+                  {isHistoryEntry ? (
+                    <PersonPinCircleIcon />
+                  ) : (
+                    <EventIcon fontSize="small" />
+                  )}
+                </AppTimelineDot>
+                <AppTimelineConnector
+                  sx={{ opacity: isHistoryEntry ? 1.0 : 0.5 }}
+                />
+              </AppTimelineSeparator>
+              <AppTimelineContent
                 sx={{
-                  fontWeight: isCurrentLocation ? 'bold' : 'normal',
+                  ...(drawerPresentation ? { py: 1 } : {}),
+                  minWidth: { xs: 0, sm: 'auto' },
+                  overflowWrap: { xs: 'anywhere', sm: 'normal' },
                 }}
               >
-                <PersonName
-                  person={personLookup(
-                    entry.childLocationFamilyId,
-                    entry.childLocationReceivingAdultId
-                  )}
-                />
-              </Typography>
-              <Typography
-                color="text.secondary"
-                component="div"
-                variant="caption"
-                sx={{ fontStyle: 'italic' }}
-              >
-                {planDescription}
-              </Typography>
-            </AppTimelineContent>
-          </AppTimelineItem>
-        )
+                <Typography
+                  component="div"
+                  variant={drawerPresentation ? 'body2' : 'body1'}
+                  sx={{
+                    fontWeight: isCurrentLocation ? 'bold' : 'normal',
+                  }}
+                >
+                  <PersonName
+                    person={personLookup(
+                      entry.childLocationFamilyId,
+                      entry.childLocationReceivingAdultId
+                    )}
+                  />
+                </Typography>
+                <Typography
+                  color="text.secondary"
+                  component="div"
+                  variant="caption"
+                  sx={{ fontStyle: 'italic' }}
+                >
+                  {planDescription}
+                </Typography>
+              </AppTimelineContent>
+            </AppTimelineItem>
+          );
+        }
       )}
     </AppTimeline>
   );
