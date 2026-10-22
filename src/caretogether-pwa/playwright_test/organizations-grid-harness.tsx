@@ -1,6 +1,6 @@
 import { createRoot } from 'react-dom/client';
 import { useEffect, useState } from 'react';
-import type { GridColDef, GridFilterModel } from '@mui/x-data-grid-premium';
+import type { GridFilterModel } from '@mui/x-data-grid-premium';
 import { OrganizationsDataGrid } from '../src/Communities/CommunitiesList';
 import { buildOrganizationsGridColumns } from '../src/Communities/organizationsGridColumns';
 import type { OrganizationGridRow } from '../src/Communities/organizationsDataGridViewModel';
@@ -26,33 +26,9 @@ const rows: OrganizationGridRow[] = [
   },
 ];
 
-const columns: GridColDef<OrganizationGridRow>[] =
-  buildOrganizationsGridColumns({
-    organizationCategoriesEnabled: true,
-  });
-
-function CellControl() {
-  const [activated, setActivated] = useState(false);
-  return (
-    <button
-      onClick={(event) => {
-        event.stopPropagation();
-        setActivated(true);
-      }}
-    >
-      {activated ? 'Activated' : 'Inspect organization'}
-    </button>
-  );
-}
-
-if (new URLSearchParams(location.search).has('controls')) {
-  columns.push({
-    field: 'action',
-    headerName: 'Action',
-    width: 180,
-    renderCell: () => <CellControl />,
-  });
-}
+const columns = buildOrganizationsGridColumns({
+  organizationCategoriesEnabled: true,
+});
 
 export function Harness() {
   const [filterModel, setFilterModel] = useState<GridFilterModel>({

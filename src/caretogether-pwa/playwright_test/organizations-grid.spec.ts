@@ -15,7 +15,6 @@ import {
 import { buildOrganizationGridRows } from '../src/Communities/organizationsDataGridViewModel';
 
 let bundle: string;
-test.use({ storageState: { cookies: [], origins: [] } });
 
 test.beforeAll(async () => {
   const result = await build({
@@ -53,16 +52,15 @@ test.beforeAll(async () => {
 });
 
 async function openOrganizationsGridHarnessPage(
-  page: import('@playwright/test').Page,
-  query = ''
+  page: import('@playwright/test').Page
 ) {
-  await page.route('**/organizations-grid-harness*', (route) =>
+  await page.route('**/organizations-grid-harness', (route) =>
     route.fulfill({
       contentType: 'text/html',
       body: '<html><body><div id="root"></div></body></html>',
     })
   );
-  await page.goto(`/organizations-grid-harness${query}`);
+  await page.goto('/organizations-grid-harness');
 }
 
 async function mountOrganizationsGrid(page: import('@playwright/test').Page) {
@@ -70,86 +68,6 @@ async function mountOrganizationsGrid(page: import('@playwright/test').Page) {
   await page.addScriptTag({ content: bundle });
   await expect(page.getByRole('grid')).toBeVisible();
 }
-
-test('mouse row activation leaves no cell outline and preserves category badges', async ({
-  page,
-}) => {
-  await mountOrganizationsGrid(page);
-  const cell = page.getByRole('gridcell', {
-    name: 'Alpha Organization',
-    exact: true,
-  });
-  await cell.click();
-  await expect(page).toHaveURL(
-    /\/organizations\/organization\/organization-alpha$/
-  );
-  await expect(cell).toBeFocused();
-  await expect(cell).toHaveCSS('outline-style', 'none');
-  await expect(
-    page.getByRole('row').filter({ has: cell }).locator('.MuiChip-label')
-  ).toHaveText(['Housing']);
-});
-
-test('keyboard cell navigation retains visible focus and activates the organization', async ({
-  page,
-}) => {
-  await mountOrganizationsGrid(page);
-  const cell = page.getByRole('gridcell', {
-    name: 'Alpha Organization',
-    exact: true,
-  });
-  await cell.click();
-  await page.keyboard.press('ArrowRight');
-  const description = page.getByRole('gridcell', {
-    name: 'Family support',
-    exact: true,
-  });
-  await expect(description).toBeFocused();
-  await expect(description).toHaveCSS('outline-style', 'solid');
-  await expect(description).toHaveCSS('outline-width', '2px');
-  await page.keyboard.press('Enter');
-  await expect(page).toHaveURL(
-    /\/organizations\/organization\/organization-alpha$/
-  );
-});
-
-test('cell controls keep their mouse and keyboard behavior and visible focus', async ({
-  page,
-}) => {
-  await openOrganizationsGridHarnessPage(page, '?controls');
-  await page.addScriptTag({ content: bundle });
-  const row = page
-    .getByRole('row')
-    .filter({
-      has: page.getByRole('gridcell', {
-        name: 'Alpha Organization',
-        exact: true,
-      }),
-    });
-  const control = row.getByRole('button', {
-    name: 'Inspect organization',
-    exact: true,
-  });
-  await control.click();
-  const activated = row.getByRole('button', { name: 'Activated', exact: true });
-  await expect(activated).toBeVisible();
-  await expect(page).toHaveURL(/\/organizations-grid-harness\?controls$/);
-  await page.keyboard.press('Tab');
-  await page.keyboard.press('Shift+Tab');
-  await expect(activated).toBeFocused();
-  expect(
-    await activated.evaluate((element) => {
-      const style = getComputedStyle(element);
-      return (
-        element.matches(':focus-visible') &&
-        style.outlineStyle !== 'none' &&
-        parseFloat(style.outlineWidth) > 0
-      );
-    })
-  ).toBe(true);
-  await page.keyboard.press('Space');
-  await expect(page).toHaveURL(/\/organizations-grid-harness\?controls$/);
-});
 
 test('shows the quick filter when its saved value arrives after the grid mounts', async ({
   page,

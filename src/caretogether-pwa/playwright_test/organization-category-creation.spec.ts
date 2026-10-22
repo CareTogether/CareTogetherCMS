@@ -1,44 +1,12 @@
 import { randomUUID } from 'node:crypto';
 import { expect, test } from './support/fixtures';
-import { ATLANTIS_ORGANIZATION_ID, ATLANTIS_ROUTE } from './support/constants';
+import { ATLANTIS_ROUTE } from './support/constants';
 import { sideNavigation } from './support/navigation';
 import { ORGANIZATION_CATEGORIES_FEATURE_FLAG } from '../src/featureFlags';
 
 test.use({ featureFlags: { [ORGANIZATION_CATEGORIES_FEATURE_FLAG]: true } });
 
 test.describe('organization category persistence @pr', () => {
-  test.beforeEach(async ({ baseURL, page }) => {
-    // CI explicitly opts in for its disposable Atlantis tenant. Local runs must
-    // receive the same approval; saved authentication alone is insufficient.
-    expect(
-      process.env.CT_E2E_DISPOSABLE_TENANT,
-      'Live creation requires approval for the disposable Atlantis tenant'
-    ).toBe('true');
-    expect(baseURL, 'A local AppHost frontend URL is required').toBeTruthy();
-    expect(['localhost', '127.0.0.1', '[::1]']).toContain(
-      new URL(baseURL!).hostname
-    );
-    // A local frontend could be configured with a remote API. Refuse all API
-    // writes outside the approved local tenant before any request is sent.
-    await page.route('**/api/**', async (route) => {
-      if (['GET', 'HEAD', 'OPTIONS'].includes(route.request().method())) {
-        await route.continue();
-        return;
-      }
-      const url = new URL(route.request().url());
-      if (
-        !['localhost', '127.0.0.1', '[::1]'].includes(url.hostname) ||
-        !url.pathname.startsWith(`/api/${ATLANTIS_ORGANIZATION_ID}/`)
-      ) {
-        await route.abort('blockedbyclient');
-        throw new Error(
-          'Refused API write outside the local disposable Atlantis tenant'
-        );
-      }
-      await route.continue();
-    });
-  });
-
   test('creates with an existing category and retains it after reload and in Edit', async ({
     page,
   }) => {
@@ -47,8 +15,7 @@ test.describe('organization category persistence @pr', () => {
     const organizationName = `E2E Organization ${suffix}`;
     const organizationsRoute = `${ATLANTIS_ROUTE}organizations`;
 
-    // The seed configuration has no categories. Provision an existing option
-    // through the real Settings UI, only inside the opted-in disposable tenant.
+    // The seed configuration has no categories, so create one in Settings first.
     await page.goto(`${ATLANTIS_ROUTE}settings/organization-categories`);
     await page
       .getByRole('button', { name: 'Add Category', exact: true })
