@@ -55,9 +55,11 @@ function buildColumns(
       minWidth: 280,
       flex: 1.3,
       renderCell: ({ row }) => (
-        <Typography {...v2Typography.browserCell} noWrap>
-          {row.documentName}
-        </Typography>
+        <Tooltip title={isMobile ? row.documentName : ''}>
+          <Typography {...v2Typography.browserCell} noWrap>
+            {row.documentName}
+          </Typography>
+        </Tooltip>
       ),
     },
     {
@@ -207,6 +209,8 @@ export function FamilyDocumentsDataGridV2({
     <Box
       sx={{
         ...v2DataGridStyles(theme),
+        minWidth: 0,
+        maxWidth: '100%',
         '& .MuiDataGrid-cell[data-field="actions"]': {
           py: { xs: 0, sm: 1 },
         },
@@ -223,6 +227,7 @@ export function FamilyDocumentsDataGridV2({
         columnHeaderHeight={42}
         disableRowSelectionOnClick
         hideFooter
+        showToolbar={isMobile}
         initialState={{
           columns: {
             columnVisibilityModel: {
@@ -238,6 +243,12 @@ export function FamilyDocumentsDataGridV2({
         slotProps={{
           toolbar: {
             showQuickFilter: true,
+            sx: {
+              '& .MuiDataGrid-toolbarQuickFilter, & .MuiDataGrid-toolbarQuickFilterControl':
+                {
+                  maxWidth: '100%',
+                },
+            },
           },
         }}
       />
