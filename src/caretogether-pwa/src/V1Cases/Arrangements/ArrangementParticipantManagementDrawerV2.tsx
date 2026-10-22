@@ -10,6 +10,7 @@ import {
   FormControlLabel,
   FormLabel,
   IconButton,
+  ListItemButton,
   Radio,
   RadioGroup,
   Stack,
@@ -133,16 +134,21 @@ export function ArrangementParticipantManagementDrawerV2({
 
           <Stack spacing={1}>
             {summaries.map((summary) => (
-              <Box
+              <ListItemButton
                 key={summary.functionName}
                 onClick={() => setSelectedFunctionSummary(summary)}
                 sx={{
                   borderBottom: 1,
                   borderColor: 'divider',
-                  cursor: 'pointer',
+                  p: 0,
                   pb: 1.25,
                   '&:last-of-type': { borderBottom: 0, pb: 0 },
                   '&:hover': { backgroundColor: 'action.hover' },
+                  '&.Mui-focusVisible': {
+                    outline: (theme) =>
+                      `2px solid ${theme.palette.primary.main}`,
+                    outlineOffset: -2,
+                  },
                 }}
               >
                 <Stack
@@ -153,9 +159,11 @@ export function ArrangementParticipantManagementDrawerV2({
                     justifyContent: 'space-between',
                     px: 0.75,
                     py: 0.5,
+                    width: '100%',
+                    minWidth: 0,
                   }}
                 >
-                  <Box sx={{ minWidth: 0 }}>
+                  <Box sx={{ minWidth: 0, flex: 1, overflowWrap: 'anywhere' }}>
                     <Typography variant="body2" sx={{ fontWeight: 700 }}>
                       {summary.functionName}
                     </Typography>
@@ -163,9 +171,13 @@ export function ArrangementParticipantManagementDrawerV2({
                       {assignmentSummary(summary)}
                     </Typography>
                   </Box>
-                  <ChevronRightIcon color="action" fontSize="small" />
+                  <ChevronRightIcon
+                    color="action"
+                    fontSize="small"
+                    sx={{ flexShrink: 0 }}
+                  />
                 </Stack>
-              </Box>
+              </ListItemButton>
             ))}
           </Stack>
         </Stack>
