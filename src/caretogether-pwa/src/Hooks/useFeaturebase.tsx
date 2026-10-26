@@ -1,8 +1,11 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useMediaQuery, useTheme } from '@mui/material';
 import { atom, useSetAtom } from 'jotai';
-import { useAccountInfo } from '../Authentication/Auth';
-import { useSelectedLocationContext } from '../Model/Data';
+import { shutdownFeaturebase, useAccountInfo } from '../Authentication/Auth';
+import {
+  useCurrentLocationLoadable,
+  useSelectedLocationContext,
+} from '../Model/Data';
 import {
   useLocationConfigurationLoadable,
   useOrganizationConfigurationLoadable,
@@ -44,10 +47,31 @@ export const useFeaturebase = () => {
   const setChangelogUnreadCount = useSetAtom(changelogUnreadCountState);
   const [featurebaseIdentity, setFeaturebaseIdentity] =
     useState<FeaturebaseIdentity>();
+  const messengerUserId = useRef<string | undefined>(undefined);
+  const queuedSdk = useRef<Window['Featurebase'] | undefined>(undefined);
+  const [scriptLoadFailed, setScriptLoadFailed] = useState(false);
 
   // Check if user has permission to access support screen
   const permissions = useGlobalPermissionsLoadable();
+  const currentLocation = useCurrentLocationLoadable();
   const hasAccessToSupport = permissions(Permission.AccessSupportScreen);
+
+  useEffect(() => {
+    if (
+      messengerUserId.current &&
+      ((currentLocation && !hasAccessToSupport) ||
+        messengerUserId.current !== accountInfo?.userId)
+    ) {
+      shutdownFeaturebase();
+      messengerUserId.current = undefined;
+      setChangelogUnreadCount(0);
+    }
+  }, [
+    accountInfo?.userId,
+    currentLocation,
+    hasAccessToSupport,
+    setChangelogUnreadCount,
+  ]);
 
   useEffect(() => {
     if (!hasAccessToSupport || !accountInfo?.userId) {
@@ -57,12 +81,18 @@ export const useFeaturebase = () => {
 
     let cancelled = false;
     const userId = accountInfo.userId;
+    setFeaturebaseIdentity(undefined);
 
-    void api.users.getFeaturebaseIdentityHash().then((userHash) => {
-      if (cancelled) return;
+    void api.users
+      .getFeaturebaseIdentityHash()
+      .then((userHash) => {
+        if (cancelled || !userHash?.trim()) return;
 
-      setFeaturebaseIdentity({ userHash, userId });
-    });
+        setFeaturebaseIdentity({ userHash, userId });
+      })
+      .catch(() => {
+        if (!cancelled) setFeaturebaseIdentity(undefined);
+      });
 
     return () => {
       cancelled = true;
@@ -72,6 +102,7 @@ export const useFeaturebase = () => {
   useEffect(() => {
     if (
       !hasAccessToSupport ||
+      scriptLoadFailed ||
       !accountInfo?.userId ||
       featurebaseIdentity?.userId !== accountInfo.userId
     ) {
@@ -85,8 +116,10 @@ export const useFeaturebase = () => {
       win.Featurebase = function (...args: unknown[]) {
         (win.Featurebase.q = win.Featurebase.q || []).push(args);
       };
+      queuedSdk.current = win.Featurebase;
     }
 
+    messengerUserId.current = accountInfo.userId;
     // Boot Featurebase messenger with configuration including user attributes
     win.Featurebase('boot', {
       appId: '6890e41acb9e844a4374a7a8', // required
@@ -140,6 +173,7 @@ export const useFeaturebase = () => {
     );
   }, [
     hasAccessToSupport,
+    scriptLoadFailed,
     accountInfo,
     featurebaseIdentity,
     organizationConfiguration,
@@ -165,11 +199,20 @@ export const useFeaturebase = () => {
     script.src = 'https://do.featurebase.app/js/sdk.js';
     script.id = 'featurebase-sdk';
     script.async = true;
+    setScriptLoadFailed(false);
+    script.onerror = () => {
+      setScriptLoadFailed(true);
+      if (window.Featurebase === queuedSdk.current) {
+        window.Featurebase.q = [];
+      }
+      script.remove();
+    };
 
     document.head.appendChild(script);
 
     // Cleanup function
     return () => {
+      script.onerror = null;
       const scriptElement = document.getElementById('featurebase-sdk');
       if (scriptElement) {
         scriptElement.remove();
