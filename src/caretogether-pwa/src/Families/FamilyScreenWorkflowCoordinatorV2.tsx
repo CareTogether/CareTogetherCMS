@@ -6,7 +6,7 @@ import {
   V1Case,
   V1Referral,
 } from '../GeneratedClient';
-import { AddEditV1ReferralNoteDialog } from '../V1Referrals/AddEditV1ReferralNoteDialog';
+import { AddEditV1ReferralNoteDrawer } from '../V1Referrals/AddEditV1ReferralNoteDrawer';
 import { ApproveV1ReferralNoteDialog } from '../V1Referrals/ApproveV1ReferralNoteDialog';
 import { DiscardV1ReferralNoteDialog } from '../V1Referrals/DiscardV1ReferralNoteDialog';
 import { CloseV1CaseDrawer } from '../V1Cases/CloseV1CaseDrawer';
@@ -187,7 +187,7 @@ export function FamilyScreenWorkflowCoordinatorV2({
         />
       )}
       {recentReferralNoteAction?.action === 'edit' && (
-        <AddEditV1ReferralNoteDialog
+        <AddEditV1ReferralNoteDrawer
           referralId={recentReferralNoteAction.referralId}
           note={recentReferralNoteAction.note}
           onClose={onRecentReferralNoteActionClose}
