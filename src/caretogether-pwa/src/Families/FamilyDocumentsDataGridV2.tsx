@@ -2,7 +2,9 @@ import {
   Box,
   Chip,
   IconButton,
+  MenuItem,
   Stack,
+  TextField,
   Tooltip,
   Typography,
   useMediaQuery,
@@ -12,7 +14,15 @@ import {
   Delete as DeleteIcon,
   Download as DownloadIcon,
 } from '@mui/icons-material';
-import { GridColDef, GridToolbar } from '@mui/x-data-grid-premium';
+import {
+  GridColDef,
+  GridListViewColDef,
+  GridToolbar,
+  GridToolbarProps,
+  gridSortModelSelector,
+  useGridApiContext,
+  useGridSelector,
+} from '@mui/x-data-grid-premium';
 import { useMemo } from 'react';
 import { FamilyDocumentRowV2 } from './familyDocumentsViewModelV2';
 import { v2DataGridStyles } from './v2DataGridStyles';
@@ -26,6 +36,59 @@ type FamilyDocumentsDataGridV2Props = {
   onDownload: (row: FamilyDocumentRowV2) => void;
   rows: FamilyDocumentRowV2[];
 };
+
+function DocumentsMobileToolbar(props: GridToolbarProps) {
+  const apiRef = useGridApiContext();
+  const sortModel = useGridSelector(apiRef, gridSortModelSelector);
+  const sortableColumns = apiRef.current
+    .getAllColumns()
+    .filter((column) => column.sortable);
+  const sortValue =
+    sortModel.length === 1
+      ? `${sortModel[0].field}:${sortModel[0].sort}`
+      : sortModel.length === 0
+        ? ''
+        : 'multiple';
+
+  return (
+    <Stack spacing={1} sx={{ minWidth: 0, p: 0.5 }}>
+      <GridToolbar {...props} />
+      <TextField
+        select
+        label="Sort documents"
+        size="small"
+        fullWidth
+        sx={{ '& .MuiInputBase-root': { minHeight: 44 } }}
+        value={sortValue}
+        onChange={(event) => {
+          if (!event.target.value) {
+            apiRef.current.setSortModel([]);
+            return;
+          }
+          const [field, sort] = event.target.value.split(':');
+          if (sort === 'asc' || sort === 'desc') {
+            apiRef.current.setSortModel([{ field, sort }]);
+          }
+        }}
+      >
+        <MenuItem value="">Unsorted</MenuItem>
+        {sortModel.length > 1 && (
+          <MenuItem value="multiple" disabled>
+            Multiple columns
+          </MenuItem>
+        )}
+        {sortableColumns.flatMap((column) => [
+          <MenuItem key={`${column.field}:asc`} value={`${column.field}:asc`}>
+            {column.headerName} — ascending
+          </MenuItem>,
+          <MenuItem key={`${column.field}:desc`} value={`${column.field}:desc`}>
+            {column.headerName} — descending
+          </MenuItem>,
+        ])}
+      </TextField>
+    </Stack>
+  );
+}
 
 function familyDocumentSearchText(row: FamilyDocumentRowV2) {
   return [
@@ -194,6 +257,7 @@ export function FamilyDocumentsDataGridV2({
 }: FamilyDocumentsDataGridV2Props) {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+  const isListView = useMediaQuery(theme.breakpoints.down('md'));
   const columns = useMemo(
     () => buildColumns({ onDelete, onDownload }, isMobile),
     [onDelete, onDownload, isMobile]
@@ -204,6 +268,49 @@ export function FamilyDocumentsDataGridV2({
       entityId: filterScopeId,
       namespace: 'familyDocuments',
     });
+  const listViewColumn = useMemo<GridListViewColDef<FamilyDocumentRowV2>>(
+    () => ({
+      field: 'documentList',
+      display: 'flex',
+      renderCell: (params) => {
+        const { row } = params;
+        const uploadedBy = row.uploadedByLabel ?? row.uploadedByUserId;
+        return (
+          <Stack spacing={0.5} sx={{ width: '100%', minWidth: 0, py: 1 }}>
+            <Typography
+              {...v2Typography.primaryValue}
+              sx={{ fontWeight: 600, overflowWrap: 'anywhere' }}
+            >
+              {row.documentName}
+            </Typography>
+            <Typography
+              {...v2Typography.secondaryValue}
+              sx={{ color: 'text.secondary', overflowWrap: 'anywhere' }}
+            >
+              Uploaded {row.uploadDateLabel}
+              {uploadedBy ? ` by ${uploadedBy}` : ''}
+            </Typography>
+            <Typography
+              {...v2Typography.secondaryValue}
+              sx={{ color: 'text.secondary', overflowWrap: 'anywhere' }}
+            >
+              {row.fileTypeLabel} · {row.sourceLabel}
+            </Typography>
+            <Box
+              sx={{
+                '& .MuiIconButton-root': { minWidth: 44, minHeight: 44 },
+              }}
+            >
+              {columns
+                .find((column) => column.field === 'actions')
+                ?.renderCell?.(params)}
+            </Box>
+          </Stack>
+        );
+      },
+    }),
+    [columns]
+  );
 
   return (
     <Box
@@ -211,13 +318,18 @@ export function FamilyDocumentsDataGridV2({
         ...v2DataGridStyles(theme),
         minWidth: 0,
         maxWidth: '100%',
+        height: isListView ? '70dvh' : undefined,
         '& .MuiDataGrid-cell[data-field="actions"]': {
           py: { xs: 0, sm: 1 },
         },
       }}
     >
       <PersistedFilterDataGridPremium
-        autoHeight
+        autoHeight={!isListView}
+        listView={isListView}
+        listViewColumn={listViewColumn}
+        getRowHeight={isListView ? () => 'auto' : undefined}
+        getEstimatedRowHeight={isListView ? () => 160 : undefined}
         rows={rows}
         columns={columns}
         filterModel={filterModel}
@@ -227,7 +339,7 @@ export function FamilyDocumentsDataGridV2({
         columnHeaderHeight={42}
         disableRowSelectionOnClick
         hideFooter
-        showToolbar={isMobile}
+        showToolbar={isListView}
         initialState={{
           columns: {
             columnVisibilityModel: {
@@ -239,11 +351,12 @@ export function FamilyDocumentsDataGridV2({
             sortModel: [{ field: 'uploadedAtUtc', sort: 'desc' }],
           },
         }}
-        slots={{ toolbar: GridToolbar }}
+        slots={{ toolbar: isListView ? DocumentsMobileToolbar : GridToolbar }}
         slotProps={{
           toolbar: {
             showQuickFilter: true,
             sx: {
+              '& .MuiButtonBase-root': { minWidth: 44, minHeight: 44 },
               '& .MuiDataGrid-toolbarQuickFilter, & .MuiDataGrid-toolbarQuickFilterControl':
                 {
                   maxWidth: '100%',
