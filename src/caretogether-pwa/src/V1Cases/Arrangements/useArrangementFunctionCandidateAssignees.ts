@@ -9,7 +9,7 @@ import {
 } from '../../GeneratedClient';
 import { usePersonAndFamilyLookup } from '../../Model/DirectoryModel';
 import { useVisibleFamilies } from '../../Model/Data';
-import { EXPIRED_VOLUNTEER_ASSIGNMENTS_FEATURE_FLAG } from '../../featureFlags';
+import { UNAPPROVED_VOLUNTEER_ASSIGNMENTS_FEATURE_FLAG } from '../../featureFlags';
 import { getFamilyName } from './arrangementAssignmentPresentationHelpersV2';
 
 type Family = NonNullable<CombinedFamilyInfo['family']>;
@@ -17,7 +17,7 @@ type Family = NonNullable<CombinedFamilyInfo['family']>;
 type Candidate = {
   family: Family;
   person: Person | null;
-  expired: boolean;
+  status: RoleApprovalStatus | undefined;
 };
 
 export type ArrangementFunctionCandidateAssignee = {
@@ -36,18 +36,28 @@ type UseArrangementFunctionCandidateAssigneesParameters = {
 
 function isAssignableStatus(
   status: RoleApprovalStatus | undefined,
-  allowExpired: boolean
+  allowUnapproved: boolean
 ) {
   if (
     status === RoleApprovalStatus.Approved ||
     status === RoleApprovalStatus.Onboarded
   )
     return true;
-  return allowExpired && status === RoleApprovalStatus.Expired;
+  return (
+    allowUnapproved &&
+    (status === RoleApprovalStatus.Expired ||
+      status === RoleApprovalStatus.Prospective)
+  );
 }
 
-function withExpiredLabel(displayName: string, expired: boolean) {
-  return expired ? `${displayName} (expired)` : displayName;
+function withStatusLabel(
+  displayName: string,
+  status: RoleApprovalStatus | undefined
+) {
+  if (status === RoleApprovalStatus.Expired) return `${displayName} (expired)`;
+  if (status === RoleApprovalStatus.Prospective)
+    return `${displayName} (prospective)`;
+  return displayName;
 }
 
 function familyPrimaryContact(family: Family) {
@@ -94,8 +104,9 @@ export function useArrangementFunctionCandidateAssignees({
 }: UseArrangementFunctionCandidateAssigneesParameters) {
   const visibleFamilies = useVisibleFamilies();
   const familyAndPersonLookup = usePersonAndFamilyLookup();
-  const allowExpired =
-    useFeatureFlagEnabled(EXPIRED_VOLUNTEER_ASSIGNMENTS_FEATURE_FLAG) === true;
+  const allowUnapproved =
+    useFeatureFlagEnabled(UNAPPROVED_VOLUNTEER_ASSIGNMENTS_FEATURE_FLAG) ===
+    true;
 
   return useMemo<ArrangementFunctionCandidateAssignee[]>(() => {
     if (!arrangement || !arrangementFunction) return [];
@@ -115,10 +126,10 @@ export function useArrangementFunctionCandidateAssignees({
                   assignment.personId === personResult.person?.id
               )
           )
-          .map((personResult) => ({
+          .map<Candidate>((personResult) => ({
             family: personResult.family!,
             person: personResult.person || null,
-            expired: false,
+            status: undefined,
           }))
       : [];
 
@@ -143,7 +154,7 @@ export function useArrangementFunctionCandidateAssignees({
                           ) &&
                           isAssignableStatus(
                             roleApprovalStatus.currentStatus,
-                            allowExpired
+                            allowUnapproved
                           ) &&
                           !arrangement.individualVolunteerAssignments?.find(
                             (assignment) =>
@@ -159,9 +170,7 @@ export function useArrangementFunctionCandidateAssignees({
                                     family.family!.adults!.find(
                                       (adult) => adult.item1!.id === volunteerId
                                     )!.item1 || null,
-                                  expired:
-                                    roleApprovalStatus.currentStatus ===
-                                    RoleApprovalStatus.Expired,
+                                  status: roleApprovalStatus.currentStatus,
                                 },
                               ]
                             : []
@@ -184,7 +193,7 @@ export function useArrangementFunctionCandidateAssignees({
                   ) &&
                   isAssignableStatus(
                     roleApprovalStatus.currentStatus,
-                    allowExpired
+                    allowUnapproved
                   ) &&
                   !arrangement.familyVolunteerAssignments?.find(
                     (assignment) =>
@@ -196,9 +205,7 @@ export function useArrangementFunctionCandidateAssignees({
                         {
                           family: family.family!,
                           person: null as Person | null,
-                          expired:
-                            roleApprovalStatus.currentStatus ===
-                            RoleApprovalStatus.Expired,
+                          status: roleApprovalStatus.currentStatus,
                         },
                       ]
                     : []
@@ -220,12 +227,12 @@ export function useArrangementFunctionCandidateAssignees({
             familyId: candidate.family.id!,
             personId: null,
             key: candidate.family.id!,
-            displayName: withExpiredLabel(
+            displayName: withStatusLabel(
               familyCandidateDisplayName(
                 candidate.family,
                 missingPrimaryContactFamilyName
               ),
-              candidate.expired
+              candidate.status
             ),
             candidateType: 'Families',
           };
@@ -235,15 +242,15 @@ export function useArrangementFunctionCandidateAssignees({
           familyId: candidate.family.id!,
           personId: candidate.person.id!,
           key: `${candidate.family.id!}|${candidate.person.id || ''}`,
-          displayName: withExpiredLabel(
+          displayName: withStatusLabel(
             `${candidate.person.firstName} ${candidate.person.lastName}`,
-            candidate.expired
+            candidate.status
           ),
           candidateType: 'Individuals',
         };
       });
   }, [
-    allowExpired,
+    allowUnapproved,
     arrangement,
     arrangementFunction,
     familyAndPersonLookup,
