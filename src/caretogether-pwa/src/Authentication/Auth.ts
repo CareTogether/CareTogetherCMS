@@ -649,7 +649,19 @@ export async function tryAcquireAccessToken(): Promise<string | null> {
   return await acquireMsalAccessToken();
 }
 
+export function shutdownFeaturebase(): void {
+  try {
+    if (typeof window.Featurebase === 'function') {
+      window.Featurebase('shutdown');
+    }
+  } catch {
+    return;
+  }
+}
+
 export async function logoutAsync(): Promise<void> {
+  shutdownFeaturebase();
+
   if (keycloakAuthEnabled) {
     const storedTokens = readStoredKeycloakTokens();
     localStorage.removeItem(keycloakTokenStorageKey);
