@@ -22,7 +22,7 @@ import { V1ReferralNoteEntry, V1ReferralNoteStatus } from '../GeneratedClient';
 import { useUserLookup } from '../Model/DirectoryModel';
 import { PersonName } from '../Families/PersonName';
 
-import { AddEditV1ReferralNoteDialog } from './AddEditV1ReferralNoteDialog';
+import { AddEditV1ReferralNoteDrawer } from './AddEditV1ReferralNoteDrawer';
 import { ApproveV1ReferralNoteDialog } from './ApproveV1ReferralNoteDialog';
 import { DiscardV1ReferralNoteDialog } from './DiscardV1ReferralNoteDialog';
 
@@ -203,7 +203,7 @@ export function V1ReferralNoteCard({
       )}
 
       {showEditDialog && (
-        <AddEditV1ReferralNoteDialog
+        <AddEditV1ReferralNoteDrawer
           referralId={referralId}
           note={note}
           onClose={() => setShowEditDialog(false)}

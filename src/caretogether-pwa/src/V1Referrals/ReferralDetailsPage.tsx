@@ -31,10 +31,10 @@ import { useAppNavigate } from '../Hooks/useAppNavigate';
 import { CloseV1ReferralDrawer } from './CloseV1ReferralDrawer';
 import { downloadV1ReferralFile } from '../Model/FilesModel';
 
-import { AddEditV1ReferralNoteDialog } from './AddEditV1ReferralNoteDialog';
+import { AddEditV1ReferralNoteDrawer } from './AddEditV1ReferralNoteDrawer';
 import { ReferralTimeline } from './V1ReferralTimeline';
 import { SelectReferralFamilyDrawer } from './SelectReferralFamilyDrawer';
-import { UploadV1ReferralDocumentsDialog } from './UploadV1ReferralDocumentsDialog';
+import { UploadV1ReferralDocumentsDrawer } from './UploadV1ReferralDocumentsDrawer';
 import { LinkReferralToExistingCaseDialog } from './LinkReferralToExistingCaseDialog';
 import { formatStatusWithDate } from './formatStatusWithDate';
 import { FunctionAssignmentsSection } from '../FunctionAssignments/FunctionAssignmentsSection';
@@ -54,8 +54,8 @@ export function ReferralDetailsPage() {
   const [openOpenCaseDialog, setOpenOpenCaseDialog] = useState(false);
   const [showAcceptedMessage, setShowAcceptedMessage] = useState(false);
   const [openCloseReferralDialog, setOpenCloseReferralDialog] = useState(false);
-  const [openAddNoteDialog, setOpenAddNoteDialog] = useState(false);
-  const [openUploadDocumentDialog, setOpenUploadDocumentDialog] =
+  const [openAddNoteDrawer, setOpenAddNoteDrawer] = useState(false);
+  const [openUploadDocumentDrawer, setOpenUploadDocumentDrawer] =
     useState(false);
 
   const {
@@ -243,7 +243,7 @@ export function ReferralDetailsPage() {
                 size="small"
                 sx={{ margin: 1 }}
                 startIcon={<AddCircleIcon />}
-                onClick={() => setOpenAddNoteDialog(true)}
+                onClick={() => setOpenAddNoteDrawer(true)}
               >
                 Note
               </Button>
@@ -255,7 +255,7 @@ export function ReferralDetailsPage() {
                 size="small"
                 sx={{ margin: 1 }}
                 startIcon={<CloudUploadIcon />}
-                onClick={() => setOpenUploadDocumentDialog(true)}
+                onClick={() => setOpenUploadDocumentDrawer(true)}
               >
                 Upload
               </Button>
@@ -485,17 +485,17 @@ export function ReferralDetailsPage() {
         />
       )}
 
-      {openAddNoteDialog && canEditReferral && (
-        <AddEditV1ReferralNoteDialog
+      {openAddNoteDrawer && canEditReferral && (
+        <AddEditV1ReferralNoteDrawer
           referralId={currentReferral.referralId}
-          onClose={() => setOpenAddNoteDialog(false)}
+          onClose={() => setOpenAddNoteDrawer(false)}
         />
       )}
 
-      {openUploadDocumentDialog && !isClosed && canEditReferral && (
-        <UploadV1ReferralDocumentsDialog
+      {openUploadDocumentDrawer && !isClosed && canEditReferral && (
+        <UploadV1ReferralDocumentsDrawer
           referralId={currentReferral.referralId}
-          onClose={() => setOpenUploadDocumentDialog(false)}
+          onClose={() => setOpenUploadDocumentDrawer(false)}
         />
       )}
 
