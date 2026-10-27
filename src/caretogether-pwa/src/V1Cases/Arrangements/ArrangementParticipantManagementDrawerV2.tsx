@@ -509,7 +509,7 @@ function ArrangementAssignmentDetailDrawerV2({
               Unassign <AssignmentLabel assignment={unassignmentParameter} />?
             </Typography>
             <Stack
-              direction="row"
+              direction={{ xs: 'column', sm: 'row' }}
               spacing={1}
               sx={{ justifyContent: 'flex-end' }}
             >

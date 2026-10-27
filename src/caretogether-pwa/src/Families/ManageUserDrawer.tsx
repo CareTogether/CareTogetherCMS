@@ -303,12 +303,18 @@ export function ManageUserDrawer({
           ))}
         </List>
       </Grid>
-      <Grid size={12} sx={{ textAlign: 'right' }}>
+      <Grid
+        size={12}
+        sx={{
+          textAlign: 'right',
+          '& > .MuiButton-root': { width: { xs: '100%', sm: 'auto' } },
+        }}
+      >
         <Button
           color="secondary"
           variant="text"
           disabled={!unsavedChanges}
-          sx={{ marginRight: 2 }}
+          sx={{ marginRight: { xs: 0, sm: 2 }, mb: { xs: 1, sm: 0 } }}
           onClick={revert}
         >
           Revert
@@ -316,7 +322,7 @@ export function ManageUserDrawer({
         <Button
           color="secondary"
           variant="contained"
-          sx={{ marginRight: 2 }}
+          sx={{ marginRight: { xs: 0, sm: 2 }, mb: { xs: 1, sm: 0 } }}
           onClick={close}
         >
           Close

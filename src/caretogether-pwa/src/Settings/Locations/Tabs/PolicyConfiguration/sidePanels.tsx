@@ -121,11 +121,18 @@ function SidePanelSaveActions({
           </Alert>
         </Grid>
       )}
-      <Grid item xs={12} sx={{ textAlign: 'right' }}>
+      <Grid
+        item
+        xs={12}
+        sx={{
+          textAlign: 'right',
+          '& > .MuiButton-root': { width: { xs: '100%', sm: 'auto' } },
+        }}
+      >
         <Button
           variant="contained"
           color="secondary"
-          sx={{ mr: 2 }}
+          sx={{ mr: { xs: 0, sm: 2 }, mb: { xs: 1, sm: 0 } }}
           disabled={saving}
           onClick={onClose}
         >
@@ -389,11 +396,18 @@ export function ActionDefinitionSidePanel({
         />
       </Grid>
 
-      <Grid item xs={12} sx={{ textAlign: 'right' }}>
+      <Grid
+        item
+        xs={12}
+        sx={{
+          textAlign: 'right',
+          '& > .MuiButton-root': { width: { xs: '100%', sm: 'auto' } },
+        }}
+      >
         <Button
           variant="contained"
           color="secondary"
-          sx={{ mr: 2 }}
+          sx={{ mr: { xs: 0, sm: 2 }, mb: { xs: 1, sm: 0 } }}
           onClick={onClose}
         >
           Cancel
@@ -556,11 +570,18 @@ export function CustomFieldSidePanel({
         </>
       )}
 
-      <Grid item xs={12} sx={{ textAlign: 'right' }}>
+      <Grid
+        item
+        xs={12}
+        sx={{
+          textAlign: 'right',
+          '& > .MuiButton-root': { width: { xs: '100%', sm: 'auto' } },
+        }}
+      >
         <Button
           variant="contained"
           color="secondary"
-          sx={{ mr: 2 }}
+          sx={{ mr: { xs: 0, sm: 2 }, mb: { xs: 1, sm: 0 } }}
           onClick={onClose}
         >
           Cancel
@@ -1876,11 +1897,18 @@ export function VolunteerRolePolicyVersionSidePanel({
         )}
       </Grid>
 
-      <Grid item xs={12} sx={{ textAlign: 'right' }}>
+      <Grid
+        item
+        xs={12}
+        sx={{
+          textAlign: 'right',
+          '& > .MuiButton-root': { width: { xs: '100%', sm: 'auto' } },
+        }}
+      >
         <Button
           variant="contained"
           color="secondary"
-          sx={{ mr: 2 }}
+          sx={{ mr: { xs: 0, sm: 2 }, mb: { xs: 1, sm: 0 } }}
           onClick={onClose}
         >
           Cancel

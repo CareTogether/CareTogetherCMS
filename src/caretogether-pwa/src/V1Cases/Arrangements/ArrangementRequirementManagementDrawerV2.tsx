@@ -791,7 +791,11 @@ export function ArrangementRequirementManagementDrawerV2({
 
         {uploadError && <Alert severity="error">{uploadError}</Alert>}
 
-        <Stack direction="row" spacing={1} sx={{ justifyContent: 'flex-end' }}>
+        <Stack
+          direction={{ xs: 'column', sm: 'row' }}
+          spacing={1}
+          sx={{ justifyContent: 'flex-end' }}
+        >
           <Button color="secondary" disabled={saving} onClick={closeDrawer}>
             Cancel
           </Button>
