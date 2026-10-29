@@ -11,7 +11,7 @@ import {
   Delete as DeleteIcon,
   Download as DownloadIcon,
 } from '@mui/icons-material';
-import { GridColDef, GridToolbar } from '@mui/x-data-grid-premium';
+import { GridColDef } from '@mui/x-data-grid-premium';
 import { useMemo } from 'react';
 import { FamilyDocumentRowV2 } from './familyDocumentsViewModelV2';
 import { v2DataGridStyles } from './v2DataGridStyles';
@@ -196,7 +196,11 @@ export function FamilyDocumentsDataGridV2({
   return (
     <Box sx={v2DataGridStyles(theme)}>
       <PersistedFilterDataGridPremium
+        showToolbar
         autoHeight
+        disableAggregation
+        disablePivoting
+        disableRowGrouping
         rows={rows}
         columns={columns}
         filterModel={filterModel}
@@ -206,7 +210,6 @@ export function FamilyDocumentsDataGridV2({
         columnHeaderHeight={42}
         disableRowSelectionOnClick
         hideFooter
-        showToolbar
         initialState={{
           columns: {
             columnVisibilityModel: {
@@ -216,12 +219,6 @@ export function FamilyDocumentsDataGridV2({
           },
           sorting: {
             sortModel: [{ field: 'uploadedAtUtc', sort: 'desc' }],
-          },
-        }}
-        slots={{ toolbar: GridToolbar }}
-        slotProps={{
-          toolbar: {
-            showQuickFilter: true,
           },
         }}
       />
