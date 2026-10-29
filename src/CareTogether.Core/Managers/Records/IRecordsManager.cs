@@ -11,6 +11,7 @@ using CareTogether.Resources.OrganizationApprovals;
 using CareTogether.Resources.V1Cases;
 using CareTogether.Resources.V1ReferralNotes;
 using CareTogether.Resources.V1Referrals;
+using CareTogether.Utilities.FileStore;
 using JsonPolymorph;
 
 namespace CareTogether.Managers.Records
@@ -167,7 +168,8 @@ namespace CareTogether.Managers.Records
             Guid locationId,
             ClaimsPrincipal user,
             Guid familyId,
-            Guid documentId
+            Guid documentId,
+            FileReadDisposition disposition
         );
 
         Task<Uri> GenerateFamilyDocumentUploadValetUrl(
@@ -183,7 +185,8 @@ namespace CareTogether.Managers.Records
             Guid locationId,
             ClaimsPrincipal user,
             Guid communityId,
-            Guid documentId
+            Guid documentId,
+            FileReadDisposition disposition
         );
 
         Task<Uri> GenerateCommunityDocumentUploadValetUrl(
@@ -199,7 +202,8 @@ namespace CareTogether.Managers.Records
             Guid locationId,
             ClaimsPrincipal user,
             Guid referralId,
-            Guid documentId
+            Guid documentId,
+            FileReadDisposition disposition
         );
 
         Task<Uri> GenerateV1ReferralDocumentUploadValetUrl(

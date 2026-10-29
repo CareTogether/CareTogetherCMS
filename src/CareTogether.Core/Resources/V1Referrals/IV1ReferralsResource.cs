@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using CareTogether.Resources;
 using CareTogether.Resources.Policies;
 using CareTogether.Resources.V1ReferralNotes;
+using CareTogether.Utilities.FileStore;
 using JsonPolymorph;
 
 namespace CareTogether.Resources.V1Referrals
@@ -146,7 +147,8 @@ namespace CareTogether.Resources.V1Referrals
             Guid organizationId,
             Guid locationId,
             Guid referralId,
-            Guid documentId
+            Guid documentId,
+            FileReadDisposition disposition
         );
 
         Task<Uri> GetV1ReferralDocumentUploadValetUrl(

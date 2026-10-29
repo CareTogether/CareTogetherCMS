@@ -5,6 +5,7 @@ using System.Security.Claims;
 using System.Threading.Tasks;
 using CareTogether.Resources.Policies;
 using CareTogether.Resources.V1Cases;
+using CareTogether.Utilities.FileStore;
 using JsonPolymorph;
 
 namespace CareTogether.Resources.Directory
@@ -298,7 +299,8 @@ namespace CareTogether.Resources.Directory
             Guid organizationId,
             Guid locationId,
             Guid familyId,
-            Guid documentId
+            Guid documentId,
+            FileReadDisposition disposition
         );
 
         //TODO: Rename to 'UploadFamilyDocumentViaValetUrl' and merge in FamilyCommand functionality to ensure consistency

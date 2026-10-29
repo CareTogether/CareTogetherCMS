@@ -613,6 +613,15 @@
               "format": "guid"
             },
             "x-position": 4
+          },
+          {
+            "name": "inline",
+            "in": "query",
+            "schema": {
+              "type": "boolean",
+              "default": false
+            },
+            "x-position": 5
           }
         ],
         "responses": {
@@ -738,6 +747,15 @@
               "format": "guid"
             },
             "x-position": 4
+          },
+          {
+            "name": "inline",
+            "in": "query",
+            "schema": {
+              "type": "boolean",
+              "default": false
+            },
+            "x-position": 5
           }
         ],
         "responses": {
@@ -863,6 +881,15 @@
               "format": "guid"
             },
             "x-position": 4
+          },
+          {
+            "name": "inline",
+            "in": "query",
+            "schema": {
+              "type": "boolean",
+              "default": false
+            },
+            "x-position": 5
           }
         ],
         "responses": {
