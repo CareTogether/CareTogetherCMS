@@ -206,6 +206,7 @@ export function FamilyDocumentsDataGridV2({
         columnHeaderHeight={42}
         disableRowSelectionOnClick
         hideFooter
+        showToolbar
         initialState={{
           columns: {
             columnVisibilityModel: {
