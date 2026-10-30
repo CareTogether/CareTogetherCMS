@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Threading.Tasks;
 using CareTogether.Managers.Records;
+using CareTogether.Utilities.FileStore;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -29,7 +30,8 @@ namespace CareTogether.Api.Controllers
             Guid organizationId,
             Guid locationId,
             Guid familyId,
-            Guid documentId
+            Guid documentId,
+            [FromQuery] bool inline = false
         )
         {
             var valetUrl = await recordsManager.GetFamilyDocumentReadValetUrl(
@@ -37,7 +39,8 @@ namespace CareTogether.Api.Controllers
                 locationId,
                 User,
                 familyId,
-                documentId
+                documentId,
+                inline ? FileReadDisposition.Inline : FileReadDisposition.Attachment
             );
             return Ok(valetUrl); //TODO: Don't return server errors (5xx) if there were client errors (should be 4xx)!
         }
@@ -65,7 +68,8 @@ namespace CareTogether.Api.Controllers
             Guid organizationId,
             Guid locationId,
             Guid communityId,
-            Guid documentId
+            Guid documentId,
+            [FromQuery] bool inline = false
         )
         {
             var valetUrl = await recordsManager.GetCommunityDocumentReadValetUrl(
@@ -73,7 +77,8 @@ namespace CareTogether.Api.Controllers
                 locationId,
                 User,
                 communityId,
-                documentId
+                documentId,
+                inline ? FileReadDisposition.Inline : FileReadDisposition.Attachment
             );
             return Ok(valetUrl);
         }
@@ -101,7 +106,8 @@ namespace CareTogether.Api.Controllers
             Guid organizationId,
             Guid locationId,
             Guid referralId,
-            Guid documentId
+            Guid documentId,
+            [FromQuery] bool inline = false
         )
         {
             var valetUrl = await recordsManager.GetV1ReferralDocumentReadValetUrl(
@@ -109,7 +115,8 @@ namespace CareTogether.Api.Controllers
                 locationId,
                 User,
                 referralId,
-                documentId
+                documentId,
+                inline ? FileReadDisposition.Inline : FileReadDisposition.Attachment
             );
             return Ok(valetUrl);
         }

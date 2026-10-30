@@ -104,19 +104,28 @@ namespace CareTogether.Resources.V1Referrals
             Guid organizationId,
             Guid locationId,
             Guid referralId,
-            Guid documentId
+            Guid documentId,
+            FileReadDisposition disposition
         )
         {
             var referral = await GetReferralAsync(organizationId, locationId, referralId);
+            var document = referral?.UploadedDocuments.FirstOrDefault(doc =>
+                doc.UploadedDocumentId == documentId
+            );
 
             if (
                 referral == null
-                || !referral.UploadedDocuments.Any(doc => doc.UploadedDocumentId == documentId)
+                || document == null
                 || referral.DeletedDocuments.Any(doc => doc == documentId)
             )
                 throw new Exception("The specified referral document does not exist.");
 
-            return await fileStore.GetValetReadUrlAsync(organizationId, locationId, documentId);
+            return await fileStore.GetValetReadUrlAsync(
+                organizationId,
+                locationId,
+                documentId,
+                new FileReadOptions(document.UploadedFileName, disposition)
+            );
         }
 
         public async Task<Uri> GetV1ReferralDocumentUploadValetUrl(

@@ -16,7 +16,9 @@ on:
 jobs:
   apphost-e2e:
     timeout-minutes: 60
-    runs-on: ubuntu-latest
+    # Pinned: ubuntu-latest is now 26.04, which Playwright 1.59 has no Chromium build for.
+    # Move back to ubuntu-latest after upgrading @playwright/test to a release that supports it.
+    runs-on: ubuntu-24.04
 
     concurrency:
       group: ci-pr-apphost-e2e-${{ github.event.pull_request.number || github.ref }}
