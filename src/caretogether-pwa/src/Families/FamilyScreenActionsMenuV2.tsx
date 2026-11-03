@@ -96,7 +96,10 @@ export function FamilyScreenActionsMenuV2({
         py: 1,
       }}
     >
-      <Box sx={{ flex: '1 1 320px', minWidth: 0 }}>
+      <Box
+        data-tour="family-screen-header"
+        sx={{ flex: '1 1 320px', minWidth: 0 }}
+      >
         <Box
           sx={{
             display: 'flex',
@@ -127,6 +130,7 @@ export function FamilyScreenActionsMenuV2({
         </Box>
       </Box>
       <Box
+        data-tour="family-screen-actions"
         sx={{
           display: 'flex',
           flex: '0 1 auto',

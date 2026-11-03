@@ -44,10 +44,12 @@ export function ResponsiveScreenTabs<TValue extends string>({
           value={selectedTab}
           onChange={(_, nextTab: TValue) => onChange(nextTab)}
           aria-label={ariaLabel}
+          data-tour={`${idPrefix}-tabs`}
         >
           {tabs.map((tab) => (
             <Tab
               key={tab.value}
+              data-tour={`${idPrefix}-tab-${tab.value}`}
               className="ph-unmask"
               value={tab.value}
               label={tab.desktopLabel}
