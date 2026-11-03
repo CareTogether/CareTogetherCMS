@@ -857,54 +857,56 @@ export function FamilyScreenV2() {
         organizationId={organizationId}
         onClose={() => setUploadDocumentDialogOpen(false)}
       />
-      <RoleSummaryCardsSection
-        cards={roleSummaryCards}
-        removedRoles={removedRoleSummaries}
-        onCardClick={(card) => {
-          setSelectedRemovedRoleId(null);
-          setSelectedRoleSummaryCardId(card.id);
-        }}
-        onRemovedRoleClick={(removedRole) => {
-          setSelectedRoleSummaryCardId(null);
-          setSelectedRemovedRoleId(removedRole.id);
-        }}
-      />
-      {isPartneringFamily && (
-        <FamilyCaseWorkspaceHeaderV2
-          activeCaseArrangements={activeCaseArrangements}
-          canViewFunctionAssignments={canViewFunctionAssignments}
-          canEditFunctionAssignments={canEditFunctionAssignments}
-          functionAssignmentPolicies={
-            policy.referralPolicy?.functionAssignmentPolicies ?? []
-          }
-          onAssign={(v1CaseId, personId, assignmentRole) =>
-            v1CasesModel.assignIndividualVolunteerToV1Case(
-              familyId,
-              v1CaseId,
-              personId,
-              assignmentRole
-            )
-          }
-          onUnassign={(v1CaseId, personId, assignmentRole) =>
-            v1CasesModel.unassignIndividualVolunteerFromV1Case(
-              familyId,
-              v1CaseId,
-              personId,
-              assignmentRole
-            )
-          }
-          canCloseV1Case={!!canCloseV1Case}
-          canReopenSelectedV1Case={canReopenSelectedV1Case}
-          currentReferral={currentReferral}
-          family={family}
-          referralsEnabled={referralsEnabled}
-          selectedV1Case={selectedV1Case}
-          onArrangementOpen={setSelectedArrangementRowId}
-          onCloseCase={() => setCloseCaseDrawerOpen(true)}
-          onOpenNewCase={() => setOpenNewV1CaseDialogOpen(true)}
-          onReopenCase={() => void reopenCaseNow()}
+      <Box data-tour="family-type-tools">
+        <RoleSummaryCardsSection
+          cards={roleSummaryCards}
+          removedRoles={removedRoleSummaries}
+          onCardClick={(card) => {
+            setSelectedRemovedRoleId(null);
+            setSelectedRoleSummaryCardId(card.id);
+          }}
+          onRemovedRoleClick={(removedRole) => {
+            setSelectedRoleSummaryCardId(null);
+            setSelectedRemovedRoleId(removedRole.id);
+          }}
         />
-      )}
+        {isPartneringFamily && (
+          <FamilyCaseWorkspaceHeaderV2
+            activeCaseArrangements={activeCaseArrangements}
+            canViewFunctionAssignments={canViewFunctionAssignments}
+            canEditFunctionAssignments={canEditFunctionAssignments}
+            functionAssignmentPolicies={
+              policy.referralPolicy?.functionAssignmentPolicies ?? []
+            }
+            onAssign={(v1CaseId, personId, assignmentRole) =>
+              v1CasesModel.assignIndividualVolunteerToV1Case(
+                familyId,
+                v1CaseId,
+                personId,
+                assignmentRole
+              )
+            }
+            onUnassign={(v1CaseId, personId, assignmentRole) =>
+              v1CasesModel.unassignIndividualVolunteerFromV1Case(
+                familyId,
+                v1CaseId,
+                personId,
+                assignmentRole
+              )
+            }
+            canCloseV1Case={!!canCloseV1Case}
+            canReopenSelectedV1Case={canReopenSelectedV1Case}
+            currentReferral={currentReferral}
+            family={family}
+            referralsEnabled={referralsEnabled}
+            selectedV1Case={selectedV1Case}
+            onArrangementOpen={setSelectedArrangementRowId}
+            onCloseCase={() => setCloseCaseDrawerOpen(true)}
+            onOpenNewCase={() => setOpenNewV1CaseDialogOpen(true)}
+            onReopenCase={() => void reopenCaseNow()}
+          />
+        )}
+      </Box>
 
       <FamilyPinnedNotesV2
         notes={pinnedNotes}
