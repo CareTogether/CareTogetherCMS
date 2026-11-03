@@ -7648,6 +7648,14 @@
               },
               "description": {
                 "type": "string"
+              },
+              "categoryIds": {
+                "type": "array",
+                "nullable": true,
+                "items": {
+                  "type": "string",
+                  "format": "guid"
+                }
               }
             }
           }

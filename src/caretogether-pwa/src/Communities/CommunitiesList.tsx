@@ -1,10 +1,4 @@
-import {
-  Box,
-  Button,
-  Drawer,
-  Stack,
-  useTheme,
-} from '@mui/material';
+import { Box, Button, Drawer, Stack, useTheme } from '@mui/material';
 import {
   GridChartsIntegrationContextProvider,
   GridChartsRendererProxy,
@@ -32,7 +26,10 @@ import {
   FAMILY_SCREEN_V2_EARLY_ACCESS_FEATURE_FLAG,
   ORGANIZATION_CATEGORIES_FEATURE_FLAG,
 } from '../featureFlags';
-import { v2DataGridStyles } from '../Families/v2DataGridStyles';
+import {
+  v2DataGridFocusStyles,
+  v2DataGridStyles,
+} from '../Families/v2DataGridStyles';
 import { ResponsivePageHeader } from '../Generic/ResponsivePageHeader';
 import { usePersistedGridFilterModel } from '../Hooks/usePersistedGridFilterModel';
 import { PersistedFilterDataGridPremium } from '../Generic/PersistedFilterDataGridPremium';
@@ -131,6 +128,7 @@ function OrganizationsDataGridSession({
     <GridChartsIntegrationContextProvider>
       <Box sx={v2DataGridStyles(theme)}>
         <PersistedFilterDataGridPremium
+          sx={v2DataGridFocusStyles(theme)}
           {...organizationGridFeatureProps}
           showToolbar
           chartsIntegration
@@ -257,6 +255,10 @@ export function CommunitiesList() {
                   maxWidth: '100%',
                 }}
                 onClick={() => setAddDrawerOpen(true)}
+                disabled={
+                  organizationCategoriesEnabled &&
+                  organizationConfiguration == null
+                }
               >
                 ADD NEW ORGANIZATION
               </Button>
@@ -272,6 +274,10 @@ export function CommunitiesList() {
                 maxWidth: '100%',
               }}
               onClick={() => setAddDrawerOpen(true)}
+              disabled={
+                organizationCategoriesEnabled &&
+                organizationConfiguration == null
+              }
             >
               ADD NEW ORGANIZATION
             </Button>
@@ -301,7 +307,14 @@ export function CommunitiesList() {
             },
           }}
         >
-          <AddEditCommunity onClose={() => setAddDrawerOpen(false)} />
+          <AddEditCommunity
+            availableCategories={
+              organizationCategoriesEnabled
+                ? (organizationConfiguration?.organizationCategories ?? [])
+                : undefined
+            }
+            onClose={() => setAddDrawerOpen(false)}
+          />
         </Drawer>
       )}
     </>

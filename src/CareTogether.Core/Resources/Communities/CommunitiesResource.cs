@@ -44,6 +44,9 @@ namespace CareTogether.Resources.Communities
             Guid userId
         )
         {
+            if (command is CreateCommunity { CategoryIds.Count: > 0 } create)
+                await ValidateOrganizationCategoriesAsync(organizationId, create.CategoryIds);
+
             if (command is SetOrganizationCategories setCategories)
                 await ValidateOrganizationCategoriesAsync(
                     organizationId,

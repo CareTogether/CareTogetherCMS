@@ -19,6 +19,7 @@ import {
 import { useAtomValue } from 'jotai';
 import { ShellSearchBar } from './ShellSearchBar';
 import { ShellUserProfileMenu } from './ShellUserProfileMenu';
+import { ShellFullscreenToggle } from './ShellFullscreenToggle';
 import {
   COLLAPSED_DRAWER_WIDTH,
   SHELL_APP_BAR_HEIGHT,
@@ -190,13 +191,8 @@ export function ShellAppBar({
             setOpenMobileSearch={setOpenMobileSearch}
           />
         </Box>
-        <Box
-          sx={{
-            display: 'flex',
-            alignItems: 'center',
-            flexShrink: { xs: 0, md: 1 },
-          }}
-        >
+        <Box sx={{ display: 'flex', alignItems: 'center', flexShrink: 0 }}>
+          <ShellFullscreenToggle />
           <ShellUserProfileMenu />
         </Box>
       </Toolbar>
