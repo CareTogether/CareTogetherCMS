@@ -240,6 +240,7 @@ export function FamilyMemberCardV2({ row, onClick }: FamilyMemberCardV2Props) {
 
   return (
     <Card
+      data-tour="family-member-card"
       variant="outlined"
       sx={{
         bgcolor: 'background.paper',

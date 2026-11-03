@@ -23,7 +23,7 @@ export function RoleSummaryCardsSection({
   }
 
   return (
-    <Box sx={{ mb: 2 }}>
+    <Box data-tour="family-role-cards" sx={{ mb: 2 }}>
       <Box
         sx={{
           overflowX: 'auto',

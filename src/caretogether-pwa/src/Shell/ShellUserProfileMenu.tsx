@@ -47,6 +47,7 @@ export function ShellUserProfileMenu() {
   return (
     <>
       <IconButton
+        data-tour="user-profile-menu"
         size="large"
         edge="end"
         aria-label="user account"
