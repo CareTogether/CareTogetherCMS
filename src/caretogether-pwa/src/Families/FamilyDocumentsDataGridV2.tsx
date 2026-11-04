@@ -11,6 +11,7 @@ import {
 import {
   Delete as DeleteIcon,
   Download as DownloadIcon,
+  Visibility as PreviewIcon,
 } from '@mui/icons-material';
 import { GridColDef, GridToolbar } from '@mui/x-data-grid-premium';
 import { useMemo } from 'react';
@@ -24,6 +25,7 @@ type FamilyDocumentsDataGridV2Props = {
   filterScopeId?: string;
   onDelete: (row: FamilyDocumentRowV2) => void;
   onDownload: (row: FamilyDocumentRowV2) => void;
+  onPreview: (row: FamilyDocumentRowV2) => void;
   rows: FamilyDocumentRowV2[];
 };
 
@@ -44,7 +46,11 @@ function buildColumns(
   {
     onDelete,
     onDownload,
-  }: Pick<FamilyDocumentsDataGridV2Props, 'onDelete' | 'onDownload'>,
+    onPreview,
+  }: Pick<
+    FamilyDocumentsDataGridV2Props,
+    'onDelete' | 'onDownload' | 'onPreview'
+  >,
   isMobile: boolean
 ): GridColDef<FamilyDocumentRowV2>[] {
   return [
@@ -117,7 +123,7 @@ function buildColumns(
       field: 'actions',
       headerClassName: 'ph-unmask',
       headerName: 'Actions',
-      width: isMobile ? 112 : 92,
+      width: isMobile ? 160 : 132,
       sortable: false,
       filterable: false,
       disableColumnMenu: true,
@@ -134,6 +140,24 @@ function buildColumns(
           }}
           onClick={(event) => event.stopPropagation()}
         >
+          {row.permissionFlags.canPreview && (
+            <Tooltip title="Preview">
+              <span>
+                <IconButton
+                  className="ph-unmask"
+                  aria-label={`Preview ${row.documentName}`}
+                  onClick={() => onPreview(row)}
+                  size="small"
+                  sx={{
+                    minWidth: { xs: 44, sm: 0 },
+                    minHeight: { xs: 44, sm: 0 },
+                  }}
+                >
+                  <PreviewIcon fontSize="small" />
+                </IconButton>
+              </span>
+            </Tooltip>
+          )}
           <Tooltip title="Download">
             <span>
               <IconButton
@@ -190,13 +214,14 @@ export function FamilyDocumentsDataGridV2({
   filterScopeId,
   onDelete,
   onDownload,
+  onPreview,
   rows,
 }: FamilyDocumentsDataGridV2Props) {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const columns = useMemo(
-    () => buildColumns({ onDelete, onDownload }, isMobile),
-    [onDelete, onDownload, isMobile]
+    () => buildColumns({ onDelete, onDownload, onPreview }, isMobile),
+    [onDelete, onDownload, onPreview, isMobile]
   );
   const { filterModel, filterModelRestored, onFilterModelChange } =
     usePersistedGridFilterModel({
@@ -214,10 +239,15 @@ export function FamilyDocumentsDataGridV2({
         '& .MuiDataGrid-cell[data-field="actions"]': {
           py: { xs: 0, sm: 1 },
         },
+        '& .previewable-document-row': { cursor: 'pointer' },
       }}
     >
       <PersistedFilterDataGridPremium
+        showToolbar
         autoHeight
+        disableAggregation
+        disablePivoting
+        disableRowGrouping
         rows={rows}
         columns={columns}
         filterModel={filterModel}
@@ -226,8 +256,13 @@ export function FamilyDocumentsDataGridV2({
         rowHeight={56}
         columnHeaderHeight={42}
         disableRowSelectionOnClick
+        getRowClassName={({ row }) =>
+          row.permissionFlags.canPreview ? 'previewable-document-row' : ''
+        }
+        onRowClick={({ row }) => {
+          if (row.permissionFlags.canPreview) onPreview(row);
+        }}
         hideFooter
-        showToolbar
         initialState={{
           columns: {
             columnVisibilityModel: {

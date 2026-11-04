@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Immutable;
 using System.Threading.Tasks;
+using CareTogether.Utilities.FileStore;
 using JsonPolymorph;
 
 namespace CareTogether.Resources.Communities
@@ -88,7 +89,8 @@ namespace CareTogether.Resources.Communities
             Guid organizationId,
             Guid locationId,
             Guid communityId,
-            Guid documentId
+            Guid documentId,
+            FileReadDisposition disposition
         );
 
         Task<Uri> GetCommunityDocumentUploadValetUrl(

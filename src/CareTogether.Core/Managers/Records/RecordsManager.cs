@@ -17,6 +17,7 @@ using CareTogether.Resources.Policies;
 using CareTogether.Resources.V1Cases;
 using CareTogether.Resources.V1ReferralNotes;
 using CareTogether.Resources.V1Referrals;
+using CareTogether.Utilities.FileStore;
 using Nito.AsyncEx;
 using Nito.Disposables.Internals;
 using ArrangementAssignIndividualVolunteer = CareTogether.Resources.V1Cases.AssignIndividualVolunteer;
@@ -392,7 +393,8 @@ namespace CareTogether.Managers.Records
             Guid locationId,
             ClaimsPrincipal user,
             Guid familyId,
-            Guid documentId
+            Guid documentId,
+            FileReadDisposition disposition
         )
         {
             var userContext = await CreateSessionUserContext(user, organizationId, locationId);
@@ -411,7 +413,8 @@ namespace CareTogether.Managers.Records
                 organizationId,
                 locationId,
                 familyId,
-                documentId
+                documentId,
+                disposition
             );
 
             return valetUrl;
@@ -452,7 +455,8 @@ namespace CareTogether.Managers.Records
             Guid locationId,
             ClaimsPrincipal user,
             Guid communityId,
-            Guid documentId
+            Guid documentId,
+            FileReadDisposition disposition
         )
         {
             var userContext = await CreateSessionUserContext(user, organizationId, locationId);
@@ -471,7 +475,8 @@ namespace CareTogether.Managers.Records
                 organizationId,
                 locationId,
                 communityId,
-                documentId
+                documentId,
+                disposition
             );
 
             return valetUrl;
@@ -512,7 +517,8 @@ namespace CareTogether.Managers.Records
             Guid locationId,
             ClaimsPrincipal user,
             Guid referralId,
-            Guid documentId
+            Guid documentId,
+            FileReadDisposition disposition
         )
         {
             var userContext = await CreateSessionUserContext(user, organizationId, locationId);
@@ -531,7 +537,8 @@ namespace CareTogether.Managers.Records
                 organizationId,
                 locationId,
                 referralId,
-                documentId
+                documentId,
+                disposition
             );
         }
 

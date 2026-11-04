@@ -51,13 +51,15 @@ namespace CareTogether.Utilities.FileStore
         public Task<Uri> GetValetReadUrlAsync(
             Guid organizationId,
             Guid locationId,
-            Guid documentId
-        ) => GetValetReadUrlAsync(organizationId, locationId, $"{documentId:D}");
+            Guid documentId,
+            FileReadOptions readOptions
+        ) => GetValetReadUrlAsync(organizationId, locationId, $"{documentId:D}", readOptions);
 
         public Task<Uri> GetValetReadUrlAsync(
             Guid organizationId,
             Guid locationId,
-            string documentSubpath
+            string documentSubpath,
+            FileReadOptions readOptions
         )
         {
             var tenantContainer = blobServiceClient.GetBlobContainerClient(
@@ -66,10 +68,20 @@ namespace CareTogether.Utilities.FileStore
             var objectBlob = tenantContainer.GetBlockBlobClient(
                 $"{locationId}/{fileCategory}/{documentSubpath}"
             );
-            var sasUri = objectBlob.GenerateSasUri(
+            // Blobs are stored as application/octet-stream under GUID names, so the SAS overrides
+            // the response headers (rsct/rscd) to let browsers render previews and keep file names.
+            var sasBuilder = new BlobSasBuilder(
                 BlobSasPermissions.Read,
                 DateTimeOffset.UtcNow.AddMinutes(15)
-            );
+            )
+            {
+                BlobContainerName = objectBlob.BlobContainerName,
+                BlobName = objectBlob.Name,
+                Resource = "b",
+                ContentType = readOptions.ContentType,
+                ContentDisposition = readOptions.ContentDisposition,
+            };
+            var sasUri = objectBlob.GenerateSasUri(sasBuilder);
             return Task.FromResult(sasUri);
         }
 
