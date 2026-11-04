@@ -194,7 +194,6 @@ export function FamilyDocumentsDataGridV2({
 }: FamilyDocumentsDataGridV2Props) {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
-  const showMobileToolbar = useMediaQuery(theme.breakpoints.down('md'));
   const columns = useMemo(
     () => buildColumns({ onDelete, onDownload }, isMobile),
     [onDelete, onDownload, isMobile]
@@ -228,7 +227,7 @@ export function FamilyDocumentsDataGridV2({
         columnHeaderHeight={42}
         disableRowSelectionOnClick
         hideFooter
-        showToolbar={showMobileToolbar}
+        showToolbar
         initialState={{
           columns: {
             columnVisibilityModel: {
