@@ -77,6 +77,7 @@ export function FamilyMembersSectionV2({
       <Box
         sx={{
           display: 'grid',
+          alignItems: 'start',
           gap: 1.5,
           gridTemplateColumns: 'repeat(auto-fill, minmax(min(320px, 100%), 1fr))',
         }}

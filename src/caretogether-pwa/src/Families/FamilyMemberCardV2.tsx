@@ -244,7 +244,6 @@ export function FamilyMemberCardV2({ row, onClick }: FamilyMemberCardV2Props) {
       sx={{
         bgcolor: 'background.paper',
         borderColor: 'divider',
-        height: '100%',
         transition: (theme) =>
           theme.transitions.create(
             ['border-color', 'box-shadow', 'transform'],
@@ -270,7 +269,6 @@ export function FamilyMemberCardV2({ row, onClick }: FamilyMemberCardV2Props) {
           alignItems: 'stretch',
           cursor: 'pointer',
           display: 'flex',
-          height: '100%',
           textAlign: 'left',
           '&.Mui-focusVisible': {
             outline: (theme) => `2px solid ${theme.palette.primary.main}`,
