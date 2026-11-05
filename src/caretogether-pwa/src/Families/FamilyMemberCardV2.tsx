@@ -245,7 +245,6 @@ export function FamilyMemberCardV2({ row, onClick }: FamilyMemberCardV2Props) {
       sx={{
         bgcolor: 'background.paper',
         borderColor: 'divider',
-        height: '100%',
         transition: (theme) =>
           theme.transitions.create(
             ['border-color', 'box-shadow', 'transform'],
