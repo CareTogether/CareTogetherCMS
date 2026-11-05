@@ -17,6 +17,8 @@ import { usePartneringFamilies } from '../Model/V1CasesModel';
 import { useFamilyLookup } from '../Model/DirectoryModel';
 import { useAppNavigate } from '../Hooks/useAppNavigate';
 import { useLocalStorage } from '../Hooks/useLocalStorage';
+import { useFeatureFlagEnabled } from 'posthog-js/react';
+import { FAMILY_SCREEN_V2_EARLY_ACCESS_FEATURE_FLAG } from '../featureFlags';
 import {
   buildDashboardCalendarEventGroups,
   CalendarFilters,
@@ -227,6 +229,8 @@ function getDashboardCalendarEventTypeFilterKey(
 }
 
 export function DashboardCalendar() {
+  const isV2 =
+    useFeatureFlagEnabled(FAMILY_SCREEN_V2_EARLY_ACCESS_FEATURE_FLAG) === true;
   const familyLookup = useFamilyLookup();
   const partneringFamilies = usePartneringFamilies();
   const appNavigate = useAppNavigate();
@@ -491,7 +495,11 @@ export function DashboardCalendar() {
           readOnly
           areEventsDraggable={false}
           areEventsResizable={false}
-          sx={{ height: '100%', minHeight: 520 }}
+          sx={{
+            height: '100%',
+            minHeight: 520,
+            ...(isV2 && { backgroundColor: { md: '#FFFFFF' } }),
+          }}
         />
       </Grid>
     </Grid>

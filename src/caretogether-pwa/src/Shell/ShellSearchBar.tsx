@@ -164,15 +164,18 @@ function familyTypeSuffix(result: FamilySearchResult): string {
 }
 
 interface ShellSearchBarProps {
+  v2DesktopPresentation?: boolean;
   openMobileSearch: boolean;
   setOpenMobileSearch: (value: boolean) => void;
 }
 export function ShellSearchBar({
+  v2DesktopPresentation = false,
   openMobileSearch,
   setOpenMobileSearch,
 }: ShellSearchBarProps) {
   const theme = useTheme();
   const isDesktop = useMediaQuery(theme.breakpoints.up('md'));
+  const useV2Dropdown = v2DesktopPresentation && isDesktop;
 
   const families = useVisibleFamilies();
 
@@ -267,6 +270,22 @@ export function ShellSearchBar({
           sx: {
             backgroundColor: theme.palette.primary.light,
             color: theme.palette.primary.contrastText,
+            ...(useV2Dropdown && {
+              backgroundColor: '#FFFFFF',
+              color: theme.palette.text.primary,
+              '& small, & .MuiTypography-caption': {
+                color: theme.palette.text.secondary,
+                opacity: 1,
+              },
+              '& .MuiAutocomplete-option:hover, & .MuiAutocomplete-option.Mui-focused':
+                { backgroundColor: theme.palette.action.hover },
+              '& .MuiAutocomplete-option[aria-selected="true"]': {
+                backgroundColor: theme.palette.action.selected,
+                '&.Mui-focused, &:hover': {
+                  backgroundColor: theme.palette.action.hover,
+                },
+              },
+            }),
           },
         },
       }}

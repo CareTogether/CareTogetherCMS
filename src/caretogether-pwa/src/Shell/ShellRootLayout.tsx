@@ -23,6 +23,7 @@ import {
   EXPANDED_DRAWER_WIDTH,
   MOBILE_BOTTOM_SAFE_AREA,
   SHELL_APP_BAR_HEIGHT,
+  V2_DESKTOP_APP_BAR_HEIGHT,
 } from './shellLayoutConstants';
 
 function ShellRootLayout({ children }: React.PropsWithChildren) {
@@ -32,12 +33,15 @@ function ShellRootLayout({ children }: React.PropsWithChildren) {
 
   return (
     <ThemeProvider theme={isV2 ? v2TypographyTheme : theme}>
-      <ShellLayoutContent>{children}</ShellLayoutContent>
+      <ShellLayoutContent isV2={isV2}>{children}</ShellLayoutContent>
     </ThemeProvider>
   );
 }
 
-function ShellLayoutContent({ children }: React.PropsWithChildren) {
+function ShellLayoutContent({
+  children,
+  isV2,
+}: React.PropsWithChildren<{ isV2: boolean }>) {
   const theme = useTheme();
   const isDesktop = useMediaQuery(theme.breakpoints.up('md'));
 
@@ -57,19 +61,45 @@ function ShellLayoutContent({ children }: React.PropsWithChildren) {
   useFeaturebase();
 
   return (
-    <Box sx={{ flexGrow: 1, fontFamily: theme.typography.fontFamily }}>
+    <Box
+      sx={{
+        flexGrow: 1,
+        fontFamily: theme.typography.fontFamily,
+        ...(isV2 && {
+          '--shell-desktop-app-bar-height': `${V2_DESKTOP_APP_BAR_HEIGHT}px`,
+        }),
+      }}
+    >
       <ShellAppBar
         menuDrawerOpen={menuDrawerOpen}
         setMenuDrawerOpen={setMenuDrawerOpen}
         drawerWidth={drawerWidth + 'px'}
       />
       {isDesktop && (
-        <ShellSideNavigation open={menuDrawerOpen} width={drawerWidth} />
+        <ShellSideNavigation
+          open={menuDrawerOpen}
+          width={drawerWidth}
+          isV2={isV2}
+        />
       )}
       <Box
         sx={{
           flexGrow: 1,
           marginLeft: isDesktop ? drawerWidth + 'px' : undefined,
+          ...(isV2 && {
+            isolation: 'isolate',
+            '&::before': {
+              content: '""',
+              position: 'fixed',
+              top: SHELL_APP_BAR_HEIGHT,
+              left: isDesktop ? drawerWidth : 0,
+              right: 0,
+              bottom: 0,
+              backgroundColor: 'rgba(38, 163, 171, 0.08)',
+              pointerEvents: 'none',
+              zIndex: -1,
+            },
+          }),
         }}
       >
         <Container
@@ -81,7 +111,7 @@ function ShellLayoutContent({ children }: React.PropsWithChildren) {
               xs: `${MOBILE_BOTTOM_SAFE_AREA}px`,
               md: `${DESKTOP_BOTTOM_SAFE_AREA}px`,
             },
-            backgroundColor: '#fff',
+            backgroundColor: isV2 ? 'transparent' : '#fff',
           }}
         >
           <React.Suspense

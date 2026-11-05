@@ -1,7 +1,7 @@
 import { createTheme } from '@mui/material/styles';
 import { theme } from './theme';
 
-const fontFamily = '"Poppins", "Helvetica", "Arial", sans-serif';
+const fontFamily = '"Inter", "Helvetica", "Arial", sans-serif';
 
 export const v2TypographyTheme = createTheme(theme, {
   typography: {

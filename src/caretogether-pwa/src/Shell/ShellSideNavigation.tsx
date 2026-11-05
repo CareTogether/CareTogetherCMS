@@ -214,8 +214,13 @@ function SideNavigationMenu({ open }: SideNavigationMenuProps) {
 interface ShellSideNavigationProps {
   open: boolean;
   width: number;
+  isV2?: boolean;
 }
-export function ShellSideNavigation({ open, width }: ShellSideNavigationProps) {
+export function ShellSideNavigation({
+  open,
+  width,
+  isV2 = false,
+}: ShellSideNavigationProps) {
   const theme = useTheme();
 
   return (
@@ -235,8 +240,8 @@ export function ShellSideNavigation({ open, width }: ShellSideNavigationProps) {
             minWidth: width, // Prevent shrinking
             maxWidth: width, // Prevent expanding
             boxSizing: 'border-box',
-            backgroundColor: theme.palette.primary.dark,
-            color: theme.palette.primary.contrastText,
+            backgroundColor: isV2 ? '#FFFFFF' : theme.palette.primary.dark,
+            color: isV2 ? '#07666C' : theme.palette.primary.contrastText,
             overflowX: 'hidden',
             display: 'flex',
             flexDirection: 'column',
@@ -252,6 +257,35 @@ export function ShellSideNavigation({ open, width }: ShellSideNavigationProps) {
           flex: 1,
           overflowY: 'auto',
           overflowX: 'hidden',
+          ...(isV2 && {
+            '& .MuiListItemButton-root': {
+              minWidth: 0,
+              color: theme.palette.text.primary,
+              '& .MuiListItemText-root': { color: 'inherit' },
+              '& .MuiListItemIcon-root, & .MuiSvgIcon-root': {
+                color: '#07666C',
+              },
+              '&:hover': { backgroundColor: theme.palette.action.hover },
+              '&.Mui-selected': {
+                backgroundColor: '#07666C',
+                color: '#FFFFFF',
+                '& .MuiListItemIcon-root, & .MuiSvgIcon-root': {
+                  color: '#FFFFFF',
+                },
+                '&:hover': { backgroundColor: '#07666C' },
+              },
+              '&.Mui-focusVisible': {
+                outline: '2px solid #188F97',
+                outlineOffset: -2,
+              },
+              '&.Mui-disabled': {
+                opacity: theme.palette.action.disabledOpacity,
+                '& .MuiListItemText-root': {
+                  color: theme.palette.text.disabled,
+                },
+              },
+            },
+          }),
         }}
       >
         <SideNavigationMenu open={open} />
@@ -259,8 +293,12 @@ export function ShellSideNavigation({ open, width }: ShellSideNavigationProps) {
       {open && (
         <Box
           sx={{
-            backgroundColor: theme.palette.primary.dark,
+            backgroundColor: isV2 ? '#FFFFFF' : theme.palette.primary.dark,
             borderTop: `1px solid ${theme.palette.divider}`,
+            ...(isV2 && {
+              '& .MuiTypography-root': { color: theme.palette.text.secondary },
+              '& a': { color: '#07666C !important' },
+            }),
           }}
         >
           <Stack className="ph-unmask" sx={{ alignItems: 'center', py: 2 }}>
