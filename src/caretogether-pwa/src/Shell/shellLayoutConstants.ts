@@ -1,5 +1,6 @@
 const CHAT_WIDGET_SAFE_HEIGHT = 90;
 const DESKTOP_APP_BAR_HEIGHT = 48;
+export const V2_DESKTOP_APP_BAR_HEIGHT = DESKTOP_APP_BAR_HEIGHT;
 const TABLET_APP_BAR_HEIGHT = 64;
 const MOBILE_APP_BAR_HEIGHT = 56;
 
@@ -14,7 +15,7 @@ export const MOBILE_BOTTOM_SAFE_AREA =
 export const SHELL_APP_BAR_HEIGHT = {
   xs: `${MOBILE_APP_BAR_HEIGHT}px`,
   sm: `${TABLET_APP_BAR_HEIGHT}px`,
-  md: `${DESKTOP_APP_BAR_HEIGHT}px`,
+  md: `var(--shell-desktop-app-bar-height, ${DESKTOP_APP_BAR_HEIGHT}px)`,
 };
 
 export const SHELL_DRAWER_TOP_OFFSET = SHELL_APP_BAR_HEIGHT;
