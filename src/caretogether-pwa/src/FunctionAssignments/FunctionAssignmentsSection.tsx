@@ -86,7 +86,8 @@ export function FunctionAssignmentsEditorDrawer({
       slotProps={{
         paper: {
           sx: {
-            width: 500,
+            width: { xs: '100%', sm: 500 },
+            boxSizing: 'border-box',
             p: 3,
             top: 45,
           },
@@ -134,9 +135,15 @@ export function FunctionAssignmentsEditorDrawer({
         })}
 
         <Stack
-          direction="row"
+          direction={{ xs: 'column', sm: 'row' }}
           spacing={2}
-          sx={{ justifyContent: 'flex-end' }}
+          sx={{
+            justifyContent: 'flex-end',
+            '& > .MuiButton-root': {
+              width: { xs: '100%', sm: 'auto' },
+              minHeight: { xs: 44, sm: 'auto' },
+            },
+          }}
         >
           <Button
             color="secondary"
@@ -186,15 +193,20 @@ export function FunctionAssignmentsSection({
   }
 
   return (
-    <Box sx={{ width: '100%' }}>
+    <Box sx={{ width: '100%', minWidth: 0 }}>
       <Stack
-        direction="row"
+        direction={{ xs: 'column', sm: 'row' }}
         spacing={2}
-        sx={{ alignItems: 'center', mb: 1 }}
+        sx={{ alignItems: { xs: 'stretch', sm: 'center' }, mb: 1 }}
       >
         <Typography variant="h3">{title}</Typography>
         {canEdit && (
-          <Button variant="outlined" size="small" onClick={openDrawer}>
+          <Button
+            variant="outlined"
+            size="small"
+            onClick={openDrawer}
+            sx={{ minHeight: { xs: 44, sm: 'auto' } }}
+          >
             Edit assignments
           </Button>
         )}

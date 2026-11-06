@@ -149,24 +149,51 @@ export function ReferralDetailsPage() {
   };
 
   return (
-    <Grid container sx={{ p: 3 }} spacing={0}>
+    <Grid
+      container
+      sx={{
+        p: { xs: 0, sm: 3 },
+        width: '100%',
+        minWidth: 0,
+        overflowWrap: { xs: 'anywhere', md: 'normal' },
+      }}
+      spacing={0}
+    >
       <Grid
         item
         xs={12}
         sx={{
           display: 'flex',
           justifyContent: 'space-between',
-          alignItems: 'center',
+          alignItems: { xs: 'stretch', md: 'center' },
+          flexDirection: { xs: 'column', md: 'row' },
+          gap: { xs: 2, md: 0 },
           mb: 3,
         }}
       >
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+        <Box
+          sx={{ display: 'flex', alignItems: 'center', gap: 1, minWidth: 0 }}
+        >
           <Typography variant="h5" sx={{ fontWeight: 600 }}>
             {currentReferral.title}
           </Typography>
         </Box>
 
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 3 }}>
+        <Box
+          sx={{
+            display: { xs: 'grid', md: 'flex' },
+            gridTemplateColumns: {
+              xs: 'minmax(0, 1fr)',
+              sm: 'repeat(2, minmax(0, 1fr))',
+            },
+            alignItems: 'center',
+            gap: { xs: 1, md: 3 },
+            '& > .MuiButton-root': {
+              minHeight: { xs: 44, md: 'auto' },
+              height: { xs: '100%', md: 'auto' },
+            },
+          }}
+        >
           {!isClosed && canEditReferral && (
             <Button
               variant="outlined"

@@ -46,7 +46,16 @@ export function CloseReasonDrawer({
       anchor="right"
       open
       onClose={onClose}
-      slotProps={{ paper: { sx: { width: 500, p: 3, top: 45 } } }}
+      slotProps={{
+        paper: {
+          sx: {
+            width: { xs: '100%', sm: 500 },
+            boxSizing: 'border-box',
+            p: 3,
+            top: 45,
+          },
+        },
+      }}
     >
       <form noValidate>
         <Grid container spacing={2}>
@@ -86,11 +95,24 @@ export function CloseReasonDrawer({
             />
           </Grid>
 
-          <Grid item xs={12} sx={{ textAlign: 'right' }}>
+          <Grid
+            item
+            xs={12}
+            sx={{
+              textAlign: 'right',
+              display: { xs: 'flex', sm: 'block' },
+              flexDirection: 'column',
+              gap: { xs: 2, sm: 0 },
+              '& > .MuiButton-root': {
+                width: { xs: '100%', sm: 'auto' },
+                minHeight: { xs: 44, sm: 'auto' },
+              },
+            }}
+          >
             <Button
               color="secondary"
               variant="contained"
-              sx={{ mr: 2 }}
+              sx={{ mr: { xs: 0, sm: 2 } }}
               onClick={onClose}
             >
               Cancel
