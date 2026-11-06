@@ -13,7 +13,7 @@ import {
   Download as DownloadIcon,
   Visibility as PreviewIcon,
 } from '@mui/icons-material';
-import { GridColDef, GridToolbar } from '@mui/x-data-grid-premium';
+import { GridColDef } from '@mui/x-data-grid-premium';
 import { useMemo } from 'react';
 import { FamilyDocumentRowV2 } from './familyDocumentsViewModelV2';
 import { v2DataGridStyles } from './v2DataGridStyles';
@@ -239,6 +239,10 @@ export function FamilyDocumentsDataGridV2({
         '& .MuiDataGrid-cell[data-field="actions"]': {
           py: { xs: 0, sm: 1 },
         },
+        '& .MuiDataGrid-toolbar .MuiButtonBase-root': {
+          minWidth: { xs: 44, sm: 0 },
+          minHeight: { xs: 44, sm: 0 },
+        },
         '& .previewable-document-row': { cursor: 'pointer' },
       }}
     >
@@ -272,19 +276,6 @@ export function FamilyDocumentsDataGridV2({
           },
           sorting: {
             sortModel: [{ field: 'uploadedAtUtc', sort: 'desc' }],
-          },
-        }}
-        slots={{ toolbar: GridToolbar }}
-        slotProps={{
-          toolbar: {
-            showQuickFilter: true,
-            sx: {
-              '& .MuiButtonBase-root': { minWidth: 44, minHeight: 44 },
-              '& .MuiDataGrid-toolbarQuickFilter, & .MuiDataGrid-toolbarQuickFilterControl':
-                {
-                  maxWidth: '100%',
-                },
-            },
           },
         }}
       />
