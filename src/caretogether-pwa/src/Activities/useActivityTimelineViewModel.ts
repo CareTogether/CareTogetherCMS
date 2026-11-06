@@ -10,8 +10,10 @@ import {
   buildInitialFamilyTimelineActivities,
   buildMergedTimelineModel,
   buildReferralTimelineItems,
+  getTimelineItemKey,
   MergedTimelineItem,
 } from './activityTimelineModel';
+import { uniqueKeys } from './uniqueKeys';
 
 type UseActivityTimelineViewModelParameters = {
   family: CombinedFamilyInfo;
@@ -68,6 +70,10 @@ export function useActivityTimelineViewModel({
       sortBy
     );
 
+  const timelineItemKeys = uniqueKeys(
+    mergedTimelineItems.map(getTimelineItemKey)
+  );
+
   return {
     arrangementPartneringPerson,
     displayActivitiesWithNotes,
@@ -76,5 +82,6 @@ export function useActivityTimelineViewModel({
     personLookup,
     setSortBy,
     sortBy,
+    timelineItemKeys,
   };
 }
