@@ -76,6 +76,7 @@ export function AddNewReferralDrawer({ onClose }: AddNewReferralDrawerProps) {
             boxSizing: 'border-box',
             p: 3,
             top: 45,
+            height: 'calc(100% - 45px)',
           },
         },
       }}
