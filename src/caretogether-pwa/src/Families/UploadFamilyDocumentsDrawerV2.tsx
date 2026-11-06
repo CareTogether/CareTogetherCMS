@@ -186,6 +186,7 @@ export function UploadFamilyDocumentsDrawerV2({
           borderTop: 1,
           borderColor: 'divider',
           display: 'flex',
+          flexDirection: { xs: 'column', sm: 'row' },
           gap: 1,
           justifyContent: 'flex-end',
           p: 2,

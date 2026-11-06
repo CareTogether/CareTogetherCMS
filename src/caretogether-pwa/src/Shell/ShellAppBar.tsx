@@ -183,7 +183,7 @@ export function ShellAppBar({
             flexGrow: 1,
             display: 'flex',
             justifyContent: 'center',
-            ...(isV2 && isDesktop && { minWidth: 0 }),
+            ...((!isDesktop || isV2) && { minWidth: 0 }),
           }}
         >
           <ShellSearchBar
