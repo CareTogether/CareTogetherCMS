@@ -1,3 +1,4 @@
+import { useId } from 'react';
 import Grid from '../../Generic/GridLegacyCompat';
 import {
   Button,
@@ -45,7 +46,7 @@ import {
 } from '@mui/icons-material';
 import { useBackdrop } from '../../Hooks/useBackdrop';
 import { usePersonLookup } from '../../Model/DirectoryModel';
-import { PersonName, personNameString } from '../../Families/PersonName';
+import { PersonName } from '../../Families/PersonName';
 import { format } from 'date-fns';
 import { a11yProps, TabPanel } from '../../Generic/TabPanel';
 import { isBackdropClick } from '../../Utilities/handleBackdropClick';
@@ -68,6 +69,7 @@ export function ChildLocationTimeline({
   recordChildLocationPlan,
   presentation = 'dialog',
 }: ChildLocationTimelineProps) {
+  const timelineId = useId();
   const personLookup = usePersonLookup();
   const withBackdrop = useBackdrop();
   const { timelineItems } = useChildLocationTimelineViewModel({ arrangement });
@@ -110,12 +112,10 @@ export function ChildLocationTimeline({
           },
           i
         ) => {
-          const entryLabel = `${format(entry.timestampUtc!, 'M/d/yy h:mm a')}, ${personNameString(
-            personLookup(
-              entry.childLocationFamilyId,
-              entry.childLocationReceivingAdultId
-            )
-          )}, ${planDescription}`;
+          // Keep names and dates out of aria-label: PostHog masks text but not attributes.
+          const timestampId = `${timelineId}-${i}-timestamp`;
+          const detailsId = `${timelineId}-${i}-details`;
+          const entryDescriptionIds = `${timestampId} ${detailsId}`;
           return (
             <AppTimelineItem
               key={i}
@@ -130,6 +130,7 @@ export function ChildLocationTimeline({
                 }}
               >
                 <Typography
+                  id={timestampId}
                   component="span"
                   variant={drawerPresentation ? 'caption' : 'body2'}
                   sx={{
@@ -140,7 +141,8 @@ export function ChildLocationTimeline({
                 </Typography>
                 {!isHistoryEntry && (
                   <IconButton
-                    aria-label={`Record planned location change: ${entryLabel}`}
+                    aria-label="Record planned location change"
+                    aria-describedby={entryDescriptionIds}
                     onClick={() => recordChildLocationPlan(entry)}
                     size="small"
                     color="primary"
@@ -153,7 +155,8 @@ export function ChildLocationTimeline({
                   </IconButton>
                 )}
                 <IconButton
-                  aria-label={`Delete ${isHistoryEntry ? 'recorded location change' : 'planned location change'}: ${entryLabel}`}
+                  aria-label={`Delete ${isHistoryEntry ? 'recorded location change' : 'planned location change'}`}
+                  aria-describedby={entryDescriptionIds}
                   onClick={() =>
                     isHistoryEntry
                       ? deleteChildLocationEntry(entry)
@@ -193,6 +196,7 @@ export function ChildLocationTimeline({
                 />
               </AppTimelineSeparator>
               <AppTimelineContent
+                id={detailsId}
                 sx={{
                   ...(drawerPresentation ? { py: 1 } : {}),
                   minWidth: { xs: 0, sm: 'auto' },
