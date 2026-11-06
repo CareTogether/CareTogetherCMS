@@ -3,6 +3,7 @@ import {
   Dashboard as DashboardIcon,
   Diversity3 as Diversity3Icon,
   Inbox,
+  Insights as InsightsIcon,
   Menu as MenuIcon,
   People as PeopleIcon,
   PermPhoneMsg as PermPhoneMsgIcon,
@@ -16,10 +17,12 @@ import {
   Divider,
   Drawer,
   List,
+  ListItemButton,
+  ListItemText,
   Paper,
   useTheme,
 } from '@mui/material';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useMatch } from 'react-router-dom';
 import { ShellContextSwitcher } from './ShellContextSwitcher';
 import { useSelectedLocationContext } from '../Model/Data';
 import { ListItemLink } from './ListItemLink';
@@ -28,6 +31,9 @@ import { useGlobalPermissionsLoadable } from '../Model/SessionModel';
 import { Permission } from '../GeneratedClient';
 import { Stack } from '@mui/system';
 import { useQueueItemsCountLoadable } from '../Model/QueueModel';
+import { useAtomValue } from 'jotai';
+import { reportSubmenuItemsAtom } from '../Model/UI';
+import { useCanAccessReferrals } from './useCanAccessReferrals';
 
 export function ShellBottomNavigation() {
   const theme = useTheme();
@@ -39,10 +45,9 @@ export function ShellBottomNavigation() {
 
   const links = [
     new RegExp(`^$never`),
-    new RegExp(`^${locationPrefix}/*$`),
+    new RegExp(`^${locationPrefix}/inbox/*.*$`),
     new RegExp(`^${locationPrefix}/clients/*.*$`),
     new RegExp(`^${locationPrefix}/volunteers/*.*$`),
-    new RegExp(`^${locationPrefix}/organizations/*.*$`),
   ];
   const selectedLink = Math.max(
     links.findIndex((link) => location.pathname.match(link) != null),
@@ -52,6 +57,9 @@ export function ShellBottomNavigation() {
 
   const flags = useFeatureFlagsLoadable();
   const permissions = useGlobalPermissionsLoadable();
+  const canAccessReferrals = useCanAccessReferrals();
+  const reportSubmenuItems = useAtomValue(reportSubmenuItemsAtom);
+  const isReportsPage = useMatch(`${locationPrefix}/reports/*`) !== null;
 
   const queueItemsCount = useQueueItemsCountLoadable();
 
@@ -84,6 +92,8 @@ export function ShellBottomNavigation() {
         }}
       >
         <BottomNavigationAction
+          aria-label="Open navigation menu"
+          aria-expanded={drawerOpen}
           icon={<MenuIcon />}
           onClick={() => setDrawerOpen(true)}
         />
@@ -130,6 +140,11 @@ export function ShellBottomNavigation() {
           {flags && (
             <List
               aria-label="secondary navigation"
+              onClick={(event) => {
+                if ((event.target as Element).closest('a')) {
+                  setDrawerOpen(false);
+                }
+              }}
               sx={{
                 position: 'relative',
                 top: 100,
@@ -144,6 +159,15 @@ export function ShellBottomNavigation() {
                   primary="Dashboard"
                   icon={<DashboardIcon />}
                 />
+                {canAccessReferrals && (
+                  <ListItemLink
+                    className="ph-unmask"
+                    darkColor
+                    to={`${locationPrefix}/referrals`}
+                    primary="Referrals"
+                    icon={<PermPhoneMsgIcon />}
+                  />
+                )}
                 {permissions(Permission.AccessOrganizationsScreen) && (
                   <ListItemLink
                     darkColor
@@ -151,6 +175,49 @@ export function ShellBottomNavigation() {
                     primary="Organizations"
                     icon={<Diversity3Icon />}
                   />
+                )}
+                {permissions(Permission.AccessReportsScreen) && (
+                  <>
+                    <ListItemLink
+                      className="ph-unmask"
+                      darkColor
+                      to={`${locationPrefix}/reports`}
+                      primary="Reports"
+                      icon={<InsightsIcon />}
+                    />
+                    {isReportsPage && reportSubmenuItems.length > 0 && (
+                      <li>
+                        <List aria-label="Report pages" disablePadding>
+                          {reportSubmenuItems.map((item) => (
+                            <li key={item.label}>
+                              <ListItemButton
+                                component="button"
+                                type="button"
+                                selected={item.isActive}
+                                aria-current={
+                                  item.isActive ? 'page' : undefined
+                                }
+                                onClick={() => {
+                                  item.onClick();
+                                  setDrawerOpen(false);
+                                }}
+                                sx={{ width: '100%', pl: 3 }}
+                              >
+                                <ListItemText
+                                  primary={item.label}
+                                  slotProps={{
+                                    primary: {
+                                      sx: { overflowWrap: 'anywhere' },
+                                    },
+                                  }}
+                                />
+                              </ListItemButton>
+                            </li>
+                          ))}
+                        </List>
+                      </li>
+                    )}
+                  </>
                 )}
                 {permissions(Permission.AccessSettingsScreen) && (
                   <ListItemLink
