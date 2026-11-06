@@ -6,9 +6,6 @@ import {
   useLocationConfiguration,
   useOrganizationConfiguration,
 } from '../Model/ConfigurationModel';
-import { Permission } from '../GeneratedClient';
-import { useGlobalPermissionsLoadable } from '../Model/SessionModel';
-import { wideTablePageSx } from '../Utilities/wideTablePageSx';
 import { useScreenTitle } from '../Shell/ShellScreenTitle';
 import { DashboardCalendar } from './DashboardCalendar';
 
@@ -17,22 +14,12 @@ function Dashboard() {
     useFeatureFlagEnabled(FAMILY_SCREEN_V2_EARLY_ACCESS_FEATURE_FLAG) === true;
   const organizationConfiguration = useOrganizationConfiguration();
   const locationConfiguration = useLocationConfiguration();
-  const permissions = useGlobalPermissionsLoadable();
 
   useScreenTitle('Dashboard');
 
   return (
-    <Container
-      disableGutters
-      maxWidth={false}
-      sx={{
-        boxSizing: 'border-box',
-        ...wideTablePageSx(permissions(Permission.AccessSupportScreen)),
-        minWidth: 0,
-        overflow: 'auto',
-      }}
-    >
-      <Stack direction="column" sx={{ minHeight: '100%', minWidth: 0 }}>
+    <Container disableGutters maxWidth={false} sx={{ minWidth: 0 }}>
+      <Stack direction="column" sx={{ minWidth: 0 }}>
         {isV2 && (
           <Typography
             className="ph-unmask"
