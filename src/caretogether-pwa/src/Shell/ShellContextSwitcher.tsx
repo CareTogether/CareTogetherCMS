@@ -1,4 +1,4 @@
-import { Add as AddIcon } from '@mui/icons-material';
+import { Add as AddIcon, KeyboardArrowDown } from '@mui/icons-material';
 import {
   Divider,
   Button,
@@ -29,11 +29,13 @@ import { locationScopedRoutes } from '../LocationScopedRoutes';
 import { locationSwitchTarget } from './locationSwitchTarget';
 
 interface ShellContextSwitcherProps {
+  v2DesktopPresentation?: boolean;
   contained?: boolean;
   showOrganization?: boolean;
 }
 
 export function ShellContextSwitcher({
+  v2DesktopPresentation = false,
   contained = false,
   showOrganization = true,
 }: ShellContextSwitcherProps) {
@@ -55,6 +57,7 @@ export function ShellContextSwitcher({
 
   const theme = useTheme();
   const isDesktop = useMediaQuery(theme.breakpoints.up('md'));
+  const useV2Dropdown = v2DesktopPresentation && isDesktop;
   const isAppBarContext = contained && !showOrganization && isDesktop;
 
   const availableLocations = currentOrganization?.locations;
@@ -134,6 +137,7 @@ export function ShellContextSwitcher({
       selectedLocationContext ? (
         availableLocations.length >= 1 ? (
           <Select
+            {...(useV2Dropdown && { IconComponent: KeyboardArrowDown })}
             inputProps={{ 'aria-label': 'Location' }}
             className="ph-unmask"
             size={isDesktop ? 'small' : 'medium'}
@@ -191,13 +195,41 @@ export function ShellContextSwitcher({
                   borderRadius: 1,
                 },
               }),
+              ...(useV2Dropdown && {
+                '& .MuiSelect-icon': {
+                  color: '#07666C',
+                  fontSize: 20,
+                  top: 'calc(50% - 10px)',
+                },
+              }),
             }}
             MenuProps={{
               slotProps: {
+                paper: {
+                  sx: useV2Dropdown
+                    ? { backgroundColor: '#FFFFFF' }
+                    : undefined,
+                },
                 list: {
                   sx: {
                     backgroundColor: theme.palette.primary.light,
                     color: theme.palette.primary.contrastText,
+                    ...(useV2Dropdown && {
+                      backgroundColor: '#FFFFFF',
+                      color: theme.palette.text.primary,
+                      '& .MuiMenuItem-root': {
+                        '&:hover, &.Mui-focusVisible': {
+                          backgroundColor: theme.palette.action.hover,
+                        },
+                        '&.Mui-selected': {
+                          color: '#07666C',
+                          backgroundColor: theme.palette.action.selected,
+                          '&:hover, &.Mui-focusVisible': {
+                            backgroundColor: theme.palette.action.hover,
+                          },
+                        },
+                      },
+                    }),
                   },
                 },
               },
@@ -225,10 +257,12 @@ export function ShellContextSwitcher({
               >
                 <Divider
                   sx={{
-                    borderColor: alpha(
-                      theme.palette.primary.contrastText,
-                      theme.palette.action.disabledOpacity
-                    ),
+                    borderColor: useV2Dropdown
+                      ? theme.palette.divider
+                      : alpha(
+                          theme.palette.primary.contrastText,
+                          theme.palette.action.disabledOpacity
+                        ),
                     my: 0.5,
                   }}
                 />
@@ -237,12 +271,20 @@ export function ShellContextSwitcher({
                   fullWidth
                   startIcon={<AddIcon />}
                   sx={{
+                    ...(useV2Dropdown && { color: '#07666C' }),
                     '&:hover': {
-                      backgroundColor: alpha(
-                        theme.palette.primary.contrastText,
-                        theme.palette.action.hoverOpacity
-                      ),
+                      backgroundColor: useV2Dropdown
+                        ? theme.palette.action.hover
+                        : alpha(
+                            theme.palette.primary.contrastText,
+                            theme.palette.action.hoverOpacity
+                          ),
                     },
+                    ...(useV2Dropdown && {
+                      '&.Mui-focusVisible': {
+                        backgroundColor: theme.palette.action.focus,
+                      },
+                    }),
                     justifyContent: 'flex-start',
                     px: 2,
                     py: 1,
