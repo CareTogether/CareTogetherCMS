@@ -1,0 +1,42 @@
+{
+  "voice": "af_heart",
+  "speed": 1.0,
+  "steps": [
+    {
+      "id": "approvals-tab",
+      "text": "The Approvals tab shows how many requirements are missing or expired."
+    },
+    {
+      "id": "role-card",
+      "text": "Each role this family is applying for or approved in has a card with its current status."
+    },
+    {
+      "id": "role-details",
+      "text": "Click the role card to see what this role needs. The requirements at the top are for the whole family. Under Family Members, each person has their own requirements to complete."
+    },
+    {
+      "id": "open-requirement",
+      "text": "Click a missing requirement, then Complete."
+    },
+    {
+      "id": "fill-completion",
+      "text": "Add the date and attach the document if there is one. You can also leave a note."
+    },
+    {
+      "id": "updated",
+      "text": "The requirement now shows as completed. If the role has a next step, like a meet and greet, it shows up right away."
+    },
+    {
+      "id": "exemption",
+      "text": "Requirements can also be exempted, with a reason and an end date. This one is exempted until the new check comes back."
+    },
+    {
+      "id": "complete-other",
+      "text": "To log something that isn't listed, use Complete Other and search for any action."
+    },
+    {
+      "id": "filter-expiring",
+      "text": "This table lists every requirement for the family. Filter by Expiring to plan renewals before they lapse."
+    }
+  ]
+}

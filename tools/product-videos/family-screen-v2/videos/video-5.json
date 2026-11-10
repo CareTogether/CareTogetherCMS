@@ -1,0 +1,11 @@
+{
+  "voice": "af_heart",
+  "speed": 1.0,
+  "steps": [
+    { "id": "open-member", "text": "Click any family member to open their details on the side. You stay on the family." },
+    { "id": "sections", "text": "Everything about this person is in one panel: basic information, contact details, comments, and concerns." },
+    { "id": "edit", "text": "Edit any section directly here, then save." },
+    { "id": "add-person", "text": "To add someone, use Adult or Child at the top, fill in their details, and click Add to Family." },
+    { "id": "organizations", "text": "On the right, you can also link the family to organizations." }
+  ]
+}

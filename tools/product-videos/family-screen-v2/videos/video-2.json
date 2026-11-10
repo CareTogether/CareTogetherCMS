@@ -1,0 +1,14 @@
+{
+  "voice": "af_heart",
+  "speed": 1.0,
+  "steps": [
+    { "id": "add-note", "text": "To add a note, click Note at the top. It's available from any tab." },
+    { "id": "write-note", "text": "Write your note and save it. Like before, it starts as a draft." },
+    { "id": "recent-activity", "text": "Your note shows up right away under Recent Activity." },
+    { "id": "badge", "text": "This badge counts the drafts that still need approval." },
+    { "id": "approve", "text": "If you're allowed to approve notes, you can do it right here, without leaving the Overview." },
+    { "id": "count-updates", "text": "The count updates as soon as you approve." },
+    { "id": "timeline", "text": "Timeline and Notes has the full history, and you can sort it however you like." },
+    { "id": "print", "text": "To print the notes, use the menu at the top." }
+  ]
+}
