@@ -1,6 +1,6 @@
-"""Render each narration step of launches/<launch>/videos/<video>.json to work/<launch>/<video>/audio/<step>.wav with Kokoro.
+"""Render each narration step of <topic>/videos/<video>.json to work/<topic>/<video>/audio/<step>.wav with Kokoro.
 
-Usage: .venv/bin/python tts.py <launch>/<video>
+Usage: .venv/bin/python tts.py <topic>/<video>
 """
 
 import json
@@ -13,10 +13,10 @@ from kokoro_onnx import Kokoro
 ROOT = Path(__file__).parent
 
 
-def main(launch_and_video: str) -> None:
-    launch, video_id = launch_and_video.split("/")
-    narration = json.loads((ROOT / "launches" / launch / "videos" / f"{video_id}.json").read_text())
-    audio = ROOT / "work" / launch / video_id / "audio"
+def main(topic_and_video: str) -> None:
+    topic, video_id = topic_and_video.split("/")
+    narration = json.loads((ROOT / topic / "videos" / f"{video_id}.json").read_text())
+    audio = ROOT / "work" / topic / video_id / "audio"
     audio.mkdir(parents=True, exist_ok=True)
     kokoro = Kokoro(str(ROOT / "models/kokoro-v1.0.onnx"), str(ROOT / "models/voices-v1.0.bin"))
 

@@ -25,6 +25,7 @@ export function steps({ page, h }) {
     'arrangements-tab': async () => {
       await h.click(tab(/Arrangements/i));
       await page.getByRole('row', { name: /^Hosting Eric Doe/ }).waitFor();
+      await h.screenshot('arrangements-tab', [page.getByRole('grid')]);
       await h.sleep(500);
       await h.highlight(page.getByRole('grid'), 2200);
     },

@@ -5,7 +5,7 @@ description: Prepare the launch of a CareTogether feature, with an Update post o
 
 # Launch a feature
 
-Follow [docs/feature-launch.md](../../../docs/feature-launch.md) step by step. It is the process; this skill only adds how an agent runs it. The recording tools and the Family Screen V2 example are in [tools/launch-videos](../../../tools/launch-videos).
+Follow [docs/feature-launch.md](../../../docs/feature-launch.md) step by step. It is the process; this skill only adds how an agent runs it. The recording tools and the Family Screen V2 example are in [tools/product-videos](../../../tools/product-videos). If the launch needs help articles, write them with the `help-article` skill.
 
 ## Before you start
 
@@ -36,6 +36,6 @@ Then write the plan from step 1 of the process and show it before recording anyt
 
 ## When you finish
 
-- Commit `tools/launch-videos/launches/<launch>/` on a branch, without the MP4s.
+- Commit the topic folder in `tools/product-videos/` on a branch, without the MP4s.
 - Add anything new you learned to `docs/feature-launch.md` in the same branch.
 - Report the draft's title and ID, the video IDs and their visibility, and what is left for the person to do.

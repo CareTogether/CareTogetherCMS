@@ -1,13 +1,15 @@
-// Records narrated feature videos against the Atlantis test organization on app.caretogether.io.
-// See README.md for setup and docs/feature-launch.md for the whole launch process.
+// Records narrated product videos and screenshots against the Atlantis test organization on app.caretogether.io.
+// See README.md for setup and use.
 //
-//   node record.mjs login                                       opens a browser window so you can sign in once
-//   node record.mjs record <launch>/<video>                     records work/<launch>/<video>/frames and timeline.json
-//   node record.mjs record <launch>/<video> --dry               same walkthrough, but cancels instead of saving
-//   node record.mjs probe <launch> <path> [script.mjs]          opens a page, runs a script, saves work/probe.png
+//   node record.mjs login                                    opens a browser window so you can sign in once
+//   node record.mjs record <topic>/<video>                   records work/<topic>/<video>/frames and timeline.json
+//   node record.mjs record <topic>/<video> --dry             same walkthrough, but cancels instead of saving
+//   node record.mjs stills <topic>/<video> [--dry]           runs the steps without video, saving work/<topic>/screenshots
+//   node record.mjs probe <topic> <path> [script.mjs]        opens a page, runs a script, saves work/probe.png
 //
-// Each launch lives in launches/<launch>/, with launch.json (feature flags to force on)
+// Each topic lives in <topic>/, with topic.json (feature flags to force on)
 // and one videos/<video>.mjs (steps) plus videos/<video>.json (narration) per video.
+// A videos/<video>.mjs without narration is fine for stills only.
 // Each step starts its narration clip and performs its actions at the same time,
 // then waits until the clip has finished plus a short pause.
 
@@ -29,22 +31,23 @@ const CHROMIUM_PATH = process.env.CHROMIUM_PATH ?? '/usr/bin/chromium';
 const VIEWPORT = { width: 1920, height: 1080 };
 const PAUSE_AFTER_CLIP_MS = 600;
 const mode = process.argv[2];
-const [launchName, videoId] = (process.argv[3] ?? '').split('/');
-const LAUNCH_DIR = path.join(ROOT, 'launches', launchName ?? '');
-const WORK_DIR = path.join(ROOT, 'work', launchName ?? '', videoId ?? '');
+const [topicName, videoId] = (process.argv[3] ?? '').split('/');
+const TOPIC_DIR = path.join(ROOT, topicName ?? '');
+const WORK_DIR = path.join(ROOT, 'work', topicName ?? '', videoId ?? '');
 const FRAMES_DIR = path.join(WORK_DIR, 'frames');
+const SCREENSHOTS_DIR = path.join(ROOT, 'work', topicName ?? '', 'screenshots');
 const dryRun = process.argv.includes('--dry');
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
-function loadLaunch() {
-  const file = path.join(LAUNCH_DIR, 'launch.json');
+function loadTopic() {
+  const file = path.join(TOPIC_DIR, 'topic.json');
   return fs.existsSync(file) ? JSON.parse(fs.readFileSync(file, 'utf8')) : {};
 }
 
 function loadClipDurations() {
   const narration = JSON.parse(
-    fs.readFileSync(path.join(LAUNCH_DIR, 'videos', `${videoId}.json`), 'utf8')
+    fs.readFileSync(path.join(TOPIC_DIR, 'videos', `${videoId}.json`), 'utf8')
   );
   const durationsFile = path.join(WORK_DIR, 'audio/durations.json');
   const durations = fs.existsSync(durationsFile)
@@ -60,7 +63,7 @@ function loadClipDurations() {
   );
 }
 
-async function launch(headless) {
+async function launchBrowser(headless) {
   return chromium.launchPersistentContext(PROFILE_DIR, {
     executablePath: CHROMIUM_PATH,
     headless,
@@ -70,7 +73,7 @@ async function launch(headless) {
 }
 
 async function login() {
-  const context = await launch(false);
+  const context = await launchBrowser(false);
   const page = context.pages()[0] ?? (await context.newPage());
   await page.goto(BASE_URL);
   console.log('Sign in in the browser window. Waiting for the app to load...');
@@ -181,7 +184,7 @@ async function highlight(page, locator, ms = 1800) {
   await showRing(page, box.x, box.y, box.width, box.height, ms);
 }
 
-async function showRing(page, x, y, width, height, ms) {
+async function placeRing(page, x, y, width, height) {
   await page.evaluate(
     ([x, y, width, height]) => {
       const ring = document.getElementById('__demo-ring');
@@ -195,20 +198,55 @@ async function showRing(page, x, y, width, height, ms) {
     },
     [x, y, width, height]
   );
-  await sleep(ms);
+}
+
+async function hideRing(page) {
   await page.evaluate(() => {
     document.getElementById('__demo-ring').style.opacity = '0';
   });
 }
 
-async function highlightArea(page, locators, ms = 1800) {
+async function showRing(page, x, y, width, height, ms) {
+  await placeRing(page, x, y, width, height);
+  await sleep(ms);
+  await hideRing(page);
+}
+
+async function areaAround(locators) {
   const boxes = [];
   for (const locator of locators) boxes.push((await center(locator)).box);
   const left = Math.min(...boxes.map((box) => box.x));
   const top = Math.min(...boxes.map((box) => box.y));
   const right = Math.max(...boxes.map((box) => box.x + box.width));
   const bottom = Math.max(...boxes.map((box) => box.y + box.height));
-  await showRing(page, left, top, right - left, bottom - top, ms);
+  return { x: left, y: top, width: right - left, height: bottom - top };
+}
+
+async function highlightArea(page, locators, ms = 1800) {
+  const { x, y, width, height } = await areaAround(locators);
+  await showRing(page, x, y, width, height, ms);
+}
+
+// In stills mode, saves work/<topic>/screenshots/<name>.png without the cursor,
+// with the highlight ring around the given locators if there are any.
+// In record mode it does nothing, so a still never shows up in the video.
+async function screenshot(page, name, locators = []) {
+  if (mode !== 'stills') return;
+  await page.evaluate(() => {
+    document.getElementById('__demo-cursor').style.visibility = 'hidden';
+  });
+  if (locators.length > 0) {
+    const { x, y, width, height } = await areaAround(locators);
+    await placeRing(page, x, y, width, height);
+  }
+  await sleep(400);
+  fs.mkdirSync(SCREENSHOTS_DIR, { recursive: true });
+  await page.screenshot({ path: path.join(SCREENSHOTS_DIR, `${name}.png`) });
+  await hideRing(page);
+  await page.evaluate(() => {
+    document.getElementById('__demo-cursor').style.visibility = 'visible';
+  });
+  console.log(`saved screenshots/${name}.png`);
 }
 
 async function resetOverlay(page) {
@@ -249,10 +287,10 @@ async function startScreencast(page) {
   };
 }
 
-// Turns the launch's feature flags on in this browser only, by patching PostHog's
+// Turns the topic's feature flags on in this browser only, by patching PostHog's
 // flag response. The signed-in account's own Beta Features settings stay as they are.
 async function forceFlags(context) {
-  const flagKeys = loadLaunch().flags ?? [];
+  const flagKeys = loadTopic().flags ?? [];
   if (flagKeys.length === 0) return;
   await context.route('https://us.i.posthog.com/flags/**', async (route) => {
     const response = await route.fetch();
@@ -272,10 +310,9 @@ async function forceFlags(context) {
   });
 }
 
-async function record() {
-  const video = await import(path.join(LAUNCH_DIR, 'videos', `${videoId}.mjs`));
-  const clipDurations = loadClipDurations();
-  const context = await launch(true);
+async function openVideo() {
+  const video = await import(path.join(TOPIC_DIR, 'videos', `${videoId}.mjs`));
+  const context = await launchBrowser(true);
   await forceFlags(context);
   const page = context.pages()[0] ?? (await context.newPage());
   await page.addInitScript(installOverlay);
@@ -285,9 +322,6 @@ async function record() {
   await page.evaluate(installOverlay);
   await sleep(2000);
 
-  const screencast = await startScreencast(page);
-  await sleep(1200);
-
   const h = {
     sleep,
     moveTo: (locator) => moveTo(page, locator),
@@ -296,21 +330,49 @@ async function record() {
     highlightArea: (locators, ms) => highlightArea(page, locators, ms),
     resetOverlay: () => resetOverlay(page),
     typeSlowly: (text) => typeSlowly(page, text),
+    screenshot: (name, locators) => screenshot(page, name, locators),
   };
   const actions = video.steps({ page, dryRun, h, baseUrl: BASE_URL });
+  return { context, page, actions };
+}
+
+async function runStep(context, page, actions, id) {
+  try {
+    await actions[id]();
+  } catch (error) {
+    fs.mkdirSync(WORK_DIR, { recursive: true });
+    await page.screenshot({ path: path.join(WORK_DIR, 'error.png') });
+    console.log(await page.locator('body').ariaSnapshot().catch(() => ''));
+    await context.close();
+    throw error;
+  }
+}
+
+// Runs every step without recording video or waiting for narration, so only
+// the steps' h.screenshot calls produce output. No narration file is needed.
+async function stills() {
+  const { context, page, actions } = await openVideo();
+  for (const id of Object.keys(actions)) {
+    console.log(`step ${id}`);
+    await runStep(context, page, actions, id);
+    await sleep(PAUSE_AFTER_CLIP_MS);
+  }
+  await context.close();
+}
+
+async function record() {
+  const clipDurations = loadClipDurations();
+  const { context, page, actions } = await openVideo();
+
+  const screencast = await startScreencast(page);
+  await sleep(1200);
+
   const timeline = [];
   for (const [id, clipSeconds] of Object.entries(clipDurations)) {
     const startedAt = Date.now() / 1000;
     timeline.push({ id, start: startedAt });
     console.log(`step ${id} (${clipSeconds.toFixed(1)}s clip)`);
-    try {
-      await actions[id]();
-    } catch (error) {
-      await page.screenshot({ path: path.join(WORK_DIR, 'error.png') });
-      console.log(await page.locator('body').ariaSnapshot().catch(() => ''));
-      await context.close();
-      throw error;
-    }
+    await runStep(context, page, actions, id);
     const elapsedMs = Date.now() - startedAt * 1000;
     await sleep(Math.max(0, clipSeconds * 1000 - elapsedMs) + PAUSE_AFTER_CLIP_MS);
   }
@@ -328,11 +390,11 @@ async function record() {
   console.log(`Captured ${screencast.frames.length} frames.`);
 }
 
-// Opens BASE_URL + <path> with the launch's flags on, runs the optional script's
+// Opens BASE_URL + <path> with the topic's flags on, runs the optional script's
 // default export on the page, then saves work/probe.png and prints the page's
-// accessibility tree. Use it to find locators and to run a launch's setup/ scripts.
+// accessibility tree. Use it to find locators and to run a topic's setup/ scripts.
 async function probe(urlPath, scriptFile) {
-  const context = await launch(true);
+  const context = await launchBrowser(true);
   await forceFlags(context);
   const page = context.pages()[0] ?? (await context.newPage());
   await page.goto(BASE_URL + urlPath);
@@ -354,8 +416,9 @@ async function probe(urlPath, scriptFile) {
 
 if (mode === 'login') await login();
 else if (mode === 'record' && videoId) await record();
-else if (mode === 'probe' && launchName) await probe(process.argv[4] ?? '', process.argv[5]);
+else if (mode === 'stills' && videoId) await stills();
+else if (mode === 'probe' && topicName) await probe(process.argv[4] ?? '', process.argv[5]);
 else
   console.log(
-    'Usage: node record.mjs login | record <launch>/<video> [--dry] | probe <launch> <path> [script.mjs]'
+    'Usage: node record.mjs login | record <topic>/<video> [--dry] | stills <topic>/<video> [--dry] | probe <topic> <path> [script.mjs]'
   );

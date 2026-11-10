@@ -1,6 +1,6 @@
-"""Join work/<launch>/<video>/frames and its audio into work/<launch>/<output>.mp4, placing each clip where timeline.json says its step started.
+"""Join work/<topic>/<video>/frames and its audio into work/<topic>/<output>.mp4, placing each clip where timeline.json says its step started.
 
-Usage: .venv/bin/python build.py <launch>/<video>
+Usage: .venv/bin/python build.py <topic>/<video>
 """
 
 import json
@@ -12,11 +12,11 @@ from pathlib import Path
 ROOT = Path(__file__).parent
 
 
-def main(launch_and_video: str) -> None:
-    launch, video_id = launch_and_video.split("/")
-    work = ROOT / "work" / launch / video_id
-    module = (ROOT / "launches" / launch / "videos" / f"{video_id}.mjs").read_text()
-    output = ROOT / "work" / launch / re.search(r"export const output = '([^']+)'", module).group(1)
+def main(topic_and_video: str) -> None:
+    topic, video_id = topic_and_video.split("/")
+    work = ROOT / "work" / topic / video_id
+    module = (ROOT / topic / "videos" / f"{video_id}.mjs").read_text()
+    output = ROOT / "work" / topic / re.search(r"export const output = '([^']+)'", module).group(1)
     timeline = json.loads((work / "timeline.json").read_text())
     frames = timeline["frames"]
     origin = frames[0]["timestamp"]
