@@ -1,10 +1,10 @@
 # YouTube: Remove a role and Complete Other
 
-Upload `work/role-actions/role-actions.mp4` (about 64 seconds).
+Uploaded as https://youtu.be/UJrDOjn5TiI (64 seconds).
 
 ## Title
 
-CareTogether: Remove a role or complete an action for one person
+CareTogether: Remove a role or record an action for one person
 
 ## Description
 
