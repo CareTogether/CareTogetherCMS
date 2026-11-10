@@ -11,12 +11,14 @@ export function steps({ page, h }) {
   const tab = (name) => page.getByRole('tab', { name });
   const panel = page.getByRole('dialog').filter({ hasText: 'Arrangement' });
   const section = (name) => panel.getByRole('heading', { name, exact: true });
+  // Atlantis seed dates move when the organization is reset, so match any open date.
+  const caseOpened = page.getByText(/^Opened \d/).first();
 
   return {
     'case-header': async () => {
       await h.sleep(500);
       await h.highlightArea(
-        [page.getByText('Opened 9/1/26'), page.getByRole('button', { name: /^Hosting Eric Doe Host Family/ })],
+        [caseOpened, page.getByRole('button', { name: /^Hosting Eric Doe Host Family/ })],
         2200
       );
       await h.moveTo(page.getByRole('button', { name: /^Hosting Eric Doe Host Family/ }));
@@ -47,10 +49,12 @@ export function steps({ page, h }) {
       const closedCase = page.getByRole('button', { name: /^Closed Case/ });
       await closedCase.waitFor();
       await h.sleep(500);
+      const currentOpened = await caseOpened.textContent();
       await h.click(closedCase);
-      await page.getByText('Opened 9/5/26').first().waitFor();
+      const closedOpened = page.getByText(/^Opened \d/).filter({ hasNotText: currentOpened }).first();
+      await closedOpened.waitFor();
       await h.sleep(500);
-      await h.highlight(page.getByText('Opened 9/5/26').first().locator('xpath=..'), 2200);
+      await h.highlight(closedOpened.locator('xpath=..'), 2200);
     },
   };
 }

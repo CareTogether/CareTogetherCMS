@@ -84,6 +84,7 @@ Things that went wrong with Family Screen V2:
 - Seed documents in Atlantis have no stored file, so their preview fails. Upload a new file in the video instead.
 - Some actions need a second confirmation dialog, such as **Mark requirement incomplete?**.
 - A side panel can still show the old state after a save. Close it before showing the result.
+- Atlantis seed dates move when the organization is reset. Match dates with a pattern, such as `/^Opened \d/`, never a literal like `'Opened 9/1/26'`.
 
 ## Making screenshots
 
