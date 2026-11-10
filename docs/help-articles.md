@@ -19,6 +19,8 @@ Follow [tools/product-videos/README.md](../tools/product-videos/README.md).
 - Write the steps as a script and call `h.screenshot(name, locators)` where a picture is needed, with the ring on what the reader should click or read.
 - Run `node record.mjs stills <topic>/<script> --dry`. Drop `--dry` only when a screenshot must show the result of a save.
 - Open every image. It must show only Atlantis test data, and nothing important cut off.
+- To move to another family inside one take, push the new path and dispatch `popstate` (see `role-actions/videos/video-1.mjs`). `page.goto` reloads the app and leaves a blank white frame in the video.
+- The family **⋮** menu button has no accessible name. Find it as the button right after **Note**.
 - An article can embed a launch video when one already shows the task. Record a new video only for a task that is hard to follow from screenshots.
 
 ## 3. Write the article
