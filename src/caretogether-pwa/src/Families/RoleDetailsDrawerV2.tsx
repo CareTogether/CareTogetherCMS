@@ -217,6 +217,7 @@ function ParticipantsSection({
   participants,
   requirements,
   showParticipantActions,
+  onParticipantCompleteOther,
   onParticipantRemove,
   onParticipantReset,
   onRequirementClick,
@@ -225,6 +226,7 @@ function ParticipantsSection({
   participants: RoleParticipant[];
   requirements?: RoleSummaryRequirement[];
   showParticipantActions: boolean;
+  onParticipantCompleteOther: (participant: RoleParticipant) => void;
   onParticipantRemove: (participant: RoleParticipant) => void;
   onParticipantReset: (participant: RoleParticipant) => void;
   onRequirementClick: (row: ApprovalLedgerRow) => void;
@@ -261,6 +263,15 @@ function ParticipantsSection({
                 label={participantStateLabels[participant.state]}
                 size="small"
               />
+              {showParticipantActions && (
+                <Button
+                  onClick={() => onParticipantCompleteOther(participant)}
+                  size="small"
+                  variant="outlined"
+                >
+                  Complete Other
+                </Button>
+              )}
               {showParticipantActions && participant.state === 'active' && (
                 <Button
                   color="error"
@@ -466,6 +477,26 @@ function personForSubject(
         lastName: subject.label.split(' ').slice(1).join(' '),
       } as Person)
     : undefined;
+}
+
+function participantRoleCard(
+  card: RoleSummaryCard,
+  participant: RoleParticipant,
+  volunteerFamilyId: string
+): RoleSummaryCard {
+  return {
+    ...card,
+    subject: {
+      scope: 'person',
+      id: participant.id,
+      label: participant.label,
+    },
+    context: {
+      kind: 'Individual Volunteer',
+      volunteerFamilyId,
+      personId: participant.id,
+    },
+  };
 }
 
 type SelectedRoleManagement = {
@@ -751,6 +782,15 @@ export function RoleDetailsDrawerV2({
                   card ? (card.memberRequirements ?? []) : undefined
                 }
                 showParticipantActions={card !== null}
+                onParticipantCompleteOther={(participant) => {
+                  if (!card) return;
+
+                  setSelectedRoleManagement({
+                    mode: 'completeOther',
+                    person: participant.person,
+                    role: participantRoleCard(card, participant, familyId),
+                  });
+                }}
                 onParticipantRemove={(participant) => {
                   if (!card) return;
 
