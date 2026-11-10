@@ -1,0 +1,6 @@
+# Local only: Python environment, voice models, the signed-in browser profile, and recordings.
+.venv
+models
+.profile
+work
+*.mp4

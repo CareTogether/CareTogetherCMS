@@ -1,0 +1,11 @@
+{
+  "voice": "af_heart",
+  "speed": 1.0,
+  "steps": [
+    { "id": "upload", "text": "Upload is always at the top of the family. Choose one or more files, then click Upload." },
+    { "id": "documents-tab", "text": "The Documents tab lists every file uploaded for this family, with the newest on top." },
+    { "id": "search", "text": "To find a file, type part of its name in the search box." },
+    { "id": "preview", "text": "Click the eye icon to preview PDFs and images right here, without downloading them." },
+    { "id": "preview-actions", "text": "From the preview, you can open the file in a new tab, or download it." }
+  ]
+}
