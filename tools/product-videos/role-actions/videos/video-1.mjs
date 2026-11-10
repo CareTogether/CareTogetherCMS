@@ -23,6 +23,10 @@ export function steps({ page, h, baseUrl }) {
   const removeRole = page.getByRole('dialog').filter({ hasText: 'Role Management' }).filter({
     has: page.getByRole('heading', { name: 'Remove Role', exact: true }),
   });
+  const familyRoleDetails = page
+    .getByRole('dialog')
+    .filter({ hasText: 'Role Details' })
+    .filter({ has: page.getByRole('heading', { name: 'Host Family', exact: true }) });
   const familyMenuButton = page
     .getByRole('button', { name: 'Note', exact: true })
     .locator('xpath=following-sibling::button[1]');
@@ -88,7 +92,7 @@ export function steps({ page, h, baseUrl }) {
       await h.click(roleDetails.getByRole('button', { name: 'close role details' }));
       await roleDetails.waitFor({ state: 'hidden' });
     },
-    'family-menu': async () => {
+    'family-card': async () => {
       // Navigate inside the app: a full page load shows a blank white frame.
       await page.evaluate((url) => {
         window.history.pushState({}, '', url);
@@ -97,7 +101,26 @@ export function steps({ page, h, baseUrl }) {
       await page.getByRole('heading', { name: 'Brambleswift Family' }).waitFor();
       await h.sleep(600);
       const familyCard = page.getByRole('button', { name: /^Family Host Family/ });
-      await h.highlight(familyCard, 1800);
+      await h.highlight(familyCard, 1400);
+      await h.click(familyCard);
+      await familyRoleDetails.waitFor();
+      await h.sleep(800);
+      await h.highlight(familyRoleDetails.getByRole('button', { name: 'Complete Other' }), 2400);
+    },
+    'family-members': async () => {
+      const members = familyRoleDetails.getByText('Family Members', { exact: true });
+      const removeButtons = familyRoleDetails.getByRole('button', { name: 'Remove from role' });
+      await members.scrollIntoViewIfNeeded();
+      await h.sleep(400);
+      await h.screenshot('family-role-members', [members, removeButtons.last()]);
+      await h.highlightArea([members, removeButtons.first()], 2400);
+      const requirement = familyRoleDetails.getByRole('button', { name: /^Missing Comprehensive Background Check/ }).first();
+      await h.moveTo(requirement);
+      await h.highlight(requirement, 2000);
+      await h.click(familyRoleDetails.getByRole('button', { name: 'close role details' }));
+      await familyRoleDetails.waitFor({ state: 'hidden' });
+    },
+    'family-menu': async () => {
       await h.click(familyMenuButton);
       const items = [
         page.getByRole('menuitem', { name: 'Remove from Host Family role' }),
@@ -106,12 +129,7 @@ export function steps({ page, h, baseUrl }) {
       await items[0].waitFor();
       await h.sleep(400);
       await h.screenshot('family-menu', items);
-      await h.highlight(items[0], 2000);
-    },
-    'family-complete-other': async () => {
-      const item = page.getByRole('menuitem', { name: 'Complete other...' });
-      await h.moveTo(item);
-      await h.highlight(item, 2600);
+      await h.highlightArea(items, 2600);
       await page.keyboard.press('Escape');
       await h.sleep(500);
     },

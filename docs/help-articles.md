@@ -25,13 +25,20 @@ Follow [tools/product-videos/README.md](../tools/product-videos/README.md).
 
 ## 3. Write the article
 
-- Write in English, in plain words. Use the exact UI labels, in bold.
+- Write in English, in ASD-STE100 Simplified Technical English (STE), so readers who learned English as a second language understand each step:
+  - Write instructions in the imperative, one instruction per sentence, at most 20 words. Keep descriptive sentences to at most 25 words.
+  - Use the active voice and simple tenses. Use no contractions and no phrasal verbs ("remove", not "take out").
+  - Use STE approved words where you can: "select", not "choose"; "all the family", not "the whole family"; "must have", not "need".
+  - Software verbs like "click" and "type" are accepted as technical verbs.
+  - Use the exact UI labels, in bold, even when they contain words STE does not approve. Use permission names as the app shows them.
+  - Put a limit or a known gap in a **NOTE:** paragraph. Do not promise a fix or a date.
+- Write video narration in STE too. Keep each step's narration to one or two short sentences.
 - Start with one or two sentences on what the reader can do and who can do it.
 - Use numbered steps, one action per step, with the screenshot right after the step it shows.
 - Say who each part applies to, for example volunteer families or client families, or a role that needs a permission.
 - End with related articles, if there are any, instead of explaining them again.
 - Give the article a short description; Featurebase shows it in search results and lists.
-- The `humanize` skill in `.claude/skills/` rewrites a draft in a plainer voice.
+- Do not run the `humanize` skill on a help article: it rewrites toward natural English and undoes STE.
 
 ## 4. Put it in Featurebase
 
