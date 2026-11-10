@@ -20,7 +20,7 @@ Follow [docs/help-articles.md](../../../docs/help-articles.md) step by step. It 
 - Use `--dry` unless a screenshot must show the result of a save. Tell the person what Atlantis data a run without `--dry` adds or changes.
 - Open every screenshot before using it. Check it shows only test data and the right element is ringed.
 - Read every Featurebase draft back after writing it.
-- Write in English, in plain words, with the exact UI labels.
+- Write in English, in ASD-STE100 Simplified Technical English, with the exact UI labels. The rules are in step 3 of the process.
 
 ## Stop and ask before
 
