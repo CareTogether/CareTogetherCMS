@@ -14,7 +14,6 @@ import { PersonName } from '../Families/PersonName';
 import { v2Typography } from '../Families/v2Typography';
 import { useUserLookup } from '../Model/DirectoryModel';
 import { formatUtcDateOnly } from '../Utilities/dateUtils';
-import { approvalLedgerStatusPresentation } from './approvalLedgerStatusPresentation';
 import { ApprovalLedgerStatusChip } from './ApprovalLedgerStatusChip';
 import type {
   ApprovalLedgerOccurrence,
@@ -199,6 +198,10 @@ export function ApprovalDetailsDrawerLayout({
   notes: ReactNode;
 }) {
   const userLookup = useUserLookup();
+  // Expired and expiring rows still come from a completion or an exemption.
+  const isExemption =
+    row?.occurrences.some((occurrence) => occurrence.status === 'exempted') ??
+    false;
   const completedOrExemptedOn = row?.completedOrExemptedOn
     ? formatUtcDateOnly(row.completedOrExemptedOn)
     : undefined;
@@ -280,33 +283,20 @@ export function ApprovalDetailsDrawerLayout({
               <RoleChipList labels={row.neededForRoleLabels} />
             </Box>
             {row.completedOrExemptedByUserId && (
-              <DetailField
-                label={
-                  approvalLedgerStatusPresentation(row).recordStatus ===
-                  'exempted'
-                    ? 'Exempted By'
-                    : 'Completed By'
-                }
-              >
+              <DetailField label={isExemption ? 'Exempted By' : 'Completed By'}>
                 <PersonName
                   person={userLookup(row.completedOrExemptedByUserId)}
                 />
               </DetailField>
             )}
             {completedOrExemptedOn && (
-              <DetailField
-                label={
-                  row.status === 'completed' ? 'Completed On' : 'Exempted On'
-                }
-              >
+              <DetailField label={isExemption ? 'Exempted On' : 'Completed On'}>
                 {completedOrExemptedOn}
               </DetailField>
             )}
             {validUntil && (
               <DetailField
-                label={
-                  row.status === 'completed' ? 'Valid Until' : 'Exempted Until'
-                }
+                label={isExemption ? 'Exempted Until' : 'Valid Until'}
               >
                 {validUntil}
               </DetailField>
