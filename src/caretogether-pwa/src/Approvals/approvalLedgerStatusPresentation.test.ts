@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import {
+  approvalAttentionCounts,
   approvalLedgerStatusPresentation,
   approvalLedgerStatusText,
 } from './approvalLedgerStatusPresentation.ts';
@@ -84,5 +85,28 @@ test('sorts expired history after current records', () => {
   assert.deepEqual(
     sorted.map(({ status }) => status),
     ['missing', 'completed', 'expired']
+  );
+});
+
+test('does not count a renewed expired record as needing attention', () => {
+  const berrin = { scope: 'person' as const, id: 'berrin', label: 'Berrin' };
+  const elda = { scope: 'person' as const, id: 'elda', label: 'Elda' };
+  const row = (
+    status: ApprovalLedgerStatus,
+    requirementName: string,
+    subject = berrin
+  ) => ({ status, requirementName, appliesTo: [subject] });
+
+  assert.deepEqual(
+    approvalAttentionCounts([
+      row('expired', 'Background Check'),
+      row('completed', 'Background Check'),
+      row('expired', 'Training'),
+      row('expiring', 'Training'),
+      row('expired', 'Fingerprints'),
+      row('completed', 'Fingerprints', elda),
+      row('missing', 'Fingerprints'),
+    ]),
+    { missing: 1, expired: 1 }
   );
 });
