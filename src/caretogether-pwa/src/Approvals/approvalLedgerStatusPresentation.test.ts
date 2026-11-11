@@ -128,7 +128,7 @@ test('explains an outlined chip with a tooltip, only for expired records', () =>
       },
       formatDate
     ),
-    'This completion expired on 2026-08-02. The outline marks it as a past record, kept for history. Check the other rows for a current completion.'
+    'This completion expired on 2026-08-02.'
   );
   assert.match(
     approvalLedgerStatusTooltip(
@@ -139,7 +139,7 @@ test('explains an outlined chip with a tooltip, only for expired records', () =>
       },
       formatDate
     ) ?? '',
-    /^This exemption expired on 2026-08-02\./
+    /^This exemption expired on 2026-08-02\.$/
   );
   assert.equal(
     approvalLedgerStatusTooltip(

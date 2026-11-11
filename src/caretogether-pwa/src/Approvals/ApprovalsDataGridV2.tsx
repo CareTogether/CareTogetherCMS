@@ -25,7 +25,11 @@ import {
   formatApprovalLedgerDate,
   subjectKey,
 } from './approvalLedgerDataGridViewModel';
-import { approvalLedgerStatusText } from './approvalLedgerStatusPresentation';
+import { formatUtcDateOnly } from '../Utilities/dateUtils';
+import {
+  approvalLedgerStatusText,
+  approvalLedgerStatusTooltip,
+} from './approvalLedgerStatusPresentation';
 import { ApprovalLedgerStatusChip } from './ApprovalLedgerStatusChip';
 import {
   approvalLedgerLeafRowIdsForExport,
@@ -403,11 +407,24 @@ function buildColumns(
       ...quickFilterDisabled,
       valueGetter: (_value, row) => row.validUntil?.getTime() ?? null,
       valueFormatter: (_value, row) => approvalLedgerValidUntilText(row),
-      renderCell: ({ row }) => (
-        <Typography {...v2Typography.browserSecondary}>
-          {approvalLedgerValidUntilText(row)}
-        </Typography>
-      ),
+      renderCell: ({ row }) => {
+        const text = (
+          <Typography {...v2Typography.browserSecondary}>
+            {approvalLedgerValidUntilText(row)}
+          </Typography>
+        );
+        const tooltip = approvalLedgerStatusTooltip(row, formatUtcDateOnly);
+
+        if (!tooltip) {
+          return text;
+        }
+
+        return (
+          <Tooltip describeChild title={tooltip}>
+            {text}
+          </Tooltip>
+        );
+      },
     },
     {
       ...reportingLockdown,
