@@ -13,7 +13,7 @@ import {
 
 const expiredOn = new Date('2026-08-02T00:00:00.000Z');
 
-test('shows an expired completion as completed, with the expiry date', () => {
+test('shows an expired completion as an outlined Completed chip', () => {
   const row = {
     status: 'expired' as const,
     validUntil: expiredOn,
@@ -24,12 +24,13 @@ test('shows an expired completion as completed, with the expiry date', () => {
     recordStatus: 'completed',
     label: 'Completed',
     color: 'success',
+    variant: 'outlined',
     expiredOn,
   });
   assert.equal(approvalLedgerStatusText(row), 'Completed (expired)');
 });
 
-test('shows an expired exemption as exempted, with the expiry date', () => {
+test('shows an expired exemption as an outlined Exempted chip', () => {
   const row = {
     status: 'expired' as const,
     validUntil: expiredOn,
@@ -40,6 +41,7 @@ test('shows an expired exemption as exempted, with the expiry date', () => {
     recordStatus: 'exempted',
     label: 'Exempted',
     color: 'default',
+    variant: 'outlined',
     expiredOn,
   });
   assert.equal(approvalLedgerStatusText(row), 'Exempted (expired)');
@@ -60,11 +62,13 @@ test('keeps other statuses unchanged and without expiry info', () => {
     recordStatus: 'missing',
     label: 'Missing',
     color: 'error',
+    variant: 'filled',
   });
   assert.deepEqual(expiring, {
     recordStatus: 'expiring',
     label: 'Expiring',
     color: 'warning',
+    variant: 'filled',
   });
   assert.equal(
     approvalLedgerStatusText({ status: 'completed', occurrences: [] }),

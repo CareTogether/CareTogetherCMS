@@ -14,6 +14,7 @@ import { PersonName } from '../Families/PersonName';
 import { v2Typography } from '../Families/v2Typography';
 import { useUserLookup } from '../Model/DirectoryModel';
 import { formatUtcDateOnly } from '../Utilities/dateUtils';
+import { approvalLedgerValidUntilText } from './approvalLedgerDataGridViewModel';
 import { ApprovalLedgerStatusChip } from './ApprovalLedgerStatusChip';
 import type {
   ApprovalLedgerOccurrence,
@@ -206,7 +207,7 @@ export function ApprovalDetailsDrawerLayout({
     ? formatUtcDateOnly(row.completedOrExemptedOn)
     : undefined;
   const validUntil = row?.validUntil
-    ? formatUtcDateOnly(row.validUntil)
+    ? approvalLedgerValidUntilText(row)
     : undefined;
 
   return (

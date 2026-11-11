@@ -19,6 +19,7 @@ import {
   approvalLedgerMemberGroupingKey,
   approvalLedgerQuickFilterParser,
   approvalLedgerSearchText,
+  approvalLedgerValidUntilText,
   compareApprovalLedgerMemberKeys,
   countLabel,
   formatApprovalLedgerDate,
@@ -401,10 +402,10 @@ function buildColumns(
       minWidth: 140,
       ...quickFilterDisabled,
       valueGetter: (_value, row) => row.validUntil?.getTime() ?? null,
-      valueFormatter: (_value, row) => formatApprovalLedgerDate(row.validUntil),
+      valueFormatter: (_value, row) => approvalLedgerValidUntilText(row),
       renderCell: ({ row }) => (
         <Typography {...v2Typography.browserSecondary}>
-          {formatApprovalLedgerDate(row.validUntil)}
+          {approvalLedgerValidUntilText(row)}
         </Typography>
       ),
     },

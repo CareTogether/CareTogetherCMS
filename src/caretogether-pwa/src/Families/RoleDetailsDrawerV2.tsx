@@ -316,11 +316,12 @@ function RequirementSummaryRow({
   requirement: RoleSummaryRequirement;
 }) {
   const completedOrExemptedOn = formatDate(requirement.completedOrExemptedOn);
-  // An expired record shows its expiry date beside the status chip instead.
-  const validUntil =
-    requirement.status === 'expired'
-      ? undefined
-      : formatDate(requirement.validUntil);
+  const validUntil = formatDate(requirement.validUntil);
+  const validUntilLabel = validUntil
+    ? requirement.status === 'expired'
+      ? `Expired ${validUntil}`
+      : `Valid until ${validUntil}`
+    : null;
 
   return (
     <Box
@@ -350,13 +351,10 @@ function RequirementSummaryRow({
               spacing={0.5}
               sx={{
                 alignItems: { xs: 'center', sm: 'center' },
-                width: { xs: 'auto', sm: 112 },
+                width: 80,
               }}
             >
-              <ApprovalLedgerStatusChip
-                direction={{ xs: 'row', sm: 'column' }}
-                row={requirement.ledgerRow}
-              />
+              <ApprovalLedgerStatusChip row={requirement.ledgerRow} />
               <Typography variant="caption">{completedOrExemptedOn}</Typography>
             </Stack>
             <Stack
@@ -387,10 +385,7 @@ function RequirementSummaryRow({
               </Typography>
               {(completedOrExemptedOn || validUntil) && (
                 <Typography color="text.secondary" variant="caption">
-                  {[
-                    requirement.subject.label ?? null,
-                    validUntil ? `Valid until ${validUntil}` : null,
-                  ]
+                  {[requirement.subject.label ?? null, validUntilLabel]
                     .filter(Boolean)
                     .join(' · ')}
                 </Typography>

@@ -54,6 +54,18 @@ export function formatApprovalLedgerDate(date?: Date) {
   return date ? formatUtcDateOnly(date) : '-';
 }
 
+export function approvalLedgerValidUntilText(
+  row: Pick<ApprovalLedgerRow, 'status' | 'validUntil'>
+) {
+  const date = formatApprovalLedgerDate(row.validUntil);
+
+  if (row.status !== 'expired' || !row.validUntil) {
+    return date;
+  }
+
+  return `${date} (expired)`;
+}
+
 export function subjectKey(scope: string, id: string) {
   return `${scope}:${id}`;
 }

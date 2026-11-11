@@ -22,6 +22,8 @@ export type ApprovalLedgerStatusPresentation = {
   recordStatus: Exclude<ApprovalLedgerStatus, 'expired'>;
   label: string;
   color: ApprovalLedgerStatusChipColor;
+  /** Outlined marks a past (expired) record; current records are filled. */
+  variant: 'filled' | 'outlined';
   /** Set only when the completion or exemption has expired. */
   expiredOn?: Date;
 };
@@ -66,7 +68,8 @@ function expiredRecordStatus(row: ApprovalLedgerStatusRow) {
 /**
  * An expired completion or exemption is history, not an action item: the
  * requirement shows up as missing on its own when it is no longer met. So it
- * keeps its completed/exempted look, with the expiry date as extra detail.
+ * keeps its completed/exempted label in an outlined chip, and the expiry date
+ * is shown where the record's dates already are.
  */
 export function approvalLedgerStatusPresentation(
   row: ApprovalLedgerStatusRow
@@ -76,6 +79,7 @@ export function approvalLedgerStatusPresentation(
       recordStatus: row.status,
       label: approvalLedgerStatusLabels[row.status],
       color: approvalLedgerStatusColor(row.status),
+      variant: 'filled',
     };
   }
 
@@ -85,6 +89,7 @@ export function approvalLedgerStatusPresentation(
     recordStatus,
     label: approvalLedgerStatusLabels[recordStatus],
     color: approvalLedgerStatusColor(recordStatus),
+    variant: 'outlined',
     expiredOn: row.validUntil,
   };
 }
