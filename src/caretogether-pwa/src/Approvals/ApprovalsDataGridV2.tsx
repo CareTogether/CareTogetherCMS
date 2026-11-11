@@ -19,13 +19,13 @@ import {
   approvalLedgerMemberGroupingKey,
   approvalLedgerQuickFilterParser,
   approvalLedgerSearchText,
-  approvalLedgerStatusColor,
-  approvalLedgerStatusLabels,
   compareApprovalLedgerMemberKeys,
   countLabel,
   formatApprovalLedgerDate,
   subjectKey,
 } from './approvalLedgerDataGridViewModel';
+import { approvalLedgerStatusText } from './approvalLedgerStatusPresentation';
+import { ApprovalLedgerStatusChip } from './ApprovalLedgerStatusChip';
 import {
   approvalLedgerLeafRowIdsForExport,
   formatApprovalLedgerLeafValue,
@@ -351,14 +351,8 @@ function buildColumns(
       headerName: 'Status',
       width: 140,
       ...quickFilterDisabled,
-      valueGetter: (_value, row) => approvalLedgerStatusLabels[row.status],
-      renderCell: ({ row }) => (
-        <Chip
-          color={approvalLedgerStatusColor(row.status)}
-          label={approvalLedgerStatusLabels[row.status]}
-          size="small"
-        />
-      ),
+      valueGetter: (_value, row) => approvalLedgerStatusText(row),
+      renderCell: ({ row }) => <ApprovalLedgerStatusChip row={row} />,
     },
     {
       ...reportingLockdown,

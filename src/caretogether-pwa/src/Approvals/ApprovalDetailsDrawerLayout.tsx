@@ -14,10 +14,8 @@ import { PersonName } from '../Families/PersonName';
 import { v2Typography } from '../Families/v2Typography';
 import { useUserLookup } from '../Model/DirectoryModel';
 import { formatUtcDateOnly } from '../Utilities/dateUtils';
-import {
-  approvalLedgerStatusColor,
-  approvalLedgerStatusLabels,
-} from './approvalLedgerDataGridViewModel';
+import { approvalLedgerStatusPresentation } from './approvalLedgerStatusPresentation';
+import { ApprovalLedgerStatusChip } from './ApprovalLedgerStatusChip';
 import type {
   ApprovalLedgerOccurrence,
   ApprovalLedgerRow,
@@ -261,12 +259,7 @@ export function ApprovalDetailsDrawerLayout({
                   flexWrap: 'wrap',
                 }}
               >
-                <Chip
-                  className="ph-unmask"
-                  color={approvalLedgerStatusColor(row.status)}
-                  label={approvalLedgerStatusLabels[row.status]}
-                  size="small"
-                />
+                <ApprovalLedgerStatusChip row={row} />
                 {headerActions}
               </Box>
             </Box>
@@ -289,7 +282,10 @@ export function ApprovalDetailsDrawerLayout({
             {row.completedOrExemptedByUserId && (
               <DetailField
                 label={
-                  row.status === 'completed' ? 'Completed By' : 'Exempted By'
+                  approvalLedgerStatusPresentation(row).recordStatus ===
+                  'exempted'
+                    ? 'Exempted By'
+                    : 'Completed By'
                 }
               >
                 <PersonName

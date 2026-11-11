@@ -37,36 +37,10 @@ export type ApprovalLedgerDomainFilters = {
   statusFilter: ApprovalLedgerStatus | 'all';
 };
 
-export const approvalLedgerStatusLabels: Record<ApprovalLedgerStatus, string> =
-  {
-    missing: 'Missing',
-    optional: 'Optional',
-    completed: 'Completed',
-    exempted: 'Exempted',
-    expiring: 'Expiring',
-    expired: 'Expired',
-    availableApplication: 'Application',
-  };
-
-export function approvalLedgerStatusColor(status: ApprovalLedgerStatus) {
-  switch (status) {
-    case 'expired':
-      return 'warning';
-    case 'missing':
-      return 'error';
-    case 'optional':
-      return 'info';
-    case 'expiring':
-      return 'warning';
-    case 'availableApplication':
-      return 'info';
-    case 'completed':
-      return 'success';
-    case 'exempted':
-    default:
-      return 'default';
-  }
-}
+export {
+  approvalLedgerStatusColor,
+  approvalLedgerStatusLabels,
+} from './approvalLedgerStatusPresentation';
 
 export function countLabel(count: number, singular: string, plural: string) {
   if (count === 0) {

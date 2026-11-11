@@ -280,11 +280,11 @@ function requirementStatusPriority(status: ApprovalLedgerStatus) {
   const priority: ApprovalLedgerStatus[] = [
     'missing',
     'optional',
-    'expired',
     'expiring',
     'completed',
     'exempted',
     'availableApplication',
+    'expired',
   ];
 
   return priority.indexOf(status);
