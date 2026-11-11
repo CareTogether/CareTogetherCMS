@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import {
   approvalAttentionCounts,
+  approvalLedgerStatusTooltip,
   approvalLedgerStatusPresentation,
   approvalLedgerStatusText,
 } from './approvalLedgerStatusPresentation.ts';
@@ -112,5 +113,39 @@ test('does not count a renewed expired record as needing attention', () => {
       row('missing', 'Fingerprints'),
     ]),
     { missing: 1, expired: 1 }
+  );
+});
+
+test('explains an outlined chip with a tooltip, only for expired records', () => {
+  const formatDate = (date: Date) => date.toISOString().slice(0, 10);
+
+  assert.equal(
+    approvalLedgerStatusTooltip(
+      {
+        status: 'expired',
+        validUntil: expiredOn,
+        occurrences: [{ status: 'completed' }],
+      },
+      formatDate
+    ),
+    'This completion expired on 2026-08-02. The outline marks it as a past record, kept for history. Check the other rows for a current completion.'
+  );
+  assert.match(
+    approvalLedgerStatusTooltip(
+      {
+        status: 'expired',
+        validUntil: expiredOn,
+        occurrences: [{ status: 'exempted' }],
+      },
+      formatDate
+    ) ?? '',
+    /^This exemption expired on 2026-08-02\./
+  );
+  assert.equal(
+    approvalLedgerStatusTooltip(
+      { status: 'completed', occurrences: [{ status: 'completed' }] },
+      formatDate
+    ),
+    undefined
   );
 });

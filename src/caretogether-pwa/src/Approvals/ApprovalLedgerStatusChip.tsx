@@ -1,6 +1,8 @@
-import { Chip } from '@mui/material';
+import { Chip, Tooltip } from '@mui/material';
+import { formatUtcDateOnly } from '../Utilities/dateUtils';
 import {
   approvalLedgerStatusPresentation,
+  approvalLedgerStatusTooltip,
   type ApprovalLedgerStatusRow,
 } from './approvalLedgerStatusPresentation';
 
@@ -10,8 +12,8 @@ export function ApprovalLedgerStatusChip({
   row: ApprovalLedgerStatusRow;
 }) {
   const { label, color, variant } = approvalLedgerStatusPresentation(row);
-
-  return (
+  const tooltip = approvalLedgerStatusTooltip(row, formatUtcDateOnly);
+  const chip = (
     <Chip
       className="ph-unmask"
       color={color}
@@ -19,5 +21,15 @@ export function ApprovalLedgerStatusChip({
       size="small"
       variant={variant}
     />
+  );
+
+  if (!tooltip) {
+    return chip;
+  }
+
+  return (
+    <Tooltip describeChild title={tooltip}>
+      {chip}
+    </Tooltip>
   );
 }

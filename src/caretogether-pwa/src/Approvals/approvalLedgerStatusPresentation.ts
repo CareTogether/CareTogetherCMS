@@ -94,6 +94,26 @@ export function approvalLedgerStatusPresentation(
   };
 }
 
+/**
+ * Hover text for an outlined (expired) chip, explaining why it looks
+ * different. Returns undefined for current records, which need no tooltip.
+ */
+export function approvalLedgerStatusTooltip(
+  row: ApprovalLedgerStatusRow,
+  formatDate: (date: Date) => string
+) {
+  const { recordStatus, expiredOn } = approvalLedgerStatusPresentation(row);
+
+  if (row.status !== 'expired') {
+    return undefined;
+  }
+
+  const record = recordStatus === 'exempted' ? 'exemption' : 'completion';
+  const expiry = expiredOn ? ` on ${formatDate(expiredOn)}` : '';
+
+  return `This ${record} expired${expiry}. The outline marks it as a past record, kept for history. Check the other rows for a current ${record}.`;
+}
+
 /** Plain-text status for grid sorting, filtering and export. */
 export function approvalLedgerStatusText(row: ApprovalLedgerStatusRow) {
   const presentation = approvalLedgerStatusPresentation(row);
