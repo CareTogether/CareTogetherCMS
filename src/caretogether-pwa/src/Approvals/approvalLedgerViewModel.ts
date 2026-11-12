@@ -90,16 +90,14 @@ export type BuildApprovalLedgerRowsInput = {
 
 const EXPIRING_APPROVAL_DAYS = 30;
 
-// Expired completions and exemptions are history: a requirement that is no
-// longer met also shows up as missing, so they go last instead of first.
 export const APPROVAL_LEDGER_STATUS_PRIORITY: ApprovalLedgerStatus[] = [
+  'expired',
   'missing',
   'optional',
   'expiring',
   'availableApplication',
   'exempted',
   'completed',
-  'expired',
 ];
 
 const DEFAULT_FAMILY_SUBJECT: ApprovalLedgerSubject = {

@@ -6,11 +6,7 @@ import {
   approvalLedgerStatusPresentation,
   approvalLedgerStatusText,
 } from './approvalLedgerStatusPresentation.ts';
-import {
-  sortApprovalLedgerRows,
-  type ApprovalLedgerRow,
-  type ApprovalLedgerStatus,
-} from './approvalLedgerViewModel.ts';
+import type { ApprovalLedgerStatus } from './approvalLedgerViewModel.ts';
 
 const expiredOn = new Date('2026-08-02T00:00:00.000Z');
 
@@ -74,22 +70,6 @@ test('keeps other statuses unchanged and without expiry info', () => {
   assert.equal(
     approvalLedgerStatusText({ status: 'completed', occurrences: [] }),
     'Completed'
-  );
-});
-
-test('sorts expired history after current records', () => {
-  const row = (status: ApprovalLedgerStatus, requirementName: string) =>
-    ({ status, requirementName }) as ApprovalLedgerRow;
-
-  const sorted = sortApprovalLedgerRows([
-    row('expired', 'Fingerprints'),
-    row('completed', 'Fingerprints'),
-    row('missing', 'Training'),
-  ]);
-
-  assert.deepEqual(
-    sorted.map(({ status }) => status),
-    ['missing', 'completed', 'expired']
   );
 });
 

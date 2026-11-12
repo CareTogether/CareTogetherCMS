@@ -526,8 +526,9 @@ export function RoleDetailsDrawerV2({
     setSelectedRoleManagement(null);
   }, [card?.id, familyId, open, removedRole?.id]);
 
-  // Already sorted by roleSummaryViewModel, with expired history last.
-  const requirements = card?.requirements ?? [];
+  const requirements = [...(card?.requirements ?? [])].sort((a, b) =>
+    b.status.localeCompare(a.status)
+  );
   function removedRoleForParticipant(
     participant: RoleParticipant
   ): RemovedRoleSummary | null {
