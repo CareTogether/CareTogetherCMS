@@ -17,6 +17,7 @@ import { usePartneringFamilies } from '../Model/V1CasesModel';
 import { useFamilyLookup } from '../Model/DirectoryModel';
 import { useAppNavigate } from '../Hooks/useAppNavigate';
 import { useLocalStorage } from '../Hooks/useLocalStorage';
+import { pageContentHeight } from '../Utilities/wideTablePageSx';
 import {
   buildDashboardCalendarEventGroups,
   CalendarFilters,
@@ -136,6 +137,8 @@ const calendarEventTypeFilters: CalendarEventTypeFilter[] = [
 ];
 
 const calendarViews: CalendarView[] = ['month', 'agenda'];
+// Fills the whole screen; the shell's bottom padding adds the scroll space below it.
+const calendarHeight = pageContentHeight(false);
 const calendarPreferences: Partial<EventCalendarPreferences> = {
   showWeekends: true,
   showEmptyDaysInAgenda: true,
@@ -328,10 +331,7 @@ export function DashboardCalendar() {
   }
 
   return (
-    <Grid
-      container
-      sx={{ flex: '1 0 auto', flexDirection: 'column', minWidth: 0 }}
-    >
+    <Grid container sx={{ flexDirection: 'column', minWidth: 0 }}>
       <Grid item sx={{ mb: { xs: 0.5, sm: 1 }, flexShrink: 0, minWidth: 0 }}>
         <Box
           aria-label="Filter event types"
@@ -461,7 +461,7 @@ export function DashboardCalendar() {
       <Grid
         item
         onClickCapture={handleCalendarClick}
-        sx={{ flex: '1 0 520px', minHeight: 520, minWidth: 0 }}
+        sx={{ height: calendarHeight, minHeight: 520, minWidth: 0 }}
       >
         <EventCalendar
           key={
