@@ -43,6 +43,10 @@ export function VolunteersToolbarV2({
               disabled={disabled}
               onClick={onCopyEmailAddresses}
               size="small"
+              sx={{
+                minWidth: { xs: 44, sm: 0 },
+                minHeight: { xs: 44, sm: 0 },
+              }}
             >
               <EmailIcon fontSize="small" />
             </IconButton>
@@ -58,6 +62,10 @@ export function VolunteersToolbarV2({
               disabled={disabled}
               onClick={onToggleBulkSms}
               size="small"
+              sx={{
+                minWidth: { xs: 44, sm: 0 },
+                minHeight: { xs: 44, sm: 0 },
+              }}
             >
               <SmsIcon fontSize="small" sx={{ position: 'relative', top: 1 }} />
             </IconButton>

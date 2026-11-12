@@ -100,7 +100,12 @@ export function AddFamilyCommunitiesFormV2({
       </Grid>
       <Grid
         size={12}
-        sx={{ display: 'flex', justifyContent: 'flex-end', gap: 1 }}
+        sx={{
+          display: 'flex',
+          flexDirection: { xs: 'column', sm: 'row' },
+          justifyContent: 'flex-end',
+          gap: 1,
+        }}
       >
         <Button color="secondary" onClick={onClose}>
           Cancel

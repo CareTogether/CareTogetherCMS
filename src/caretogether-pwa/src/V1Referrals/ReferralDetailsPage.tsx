@@ -10,10 +10,18 @@ import {
   Typography,
   Snackbar,
   Alert,
+  IconButton,
+  ListItemIcon,
+  ListItemText,
+  Menu,
+  MenuItem,
+  useMediaQuery,
+  useTheme,
 } from '@mui/material';
 import {
   AddCircle as AddCircleIcon,
   CloudUpload as CloudUploadIcon,
+  MoreVert as MoreVertIcon,
 } from '@mui/icons-material';
 
 import { familyNameString } from '../Families/FamilyName';
@@ -44,6 +52,9 @@ import { useReferralDetailsViewModel } from './useReferralDetailsViewModel';
 
 export function ReferralDetailsPage() {
   useScreenTitle('Referrals');
+  const theme = useTheme();
+  const isDesktop = useMediaQuery(theme.breakpoints.up('sm'));
+  const [menuAnchor, setMenuAnchor] = useState<HTMLElement | null>(null);
 
   const { referralId } = useParams<{ referralId: string }>();
   const appNavigate = useAppNavigate();
@@ -132,6 +143,11 @@ export function ReferralDetailsPage() {
   }
 
   const currentReferral = referral;
+  const hasMobileActions =
+    canEditReferral ||
+    (isOpen && canCloseReferral) ||
+    canCreateClientFamily ||
+    canSelectFamily;
 
   const referralRequirementContext: V1ReferralContext = {
     kind: 'V1Referral',
@@ -149,25 +165,88 @@ export function ReferralDetailsPage() {
   };
 
   return (
-    <Grid container sx={{ p: 3 }} spacing={0}>
+    <Grid
+      container
+      sx={{
+        p: { xs: 0, sm: 3 },
+        pt: { xs: 1, sm: 3 },
+        width: '100%',
+        minWidth: 0,
+        overflowWrap: { xs: 'anywhere', md: 'normal' },
+      }}
+      spacing={0}
+    >
       <Grid
         item
         xs={12}
         sx={{
           display: 'flex',
           justifyContent: 'space-between',
-          alignItems: 'center',
-          mb: 3,
+          alignItems: { xs: 'stretch', md: 'center' },
+          flexDirection: { xs: 'column', md: 'row' },
+          gap: { xs: 2, md: 0 },
+          mb: { xs: 2, sm: 3 },
         }}
       >
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-          <Typography variant="h5" sx={{ fontWeight: 600 }}>
+        <Box
+          sx={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            gap: 1,
+            minWidth: 0,
+          }}
+        >
+          <Typography variant="h5" sx={{ fontWeight: 600, minWidth: 0 }}>
             {currentReferral.title}
           </Typography>
+          {!isDesktop && hasMobileActions && (
+            <IconButton
+              aria-label="referral actions"
+              aria-controls={menuAnchor ? 'referral-actions-menu' : undefined}
+              aria-haspopup="menu"
+              aria-expanded={Boolean(menuAnchor)}
+              onClick={(event) => setMenuAnchor(event.currentTarget)}
+              sx={{
+                border: 1,
+                borderColor: 'primary.main',
+                borderRadius: 1,
+                color: 'primary.main',
+                flexShrink: 0,
+                width: 44,
+                height: 44,
+              }}
+            >
+              <MoreVertIcon fontSize="small" />
+            </IconButton>
+          )}
         </Box>
 
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 3 }}>
-          {!isClosed && canEditReferral && (
+        <Box
+          sx={{
+            display: {
+              xs:
+                (isClosed && canReopenReferral) ||
+                canOpenCase ||
+                canLinkExistingCase
+                  ? 'grid'
+                  : 'none',
+              sm: 'grid',
+              md: 'flex',
+            },
+            gridTemplateColumns: {
+              xs: 'minmax(0, 1fr)',
+              sm: 'repeat(2, minmax(0, 1fr))',
+            },
+            alignItems: 'center',
+            gap: { xs: 1, md: 3 },
+            '& > .MuiButton-root': {
+              minHeight: { xs: 44, md: 'auto' },
+              height: { xs: '100%', md: 'auto' },
+            },
+          }}
+        >
+          {isDesktop && !isClosed && canEditReferral && (
             <Button
               variant="outlined"
               onClick={() => setOpenEditReferral(true)}
@@ -176,7 +255,7 @@ export function ReferralDetailsPage() {
             </Button>
           )}
 
-          {isOpen && canCloseReferral && (
+          {isDesktop && isOpen && canCloseReferral && (
             <Button
               variant="outlined"
               onClick={() => setOpenCloseReferralDialog(true)}
@@ -207,36 +286,98 @@ export function ReferralDetailsPage() {
           )}
 
           {canLinkExistingCase && (
-            <Button
-              variant="outlined"
-              onClick={openLinkExistingCaseDialog}
-            >
+            <Button variant="outlined" onClick={openLinkExistingCaseDialog}>
               Link to Existing Case
             </Button>
           )}
-          {canCreateClientFamily && (
-            <Button
-              variant="contained"
-              onClick={openCreateFamilyWorkflow}
-            >
+          {isDesktop && canCreateClientFamily && (
+            <Button variant="contained" onClick={openCreateFamilyWorkflow}>
               ADD NEW CLIENT FAMILY
             </Button>
           )}
 
-          {canSelectFamily && (
-            <Button
-              variant="contained"
-              onClick={openSelectFamilyWorkflow}
-            >
+          {isDesktop && canSelectFamily && (
+            <Button variant="contained" onClick={openSelectFamilyWorkflow}>
               Select Family
             </Button>
           )}
         </Box>
       </Grid>
 
+      {!isDesktop && hasMobileActions && (
+        <Menu
+          id="referral-actions-menu"
+          anchorEl={menuAnchor}
+          open={Boolean(menuAnchor)}
+          onClose={() => setMenuAnchor(null)}
+          onClick={() => setMenuAnchor(null)}
+          slotProps={{
+            list: { 'aria-label': 'Referral actions' },
+            paper: {
+              sx: {
+                '& .MuiMenuItem-root': {
+                  minHeight: 44,
+                  whiteSpace: 'normal',
+                  overflowWrap: 'anywhere',
+                },
+              },
+            },
+          }}
+        >
+          {!isClosed && canEditReferral && (
+            <MenuItem onClick={() => setOpenEditReferral(true)}>
+              Edit Referral
+            </MenuItem>
+          )}
+          {isOpen && canCloseReferral && (
+            <MenuItem onClick={() => setOpenCloseReferralDialog(true)}>
+              Close Referral
+            </MenuItem>
+          )}
+          {canCreateClientFamily && (
+            <MenuItem onClick={openCreateFamilyWorkflow}>
+              Add New Client Family
+            </MenuItem>
+          )}
+          {canSelectFamily && (
+            <MenuItem onClick={openSelectFamilyWorkflow}>
+              Select Family
+            </MenuItem>
+          )}
+          {canEditReferral && (
+            <MenuItem onClick={() => setOpenAddNoteDialog(true)}>
+              <ListItemIcon>
+                <AddCircleIcon fontSize="small" />
+              </ListItemIcon>
+              <ListItemText primary="Add Note" />
+            </MenuItem>
+          )}
+          {!isClosed && canEditReferral && (
+            <MenuItem onClick={() => setOpenUploadDocumentDialog(true)}>
+              <ListItemIcon>
+                <CloudUploadIcon fontSize="small" />
+              </ListItemIcon>
+              <ListItemText primary="Upload" />
+            </MenuItem>
+          )}
+        </Menu>
+      )}
+
       <Grid item xs={12} container spacing={0}>
-        <Grid item xs={12} md={4} sx={{ pr: { md: 2 }, mb: { xs: 3, md: 0 } }}>
-          <Box sx={{ display: 'flex', gap: 1, mb: 1, flexWrap: 'wrap' }}>
+        <Grid
+          item
+          xs={12}
+          md={4}
+          sx={{ pr: { md: 2 }, mb: { xs: 2, sm: 3, md: 0 } }}
+        >
+          <Box
+            sx={{
+              display: { xs: 'none', sm: 'flex' },
+              gap: 1,
+              mb: 1,
+              flexWrap: 'wrap',
+            }}
+          >
             {canEditReferral && (
               <Button
                 variant="contained"
@@ -269,8 +410,19 @@ export function ReferralDetailsPage() {
         </Grid>
 
         <Grid item xs={12} md={8}>
-          <Grid item xs={12} sx={{ mb: 2 }}>
-            <Stack spacing={0.5}>
+          <Grid
+            item
+            xs={12}
+            sx={{
+              mb: { xs: 1, sm: 2 },
+              '& strong': {
+                display: { xs: 'block', sm: 'inline' },
+                fontSize: { xs: '0.75rem', sm: 'inherit' },
+                color: { xs: 'text.secondary', sm: 'inherit' },
+              },
+            }}
+          >
+            <Stack spacing={{ xs: 1, sm: 0.5 }}>
               <Typography>
                 <strong>Status:</strong>{' '}
                 {formatStatusWithDate(
@@ -325,12 +477,27 @@ export function ReferralDetailsPage() {
             </Stack>
           </Grid>
 
-          <Divider sx={{ width: '100%', mb: 2 }} />
+          <Divider sx={{ width: '100%', mb: { xs: 1, sm: 2 } }} />
 
           {referralCustomFieldDisplayRows.length > 0 && (
-            <Grid item xs={12} sx={{ mb: 2 }}>
+            <Grid
+              item
+              xs={12}
+              sx={{
+                mb: { xs: 1, sm: 2 },
+                '& strong': {
+                  display: { xs: 'block', sm: 'inline' },
+                  fontSize: { xs: '0.75rem', sm: 'inherit' },
+                  color: { xs: 'text.secondary', sm: 'inherit' },
+                },
+              }}
+            >
               {referralCustomFieldDisplayRows.map((field) => (
-                <Typography key={field.name} variant="body2" sx={{ mb: 0.5 }}>
+                <Typography
+                  key={field.name}
+                  variant="body2"
+                  sx={{ mb: { xs: 1, sm: 0.5 } }}
+                >
                   <strong>{field.name}:</strong> {field.displayValue}
                 </Typography>
               ))}
@@ -357,7 +524,7 @@ export function ReferralDetailsPage() {
           )}
 
           {functionAssignmentsEnabled && canViewFunctionAssignments && (
-            <Grid item xs={12} sx={{ mt: 2 }}>
+            <Grid item xs={12} sx={{ mt: { xs: 1.5, sm: 2 } }}>
               <FunctionAssignmentsSection
                 assignments={currentReferral.assignedIndividualVolunteers ?? []}
                 policies={functionAssignmentPolicies}
@@ -380,7 +547,7 @@ export function ReferralDetailsPage() {
             </Grid>
           )}
 
-          <Divider sx={{ width: '100%', my: 3 }} />
+          <Divider sx={{ width: '100%', my: { xs: 2, sm: 3 } }} />
 
           <Grid container spacing={2}>
             <Grid item xs={12} md={6}>
@@ -421,7 +588,7 @@ export function ReferralDetailsPage() {
 
             {referralDocumentDisplayRows.length > 0 && (
               <>
-                <Divider sx={{ width: '100%', my: 3 }} />
+                <Divider sx={{ width: '100%', my: { xs: 2, sm: 3 } }} />
                 <Grid item xs={12}>
                   <Typography sx={{ fontWeight: 600, mb: 1 }}>
                     Referral Documents

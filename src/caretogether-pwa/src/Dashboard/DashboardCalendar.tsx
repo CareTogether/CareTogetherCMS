@@ -445,8 +445,8 @@ export function DashboardCalendar() {
                       sx={{
                         color: 'text.secondary',
                         flex: '0 0 auto',
-                        height: 24,
-                        width: 24,
+                        height: { xs: 44, sm: 24 },
+                        width: { xs: 44, sm: 24 },
                       }}
                     >
                       <InfoOutlinedIcon fontSize="inherit" />

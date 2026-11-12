@@ -128,7 +128,11 @@ export function RoleRemovalSectionV2({
         value={additionalComments}
         onChange={(event) => setAdditionalComments(event.target.value)}
       />
-      <Stack direction="row" spacing={1} sx={{ justifyContent: 'flex-end' }}>
+      <Stack
+        direction={{ xs: 'column', sm: 'row' }}
+        spacing={1}
+        sx={{ justifyContent: 'flex-end' }}
+      >
         <Button disabled={saving} onClick={onCancel}>
           Cancel
         </Button>
