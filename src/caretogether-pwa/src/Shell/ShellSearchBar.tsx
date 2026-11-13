@@ -1,5 +1,6 @@
 import { useCallback, useMemo, useRef, useState } from 'react';
 import { flushSync } from 'react-dom';
+import { alpha } from '@mui/material/styles';
 import { Search as SearchIcon } from '@mui/icons-material';
 import {
   Autocomplete,
@@ -289,6 +290,33 @@ export function ShellSearchBar({
               {
                 borderColor: '#fff8',
               },
+            ...(!isDesktop && {
+              '& .MuiOutlinedInput-root.MuiAutocomplete-inputRoot': {
+                minHeight: 44,
+                padding: '4px 12px',
+                borderRadius: 2,
+                backgroundColor: alpha(
+                  theme.palette.primary.contrastText,
+                  0.12
+                ),
+                '& .MuiAutocomplete-input': {
+                  minWidth: 0,
+                  padding: '6px 0',
+                  textOverflow: 'ellipsis',
+                },
+                '& .MuiOutlinedInput-notchedOutline': {
+                  borderColor: 'transparent',
+                },
+                '&.Mui-focused': {
+                  backgroundColor: alpha(
+                    theme.palette.primary.contrastText,
+                    0.18
+                  ),
+                  outline: `2px solid ${theme.palette.secondary.main}`,
+                  outlineOffset: -2,
+                },
+              },
+            }),
           }}
           slotProps={{
             ...params.slotProps,
@@ -315,10 +343,10 @@ export function ShellSearchBar({
       maxWidth={isDesktop ? 'xs' : false}
       sx={{
         width: { xs: openMobileSearch ? '100%' : 6, md: '100%' },
-        marginRight: 4,
+        marginRight: { xs: 1, md: 4 },
         marginLeft: 0,
       }}
-      style={{ paddingLeft: 0, paddingRight: isDesktop ? 0 : 3 }}
+      style={{ paddingLeft: 0, paddingRight: 0 }}
     >
       {isDesktop ? (
         <Container maxWidth="xs" style={{ padding: 0 }}>
