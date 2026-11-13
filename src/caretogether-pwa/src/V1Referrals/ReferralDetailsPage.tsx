@@ -345,7 +345,7 @@ export function ReferralDetailsPage() {
             </MenuItem>
           )}
           {canEditReferral && (
-            <MenuItem onClick={() => setOpenAddNoteDialog(true)}>
+            <MenuItem onClick={() => setOpenAddNoteDrawer(true)}>
               <ListItemIcon>
                 <AddCircleIcon fontSize="small" />
               </ListItemIcon>
@@ -353,7 +353,7 @@ export function ReferralDetailsPage() {
             </MenuItem>
           )}
           {!isClosed && canEditReferral && (
-            <MenuItem onClick={() => setOpenUploadDocumentDialog(true)}>
+            <MenuItem onClick={() => setOpenUploadDocumentDrawer(true)}>
               <ListItemIcon>
                 <CloudUploadIcon fontSize="small" />
               </ListItemIcon>
