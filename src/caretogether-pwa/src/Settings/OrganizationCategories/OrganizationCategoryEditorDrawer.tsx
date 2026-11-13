@@ -127,7 +127,12 @@ export function OrganizationCategoryEditorDrawer({
 
           <Grid
             size={12}
-            sx={{ display: 'flex', justifyContent: 'flex-end', gap: 1 }}
+            sx={{
+              display: 'flex',
+              flexDirection: { xs: 'column', sm: 'row' },
+              justifyContent: 'flex-end',
+              gap: 1,
+            }}
           >
             <Button className="ph-unmask" color="secondary" onClick={onClose}>
               Cancel

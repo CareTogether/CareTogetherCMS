@@ -169,6 +169,7 @@ export function CommunityScreen() {
           flexWrap: 'wrap',
           gap: 2,
           py: 1,
+          pb: { xs: 2, sm: 1 },
         }}
       >
         <OrganizationPrimaryHeaderInfo

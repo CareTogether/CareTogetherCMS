@@ -197,7 +197,13 @@ export function AddLocation({ onClose }: DrawerProps) {
           )}
         />
       </Grid> */}
-      <Grid size={12} sx={{ textAlign: 'right' }}>
+      <Grid
+        size={12}
+        sx={{
+          textAlign: 'right',
+          '& > .MuiButton-root': { width: { xs: '100%', sm: 'auto' } },
+        }}
+      >
         {errorMessage && (
           <>
             <Typography color="error">
@@ -212,7 +218,7 @@ export function AddLocation({ onClose }: DrawerProps) {
         <Button
           color="secondary"
           variant="contained"
-          sx={{ marginRight: 2 }}
+          sx={{ marginRight: { xs: 0, sm: 2 }, mb: { xs: 1, sm: 0 } }}
           onClick={onClose}
         >
           Cancel
