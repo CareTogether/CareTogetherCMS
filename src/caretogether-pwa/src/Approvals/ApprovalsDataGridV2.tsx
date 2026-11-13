@@ -19,13 +19,18 @@ import {
   approvalLedgerMemberGroupingKey,
   approvalLedgerQuickFilterParser,
   approvalLedgerSearchText,
-  approvalLedgerStatusColor,
-  approvalLedgerStatusLabels,
+  approvalLedgerValidUntilText,
   compareApprovalLedgerMemberKeys,
   countLabel,
   formatApprovalLedgerDate,
   subjectKey,
 } from './approvalLedgerDataGridViewModel';
+import { formatUtcDateOnly } from '../Utilities/dateUtils';
+import {
+  approvalLedgerStatusText,
+  approvalLedgerStatusTooltip,
+} from './approvalLedgerStatusPresentation';
+import { ApprovalLedgerStatusChip } from './ApprovalLedgerStatusChip';
 import {
   approvalLedgerLeafRowIdsForExport,
   formatApprovalLedgerLeafValue,
@@ -351,14 +356,8 @@ function buildColumns(
       headerName: 'Status',
       width: 140,
       ...quickFilterDisabled,
-      valueGetter: (_value, row) => approvalLedgerStatusLabels[row.status],
-      renderCell: ({ row }) => (
-        <Chip
-          color={approvalLedgerStatusColor(row.status)}
-          label={approvalLedgerStatusLabels[row.status]}
-          size="small"
-        />
-      ),
+      valueGetter: (_value, row) => approvalLedgerStatusText(row),
+      renderCell: ({ row }) => <ApprovalLedgerStatusChip row={row} />,
     },
     {
       ...reportingLockdown,
@@ -407,12 +406,25 @@ function buildColumns(
       minWidth: 140,
       ...quickFilterDisabled,
       valueGetter: (_value, row) => row.validUntil?.getTime() ?? null,
-      valueFormatter: (_value, row) => formatApprovalLedgerDate(row.validUntil),
-      renderCell: ({ row }) => (
-        <Typography {...v2Typography.browserSecondary}>
-          {formatApprovalLedgerDate(row.validUntil)}
-        </Typography>
-      ),
+      valueFormatter: (_value, row) => approvalLedgerValidUntilText(row),
+      renderCell: ({ row }) => {
+        const text = (
+          <Typography {...v2Typography.browserSecondary}>
+            {approvalLedgerValidUntilText(row)}
+          </Typography>
+        );
+        const tooltip = approvalLedgerStatusTooltip(row, formatUtcDateOnly);
+
+        if (!tooltip) {
+          return text;
+        }
+
+        return (
+          <Tooltip describeChild title={tooltip}>
+            {text}
+          </Tooltip>
+        );
+      },
     },
     {
       ...reportingLockdown,

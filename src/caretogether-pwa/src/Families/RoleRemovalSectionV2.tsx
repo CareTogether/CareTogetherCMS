@@ -43,7 +43,8 @@ export function RoleRemovalSectionV2({
   const [saving, setSaving] = useState(false);
   const canRemoveRole = additionalComments !== '';
   const isFamilyRole =
-    person === undefined || policy.volunteerPolicy?.volunteerFamilyRoles?.[role];
+    person === undefined ||
+    policy.volunteerPolicy?.volunteerFamilyRoles?.[role];
   const participantName = person
     ? `${person.firstName} ${person.lastName}`
     : 'this family';
@@ -143,7 +144,7 @@ export function RoleRemovalSectionV2({
           onClick={() => setConfirmOpen(true)}
           variant="contained"
         >
-          {saving ? 'Removing...' : 'Remove Role'}
+          {saving ? 'Removing...' : 'Remove from role'}
         </Button>
       </Stack>
       <Dialog open={confirmOpen} onClose={() => setConfirmOpen(false)}>
@@ -165,7 +166,7 @@ export function RoleRemovalSectionV2({
             onClick={() => void removeRole()}
             variant="contained"
           >
-            {saving ? 'Removing...' : 'Remove Role'}
+            {saving ? 'Removing...' : 'Remove from role'}
           </Button>
         </DialogActions>
       </Dialog>
