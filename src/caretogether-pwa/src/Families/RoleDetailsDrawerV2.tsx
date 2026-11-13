@@ -26,10 +26,8 @@ import {
   roleApprovalStatusChipColor,
   roleApprovalStatusLabel,
 } from '../Volunteers/roleApprovalStatusPresentation';
-import type {
-  ApprovalLedgerRow,
-  ApprovalLedgerStatus,
-} from '../Approvals/approvalLedgerViewModel';
+import type { ApprovalLedgerRow } from '../Approvals/approvalLedgerViewModel';
+import { ApprovalLedgerStatusChip } from '../Approvals/ApprovalLedgerStatusChip';
 import { ApprovalDetailsDrawerV2 } from './ApprovalDetailsDrawerV2';
 import {
   RoleManagementDrawerV2,
@@ -67,35 +65,6 @@ const participantStateLabels: Record<ParticipantState, string> = {
   optedOut: 'Opted Out',
   denied: 'Denied',
 };
-
-const requirementStatusLabels: Record<ApprovalLedgerStatus, string> = {
-  missing: 'Missing',
-  optional: 'Optional',
-  completed: 'Completed',
-  exempted: 'Exempted',
-  expiring: 'Expiring',
-  expired: 'Expired',
-  availableApplication: 'Application',
-};
-
-function requirementStatusColor(status: ApprovalLedgerStatus) {
-  switch (status) {
-    case 'missing':
-    case 'expired':
-      return 'error';
-    case 'optional':
-      return 'info';
-    case 'expiring':
-      return 'warning';
-    case 'availableApplication':
-      return 'info';
-    case 'completed':
-      return 'success';
-    case 'exempted':
-    default:
-      return 'default';
-  }
-}
 
 function formattedEffectiveDate(card: RoleSummaryCard) {
   return card.effectiveDate ? formatUtcDateOnly(card.effectiveDate) : undefined;
@@ -359,6 +328,11 @@ function RequirementSummaryRow({
 }) {
   const completedOrExemptedOn = formatDate(requirement.completedOrExemptedOn);
   const validUntil = formatDate(requirement.validUntil);
+  const validUntilLabel = validUntil
+    ? requirement.status === 'expired'
+      ? `Expired ${validUntil}`
+      : `Valid until ${validUntil}`
+    : null;
 
   return (
     <Box
@@ -386,14 +360,12 @@ function RequirementSummaryRow({
             <Stack
               direction={{ xs: 'row', sm: 'column' }}
               spacing={0.5}
-              sx={{ alignItems: { xs: 'center', sm: 'center' }, width: 80 }}
+              sx={{
+                alignItems: { xs: 'center', sm: 'center' },
+                width: 80,
+              }}
             >
-              <Chip
-                color={requirementStatusColor(requirement.status)}
-                label={requirementStatusLabels[requirement.status]}
-                size="small"
-                sx={{ flex: '0 0 auto' }}
-              />
+              <ApprovalLedgerStatusChip row={requirement.ledgerRow} />
               <Typography variant="caption">{completedOrExemptedOn}</Typography>
             </Stack>
             <Stack
@@ -424,10 +396,7 @@ function RequirementSummaryRow({
               </Typography>
               {(completedOrExemptedOn || validUntil) && (
                 <Typography color="text.secondary" variant="caption">
-                  {[
-                    requirement.subject.label ?? null,
-                    validUntil ? `Valid until ${validUntil}` : null,
-                  ]
+                  {[requirement.subject.label ?? null, validUntilLabel]
                     .filter(Boolean)
                     .join(' · ')}
                 </Typography>

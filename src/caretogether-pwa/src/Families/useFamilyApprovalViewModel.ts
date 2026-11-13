@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
 import { CombinedFamilyInfo } from '../GeneratedClient';
 import { IndividualVolunteerContext } from '../Requirements/RequirementContext';
+import { approvalAttentionCounts as countApprovalAttention } from '../Approvals/approvalLedgerStatusPresentation';
 import { buildApprovalLedgerRows } from '../Approvals/approvalLedgerViewModel';
 import {
   buildRemovedRoleSummaries,
@@ -171,21 +172,7 @@ export function useFamilyApprovalViewModel({
   );
 
   const approvalAttentionCounts = useMemo(
-    () =>
-      approvalLedgerRows.reduce(
-        (counts, row) => {
-          if (row.status === 'missing') {
-            return { ...counts, missing: counts.missing + 1 };
-          }
-
-          if (row.status === 'expired') {
-            return { ...counts, expired: counts.expired + 1 };
-          }
-
-          return counts;
-        },
-        { missing: 0, expired: 0 }
-      ),
+    () => countApprovalAttention(approvalLedgerRows),
     [approvalLedgerRows]
   );
 
