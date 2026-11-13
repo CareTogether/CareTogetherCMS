@@ -52,6 +52,7 @@ export function FamilyCompleteOtherDrawerV2({
           </Box>
 
           <ApprovalWorkflowLauncherV2
+            key={familyId}
             subject={{ scope: 'family', id: familyId, label: 'Family' }}
             context={{ kind: 'Volunteer Family', volunteerFamilyId: familyId }}
             onSuccess={onClose}

@@ -1,5 +1,3 @@
-import type { RequirementContext } from '../Requirements/RequirementContext';
-
 export const FAMILY_TARGET_KEY = 'family';
 
 export type CompleteOtherTargetOption = {
@@ -35,12 +33,15 @@ export function completeOtherTargetOptions(
   return [{ key: FAMILY_TARGET_KEY, label: 'Family' }, ...people];
 }
 
-export function initialCompleteOtherTargetKeys(context: RequirementContext) {
-  if (context.kind === 'Individual Volunteer') {
-    return [context.personId];
-  }
+/** The target that matches where Complete Other was opened from. */
+export function completeOtherTargetKeysForSubject(subject: {
+  scope: 'family' | 'person' | 'organization';
+  id: string;
+}) {
+  if (subject.scope === 'family') return [FAMILY_TARGET_KEY];
+  if (subject.scope === 'person') return [subject.id];
 
-  return [FAMILY_TARGET_KEY];
+  return [];
 }
 
 export function completeOtherTargetsFromKeys(
@@ -62,4 +63,17 @@ export function toggleCompleteOtherTargetKey(
   }
 
   return keys.includes(key) ? keys : [...keys, key];
+}
+
+/** Targets in `targets` that were not saved yet by an earlier attempt. */
+export function unsavedCompleteOtherTargets(
+  targets: CompleteOtherTargets,
+  savedKeys: string[]
+): CompleteOtherTargets {
+  return {
+    family: targets.family && !savedKeys.includes(FAMILY_TARGET_KEY),
+    personIds: targets.personIds.filter(
+      (personId) => !savedKeys.includes(personId)
+    ),
+  };
 }

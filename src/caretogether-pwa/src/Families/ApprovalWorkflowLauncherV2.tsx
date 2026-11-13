@@ -19,7 +19,6 @@ import {
   FAMILY_TARGET_KEY,
   completeOtherTargetOptions,
   completeOtherTargetsFromKeys,
-  initialCompleteOtherTargetKeys,
   toggleCompleteOtherTargetKey,
 } from './completeOtherTargets';
 import {
@@ -30,6 +29,8 @@ import {
 type ApprovalWorkflowLauncherV2Props = {
   subject: ApprovalLedgerSubject;
   context: RequirementContext;
+  /** Targets checked when the form opens. Defaults to none. */
+  initialTargetKeys?: string[];
   onSuccess?: () => void;
 };
 
@@ -47,6 +48,7 @@ function volunteerFamilyId(context: RequirementContext) {
 export function ApprovalWorkflowLauncherV2({
   subject,
   context,
+  initialTargetKeys = [],
   onSuccess,
 }: ApprovalWorkflowLauncherV2Props) {
   const policy = usePolicy();
@@ -58,9 +60,8 @@ export function ApprovalWorkflowLauncherV2({
   );
   const [managementMode, setManagementMode] =
     useState<RequirementManagementMode | null>(null);
-  const [selectedTargetKeys, setSelectedTargetKeys] = useState(() =>
-    initialCompleteOtherTargetKeys(context)
-  );
+  const [selectedTargetKeys, setSelectedTargetKeys] =
+    useState(initialTargetKeys);
   const actionNames = useMemo(() => {
     const names = Object.entries(policy.actionDefinitions).flatMap(
       ([actionName, actionDefinition]) => [
@@ -97,6 +98,9 @@ export function ApprovalWorkflowLauncherV2({
           scope: selectedTargetKeys.includes(FAMILY_TARGET_KEY)
             ? 'family'
             : 'person',
+          // Display-only subject for the synthetic occurrence: the id joins
+          // the checked keys and is not a real family or person id. Saving
+          // uses `targets`, never this id.
           id: selectedTargetOptions.map((option) => option.key).join(','),
           label: selectedTargetOptions.map((option) => option.label).join(', '),
         }
@@ -114,7 +118,9 @@ export function ApprovalWorkflowLauncherV2({
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
       {targetOptions.length > 0 && (
         <FormControl component="fieldset" variant="standard">
-          <FormLabel component="legend">Record for</FormLabel>
+          <FormLabel className="ph-unmask" component="legend">
+            Record for
+          </FormLabel>
           <FormGroup>
             {targetOptions.map((option) => (
               <FormControlLabel
@@ -133,7 +139,13 @@ export function ApprovalWorkflowLauncherV2({
                     }
                   />
                 }
-                label={option.label}
+                label={
+                  option.key === FAMILY_TARGET_KEY ? (
+                    <span className="ph-unmask">{option.label}</span>
+                  ) : (
+                    option.label
+                  )
+                }
               />
             ))}
           </FormGroup>

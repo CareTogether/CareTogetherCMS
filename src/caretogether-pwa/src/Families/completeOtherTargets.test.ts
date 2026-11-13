@@ -2,10 +2,11 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import {
   FAMILY_TARGET_KEY,
+  completeOtherTargetKeysForSubject,
   completeOtherTargetOptions,
   completeOtherTargetsFromKeys,
-  initialCompleteOtherTargetKeys,
   toggleCompleteOtherTargetKey,
+  unsavedCompleteOtherTargets,
 } from './completeOtherTargets.ts';
 
 test('lists the family first, then each active adult', () => {
@@ -23,27 +24,6 @@ test('lists the family first, then each active adult', () => {
   ]);
 });
 
-test('starts with the person when opened for one person', () => {
-  assert.deepEqual(
-    initialCompleteOtherTargetKeys({
-      kind: 'Individual Volunteer',
-      volunteerFamilyId: 'f1',
-      personId: 'p1',
-    }),
-    ['p1']
-  );
-});
-
-test('starts with the family when opened for the family', () => {
-  assert.deepEqual(
-    initialCompleteOtherTargetKeys({
-      kind: 'Volunteer Family',
-      volunteerFamilyId: 'f1',
-    }),
-    [FAMILY_TARGET_KEY]
-  );
-});
-
 test('splits checked keys into the family flag and person ids', () => {
   assert.deepEqual(
     completeOtherTargetsFromKeys(['p1', FAMILY_TARGET_KEY, 'p2']),
@@ -59,4 +39,25 @@ test('toggles a key without duplicates', () => {
   assert.deepEqual(toggleCompleteOtherTargetKey(['a'], 'a', true), ['a']);
   assert.deepEqual(toggleCompleteOtherTargetKey(['a'], 'b', true), ['a', 'b']);
   assert.deepEqual(toggleCompleteOtherTargetKey(['a', 'b'], 'a', false), ['b']);
+});
+
+test('skips targets saved by an earlier attempt', () => {
+  assert.deepEqual(
+    unsavedCompleteOtherTargets({ family: true, personIds: ['p1', 'p2'] }, [
+      FAMILY_TARGET_KEY,
+      'p1',
+    ]),
+    { family: false, personIds: ['p2'] }
+  );
+});
+
+test('starts with the target matching where it was opened', () => {
+  assert.deepEqual(
+    completeOtherTargetKeysForSubject({ scope: 'family', id: 'f1' }),
+    [FAMILY_TARGET_KEY]
+  );
+  assert.deepEqual(
+    completeOtherTargetKeysForSubject({ scope: 'person', id: 'p1' }),
+    ['p1']
+  );
 });
