@@ -1,3 +1,4 @@
+import { settingsCategoryBreadcrumb } from '../settingsSections';
 import {
   Button,
   Table,
@@ -47,6 +48,7 @@ export function RolesSection() {
             label: 'Settings',
             to: `/org/${organizationId}/${locationId}/settings`,
           },
+          settingsCategoryBreadcrumb(organizationId, locationId, 'roles'),
         ]}
         currentPageLabel="Roles"
         sx={{ mb: 2 }}

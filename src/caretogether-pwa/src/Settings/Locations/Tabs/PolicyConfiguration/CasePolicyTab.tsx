@@ -1,21 +1,26 @@
+import { CasePoliciesMatrix } from './CasePoliciesMatrix';
 import {
   Accordion,
   AccordionDetails,
   AccordionSummary,
+  Alert,
   Box,
   Button,
   Stack,
   Typography,
 } from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { PolicyAdministrationDrawer } from './PolicyAdministrationDrawer';
+import { useAdministrationSidePanel } from './usePolicyAdministrationPanels';
+import { usePolicyTransitionGuard } from '../../../../Hooks/useUnsavedPolicyNavigation';
 import {
   ArrangementPolicy,
   EffectiveLocationPolicy,
   FunctionAssignmentPolicy,
   V1CasePolicy,
 } from '../../../../GeneratedClient';
-import { useSidePanel } from '../../../../Hooks/useSidePanel';
+
 import { useVisibleFamilies } from '../../../../Model/Data';
 import {
   ArrangementPolicySidePanel,
@@ -37,18 +42,91 @@ import {
 } from './sharedUi';
 import { ArrangementPolicyDetails } from './ArrangementPolicyDetails';
 
-export function CasePolicyTab({
+type CasePolicyProps = {
+  policy: EffectiveLocationPolicy;
+  locationRoles: string[];
+
+  onPolicyChange: (policy: EffectiveLocationPolicy) => Promise<boolean>;
+};
+
+export function CasePolicyTab(props: CasePolicyProps) {
+  const canLeaveAdministration = usePolicyTransitionGuard();
+  const [management, setManagement] = useState<'manage' | 'create'>();
+  const [matrixState, setMatrixState] = useState({
+    dirty: false,
+    editing: false,
+    saving: false,
+  });
+  const [managementError, setManagementError] = useState<string>();
+  function openManagement(mode: 'manage' | 'create') {
+    if (matrixState.saving) {
+      void canLeaveAdministration();
+      return;
+    }
+    if (matrixState.dirty || matrixState.editing) {
+      setManagementError(
+        'Save or Cancel matrix changes and finish the active cell edit before opening administration.'
+      );
+      return;
+    }
+    setManagementError(undefined);
+    setManagement(mode);
+  }
+  return (
+    <Stack spacing={2} sx={{ minWidth: 0 }}>
+      <Stack
+        direction="row"
+        spacing={1}
+        sx={{ justifyContent: 'flex-end', flexWrap: 'wrap', gap: 1 }}
+      >
+        <Button
+          variant="contained"
+          color="primary"
+          onClick={() => openManagement('create')}
+        >
+          Add Arrangement
+        </Button>
+        <Button
+          variant="contained"
+          color="primary"
+          onClick={() => openManagement('manage')}
+        >
+          Manage Arrangements &amp; Functions
+        </Button>
+      </Stack>
+      {managementError && (matrixState.dirty || matrixState.editing) && (
+        <Alert severity="info">{managementError}</Alert>
+      )}
+      <CasePoliciesMatrix
+        policy={props.policy}
+        onPolicyChange={props.onPolicyChange}
+        onEditingStateChange={setMatrixState}
+      />
+      {management && (
+        <PolicyAdministrationDrawer
+          open
+          direct={management === 'create'}
+          onClose={() => setManagement(undefined)}
+        >
+          <CasePolicyDetailsEditor
+            {...props}
+            createArrangement={management === 'create'}
+          />
+        </PolicyAdministrationDrawer>
+      )}
+    </Stack>
+  );
+}
+function CasePolicyDetailsEditor({
   policy,
   locationRoles,
   onPolicyChange,
-}: {
-  policy: EffectiveLocationPolicy;
-  locationRoles: string[];
-  onPolicyChange: (policy: EffectiveLocationPolicy) => Promise<boolean>;
+  createArrangement = false,
+}: CasePolicyProps & {
+  createArrangement?: boolean;
 }) {
   const casePolicy = policy.referralPolicy;
   const arrangementPolicies = casePolicy?.arrangementPolicies ?? [];
-  const actionNames = Object.keys(policy.actionDefinitions ?? {});
   const volunteerRoles = Object.keys(
     policy.volunteerPolicy?.volunteerRoles ?? {}
   );
@@ -64,18 +142,31 @@ export function CasePolicyTab({
     SidePanel: FunctionAssignmentPanel,
     openSidePanel: openFunctionAssignmentPanel,
     closeSidePanel: closeFunctionAssignmentPanel,
-  } = useSidePanel({ className: 'ph-unmask' });
+    requestCloseSidePanel: requestCloseFunctionAssignmentPanel,
+  } = useAdministrationSidePanel({
+    className: 'ph-unmask',
+    protectNavigation: true,
+  });
   const {
     SidePanel: ArrangementPolicyPanel,
     openSidePanel: openArrangementPolicyPanel,
     closeSidePanel: closeArrangementPolicyPanel,
-  } = useSidePanel({ className: 'ph-unmask' });
+    requestCloseSidePanel: requestCloseArrangementPolicyPanel,
+  } = useAdministrationSidePanel({
+    className: 'ph-unmask',
+    protectNavigation: true,
+  });
+  const creationOpened = useRef(false);
+  useEffect(() => {
+    if (!createArrangement || creationOpened.current) return;
+    creationOpened.current = true;
+    openArrangementPolicyPanel();
+  }, [createArrangement, openArrangementPolicyPanel]);
   const [workingFunctionAssignmentPolicy, setWorkingFunctionAssignmentPolicy] =
     useState<FunctionAssignmentPolicy | undefined>();
   const [workingArrangementPolicy, setWorkingArrangementPolicy] = useState<
     ArrangementPolicy | undefined
   >();
-
   function updateCasePolicy(update: Partial<V1CasePolicy>) {
     return onPolicyChange(
       clonePolicyWithCasePolicy(
@@ -251,7 +342,6 @@ export function CasePolicyTab({
                     <AccordionDetails>
                       <ArrangementPolicyDetails
                         arrangement={arrangement}
-                        actionNames={actionNames}
                         volunteerRoles={volunteerRoles}
                         volunteerFamilyRoles={volunteerFamilyRoles}
                         personOptions={personOptions}
@@ -296,7 +386,7 @@ export function CasePolicyTab({
           volunteerRoles={volunteerRoles}
           volunteerFamilyRoles={volunteerFamilyRoles}
           personOptions={personOptions}
-          onClose={closeFunctionAssignmentPanel}
+          onClose={requestCloseFunctionAssignmentPanel}
           onSave={(previousRole, assignmentPolicy) =>
             updateCasePolicyAndClose(
               {
@@ -323,7 +413,7 @@ export function CasePolicyTab({
           existingArrangementTypes={arrangementPolicies.map(
             (item) => item.arrangementType
           )}
-          onClose={closeArrangementPolicyPanel}
+          onClose={requestCloseArrangementPolicyPanel}
           onSave={(previousType, arrangement) =>
             updateCasePolicyAndClose(
               {

@@ -1,3 +1,8 @@
+import {
+  settingsSections,
+  settingsSectionPath,
+} from '../src/Settings/settingsSections';
+import { SELF_SERVICE_POLICY_FEATURE_FLAG } from '../src/featureFlags';
 import { expect, test } from './support/fixtures';
 import {
   ATLANTIS_LOCATION_ID,
@@ -9,15 +14,6 @@ test.describe('location settings @smoke @pr', () => {
   test('opens the selected location configuration from Settings', async ({
     page,
   }) => {
-    const selectedLocationPolicyPath =
-      `/api/${ATLANTIS_ORGANIZATION_ID}/${ATLANTIS_LOCATION_ID}` +
-      '/Configuration/policy';
-    const selectedLocationPolicyRequest = page.waitForRequest(
-      (request) =>
-        request.method() === 'GET' &&
-        new URL(request.url()).pathname === selectedLocationPolicyPath
-    );
-
     await page.goto(
       `/org/${ATLANTIS_ORGANIZATION_ID}/${ATLANTIS_LOCATION_ID}` +
         '/settings/locations'
@@ -25,9 +21,8 @@ test.describe('location settings @smoke @pr', () => {
 
     await expect(page).toHaveURL(
       `/org/${ATLANTIS_ORGANIZATION_ID}/${ATLANTIS_LOCATION_ID}` +
-        '/settings/locations?tab=basic'
+        '/settings/locations'
     );
-    await selectedLocationPolicyRequest;
     const breadcrumb = page.getByLabel('breadcrumb');
     await expect(breadcrumb).toContainText('Settings');
     await expect(breadcrumb).toContainText('Atlantis');
@@ -53,7 +48,7 @@ test.describe('location settings @smoke @pr', () => {
     ).toBeVisible();
     await expect(page).toHaveURL(
       `/org/${ATLANTIS_ORGANIZATION_ID}/${ATLANTIS_LOCATION_ID}` +
-        '/settings/locations?tab=basic'
+        '/settings/locations'
     );
 
     await page.getByRole('button', { name: 'Cancel' }).click();
@@ -72,7 +67,7 @@ test.describe('location settings @smoke @pr', () => {
     ).toBeVisible();
     await expect(
       page.getByText(
-        'Configure settings, policies, and custom fields for the selected location.'
+        'Configure basic administration for the selected location.'
       )
     ).toBeVisible();
   });
@@ -89,9 +84,39 @@ test.describe('location settings @smoke @pr', () => {
 
     await page.goto(
       `/org/${ATLANTIS_ORGANIZATION_ID}/${ATLANTIS_LOCATION_ID}` +
-        `/settings/locations/${EL_DORADO_LOCATION_ID}`
+        `/settings/locations/${EL_DORADO_LOCATION_ID}?tab=casePolicy`
     );
 
     await editedLocationPolicyRequest;
+  });
+});
+
+test.describe('dedicated Settings sidebar', () => {
+  test.use({ featureFlags: { [SELF_SERVICE_POLICY_FEATURE_FLAG]: true } });
+  test('all configuration links navigate and identify the active section', async ({
+    page,
+  }) => {
+    for (const section of settingsSections) {
+      await page.goto(
+        settingsSectionPath(
+          ATLANTIS_ORGANIZATION_ID,
+          ATLANTIS_LOCATION_ID,
+          section.id
+        )
+      );
+      const navigation = page.getByRole('list', {
+        name: 'secondary navigation',
+      });
+      const item = navigation.getByRole('button', {
+        name: section.label,
+        exact: true,
+      });
+      await item.scrollIntoViewIfNeeded();
+      await expect(item).toHaveClass(/Mui-selected/);
+      for (const other of settingsSections)
+        await expect(
+          navigation.getByRole('button', { name: other.label, exact: true })
+        ).toBeVisible();
+    }
   });
 });

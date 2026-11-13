@@ -1,7 +1,24 @@
-import { Stack, Table, TableBody, TableCell, TableContainer, TableHead, TableRow } from '@mui/material';
-import { CustomField, CustomFieldType, CustomFieldValidation } from '../../../../GeneratedClient';
+import {
+  Stack,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+} from '@mui/material';
+import {
+  CustomField,
+  CustomFieldType,
+  CustomFieldValidation,
+} from '../../../../GeneratedClient';
 import { enumName } from './policyUtils';
-import { DeleteRowAction, DuplicateRowAction, EmptyRow, ValuesText } from './sharedUi';
+import {
+  DeleteRowAction,
+  DuplicateRowAction,
+  EmptyRow,
+  ValuesText,
+} from './sharedUi';
 
 export function CustomFieldsTable({
   fields,
@@ -19,7 +36,7 @@ export function CustomFieldsTable({
 
   return (
     <TableContainer>
-      <Table size="small">
+      <Table size="small" aria-label="Custom fields">
         <TableHead>
           <TableRow>
             <TableCell>Name</TableCell>

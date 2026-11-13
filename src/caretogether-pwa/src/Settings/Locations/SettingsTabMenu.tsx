@@ -22,6 +22,7 @@ export default function SettingsTabMenu<T>({
       {filteredTabs.map((tab) => (
         <Typography
           key={String(tab.id)}
+          data-settings-tab={String(tab.id)}
           variant="body1"
           sx={{
             cursor: 'pointer',

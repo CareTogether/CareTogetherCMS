@@ -37,8 +37,16 @@ export type AvailableOptions = {
   arrangementReasons: string[];
 };
 
-type Props = { locationConfiguration: LocationConfiguration };
-export default function AccessLevels({ locationConfiguration }: Props) {
+type Props = {
+  locationConfiguration: LocationConfiguration;
+  canEdit: boolean;
+  showHeading?: boolean;
+};
+export default function AccessLevels({
+  locationConfiguration,
+  canEdit,
+  showHeading = true,
+}: Props) {
   const accessLevels = locationConfiguration?.accessLevels ?? [];
 
   const [searchTerm, setSearchTerm] = useState('');
@@ -62,8 +70,6 @@ export default function AccessLevels({ locationConfiguration }: Props) {
   const [workingAccessLevel, setWorkingAccessLevel] =
     useState<AccessLevelData | null>(null);
 
-  const canEdit = true; // Replace with actual permission check if needed
-
   const rows = accessLevels.filter(({ name }) =>
     name?.toLowerCase().includes(searchTerm.toLowerCase())
   );
@@ -75,9 +81,11 @@ export default function AccessLevels({ locationConfiguration }: Props) {
 
   return (
     <Box>
-      <Typography variant="h6" sx={{ mb: 2 }}>
-        Access Levels
-      </Typography>
+      {showHeading && (
+        <Typography variant="h6" sx={{ mb: 2 }}>
+          Access Levels
+        </Typography>
+      )}
 
       <TextField
         placeholder="Search..."
@@ -100,7 +108,7 @@ export default function AccessLevels({ locationConfiguration }: Props) {
       {hasRows ? (
         <>
           <TableContainer sx={{ mb: 1 }}>
-            <Table>
+            <Table aria-label="Access Levels">
               <TableHead>
                 <TableRow>
                   <TableCell>Name</TableCell>
@@ -112,8 +120,9 @@ export default function AccessLevels({ locationConfiguration }: Props) {
                 {paginatedRows.map(({ id, name, organizationRoles }) => (
                   <TableRow
                     key={name}
-                    sx={{ cursor: 'pointer' }}
+                    sx={{ cursor: canEdit ? 'pointer' : 'default' }}
                     onClick={() => {
+                      if (!canEdit) return;
                       setWorkingAccessLevel({
                         id: id!,
                         name: name!,

@@ -17,14 +17,41 @@ import {
   Tooltip,
   Typography,
 } from '@mui/material';
-import { ReactNode, useState } from 'react';
+import { createContext, ReactNode, useContext, useState } from 'react';
 import { listText } from './policyUtils';
+import { useAdministrationSidePanel } from './usePolicyAdministrationPanels';
+
+const StandalonePolicyHeadingContext = createContext<string | undefined>(
+  undefined
+);
+
+export function StandalonePolicyContent({
+  title,
+  children,
+}: {
+  title: string;
+  children: ReactNode;
+}) {
+  return (
+    <StandalonePolicyHeadingContext.Provider value={title}>
+      <Stack component="section" aria-label={title} sx={{ minWidth: 0 }}>
+        {children}
+      </Stack>
+    </StandalonePolicyHeadingContext.Provider>
+  );
+}
 
 export function ValuesText({ values }: { values?: string[] }) {
   return <Typography variant="body2">{listText(values)}</Typography>;
 }
 
-export function EditableActions({ onAdd }: { onAdd: () => void }) {
+export function EditableActions({
+  onAdd,
+  disabled = false,
+}: {
+  onAdd: () => void;
+  disabled?: boolean;
+}) {
   return (
     <Stack direction="row" spacing={1} useFlexGap sx={{ flexWrap: 'wrap' }}>
       <Button
@@ -32,6 +59,7 @@ export function EditableActions({ onAdd }: { onAdd: () => void }) {
         variant="contained"
         startIcon={<AddIcon />}
         onClick={onAdd}
+        disabled={disabled}
       >
         Add
       </Button>
@@ -48,19 +76,24 @@ export function SectionHeader({
   children?: ReactNode;
   actions?: ReactNode;
 }) {
+  const standaloneHeading = useContext(StandalonePolicyHeadingContext);
+  const hideTitle = title === standaloneHeading;
+  if (hideTitle && !actions && !children) return null;
   return (
     <Stack spacing={1.5} sx={{ mb: 2 }}>
-      <Stack
-        direction={{ xs: 'column', sm: 'row' }}
-        spacing={1}
-        sx={{
-          alignItems: { xs: 'stretch', sm: 'center' },
-          justifyContent: 'space-between',
-        }}
-      >
-        <Typography variant="h6">{title}</Typography>
-        {actions}
-      </Stack>
+      {(!hideTitle || actions) && (
+        <Stack
+          direction={{ xs: 'column', sm: 'row' }}
+          spacing={1}
+          sx={{
+            alignItems: { xs: 'stretch', sm: 'center' },
+            justifyContent: hideTitle ? 'flex-end' : 'space-between',
+          }}
+        >
+          {!hideTitle && <Typography variant="h6">{title}</Typography>}
+          {actions}
+        </Stack>
+      )}
       {children}
     </Stack>
   );
@@ -100,8 +133,13 @@ export function ConfirmedRowAction({
   onClick: () => void;
 }) {
   const [confirming, setConfirming] = useState(false);
+  const panel = useAdministrationSidePanel();
 
   function closeDialog() {
+    if (panel.coordinated) {
+      panel.closeSidePanel();
+      return;
+    }
     setConfirming(false);
   }
 
@@ -118,30 +156,46 @@ export function ConfirmedRowAction({
           aria-label={`${action} ${label}`}
           onClick={(event) => {
             event.stopPropagation();
-            setConfirming(true);
+            if (panel.coordinated) panel.openSidePanel();
+            else setConfirming(true);
           }}
         >
           {icon}
         </IconButton>
       </Tooltip>
 
-      <Dialog
-        className="ph-unmask"
-        open={confirming}
-        onClose={closeDialog}
-        onClick={(event) => event.stopPropagation()}
-      >
-        <DialogTitle>{title}</DialogTitle>
-        <DialogContent>
-          <DialogContentText>{message}</DialogContentText>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={closeDialog}>No</Button>
-          <Button variant="contained" onClick={confirmDuplicate}>
-            Yes
-          </Button>
-        </DialogActions>
-      </Dialog>
+      {panel.coordinated ? (
+        <panel.SidePanel>
+          <Stack spacing={2} onClick={(event) => event.stopPropagation()}>
+            <Typography variant="h6">{title}</Typography>
+            <Typography>{message}</Typography>
+            <Stack direction="row" spacing={1}>
+              <Button onClick={closeDialog}>No</Button>
+              <Button variant="contained" onClick={confirmDuplicate}>
+                Yes
+              </Button>
+            </Stack>
+          </Stack>
+        </panel.SidePanel>
+      ) : (
+        <Dialog
+          className="ph-unmask"
+          open={confirming}
+          onClose={closeDialog}
+          onClick={(event) => event.stopPropagation()}
+        >
+          <DialogTitle>{title}</DialogTitle>
+          <DialogContent>
+            <DialogContentText>{message}</DialogContentText>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={closeDialog}>No</Button>
+            <Button variant="contained" onClick={confirmDuplicate}>
+              Yes
+            </Button>
+          </DialogActions>
+        </Dialog>
+      )}
     </>
   );
 }

@@ -1,3 +1,4 @@
+import { settingsCategoryBreadcrumb } from '../settingsSections';
 import { useState } from 'react';
 import {
   Add as AddIcon,
@@ -70,6 +71,11 @@ export function OrganizationCategoriesScreen() {
             label: 'Settings',
             to: `/org/${organizationId}/${locationId}/settings`,
           },
+          settingsCategoryBreadcrumb(
+            organizationId,
+            locationId,
+            'organizationCategories'
+          ),
         ]}
         currentPageLabel="Organization Categories"
         sx={{ mb: 2 }}

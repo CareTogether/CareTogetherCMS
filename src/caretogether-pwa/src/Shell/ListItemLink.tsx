@@ -14,12 +14,10 @@ import {
   List,
   ListItemButton,
   ListItemButtonProps,
+  IconButton,
   Tooltip,
 } from '@mui/material';
-import {
-  ExpandLess,
-  ExpandMore,
-} from '@mui/icons-material';
+import { ExpandLess, ExpandMore } from '@mui/icons-material';
 
 function TruncatedTooltip({
   children,
@@ -57,6 +55,9 @@ function TruncatedTooltip({
 }
 
 interface ListItemLinkCollapsibleProps {
+  children?: React.ReactNode;
+  isActive?: boolean;
+  wrapText?: boolean;
   icon?: React.ReactElement;
   primary: string;
   to?: string;
@@ -86,10 +87,13 @@ export function ListItemLink(props: ListItemLinkCollapsibleProps) {
     collapsed = false,
     darkColor,
     buttonProps,
+    children,
+    isActive,
+    wrapText = false,
   } = props;
 
   const match = useMatch(to ?? '');
-  const selected = !!match;
+  const selected = isActive ?? !!match;
 
   const renderLink = React.useMemo(
     () =>
@@ -104,8 +108,12 @@ export function ListItemLink(props: ListItemLinkCollapsibleProps) {
   const [collapsibleOpen, setCollapsibleOpen] = React.useState(
     defaultOpen || false
   );
+  const submenuId = React.useId();
+  React.useEffect(() => {
+    if (defaultOpen) setCollapsibleOpen(true);
+  }, [defaultOpen]);
 
-  const hasSubitems = !collapsed && subitems && subitems.length > 0;
+  const hasSubitems = !collapsed && Boolean(children || subitems?.length);
 
   // TODO: Those names are a bit confusing, we should rename them
   const desktopColor = selected ? '#fff' : '#fff8';
@@ -119,6 +127,7 @@ export function ListItemLink(props: ListItemLinkCollapsibleProps) {
           <ListItemButton
             component={to ? renderLink : 'button'}
             selected={selected}
+            aria-current={match ? 'page' : undefined}
             aria-label={collapsed ? primary : undefined}
             sx={{
               paddingLeft: collapsed ? 0 : paddingLeft,
@@ -156,7 +165,8 @@ export function ListItemLink(props: ListItemLinkCollapsibleProps) {
                     flex: 1,
                     my: 0,
                     '& .MuiListItemText-primary': {
-                      whiteSpace: 'nowrap',
+                      whiteSpace: wrapText ? 'normal' : 'nowrap',
+                      overflowWrap: wrapText ? 'anywhere' : undefined,
                       overflow: 'hidden',
                       textOverflow: 'ellipsis',
                     },
@@ -169,22 +179,27 @@ export function ListItemLink(props: ListItemLinkCollapsibleProps) {
           {hasSubitems && (
             <>
               <Divider orientation="vertical" flexItem />
-              <Box
+              <IconButton
+                aria-label={`Toggle ${primary}`}
+                aria-expanded={collapsibleOpen}
+                aria-controls={submenuId}
                 onClick={() => setCollapsibleOpen((prev) => !prev)}
-                sx={{ px: 1.5, cursor: 'pointer' }}
+                sx={{ mx: 0.5, color: 'inherit' }}
               >
                 {collapsibleOpen ? <ExpandLess /> : <ExpandMore />}
-              </Box>
+              </IconButton>
             </>
           )}
         </Box>
       </li>
       <Collapse
+        id={submenuId}
         in={hasSubitems && collapsibleOpen}
         timeout="auto"
         unmountOnExit
       >
         <List component="div" disablePadding>
+          {children}
           {subitems?.map((item) => (
             <li className="ph-unmask" key={item.label}>
               <ListItemButton

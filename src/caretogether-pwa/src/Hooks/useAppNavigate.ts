@@ -1,3 +1,9 @@
+import {
+  settingsSectionPath,
+  type SettingsSection,
+  settingsCategoryPath,
+  type SettingsCategory,
+} from '../Settings/settingsSections';
 import { useRequiredSelectedLocationContext } from '../Model/Data';
 import { NavigateOptions, useNavigate } from 'react-router-dom';
 
@@ -12,8 +18,10 @@ export interface AppNavigate {
   ) => void;
   organization: (organizationId: string) => void;
   settings: () => void;
+  settingsCategory: (category: SettingsCategory) => void;
   role: (roleId: string) => void;
   locationEdit: (locationId: string, options?: AppNavigateOptions) => void;
+  settingsSection: (section: SettingsSection) => void;
   settingsRoles: () => void;
   settingsLocations: () => void;
   settingsOrganizationCategories: () => void;
@@ -93,9 +101,13 @@ export function useAppNavigate(): AppNavigate {
     organization: (organizationId: string) =>
       inContext(`organizations/organization/${organizationId}`),
     settings: () => inContext(`settings`),
+    settingsCategory: (category) =>
+      navigate(settingsCategoryPath(organizationId, locationId, category)),
     role: (roleId: string) => inContext(`settings/roles/${roleId}`),
     locationEdit: (locationId: string, options?: AppNavigateOptions) =>
       inContext(`settings/locations/${locationId}`, options),
+    settingsSection: (section) =>
+      navigate(settingsSectionPath(organizationId, locationId, section)),
     settingsRoles: () => inContext('settings/roles'),
     settingsLocations: () => inContext('settings/locations'),
     settingsOrganizationCategories: () =>

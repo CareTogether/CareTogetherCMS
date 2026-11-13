@@ -1,3 +1,8 @@
+import {
+  settingsSections,
+  CASE_POLICY_ADMINISTRATION_PATH,
+  settingsCategories,
+} from '../Settings/settingsSections.ts';
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import type { LocationRoute } from './LocationRoute.ts';
@@ -25,6 +30,21 @@ const routes: LocationRoute[] = [
     element: null,
     locationSwitch: 'dashboard',
     children: [
+      ...settingsSections.map((section) => ({
+        path: section.path,
+        element: null,
+        locationSwitch: 'same-path' as const,
+      })),
+      ...settingsCategories.map((category) => ({
+        path: category.path,
+        element: null,
+        locationSwitch: 'same-path' as const,
+      })),
+      {
+        path: CASE_POLICY_ADMINISTRATION_PATH,
+        element: null,
+        locationSwitch: 'same-path',
+      },
       { path: 'roles', element: null, locationSwitch: 'same-path' },
       { path: 'locations', element: null, locationSwitch: 'same-path' },
       {
@@ -55,6 +75,8 @@ test('keeps routes marked same-path and their URL state', () => {
     '/clients',
     '/settings/roles',
     '/settings/locations',
+    '/settings/' + CASE_POLICY_ADMINISTRATION_PATH,
+    ...settingsCategories.map((category) => '/settings/' + category.path),
   ]) {
     assert.equal(
       switchFrom(path, '?filter=open', '#results'),
@@ -74,4 +96,12 @@ test('returns to the dashboard from routes marked dashboard', () => {
   for (const path of ['/clients/family/family-1', '/settings/not-a-page']) {
     assert.equal(switchFrom(path, '?familyMemberId=person-1'), `${nextBase}/`);
   }
+});
+
+test('all configuration pages retain their section when switching location', () => {
+  for (const section of settingsSections)
+    assert.equal(
+      switchFrom('/settings/' + section.path),
+      nextBase + '/settings/' + section.path
+    );
 });

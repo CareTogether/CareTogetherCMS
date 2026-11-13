@@ -2,6 +2,14 @@
 import { Navigate, Outlet } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import { useFeatureFlagEnabled, usePostHog } from 'posthog-js/react';
+import { SettingsConfigurationScreen } from './SettingsConfigurationScreen';
+import { PolicyNavigationConfirmation } from '../Hooks/PolicyNavigationConfirmation';
+import { LegacyCasePolicyRedirect } from './LegacyCasePolicyRedirect';
+import {
+  settingsSections,
+  settingsCategories,
+  CASE_POLICY_ADMINISTRATION_PATH,
+} from './settingsSections';
 import { SettingsScreen } from './SettingsScreen';
 import { RoleEditScreen } from './Roles/RoleEditScreen';
 import { LocationEdit } from './Locations/LocationEdit';
@@ -46,9 +54,29 @@ function OrganizationCategoriesRoute() {
 export const settingsRoutes = [
   {
     path: 'settings',
-    element: <Outlet />,
+    element: (
+      <>
+        <Outlet />
+        <PolicyNavigationConfirmation />
+      </>
+    ),
     locationSwitch: 'same-path',
     children: [
+      ...settingsCategories.map((category) => ({
+        path: category.path,
+        element: <SettingsScreen category={category.id} />,
+        locationSwitch: 'same-path' as const,
+      })),
+      {
+        path: CASE_POLICY_ADMINISTRATION_PATH,
+        element: <LegacyCasePolicyRedirect />,
+        locationSwitch: 'same-path',
+      },
+      ...settingsSections.map((section) => ({
+        path: section.path,
+        element: <SettingsConfigurationScreen section={section.id} />,
+        locationSwitch: 'same-path' as const,
+      })),
       {
         index: true,
         element: <SettingsScreen />,

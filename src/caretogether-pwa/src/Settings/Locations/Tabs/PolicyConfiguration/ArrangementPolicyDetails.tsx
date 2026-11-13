@@ -17,16 +17,10 @@ import {
   ArrangementFunction,
   ArrangementPolicy,
   FunctionRequirement,
-  MonitoringRequirement,
-  RequirementDefinition,
 } from '../../../../GeneratedClient';
-import { useSidePanel } from '../../../../Hooks/useSidePanel';
+import { useAdministrationSidePanel } from './usePolicyAdministrationPanels';
 import type { PersonOption } from './types';
-import {
-  ArrangementFunctionSidePanel,
-  MonitoringRequirementSidePanel,
-  RequirementSidePanel,
-} from './sidePanels';
+import { ArrangementFunctionSidePanel } from './sidePanels';
 import {
   enumName,
   nextCopyName,
@@ -41,8 +35,6 @@ import {
   EmptyRow,
   ValuesText,
 } from './sharedUi';
-import { MonitoringRequirementsTable, RequirementsTable } from './tables';
-
 function ArrangementFunctionSummary({
   arrangementFunction,
 }: {
@@ -68,73 +60,37 @@ function ArrangementFunctionSummary({
   );
 }
 
-function monitoringRequirementName(requirement: MonitoringRequirement) {
-  return requirement.action?.actionName ?? '';
-}
-
 export function ArrangementPolicyDetails({
   arrangement,
-  actionNames,
   volunteerRoles,
   volunteerFamilyRoles,
   personOptions,
   onArrangementChange,
 }: {
   arrangement: ArrangementPolicy;
-  actionNames: string[];
   volunteerRoles: string[];
   volunteerFamilyRoles: string[];
   personOptions: PersonOption[];
   onArrangementChange: (arrangement: ArrangementPolicy) => Promise<boolean>;
 }) {
   const {
-    SidePanel: SetupRequirementPanel,
-    openSidePanel: openSetupRequirementPanel,
-    closeSidePanel: closeSetupRequirementPanel,
-  } = useSidePanel({ className: 'ph-unmask' });
-  const {
-    SidePanel: MonitoringRequirementPanel,
-    openSidePanel: openMonitoringRequirementPanel,
-    closeSidePanel: closeMonitoringRequirementPanel,
-  } = useSidePanel({ className: 'ph-unmask' });
-  const {
-    SidePanel: CloseoutRequirementPanel,
-    openSidePanel: openCloseoutRequirementPanel,
-    closeSidePanel: closeCloseoutRequirementPanel,
-  } = useSidePanel({ className: 'ph-unmask' });
-  const {
     SidePanel: ArrangementFunctionPanel,
     openSidePanel: openArrangementFunctionPanel,
     closeSidePanel: closeArrangementFunctionPanel,
-  } = useSidePanel({ className: 'ph-unmask' });
-  const [workingSetupRequirement, setWorkingSetupRequirement] = useState<
-    RequirementDefinition | undefined
-  >();
-  const [workingMonitoringRequirement, setWorkingMonitoringRequirement] =
-    useState<MonitoringRequirement | undefined>();
-  const [workingCloseoutRequirement, setWorkingCloseoutRequirement] = useState<
-    RequirementDefinition | undefined
-  >();
+    requestCloseSidePanel: requestCloseArrangementFunctionPanel,
+  } = useAdministrationSidePanel({
+    className: 'ph-unmask',
+    protectNavigation: true,
+  });
   const [workingArrangementFunction, setWorkingArrangementFunction] = useState<
     ArrangementFunction | undefined
   >();
-  const setupActions =
-    arrangement.requiredSetupActions ??
-    arrangement.requiredSetupActions_PRE_MIGRATION;
-  const monitoringActions =
-    arrangement.requiredMonitoringActionsNew ??
-    arrangement.requiredMonitoringActions_PRE_MIGRATION;
-  const closeoutActions =
-    arrangement.requiredCloseoutActions ??
-    arrangement.requiredCloseoutActionNames_PRE_MIGRATION;
   const arrangementFunctions = arrangement.arrangementFunctions ?? [];
-
   function updateArrangement(update: Partial<ArrangementPolicy>) {
     return onArrangementChange(
       new ArrangementPolicy({ ...arrangement, ...update })
     );
   }
-
   async function updateArrangementAndClose(
     update: Partial<ArrangementPolicy>,
     closePanel: () => void
@@ -143,46 +99,6 @@ export function ArrangementPolicyDetails({
     if (saved) closePanel();
     return saved;
   }
-
-  function duplicateRequirement(
-    requirements: RequirementDefinition[],
-    requirement: RequirementDefinition
-  ) {
-    return upsertByName(
-      requirements,
-      undefined,
-      new RequirementDefinition({
-        ...requirement,
-        actionName: nextCopyName(
-          requirement.actionName,
-          requirements.map((item) => item.actionName)
-        ),
-      }),
-      (item) => item.actionName
-    );
-  }
-
-  function duplicateMonitoringRequirement(
-    requirements: MonitoringRequirement[],
-    requirement: MonitoringRequirement
-  ) {
-    return upsertByName(
-      requirements,
-      undefined,
-      new MonitoringRequirement({
-        ...requirement,
-        action: new RequirementDefinition({
-          ...requirement.action,
-          actionName: nextCopyName(
-            monitoringRequirementName(requirement),
-            requirements.map(monitoringRequirementName)
-          ),
-        }),
-      }),
-      monitoringRequirementName
-    );
-  }
-
   function duplicateArrangementFunction(
     arrangementFunction: ArrangementFunction
   ) {
@@ -201,131 +117,8 @@ export function ArrangementPolicyDetails({
       ),
     });
   }
-
   return (
     <Stack spacing={2}>
-      <Accordion variant="outlined">
-        <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-          <Typography>Required Setup Actions</Typography>
-        </AccordionSummary>
-        <AccordionDetails>
-          <Stack spacing={2}>
-            <EditableActions
-              onAdd={() => {
-                setWorkingSetupRequirement(undefined);
-                openSetupRequirementPanel();
-              }}
-            />
-            <RequirementsTable
-              requirements={setupActions}
-              emptyLabel="No setup requirements configured."
-              onEdit={(requirement) => {
-                setWorkingSetupRequirement(requirement);
-                openSetupRequirementPanel();
-              }}
-              onDuplicate={(requirement) =>
-                updateArrangement({
-                  requiredSetupActions: duplicateRequirement(
-                    setupActions,
-                    requirement
-                  ),
-                })
-              }
-              onDelete={(requirement) =>
-                updateArrangement({
-                  requiredSetupActions: removeByName(
-                    setupActions,
-                    requirement.actionName,
-                    (item) => item.actionName
-                  ),
-                })
-              }
-            />
-          </Stack>
-        </AccordionDetails>
-      </Accordion>
-
-      <Accordion variant="outlined">
-        <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-          <Typography>Required Monitoring Actions</Typography>
-        </AccordionSummary>
-        <AccordionDetails>
-          <Stack spacing={2}>
-            <EditableActions
-              onAdd={() => {
-                setWorkingMonitoringRequirement(undefined);
-                openMonitoringRequirementPanel();
-              }}
-            />
-            <MonitoringRequirementsTable
-              requirements={monitoringActions}
-              onEdit={(requirement) => {
-                setWorkingMonitoringRequirement(requirement);
-                openMonitoringRequirementPanel();
-              }}
-              onDuplicate={(requirement) =>
-                updateArrangement({
-                  requiredMonitoringActionsNew: duplicateMonitoringRequirement(
-                    monitoringActions,
-                    requirement
-                  ),
-                })
-              }
-              onDelete={(requirement) =>
-                updateArrangement({
-                  requiredMonitoringActionsNew: removeByName(
-                    monitoringActions,
-                    monitoringRequirementName(requirement),
-                    monitoringRequirementName
-                  ),
-                })
-              }
-            />
-          </Stack>
-        </AccordionDetails>
-      </Accordion>
-
-      <Accordion variant="outlined">
-        <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-          <Typography>Required Closeout Actions</Typography>
-        </AccordionSummary>
-        <AccordionDetails>
-          <Stack spacing={2}>
-            <EditableActions
-              onAdd={() => {
-                setWorkingCloseoutRequirement(undefined);
-                openCloseoutRequirementPanel();
-              }}
-            />
-            <RequirementsTable
-              requirements={closeoutActions}
-              emptyLabel="No closeout requirements configured."
-              onEdit={(requirement) => {
-                setWorkingCloseoutRequirement(requirement);
-                openCloseoutRequirementPanel();
-              }}
-              onDuplicate={(requirement) =>
-                updateArrangement({
-                  requiredCloseoutActions: duplicateRequirement(
-                    closeoutActions,
-                    requirement
-                  ),
-                })
-              }
-              onDelete={(requirement) =>
-                updateArrangement({
-                  requiredCloseoutActions: removeByName(
-                    closeoutActions,
-                    requirement.actionName,
-                    (item) => item.actionName
-                  ),
-                })
-              }
-            />
-          </Stack>
-        </AccordionDetails>
-      </Accordion>
-
       <Accordion variant="outlined">
         <AccordionSummary expandIcon={<ExpandMoreIcon />}>
           <Typography>Arrangement Functions</Typography>
@@ -424,96 +217,6 @@ export function ArrangementPolicyDetails({
           </Stack>
         </AccordionDetails>
       </Accordion>
-
-      <SetupRequirementPanel>
-        <RequirementSidePanel
-          key={workingSetupRequirement?.actionName ?? 'new-setup-requirement'}
-          title={
-            workingSetupRequirement
-              ? 'Edit Required Setup Action'
-              : 'Add Required Setup Action'
-          }
-          requirement={workingSetupRequirement}
-          actionNames={actionNames}
-          existingActionNames={setupActions.map((item) => item.actionName)}
-          onClose={closeSetupRequirementPanel}
-          onSave={(previousName, requirement) =>
-            updateArrangementAndClose(
-              {
-                requiredSetupActions: upsertByName(
-                  setupActions,
-                  previousName,
-                  requirement,
-                  (item) => item.actionName
-                ),
-              },
-              closeSetupRequirementPanel
-            )
-          }
-        />
-      </SetupRequirementPanel>
-
-      <MonitoringRequirementPanel>
-        <MonitoringRequirementSidePanel
-          key={
-            workingMonitoringRequirement?.action?.actionName ??
-            'new-monitoring-requirement'
-          }
-          title={
-            workingMonitoringRequirement
-              ? 'Edit Required Monitoring Action'
-              : 'Add Required Monitoring Action'
-          }
-          requirement={workingMonitoringRequirement}
-          actionNames={actionNames}
-          existingActionNames={monitoringActions.map(monitoringRequirementName)}
-          onClose={closeMonitoringRequirementPanel}
-          onSave={(previousName, requirement) =>
-            updateArrangementAndClose(
-              {
-                requiredMonitoringActionsNew: upsertByName(
-                  monitoringActions,
-                  previousName,
-                  requirement,
-                  monitoringRequirementName
-                ),
-              },
-              closeMonitoringRequirementPanel
-            )
-          }
-        />
-      </MonitoringRequirementPanel>
-
-      <CloseoutRequirementPanel>
-        <RequirementSidePanel
-          key={
-            workingCloseoutRequirement?.actionName ?? 'new-closeout-requirement'
-          }
-          title={
-            workingCloseoutRequirement
-              ? 'Edit Required Closeout Action'
-              : 'Add Required Closeout Action'
-          }
-          requirement={workingCloseoutRequirement}
-          actionNames={actionNames}
-          existingActionNames={closeoutActions.map((item) => item.actionName)}
-          onClose={closeCloseoutRequirementPanel}
-          onSave={(previousName, requirement) =>
-            updateArrangementAndClose(
-              {
-                requiredCloseoutActions: upsertByName(
-                  closeoutActions,
-                  previousName,
-                  requirement,
-                  (item) => item.actionName
-                ),
-              },
-              closeCloseoutRequirementPanel
-            )
-          }
-        />
-      </CloseoutRequirementPanel>
-
       <ArrangementFunctionPanel>
         <ArrangementFunctionSidePanel
           key={
@@ -527,7 +230,7 @@ export function ArrangementPolicyDetails({
           volunteerRoles={volunteerRoles}
           volunteerFamilyRoles={volunteerFamilyRoles}
           personOptions={personOptions}
-          onClose={closeArrangementFunctionPanel}
+          onClose={requestCloseArrangementFunctionPanel}
           onSave={(previousName, arrangementFunction) =>
             updateArrangementAndClose(
               {
