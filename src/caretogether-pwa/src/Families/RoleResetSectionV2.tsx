@@ -70,7 +70,11 @@ export function RoleResetSectionV2({
           ? `. Comments: ${roleRemoval.additionalComments}`
           : ''}
       </Typography>
-      <Stack direction="row" spacing={1} sx={{ justifyContent: 'flex-end' }}>
+      <Stack
+        direction={{ xs: 'column', sm: 'row' }}
+        spacing={1}
+        sx={{ justifyContent: 'flex-end' }}
+      >
         <Button disabled={saving} onClick={onCancel}>
           Cancel
         </Button>

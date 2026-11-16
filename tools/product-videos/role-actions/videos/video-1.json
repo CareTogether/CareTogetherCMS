@@ -1,0 +1,15 @@
+{
+  "voice": "af_heart",
+  "speed": 1.0,
+  "steps": [
+    { "id": "role-cards", "text": "Each card at the top of the page shows one role. A card with the name of a person shows the role of that person." },
+    { "id": "open-card", "text": "Click the card to open the role details. Remove Role and Complete Other are only for Leia." },
+    { "id": "complete-other", "text": "Click Complete Other. Type the name of the action, then select it. You can select any action." },
+    { "id": "complete-or-exempt", "text": "Click Complete or Exempt. Then give the details, as for all other requirements." },
+    { "id": "remove-role", "text": "To remove the role from Leia, click Remove Role. Select a reason, and type a comment." },
+    { "id": "remove-confirm", "text": "Click Remove Role, then click Remove Role again. The other persons in the family keep their roles." },
+    { "id": "family-card", "text": "Host Family is a role for all the family. On this card, Complete Other records an action for all the family." },
+    { "id": "family-members", "text": "Under Family Members, Remove from role removes one person from the role. To record a requirement for one person, click the requirement." },
+    { "id": "family-menu", "text": "The menu at the top right also has Remove from Host Family role and Complete other, for all the family." }
+  ]
+}

@@ -23,19 +23,15 @@ import { Copyright } from './Copyright';
 import { Version } from './Version';
 import { useGlobalPermissionsLoadable } from '../Model/SessionModel';
 import { Permission } from '../GeneratedClient';
-import {
-  useSelectedLocationContext,
-  useVisibleReferralsLoadable,
-} from '../Model/Data';
+import { useSelectedLocationContext } from '../Model/Data';
 import { useQueueItemsCountLoadable } from '../Model/QueueModel';
 import Feedback from './Feedback';
 import { useAtomValue } from 'jotai';
 import { reportSubmenuItemsAtom } from '../Model/UI';
 import { ListItemLink } from './ListItemLink';
 import WhatsNew from './WhatsNew';
-import { useFeatureFlagEnabled } from 'posthog-js/react';
 import { SettingsSidebarNavigation } from '../Settings/SettingsSidebarNavigation';
-import { REFERRALS_FEATURE_FLAG } from '../featureFlags';
+import { useCanAccessReferrals } from './useCanAccessReferrals';
 import { SHELL_DRAWER_TOP_OFFSET } from './shellLayoutConstants';
 
 interface SideNavigationMenuProps {
@@ -52,12 +48,7 @@ function SideNavigationMenu({ open }: SideNavigationMenuProps) {
 
   const reportSubmenuItems = useAtomValue(reportSubmenuItemsAtom);
 
-  const referralsEnabled = useFeatureFlagEnabled(REFERRALS_FEATURE_FLAG);
-  const visibleReferrals = useVisibleReferralsLoadable();
-  const canAccessReferrals =
-    permissions(Permission.CreateV1Referral) ||
-    permissions(Permission.ViewV1Referral) ||
-    (visibleReferrals?.length ?? 0) > 0;
+  const canAccessReferrals = useCanAccessReferrals();
   const collapsed = !open;
 
   return (
@@ -115,7 +106,7 @@ function SideNavigationMenu({ open }: SideNavigationMenuProps) {
             }
             collapsed={collapsed}
           />
-          {canAccessReferrals && referralsEnabled && (
+          {canAccessReferrals && (
             <ListItemLink
               className="ph-unmask"
               to={`${locationPrefix}/referrals`}

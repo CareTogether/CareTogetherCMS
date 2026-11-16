@@ -1,0 +1,16 @@
+{
+  "voice": "af_heart",
+  "speed": 1.0,
+  "steps": [
+    { "id": "open-family", "text": "This is the new Family screen. Everything from the old screen is still here, organized so the things you use most are on top." },
+    { "id": "header", "text": "The header shows who this family is and how to reach them." },
+    { "id": "actions", "text": "The most common actions are these buttons. Less frequent ones, like printing or removing a role, are in this menu." },
+    { "id": "tabs", "text": "Instead of one long page, the information is now in tabs: Overview, Approvals, Assignments, Documents, and Timeline and Notes." },
+    { "id": "counts", "text": "The numbers on each tab show what's inside. A colored badge means something needs your attention, like a missing requirement or notes awaiting review." },
+    { "id": "overview", "text": "Overview shows the family members, organizations, and everything that happened in the last seven days." },
+    { "id": "client-family", "text": "For a client family, you'll see Arrangements and Case History instead of Approvals." },
+    { "id": "beta-features", "text": "If you'd like to keep using the old screen for now, click your profile picture, then Beta Features." },
+    { "id": "switch", "text": "Turn off Family Screen V2, and families open in the old screen again. Turn it back on the same way when you're ready." },
+    { "id": "feedback", "text": "If something made you switch back, tell us through the chat bubble, so we can fix it before the old screen goes away." }
+  ]
+}

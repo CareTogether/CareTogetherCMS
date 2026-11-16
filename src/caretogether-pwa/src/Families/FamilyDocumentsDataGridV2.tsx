@@ -5,6 +5,7 @@ import {
   Stack,
   Tooltip,
   Typography,
+  useMediaQuery,
   useTheme,
 } from '@mui/material';
 import {
@@ -41,14 +42,17 @@ function familyDocumentSearchText(row: FamilyDocumentRowV2) {
     .join(' ');
 }
 
-function buildColumns({
-  onDelete,
-  onDownload,
-  onPreview,
-}: Pick<
-  FamilyDocumentsDataGridV2Props,
-  'onDelete' | 'onDownload' | 'onPreview'
->): GridColDef<FamilyDocumentRowV2>[] {
+function buildColumns(
+  {
+    onDelete,
+    onDownload,
+    onPreview,
+  }: Pick<
+    FamilyDocumentsDataGridV2Props,
+    'onDelete' | 'onDownload' | 'onPreview'
+  >,
+  isMobile: boolean
+): GridColDef<FamilyDocumentRowV2>[] {
   return [
     {
       field: 'documentName',
@@ -57,9 +61,11 @@ function buildColumns({
       minWidth: 280,
       flex: 1.3,
       renderCell: ({ row }) => (
-        <Typography {...v2Typography.browserCell} noWrap>
-          {row.documentName}
-        </Typography>
+        <Tooltip title={isMobile ? row.documentName : ''}>
+          <Typography {...v2Typography.browserCell} noWrap>
+            {row.documentName}
+          </Typography>
+        </Tooltip>
       ),
     },
     {
@@ -117,7 +123,7 @@ function buildColumns({
       field: 'actions',
       headerClassName: 'ph-unmask',
       headerName: 'Actions',
-      width: 132,
+      width: isMobile ? 160 : 132,
       sortable: false,
       filterable: false,
       disableColumnMenu: true,
@@ -142,6 +148,10 @@ function buildColumns({
                   aria-label={`Preview ${row.documentName}`}
                   onClick={() => onPreview(row)}
                   size="small"
+                  sx={{
+                    minWidth: { xs: 44, sm: 0 },
+                    minHeight: { xs: 44, sm: 0 },
+                  }}
                 >
                   <PreviewIcon fontSize="small" />
                 </IconButton>
@@ -156,6 +166,10 @@ function buildColumns({
                 disabled={!row.permissionFlags.canDownload}
                 onClick={() => onDownload(row)}
                 size="small"
+                sx={{
+                  minWidth: { xs: 44, sm: 0 },
+                  minHeight: { xs: 44, sm: 0 },
+                }}
               >
                 <DownloadIcon fontSize="small" />
               </IconButton>
@@ -169,6 +183,10 @@ function buildColumns({
                   aria-label={`Delete ${row.documentName}`}
                   onClick={() => onDelete(row)}
                   size="small"
+                  sx={{
+                    minWidth: { xs: 44, sm: 0 },
+                    minHeight: { xs: 44, sm: 0 },
+                  }}
                 >
                   <DeleteIcon fontSize="small" />
                 </IconButton>
@@ -200,9 +218,10 @@ export function FamilyDocumentsDataGridV2({
   rows,
 }: FamilyDocumentsDataGridV2Props) {
   const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const columns = useMemo(
-    () => buildColumns({ onDelete, onDownload, onPreview }),
-    [onDelete, onDownload, onPreview]
+    () => buildColumns({ onDelete, onDownload, onPreview }, isMobile),
+    [onDelete, onDownload, onPreview, isMobile]
   );
   const { filterModel, filterModelRestored, onFilterModelChange } =
     usePersistedGridFilterModel({
@@ -213,10 +232,19 @@ export function FamilyDocumentsDataGridV2({
 
   return (
     <Box
-      sx={[
-        v2DataGridStyles(theme),
-        { '& .previewable-document-row': { cursor: 'pointer' } },
-      ]}
+      sx={{
+        ...v2DataGridStyles(theme),
+        minWidth: 0,
+        maxWidth: '100%',
+        '& .MuiDataGrid-cell[data-field="actions"]': {
+          py: { xs: 0, sm: 1 },
+        },
+        '& .MuiDataGrid-toolbar .MuiButtonBase-root': {
+          minWidth: { xs: 44, sm: 0 },
+          minHeight: { xs: 44, sm: 0 },
+        },
+        '& .previewable-document-row': { cursor: 'pointer' },
+      }}
     >
       <PersistedFilterDataGridPremium
         showToolbar

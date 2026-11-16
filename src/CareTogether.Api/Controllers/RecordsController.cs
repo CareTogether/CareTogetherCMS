@@ -42,7 +42,10 @@ namespace CareTogether.Api.Controllers
             this.powerBI = powerBI;
         }
 
+        // Large locations return payloads of 100+ MB. Azure Front Door only compresses responses
+        // under 8 MB, so the API compresses this one itself.
         [HttpGet]
+        [CompressResponse]
         public async Task<ActionResult<IEnumerable<RecordsAggregate>>> ListVisibleAggregatesAsync(
             Guid organizationId,
             Guid locationId

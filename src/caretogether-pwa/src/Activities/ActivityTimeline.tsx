@@ -36,7 +36,6 @@ import { formatTimelineTimestamp } from './timelineTimestampFormatting';
 import {
   ActivitySorting,
   composeNoteType,
-  getTimelineItemKey,
 } from './activityTimelineModel';
 import { useActivityTimelineViewModel } from './useActivityTimelineViewModel';
 
@@ -58,6 +57,7 @@ export function ActivityTimeline({
     displayActivitiesWithNotes,
     documentLookup,
     mergedTimelineItems,
+    timelineItemKeys,
     personLookup,
     setSortBy,
     sortBy,
@@ -169,7 +169,7 @@ export function ActivityTimeline({
 
             return (
               <Box
-                key={activity.activityTimestampUtc?.toString()}
+                key={note.id}
                 sx={{
                   p: 2,
                   border: note.isPinned ? 2 : 1,
@@ -295,7 +295,7 @@ export function ActivityTimeline({
                 Boolean(nextItem.note?.isPinned);
 
           return (
-            <AppTimelineItem key={getTimelineItemKey(item)}>
+            <AppTimelineItem key={timelineItemKeys[i]}>
               <AppTimelineOppositeContent sx={{ display: 'none' }} />
               <AppTimelineSeparator>
                 <AppTimelineDot

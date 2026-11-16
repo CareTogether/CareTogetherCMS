@@ -1,0 +1,11 @@
+{
+  "voice": "af_heart",
+  "speed": 1.0,
+  "steps": [
+    { "id": "case-header", "text": "For client families, the current case is at the top, with its open date and arrangements." },
+    { "id": "arrangements-tab", "text": "The Arrangements tab lists this case's arrangements in a table." },
+    { "id": "open-arrangement", "text": "Click an arrangement to see and edit its details on the side." },
+    { "id": "panel", "text": "Set dates, manage assignments, complete requirements, and record where the child is staying, all from here." },
+    { "id": "case-history", "text": "Case History shows every case this family has had. Select a closed case, and the screen shows that case instead." }
+  ]
+}

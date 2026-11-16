@@ -45,7 +45,11 @@ function ContactInfoCopyButton({
         size="small"
         aria-label={`copy ${label.toLowerCase()}`}
         onClick={() => void handleCopy()}
-        sx={{ p: 0.25 }}
+        sx={{
+          p: 0.25,
+          minWidth: { xs: 44, sm: 0 },
+          minHeight: { xs: 44, sm: 0 },
+        }}
       >
         {copied ? (
           <CheckIcon color="success" fontSize="small" />
@@ -112,9 +116,23 @@ export function FamilyPrimaryHeaderInfoV2({
           <PrimaryContactEditor family={family} />
         </Box>
         {primaryEmailAddress && (
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+          <Box
+            sx={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 0.5,
+              minWidth: { xs: 0, sm: 'auto' },
+              maxWidth: { xs: '100%', sm: 'none' },
+            }}
+          >
             <EmailIcon fontSize="small" color="action" />
-            <Typography {...v2Typography.browserCell}>
+            <Typography
+              {...v2Typography.browserCell}
+              sx={{
+                minWidth: { xs: 0, sm: 'auto' },
+                overflowWrap: { xs: 'anywhere', sm: 'normal' },
+              }}
+            >
               {primaryEmailAddress}
             </Typography>
             <ContactInfoCopyButton
@@ -125,9 +143,23 @@ export function FamilyPrimaryHeaderInfoV2({
           </Box>
         )}
         {primaryPhoneNumber && (
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+          <Box
+            sx={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 0.5,
+              minWidth: { xs: 0, sm: 'auto' },
+              maxWidth: { xs: '100%', sm: 'none' },
+            }}
+          >
             <PhoneIcon fontSize="small" color="action" />
-            <Typography {...v2Typography.browserCell}>
+            <Typography
+              {...v2Typography.browserCell}
+              sx={{
+                minWidth: { xs: 0, sm: 'auto' },
+                overflowWrap: { xs: 'anywhere', sm: 'normal' },
+              }}
+            >
               {primaryPhoneNumber}
             </Typography>
             <ContactInfoCopyButton
@@ -138,9 +170,23 @@ export function FamilyPrimaryHeaderInfoV2({
           </Box>
         )}
         {primaryAddressText && (
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+          <Box
+            sx={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 0.5,
+              minWidth: { xs: 0, sm: 'auto' },
+              maxWidth: { xs: '100%', sm: 'none' },
+            }}
+          >
             <HomeIcon fontSize="small" color="action" />
-            <Typography {...v2Typography.browserCell}>
+            <Typography
+              {...v2Typography.browserCell}
+              sx={{
+                minWidth: { xs: 0, sm: 'auto' },
+                overflowWrap: { xs: 'anywhere', sm: 'normal' },
+              }}
+            >
               {primaryAddressText}
             </Typography>
             <ContactInfoCopyButton

@@ -17,6 +17,7 @@ import {
   Print as PrintIcon,
 } from '@mui/icons-material';
 import type { MouseEvent, ReactNode } from 'react';
+import { useRef } from 'react';
 import { personFullName, type PrintableFamilyMember } from './FamilyMemberPrintData';
 
 type RoleActionV2 = {
@@ -84,6 +85,13 @@ export function FamilyScreenActionsMenuV2({
   showToggleTestFamilyAction,
   toggleTestFamilyLabel,
 }: FamilyScreenActionsMenuV2Props) {
+  const pendingDrawerAction = useRef<(() => void) | null>(null);
+
+  function closeMenuBeforeOpening(action: () => void) {
+    pendingDrawerAction.current = action;
+    onCloseMenu();
+  }
+
   return (
     <Toolbar
       variant="dense"
@@ -120,8 +128,8 @@ export function FamilyScreenActionsMenuV2({
                 borderRadius: 1,
                 color: 'primary.main',
                 flex: '0 0 auto',
-                width: 36,
-                height: 36,
+                width: 44,
+                height: 44,
               }}
             >
               <MoreVertIcon fontSize="small" />
@@ -195,10 +203,19 @@ export function FamilyScreenActionsMenuV2({
         keepMounted
         open={Boolean(menuAnchor)}
         onClose={onCloseMenu}
+        slotProps={{
+          transition: {
+            onExited: () => {
+              const action = pendingDrawerAction.current;
+              pendingDrawerAction.current = null;
+              action?.();
+            },
+          },
+        }}
       >
         <MenuList dense={isDesktop}>
           {!isDesktop && canUploadDocuments && (
-            <MenuItem onClick={onUploadDocuments}>
+            <MenuItem onClick={() => closeMenuBeforeOpening(onUploadDocuments)}>
               <ListItemIcon>
                 <CloudUploadIcon fontSize="small" />
               </ListItemIcon>
@@ -206,7 +223,7 @@ export function FamilyScreenActionsMenuV2({
             </MenuItem>
           )}
           {!isDesktop && canEditFamilyInfo && (
-            <MenuItem onClick={onAddAdult}>
+            <MenuItem onClick={() => closeMenuBeforeOpening(onAddAdult)}>
               <ListItemIcon>
                 <AddCircleIcon fontSize="small" />
               </ListItemIcon>
@@ -214,7 +231,7 @@ export function FamilyScreenActionsMenuV2({
             </MenuItem>
           )}
           {!isDesktop && canEditFamilyInfo && (
-            <MenuItem onClick={onAddChild}>
+            <MenuItem onClick={() => closeMenuBeforeOpening(onAddChild)}>
               <ListItemIcon>
                 <AddCircleIcon fontSize="small" />
               </ListItemIcon>
@@ -222,7 +239,7 @@ export function FamilyScreenActionsMenuV2({
             </MenuItem>
           )}
           {!isDesktop && canAddNotes && (
-            <MenuItem onClick={onAddNote}>
+            <MenuItem onClick={() => closeMenuBeforeOpening(onAddNote)}>
               <ListItemIcon>
                 <AddCircleIcon fontSize="small" />
               </ListItemIcon>

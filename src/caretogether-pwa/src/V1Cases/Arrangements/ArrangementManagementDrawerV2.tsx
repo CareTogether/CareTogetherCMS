@@ -445,7 +445,11 @@ export function ArrangementManagementDrawerV2({
           />
         )}
 
-        <Stack direction="row" spacing={1} sx={{ justifyContent: 'flex-end' }}>
+        <Stack
+          direction={{ xs: 'column', sm: 'row' }}
+          spacing={1}
+          sx={{ justifyContent: 'flex-end' }}
+        >
           <Button onClick={onClose} color="secondary">
             Cancel
           </Button>

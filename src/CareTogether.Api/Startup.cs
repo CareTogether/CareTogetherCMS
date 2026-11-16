@@ -39,6 +39,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.OData;
 using Microsoft.AspNetCore.OData.NewtonsoftJson;
+using Microsoft.AspNetCore.ResponseCompression;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -80,6 +81,22 @@ namespace CareTogether.Api
             services.AddFeatureManagement().AddFeatureFilter<TargetingFilter>();
 
             services.AddHealthChecks();
+
+            // Only endpoints marked with [CompressResponse] are compressed (see Configure).
+            // Brotli "Optimal" is quality 4, which is still fast; "Fastest" (quality 1) compressed a
+            // streamed Records response to only about 30% of its size, worse than gzip "Fastest".
+            services.AddResponseCompression(options =>
+            {
+                options.EnableForHttps = true;
+                options.Providers.Add<BrotliCompressionProvider>();
+                options.Providers.Add<GzipCompressionProvider>();
+            });
+            services.Configure<BrotliCompressionProviderOptions>(options =>
+                options.Level = System.IO.Compression.CompressionLevel.Optimal
+            );
+            services.Configure<GzipCompressionProviderOptions>(options =>
+                options.Level = System.IO.Compression.CompressionLevel.Fastest
+            );
 
             services.AddMemoryCache();
 
@@ -593,6 +610,7 @@ namespace CareTogether.Api
             }
 
             app.UseRouting();
+            app.UseResponseCompressionForMarkedEndpoints();
             app.UseAuthentication();
             app.UseAuthorization();
 
