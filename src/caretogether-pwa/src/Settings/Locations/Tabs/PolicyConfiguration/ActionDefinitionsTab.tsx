@@ -17,6 +17,10 @@ import {
 import { v2DataGridStyles } from '../../../../Families/v2DataGridStyles';
 import { useSidePanel } from '../../../../Hooks/useSidePanel';
 import {
+  usePolicyTransitionGuard,
+  useUnsavedPolicyNavigation,
+} from '../../../../Hooks/useUnsavedPolicyNavigation';
+import {
   ActionDefinitionSidePanel,
   DeleteRowAction,
   EditableActions,
@@ -54,6 +58,12 @@ export function ActionDefinitionsTab({
   const draft = usePolicyGridDraft(policy, onPolicyChange);
   const apiRef = useGridApiRef();
   const [editing, setEditing] = useState(false);
+  const [drawerDirty, setDrawerDirty] = useState(false);
+  useUnsavedPolicyNavigation(drawerDirty || editing, draft.saving);
+  const canClose = usePolicyTransitionGuard({
+    dirty: drawerDirty,
+    saving: draft.saving,
+  });
   const usage = useMemo(() => getRequirementUsage(draft.value), [draft.value]);
   const rows = useMemo(
     () => buildActionDefinitionGridRows(draft.value, usage),
@@ -63,7 +73,14 @@ export function ActionDefinitionsTab({
     SidePanel: ActionSidePanel,
     openSidePanel,
     closeSidePanel,
-  } = useSidePanel({ className: 'ph-unmask' });
+    requestCloseSidePanel,
+  } = useSidePanel({
+    onBeforeClose: async () => {
+      if (!(await canClose())) return false;
+      setDrawerDirty(false);
+      return true;
+    },
+  });
   const [workingAction, setWorkingAction] = useState<
     { actionName?: string; action?: ActionRequirement } | undefined
   >();
@@ -101,7 +118,7 @@ export function ActionDefinitionsTab({
             <IconButton
               size="small"
               aria-label={`Edit details ${row.actionName}`}
-              disabled={saving}
+              disabled={saving || editing}
               onClick={() => openEditAction(row.actionName, row.action)}
             >
               <EditIcon />
@@ -109,11 +126,12 @@ export function ActionDefinitionsTab({
           </Tooltip>
           <DeleteRowAction
             label={row.actionName}
+            disabled={saving || editing}
             onClick={() => deleteAction(row.actionName)}
           />
         </Stack>
       )),
-    [deleteAction, openEditAction, saving]
+    [deleteAction, openEditAction, saving, editing]
   );
 
   function processRowUpdate(updated: ActionDefinitionGridRow) {
@@ -135,7 +153,9 @@ export function ActionDefinitionsTab({
     <Box>
       <SectionHeader
         title="Action Definitions"
-        actions={<EditableActions onAdd={openAddAction} disabled={saving} />}
+        actions={
+          <EditableActions onAdd={openAddAction} disabled={saving || editing} />
+        }
       />
 
       {editError && (
@@ -178,7 +198,9 @@ export function ActionDefinitionsTab({
             event.defaultMuiPrevented = true;
           }}
           onCellEditStart={() => setEditing(true)}
-          onCellEditStop={(params) => {
+          onCellEditStop={(params, event) => {
+            if (params.reason === 'cellFocusOut')
+              event.defaultMuiPrevented = true;
             if (params.reason === 'escapeKeyDown') setEditing(false);
           }}
           showToolbar
@@ -227,8 +249,9 @@ export function ActionDefinitionsTab({
           actionName={workingAction?.actionName}
           action={workingAction?.action}
           saveLabel="Apply to draft"
+          onDirtyChange={setDrawerDirty}
           existingActionNames={rows.map((row) => row.actionName)}
-          onClose={closeSidePanel}
+          onClose={requestCloseSidePanel}
           onSave={(previousName, actionName, action) => {
             draft.stage(
               clonePolicyWithActionDefinition(
@@ -239,6 +262,7 @@ export function ActionDefinitionsTab({
               )
             );
             closeSidePanel();
+            setDrawerDirty(false);
           }}
         />
       </ActionSidePanel>

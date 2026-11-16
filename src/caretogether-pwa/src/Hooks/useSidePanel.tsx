@@ -1,16 +1,33 @@
 import { Drawer } from '@mui/material';
-import { ReactNode, useState, useSyncExternalStore } from 'react';
+import {
+  createContext,
+  ReactNode,
+  useRef,
+  useState,
+  useSyncExternalStore,
+} from 'react';
 import { useUnsavedPolicyNavigation } from './useUnsavedPolicyNavigation';
+export const SidePanelSavingContext = createContext<
+  ((saving: boolean) => void) | undefined
+>(undefined);
 
 // The panel component is created once per hook instance so its identity stays stable
 // across renders. A component defined inline would be a new type on every render and
 // React would remount the panel content, discarding any state it holds (drafts, saving).
-function createSidePanel(className?: string, protectNavigation = false) {
+function createSidePanel(
+  className?: string,
+  protectNavigation = false,
+  beforeClose?: () => Promise<boolean>
+) {
   function SidePanelNavigationGuard() {
     useUnsavedPolicyNavigation(true);
     return null;
   }
   let open = false;
+  let saving = false;
+  const setSaving = (value: boolean) => {
+    saving = value;
+  };
   const listeners = new Set<() => void>();
 
   const setOpen = (next: boolean) => {
@@ -28,6 +45,10 @@ function createSidePanel(className?: string, protectNavigation = false) {
 
   const openSidePanel = () => setOpen(true);
   const closeSidePanel = () => setOpen(false);
+  const requestCloseSidePanel = async () => {
+    if (saving) return;
+    if (!beforeClose || (await beforeClose())) closeSidePanel();
+  };
 
   function SidePanel({ children }: { children: ReactNode }) {
     const isOpen = useSyncExternalStore(subscribe, getOpen);
@@ -42,7 +63,7 @@ function createSidePanel(className?: string, protectNavigation = false) {
           disableRestoreFocus
           anchor="right"
           open={isOpen}
-          onClose={closeSidePanel}
+          onClose={requestCloseSidePanel}
           slotProps={{
             paper: {
               sx: {
@@ -52,21 +73,34 @@ function createSidePanel(className?: string, protectNavigation = false) {
             },
           }}
         >
-          {children}
+          <SidePanelSavingContext.Provider value={setSaving}>
+            {children}
+          </SidePanelSavingContext.Provider>
         </Drawer>
       </>
     );
   }
 
-  return { SidePanel, openSidePanel, closeSidePanel };
+  return { SidePanel, openSidePanel, closeSidePanel, requestCloseSidePanel };
 }
 
 export function useSidePanel({
   className,
   protectNavigation,
-}: { className?: string; protectNavigation?: boolean } = {}) {
+  onBeforeClose,
+}: {
+  className?: string;
+  protectNavigation?: boolean;
+  onBeforeClose?: () => Promise<boolean>;
+} = {}) {
+  const beforeClose = useRef(onBeforeClose);
+  beforeClose.current = onBeforeClose;
   const [sidePanel] = useState(() =>
-    createSidePanel(className, protectNavigation)
+    createSidePanel(
+      className,
+      protectNavigation,
+      () => beforeClose.current?.() ?? Promise.resolve(true)
+    )
   );
   return sidePanel;
 }

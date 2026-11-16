@@ -54,7 +54,7 @@ export function useAdministrationSidePanel(
       }
     : {
         ...fallback,
-        requestCloseSidePanel: fallback.closeSidePanel,
+        requestCloseSidePanel: fallback.requestCloseSidePanel,
         coordinated: false,
       };
 }

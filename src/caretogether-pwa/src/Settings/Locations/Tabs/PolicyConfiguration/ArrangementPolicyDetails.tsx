@@ -2,6 +2,8 @@ import {
   Accordion,
   AccordionDetails,
   AccordionSummary,
+  IconButton,
+  Tooltip,
   Stack,
   Table,
   TableBody,
@@ -12,6 +14,7 @@ import {
   Typography,
 } from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import EditIcon from '@mui/icons-material/Edit';
 import { useState } from 'react';
 import {
   ArrangementFunction,
@@ -79,7 +82,6 @@ export function ArrangementPolicyDetails({
     closeSidePanel: closeArrangementFunctionPanel,
     requestCloseSidePanel: requestCloseArrangementFunctionPanel,
   } = useAdministrationSidePanel({
-    className: 'ph-unmask',
     protectNavigation: true,
   });
   const [workingArrangementFunction, setWorkingArrangementFunction] = useState<
@@ -149,15 +151,7 @@ export function ArrangementPolicyDetails({
                     />
                   ) : (
                     arrangementFunctions.map((arrangementFunction) => (
-                      <TableRow
-                        key={arrangementFunction.functionName}
-                        hover
-                        sx={{ cursor: 'pointer' }}
-                        onClick={() => {
-                          setWorkingArrangementFunction(arrangementFunction);
-                          openArrangementFunctionPanel();
-                        }}
-                      >
+                      <TableRow key={arrangementFunction.functionName} hover>
                         <TableCell>
                           <ArrangementFunctionSummary
                             arrangementFunction={arrangementFunction}
@@ -186,6 +180,20 @@ export function ArrangementPolicyDetails({
                             spacing={0.5}
                             sx={{ justifyContent: 'flex-end' }}
                           >
+                            <Tooltip title="Edit function">
+                              <IconButton
+                                size="small"
+                                aria-label={`Edit function ${arrangementFunction.functionName}`}
+                                onClick={() => {
+                                  setWorkingArrangementFunction(
+                                    arrangementFunction
+                                  );
+                                  openArrangementFunctionPanel();
+                                }}
+                              >
+                                <EditIcon />
+                              </IconButton>
+                            </Tooltip>
                             <DuplicateRowAction
                               label={arrangementFunction.functionName}
                               onClick={() =>

@@ -144,7 +144,6 @@ function CasePolicyDetailsEditor({
     closeSidePanel: closeFunctionAssignmentPanel,
     requestCloseSidePanel: requestCloseFunctionAssignmentPanel,
   } = useAdministrationSidePanel({
-    className: 'ph-unmask',
     protectNavigation: true,
   });
   const {
@@ -153,7 +152,6 @@ function CasePolicyDetailsEditor({
     closeSidePanel: closeArrangementPolicyPanel,
     requestCloseSidePanel: requestCloseArrangementPolicyPanel,
   } = useAdministrationSidePanel({
-    className: 'ph-unmask',
     protectNavigation: true,
   });
   const creationOpened = useRef(false);

@@ -20,13 +20,13 @@ export function CustomFamilyFieldsTab({
   onPolicyChange,
 }: {
   policy: EffectiveLocationPolicy;
-  onPolicyChange: (policy: EffectiveLocationPolicy) => void;
+  onPolicyChange: (policy: EffectiveLocationPolicy) => Promise<boolean>;
 }) {
   const {
     SidePanel: CustomFieldPanel,
     openSidePanel,
     closeSidePanel,
-  } = useSidePanel({ className: 'ph-unmask' });
+  } = useSidePanel({});
   const [workingField, setWorkingField] = useState<CustomField | undefined>();
   const fields = policy.customFamilyFields ?? [];
 
@@ -48,14 +48,18 @@ export function CustomFamilyFieldsTab({
     );
   }
 
-  function saveField(previousName: string | undefined, field: CustomField) {
-    onPolicyChange(
+  async function saveField(
+    previousName: string | undefined,
+    field: CustomField
+  ) {
+    const saved = await onPolicyChange(
       clonePolicyWithCustomFamilyFields(
         policy,
         upsertCustomField(fields, previousName, field)
       )
     );
-    closeSidePanel();
+    if (saved) closeSidePanel();
+    return saved;
   }
 
   function deleteCustomField(field: CustomField) {

@@ -124,6 +124,7 @@ export function ConfirmedRowAction({
   title,
   message,
   onClick,
+  disabled = false,
 }: {
   label: string;
   action: string;
@@ -131,6 +132,7 @@ export function ConfirmedRowAction({
   title: string;
   message: string;
   onClick: () => void;
+  disabled?: boolean;
 }) {
   const [confirming, setConfirming] = useState(false);
   const panel = useAdministrationSidePanel();
@@ -144,6 +146,7 @@ export function ConfirmedRowAction({
   }
 
   function confirmDuplicate() {
+    if (disabled) return;
     onClick();
     closeDialog();
   }
@@ -154,6 +157,7 @@ export function ConfirmedRowAction({
         <IconButton
           size="small"
           aria-label={`${action} ${label}`}
+          disabled={disabled}
           onClick={(event) => {
             event.stopPropagation();
             if (panel.coordinated) panel.openSidePanel();
@@ -171,7 +175,11 @@ export function ConfirmedRowAction({
             <Typography>{message}</Typography>
             <Stack direction="row" spacing={1}>
               <Button onClick={closeDialog}>No</Button>
-              <Button variant="contained" onClick={confirmDuplicate}>
+              <Button
+                variant="contained"
+                onClick={confirmDuplicate}
+                disabled={disabled}
+              >
                 Yes
               </Button>
             </Stack>
@@ -179,7 +187,6 @@ export function ConfirmedRowAction({
         </panel.SidePanel>
       ) : (
         <Dialog
-          className="ph-unmask"
           open={confirming}
           onClose={closeDialog}
           onClick={(event) => event.stopPropagation()}
@@ -190,7 +197,11 @@ export function ConfirmedRowAction({
           </DialogContent>
           <DialogActions>
             <Button onClick={closeDialog}>No</Button>
-            <Button variant="contained" onClick={confirmDuplicate}>
+            <Button
+              variant="contained"
+              onClick={confirmDuplicate}
+              disabled={disabled}
+            >
               Yes
             </Button>
           </DialogActions>
@@ -222,14 +233,17 @@ export function DuplicateRowAction({
 export function DeleteRowAction({
   label,
   onClick,
+  disabled = false,
 }: {
   label: string;
   onClick: () => void;
+  disabled?: boolean;
 }) {
   return (
     <ConfirmedRowAction
       label={label}
       action="Delete"
+      disabled={disabled}
       icon={<DeleteIcon fontSize="small" />}
       title={`Delete ${label}?`}
       message={`Are you sure you want to delete ${label}?`}

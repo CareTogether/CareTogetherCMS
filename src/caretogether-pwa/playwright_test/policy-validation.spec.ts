@@ -926,14 +926,51 @@ test('integrated function and case assignment CRUD reuse eligibility forms and p
     stored.referralPolicy.arrangementPolicies[0].arrangementFunctions[0]
       .eligiblePeople
   ).toEqual(['22222222-2222-4222-8222-222222222222']);
-  await functions
-    .getByText('Local function - Zero Or More', { exact: true })
-    .click();
+  const editFunction = functions.getByRole('button', {
+    name: 'Edit function Local function',
+    exact: true,
+  });
+  await editFunction.focus();
+  await editFunction.press('Space');
+  for (const field of [
+    'Eligible Individual Volunteer Roles',
+    'Eligible Volunteer Family Roles',
+    'Eligible People',
+  ]) {
+    const selected = page.getByRole('combobox', { name: field, exact: true });
+    if (field === 'Eligible People') {
+      expect(
+        await selected.evaluate((el) => el.closest('.ph-unmask') !== null)
+      ).toBe(false);
+      expect(
+        await selected.evaluate((el) => el.closest('.ph-no-capture') !== null)
+      ).toBe(true);
+      expect(
+        await page
+          .getByText('QA Person', { exact: true })
+          .evaluate((el) => el.closest('.ph-unmask') !== null)
+      ).toBe(false);
+    }
+    await selected.focus();
+    await selected.press('Backspace');
+  }
   await page
     .getByRole('textbox', { name: 'Function', exact: true })
     .fill('Edited function');
   await page.getByRole('button', { name: 'Save', exact: true }).click();
   await expect.poll(requests.puts).toBe(2);
+  for (const field of [
+    'eligibleIndividualVolunteerRoles',
+    'eligibleVolunteerFamilyRoles',
+    'eligiblePeople',
+  ]) {
+    expect(
+      (
+        stored.referralPolicy.arrangementPolicies[0]
+          .arrangementFunctions[0] as unknown as Record<string, unknown>
+      )[field]
+    ).toEqual([]);
+  }
   await page
     .getByRole('button', { name: 'Duplicate Edited function', exact: true })
     .click();
@@ -1071,9 +1108,12 @@ test('function metadata preserves inherited and explicitly empty eligibility', a
   await management.getByText('Hosting', { exact: true }).click();
   await management.getByText('Arrangement Functions', { exact: true }).click();
   for (const [index, name] of ['Inherited', 'Explicit empty'].entries()) {
-    await management
-      .getByText(name + ' - Zero Or More', { exact: true })
-      .click();
+    const edit = management.getByRole('button', {
+      name: 'Edit function ' + name,
+      exact: true,
+    });
+    await edit.focus();
+    await edit.press('Enter');
     await page
       .getByRole('combobox', { name: 'Requirement', exact: true })
       .click();
@@ -3584,3 +3624,331 @@ test('supplied-policy regression persists a new function through reload with all
   await expect(page.getByText(/^New Function -/)).toBeVisible();
   expect(puts).toBe(1);
 });
+
+for (const section of [
+  'customFamilyFields',
+  'organizationPolicy',
+  'volunteerPolicy',
+  'volunteerCustomFields',
+  'volunteerFamilyRoles',
+]) {
+  test(
+    'policy drawer retains failed saves and awaits success: ' + section,
+    async ({ page }) => {
+      const initial = policy();
+      Object.assign(initial, {
+        organizationApprovalPolicy: { organizationRoles: {} },
+      });
+      const requests = await backend(page, false, false, initial);
+      let attempts = 0;
+      let release: (() => void) | undefined;
+      await page.route('**/Configuration/policy', async (route) => {
+        if (route.request().method() !== 'PUT') {
+          await route.fulfill({ json: initial });
+          return;
+        }
+        attempts++;
+        if (attempts === 1) {
+          await route.fulfill({
+            status: 400,
+            json: { errors: ['Rejected fixture'] },
+          });
+          return;
+        }
+        if (attempts === 2) {
+          await route.abort('failed');
+          return;
+        }
+        await new Promise<void>((resolve) => {
+          release = resolve;
+        });
+        await route.fulfill({ json: route.request().postDataJSON() });
+      });
+      const volunteer = section.startsWith('volunteer');
+      await mount(page, volunteer ? 'volunteerPolicy' : section);
+      let add = page.getByRole('button', { name: 'Add', exact: true });
+      if (volunteer) {
+        const label =
+          section === 'volunteerCustomFields'
+            ? 'Custom Fields'
+            : section === 'volunteerFamilyRoles'
+              ? 'Volunteer Family Roles'
+              : 'Volunteer Roles';
+        if (label !== 'Volunteer Roles')
+          await page.getByText(label, { exact: true }).click();
+        add = page
+          .locator('.MuiAccordion-root')
+          .filter({ has: page.getByText(label, { exact: true }) })
+          .last()
+          .getByRole('button', { name: 'Add', exact: true });
+      }
+      await add.click();
+      const custom =
+        section === 'customFamilyFields' || section === 'volunteerCustomFields';
+      const label = custom
+        ? 'Name'
+        : section === 'organizationPolicy'
+          ? 'Organization Role Type'
+          : section === 'volunteerFamilyRoles'
+            ? 'Volunteer Family Role Type'
+            : 'Volunteer Role Type';
+      const input = page.getByRole('textbox', { name: label, exact: true });
+      await input.fill('Retained fixture');
+      if (!custom)
+        await page
+          .getByRole('textbox', { name: 'Version', exact: true })
+          .fill('v1');
+      const save = page.getByRole('button', { name: 'Save', exact: true });
+      await save.click();
+      await expect(
+        page.getByText(
+          'The changes could not be saved. Review the policy errors and try again.'
+        )
+      ).toBeVisible();
+      await expect(input).toHaveValue('Retained fixture');
+      await save.click();
+      await expect.poll(() => attempts).toBe(2);
+      await expect(input).toHaveValue('Retained fixture');
+      await expect(save).toBeEnabled();
+      await save.click();
+      await expect.poll(() => attempts).toBe(3);
+      await expect(save).toBeDisabled();
+      await expect(
+        page.getByRole('button', { name: 'Cancel', exact: true })
+      ).toBeDisabled();
+      await input.press('Enter');
+      expect(attempts).toBe(3);
+      await input.press('Escape');
+      await expect(input).toHaveValue('Retained fixture');
+      release!();
+      await expect(input).toHaveCount(0);
+      expect(requests.puts()).toBe(0);
+    }
+  );
+}
+
+for (const width of [320, 390, 768, 1440]) {
+  test(
+    'Action Definitions protects active and drawer edits at ' + width + 'px',
+    async ({ page }) => {
+      await page.setViewportSize({ width, height: 900 });
+      const requests = await backend(
+        page,
+        false,
+        false,
+        actionDefinitionPolicy()
+      );
+      await mount(page, 'actionDefinitions');
+      const cell = page.locator(
+        '[data-id="Dynamic activity"] [data-field="instructions"]'
+      );
+      await cell.click();
+      const active = cell.locator('input');
+      await active.fill('Unapplied fixture');
+      expect(
+        await page.evaluate(() => {
+          const e = new Event('beforeunload', { cancelable: true });
+          window.dispatchEvent(e);
+          return e.defaultPrevented;
+        })
+      ).toBe(true);
+      const stay = policyDecision(page, false);
+      await page.getByRole('link', { name: 'Location B', exact: true }).click();
+      await stay;
+      await expect(active).toHaveValue('Unapplied fixture');
+      await active.press('Escape');
+      await page
+        .getByRole('button', {
+          name: 'Edit details Dynamic activity',
+          exact: true,
+        })
+        .click();
+      const name = page.getByRole('textbox', {
+        name: 'Action Name',
+        exact: true,
+      });
+      await expect(name).toHaveValue('Dynamic activity');
+      const bounds = await name.evaluate((element) =>
+        element.closest('.MuiDrawer-paper')!.getBoundingClientRect().toJSON()
+      );
+      expect(bounds.x).toBeGreaterThanOrEqual(0);
+      expect(bounds.width).toBeLessThanOrEqual(width);
+      expect(
+        await name.evaluate((el) => el.closest('.ph-unmask') !== null)
+      ).toBe(false);
+      await page
+        .getByRole('button', { name: 'Cancel', exact: true })
+        .last()
+        .click();
+      await expect(name).toHaveCount(0);
+      await expect(
+        page.getByRole('dialog', { name: 'Unsaved changes', exact: true })
+      ).toHaveCount(0);
+      await page
+        .getByRole('button', {
+          name: 'Edit details Dynamic activity',
+          exact: true,
+        })
+        .click();
+      await name.fill('Pending drawer fixture');
+      let decision = policyDecision(page, false);
+      await name.press('Escape');
+      await decision;
+      await expect(name).toHaveValue('Pending drawer fixture');
+      decision = policyDecision(page, false);
+      await page
+        .getByRole('button', { name: 'Cancel', exact: true })
+        .last()
+        .click();
+      await decision;
+      await expect(name).toHaveValue('Pending drawer fixture');
+      decision = policyDecision(page, false);
+      await page
+        .locator('.MuiDrawer-root .MuiBackdrop-root')
+        .dispatchEvent('click');
+      await decision;
+      await expect(name).toHaveValue('Pending drawer fixture');
+      expect(
+        await page.evaluate(() => {
+          const e = new Event('beforeunload', { cancelable: true });
+          window.dispatchEvent(e);
+          return e.defaultPrevented;
+        })
+      ).toBe(true);
+      decision = policyDecision(page, false);
+      await page
+        .locator('a[href="/org/org/b/settings/action-definitions"]')
+        .dispatchEvent('click');
+      await decision;
+      await expect(name).toHaveValue('Pending drawer fixture');
+      decision = policyDecision(page, true);
+      await page
+        .getByRole('button', { name: 'Cancel', exact: true })
+        .last()
+        .click();
+      await decision;
+      await expect(name).toHaveCount(0);
+      expect(requests.puts()).toBe(0);
+    }
+  );
+}
+
+test('Action Definitions pending saves block navigation and failures retain the staged draft', async ({
+  page,
+}) => {
+  const initial = actionDefinitionPolicy();
+  const requests = await backend(page, false, false, initial);
+  let release: (() => void) | undefined;
+  let writes = 0;
+  await page.route('**/Configuration/policy', async (route) => {
+    if (route.request().method() !== 'PUT') {
+      await route.fulfill({ json: initial });
+      return;
+    }
+    writes++;
+    await new Promise<void>((resolve) => {
+      release = resolve;
+    });
+    await route.fulfill({
+      status: 500,
+      json: { errors: ['Fixture request failed'] },
+    });
+  });
+  await mount(page, 'actionDefinitions');
+  const cell = page.locator(
+    '[data-id="Dynamic activity"] [data-field="instructions"]'
+  );
+  await cell.click();
+  await cell.locator('input').fill('Retained staged fixture');
+  await cell.locator('input').press('Enter');
+  await page.getByRole('button', { name: 'Save changes', exact: true }).click();
+  await expect.poll(() => writes).toBe(1);
+  const blocked = keepDuringSave(page);
+  await page.getByRole('link', { name: 'Location B', exact: true }).click();
+  await blocked;
+  await expect(page).toHaveURL('/org/org/a/settings/action-definitions');
+  release!();
+  await expect(
+    page.getByRole('alert').filter({ hasText: 'Your draft is retained' })
+  ).toBeVisible();
+  await expect(cell).toHaveText('Retained staged fixture');
+  await expect(
+    page.getByRole('button', { name: 'Save changes', exact: true })
+  ).toBeEnabled();
+  const stay = policyDecision(page, false);
+  await page.getByRole('link', { name: 'Settings', exact: true }).click();
+  await stay;
+  await expect(cell).toHaveText('Retained staged fixture');
+  expect(writes).toBe(1);
+  expect(requests.puts()).toBe(0);
+});
+
+for (const finish of ['Enter', 'Escape']) {
+  test(
+    'Action Definitions deletion waits for the active cell to resolve with ' +
+      finish,
+    async ({ page }) => {
+      const initial = actionDefinitionPolicy();
+      Object.assign(initial.actionDefinitions, {
+        'Other action': {
+          documentLink: 0,
+          noteEntry: 0,
+          instructions: 'Other original',
+        },
+      });
+      const requests = await backend(page, false, false, initial);
+      await mount(page, 'actionDefinitions');
+      const other = page.locator(
+        '[data-id="Other action"] [data-field="instructions"]'
+      );
+      await other.click();
+      await other.locator('input').fill('Keep staged change');
+      await other.locator('input').press('Enter');
+      const row = page.locator('[data-id="Dynamic activity"]');
+      const cell = row.locator('[data-field="instructions"]');
+      const remove = page.getByRole('button', {
+        name: 'Delete Dynamic activity',
+        exact: true,
+      });
+      const save = page.getByRole('button', {
+        name: 'Save changes',
+        exact: true,
+      });
+      const cancel = page.getByRole('button', { name: 'Cancel', exact: true });
+      const status = page.getByRole('status', { name: 'Policy draft status' });
+      await expect(remove).toBeEnabled();
+      await cell.click();
+      await cell.locator('input').fill('Unapplied value');
+      await expect(remove).toBeDisabled();
+      await expect(
+        page.getByRole('button', { name: 'Delete Other action', exact: true })
+      ).toBeDisabled();
+      await expect(page.getByRole('dialog')).toHaveCount(0);
+      await expect(cell.locator('input')).toHaveValue('Unapplied value');
+      await expect(status).toHaveText(
+        'Cell edit in progress · 1 unsaved change'
+      );
+      await cell.locator('input').press(finish);
+      await expect(page.locator('.MuiDataGrid-cell--editing')).toHaveCount(0);
+      await expect(remove).toBeEnabled();
+      await expect(cell).toHaveText(
+        finish === 'Enter' ? 'Unapplied value' : 'Original instructions'
+      );
+      await remove.click();
+      await page.getByRole('button', { name: 'Yes', exact: true }).click();
+      await expect(row).toHaveCount(0);
+      await expect(other).toHaveText('Keep staged change');
+      await expect(status).toHaveText('2 unsaved changes');
+      await expect(save).toBeEnabled();
+      await expect(cancel).toBeEnabled();
+      expect(requests.puts()).toBe(0);
+      await cancel.click();
+      await expect(cell).toHaveText('Original instructions');
+      await expect(other).toHaveText('Other original');
+      await expect(status).toHaveText(/^\s*$/);
+      await expect(save).toBeDisabled();
+      await expect(cancel).toBeDisabled();
+      expect(requests.puts()).toBe(0);
+    }
+  );
+}

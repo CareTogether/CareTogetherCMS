@@ -161,7 +161,7 @@ export function VolunteerPolicyTab({
   onPolicyChange,
 }: {
   policy: EffectiveLocationPolicy;
-  onPolicyChange: (policy: EffectiveLocationPolicy) => void;
+  onPolicyChange: (policy: EffectiveLocationPolicy) => Promise<boolean>;
 }) {
   const volunteerPolicy: VolunteerPolicy | undefined = policy.volunteerPolicy;
   const customFields = volunteerPolicy?.customFields ?? [];
@@ -170,17 +170,17 @@ export function VolunteerPolicyTab({
     SidePanel: CustomFieldPanel,
     openSidePanel,
     closeSidePanel,
-  } = useSidePanel({ className: 'ph-unmask' });
+  } = useSidePanel({});
   const {
     SidePanel: VolunteerRolePanel,
     openSidePanel: openVolunteerRolePanel,
     closeSidePanel: closeVolunteerRolePanel,
-  } = useSidePanel({ className: 'ph-unmask' });
+  } = useSidePanel({});
   const {
     SidePanel: VolunteerFamilyRolePanel,
     openSidePanel: openVolunteerFamilyRolePanel,
     closeSidePanel: closeVolunteerFamilyRolePanel,
-  } = useSidePanel({ className: 'ph-unmask' });
+  } = useSidePanel({});
   const [workingField, setWorkingField] = useState<CustomField | undefined>();
   const [workingVolunteerRoleVersion, setWorkingVolunteerRoleVersion] =
     useState<
@@ -471,14 +471,15 @@ export function VolunteerPolicyTab({
           field={workingField}
           existingNames={customFields.map((field) => field.name)}
           onClose={closeSidePanel}
-          onSave={(previousName, field) => {
-            onPolicyChange(
+          onSave={async (previousName, field) => {
+            const saved = await onPolicyChange(
               clonePolicyWithVolunteerCustomFields(
                 policy,
                 upsertCustomField(customFields, previousName, field)
               )
             );
-            closeSidePanel();
+            if (saved) closeSidePanel();
+            return saved;
           }}
         />
       </CustomFieldPanel>
@@ -504,8 +505,13 @@ export function VolunteerPolicyTab({
           family={false}
           actionNames={actionNames}
           onClose={closeVolunteerRolePanel}
-          onSave={(previousRoleName, previousVersion, roleName, version) => {
-            onPolicyChange(
+          onSave={async (
+            previousRoleName,
+            previousVersion,
+            roleName,
+            version
+          ) => {
+            const saved = await onPolicyChange(
               clonePolicyWithVolunteerPolicy(
                 policy,
                 upsertVolunteerRolePolicyVersion(
@@ -517,7 +523,8 @@ export function VolunteerPolicyTab({
                 )
               )
             );
-            closeVolunteerRolePanel();
+            if (saved) closeVolunteerRolePanel();
+            return saved;
           }}
         />
       </VolunteerRolePanel>
@@ -545,8 +552,13 @@ export function VolunteerPolicyTab({
           family
           actionNames={actionNames}
           onClose={closeVolunteerFamilyRolePanel}
-          onSave={(previousRoleName, previousVersion, roleName, version) => {
-            onPolicyChange(
+          onSave={async (
+            previousRoleName,
+            previousVersion,
+            roleName,
+            version
+          ) => {
+            const saved = await onPolicyChange(
               clonePolicyWithVolunteerPolicy(
                 policy,
                 upsertVolunteerFamilyRolePolicyVersion(
@@ -558,7 +570,8 @@ export function VolunteerPolicyTab({
                 )
               )
             );
-            closeVolunteerFamilyRolePanel();
+            if (saved) closeVolunteerFamilyRolePanel();
+            return saved;
           }}
         />
       </VolunteerFamilyRolePanel>
