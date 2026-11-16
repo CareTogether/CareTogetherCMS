@@ -1,60 +1,14 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { build } from 'rolldown';
-import { fileURLToPath } from 'node:url';
-import { readFileSync } from 'node:fs';
 import {
   getGridDateOperators,
   type GridColDef,
 } from '@mui/x-data-grid-premium';
-
-const entry = fileURLToPath(
-  new URL('./DataGridFilterInputDate.tsx', import.meta.url)
-);
-const wrapper = fileURLToPath(
-  new URL('./PersistedFilterDataGridPremium.tsx', import.meta.url)
-);
-const result = await build({
-  input: 'date-filter-conversions',
-  platform: 'node',
-  write: false,
-  treeshake: { moduleSideEffects: false },
-  plugins: [
-    {
-      name: 'conversion-exports',
-      resolveId: (id) =>
-        id === 'date-filter-conversions' ? '\0conversions' : undefined,
-      load: (id) =>
-        id === '\0conversions'
-          ? `export { filterDateToPickerValue, pickerValueToFilterDate } from ${JSON.stringify(entry)}; export { getCalendarDayFilterFn } from ${JSON.stringify(wrapper)};`
-          : id === entry
-            ? `${readFileSync(entry, 'utf8')}\nexport { filterDateToPickerValue, pickerValueToFilterDate };`
-            : id === wrapper
-              ? `${readFileSync(wrapper, 'utf8')}\nexport { getCalendarDayFilterFn };`
-              : undefined,
-    },
-  ],
-  output: { format: 'esm' },
-});
-const chunk = result.output.find((item) => item.type === 'chunk');
-assert.ok(chunk?.type === 'chunk');
-const {
+import {
   filterDateToPickerValue,
   pickerValueToFilterDate,
   getCalendarDayFilterFn,
-} = (await import(
-  `data:text/javascript;base64,${Buffer.from(chunk.code).toString('base64')}`
-)) as {
-  getCalendarDayFilterFn: import('@mui/x-data-grid-premium').GridFilterOperator['getApplyFilterFn'];
-  filterDateToPickerValue: (
-    value: unknown,
-    includeTime: boolean
-  ) => Date | null;
-  pickerValueToFilterDate: (
-    value: Date | null,
-    includeTime: boolean
-  ) => Date | undefined;
-};
+} from './dataGridDateFilterUtils.ts';
 
 test('date filters retain UTC calendar days and timestamp filters retain local calendar days', () => {
   const previousZone = process.env.TZ;
@@ -109,43 +63,39 @@ test('empty and invalid filters never become invalid Date values', () => {
 });
 
 test('converted date-only values preserve every built-in operator boundary', () => {
-  for (const includeTime of [false]) {
-    const column: GridColDef = {
-      field: 'date',
-      type: includeTime ? 'dateTime' : 'date',
-    };
-    const nativeValue = new Date(
-      includeTime ? '2026-10-16T13:30' : '2026-10-16'
-    );
-    const converted = pickerValueToFilterDate(
-      filterDateToPickerValue(nativeValue, includeTime),
-      includeTime
-    );
-    for (const operator of getGridDateOperators(includeTime)) {
-      const nativeFilter: ReturnType<typeof operator.getApplyFilterFn> =
-        operator.getApplyFilterFn(
-          { field: 'date', operator: operator.value, value: nativeValue },
-          column
-        )!;
-      const pickerFilter: ReturnType<typeof operator.getApplyFilterFn> =
-        operator.getApplyFilterFn(
-          { field: 'date', operator: operator.value, value: converted },
-          column
-        )!;
-      for (const value of [
-        null,
-        new Date(2026, 9, 15),
-        new Date(2026, 9, 16),
-        new Date(2026, 9, 16, 13, 30),
-        new Date(2026, 9, 16, 13, 30, 30),
-        new Date(2026, 9, 17),
-      ]) {
-        assert.equal(
-          pickerFilter(value!, {}, column, { current: undefined! }),
-          nativeFilter(value!, {}, column, { current: undefined! }),
-          operator.value
-        );
-      }
+  const column: GridColDef = {
+    field: 'date',
+    type: 'date',
+  };
+  const nativeValue = new Date('2026-10-16');
+  const converted = pickerValueToFilterDate(
+    filterDateToPickerValue(nativeValue, false),
+    false
+  );
+  for (const operator of getGridDateOperators(false)) {
+    const nativeFilter: ReturnType<typeof operator.getApplyFilterFn> =
+      operator.getApplyFilterFn(
+        { field: 'date', operator: operator.value, value: nativeValue },
+        column
+      )!;
+    const pickerFilter: ReturnType<typeof operator.getApplyFilterFn> =
+      operator.getApplyFilterFn(
+        { field: 'date', operator: operator.value, value: converted },
+        column
+      )!;
+    for (const value of [
+      null,
+      new Date(2026, 9, 15),
+      new Date(2026, 9, 16),
+      new Date(2026, 9, 16, 13, 30),
+      new Date(2026, 9, 16, 13, 30, 30),
+      new Date(2026, 9, 17),
+    ]) {
+      assert.equal(
+        pickerFilter(value!, {}, column, { current: undefined! }),
+        nativeFilter(value!, {}, column, { current: undefined! }),
+        operator.value
+      );
     }
   }
 });

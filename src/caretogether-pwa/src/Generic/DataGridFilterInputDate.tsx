@@ -3,45 +3,15 @@ import { Box } from '@mui/material';
 import { useForkRef } from '@mui/material/utils';
 import { DatePicker } from '@mui/x-date-pickers';
 import type { GridFilterInputDateProps } from '@mui/x-data-grid-premium';
+import {
+  filterDateToPickerValue,
+  pickerValueToFilterDate,
+} from './dataGridDateFilterUtils';
 
 type Props = GridFilterInputDateProps & { filterDebounceMs?: number };
 
 const minDate = new Date('0001-01-01T00:00:00');
 const maxDate = new Date('9999-12-31T23:59:00');
-
-function filterDateToPickerValue(value: unknown, timestamp: boolean) {
-  if (value == null || value === '') return null;
-  if (
-    !(value instanceof Date) &&
-    typeof value !== 'string' &&
-    typeof value !== 'number'
-  )
-    return null;
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return null;
-  if (timestamp) return date;
-  const localDate = new Date(0);
-  localDate.setFullYear(
-    date.getUTCFullYear(),
-    date.getUTCMonth(),
-    date.getUTCDate()
-  );
-  localDate.setHours(0, 0, 0, 0);
-  return localDate;
-}
-
-function pickerValueToFilterDate(date: Date | null, timestamp: boolean) {
-  if (!date || Number.isNaN(date.getTime())) return undefined;
-  if (timestamp) {
-    const localDate = new Date(date);
-    localDate.setHours(0, 0, 0, 0);
-    return localDate;
-  }
-  const utcDate = new Date(0);
-  utcDate.setUTCFullYear(date.getFullYear(), date.getMonth(), date.getDate());
-  utcDate.setUTCHours(0, 0, 0, 0);
-  return utcDate;
-}
 
 export function DataGridFilterInputDate({
   item,
