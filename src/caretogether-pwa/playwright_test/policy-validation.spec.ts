@@ -2010,18 +2010,92 @@ async function applyApplicability(
 ) {
   const editor = await openMatrixCell(page, fn, variant);
   await editor
-    .getByRole('combobox', {
-      name: 'Requirement 1 applicability',
-      exact: true,
-    })
-    .click();
-  await page.getByRole('option', { name: value, exact: true }).click();
+    .getByRole('switch', { name: 'Requirement 1 Required', exact: true })
+    .setChecked(value === 'Required');
   await editor
     .getByRole('button', { name: 'Apply to draft', exact: true })
     .click();
 }
 
 test.describe('Case Policies matrix', () => {
+  test('Required switches preserve Optional, no-op, Cancel and keyboard staging semantics', async ({
+    page,
+  }) => {
+    const requests = await backend(page, false, false, caseMatrixPolicy());
+    await mount(page, 'casePolicy', undefined, true);
+    let editor = await openMatrixCell(page);
+    let required = editor.getByRole('switch', {
+      name: 'Requirement 1 Required',
+      exact: true,
+    });
+    const apply = () =>
+      editor.getByRole('button', { name: 'Apply to draft', exact: true });
+    await expect(required).toBeChecked();
+    await expect(required).toHaveAccessibleDescription('Required');
+    await expect(apply()).toBeDisabled();
+    await required.focus();
+    await required.press('Space');
+    await expect(required).toBeFocused();
+    await expect(required).not.toBeChecked();
+    await expect(required).toHaveAccessibleDescription('Optional');
+    await expect(
+      editor.getByRole('combobox', { name: 'Requirement 1 phase', exact: true })
+    ).toHaveText('Setup');
+    await expect(
+      editor.getByRole('spinbutton', {
+        name: 'Stage 1 interval (days)',
+        exact: true,
+      })
+    ).toHaveValue('2');
+    await expect(apply()).toBeEnabled();
+    await required.press('Space');
+    await expect(required).toBeChecked();
+    await expect(apply()).toBeDisabled();
+    await required.uncheck();
+    await editor
+      .getByRole('button', { name: 'Cancel cell', exact: true })
+      .click();
+    await expect(matrixCell(page, 'Form')).not.toHaveClass(
+      /policy-cell-unsaved/
+    );
+    editor = await openMatrixCell(page);
+    required = editor.getByRole('switch', {
+      name: 'Requirement 1 Required',
+      exact: true,
+    });
+    await expect(required).toBeChecked();
+    await required.uncheck();
+    await apply().click();
+    await expect(
+      matrixCell(page, 'Form').getByText('Base · Setup · Optional', {
+        exact: true,
+      })
+    ).toBeVisible();
+    await expect(matrixCell(page, 'Form')).toHaveClass(/policy-cell-unsaved/);
+    editor = await openMatrixCell(page);
+    required = editor.getByRole('switch', {
+      name: 'Requirement 1 Required',
+      exact: true,
+    });
+    await expect(required).not.toBeChecked();
+    await required.press('Space');
+    await apply().click();
+    await expect(matrixCell(page, 'Form')).not.toHaveClass(
+      /policy-cell-unsaved/
+    );
+    editor = await openMatrixCell(page, 'Provider function', 'First profile');
+    await expect(
+      editor.getByRole('switch', {
+        name: 'Requirement 1 Required',
+        exact: true,
+      })
+    ).not.toBeChecked();
+    await editor
+      .getByRole('button', { name: 'Cancel cell', exact: true })
+      .click();
+    expect(requests.puts()).toBe(0);
+  });
+
   test('draft history replays policy changes, branches and clears at Save and Cancel', async ({
     page,
   }) => {
@@ -2195,17 +2269,8 @@ test.describe('Case Policies matrix', () => {
         page.getByRole('dialog', { name: /^Edit Form/ })
       ).toHaveCount(1);
       await editor
-        .getByRole('combobox', {
-          name: 'Requirement 1 applicability',
-          exact: true,
-        })
-        .click();
-      await page
-        .getByRole('option', {
-          name: additional ? 'Required' : 'Optional',
-          exact: true,
-        })
-        .click();
+        .getByRole('switch', { name: 'Requirement 1 Required', exact: true })
+        .setChecked(additional);
       await expect(cell).toHaveText(before, { useInnerText: true });
       await editor
         .getByRole('button', { name: 'Cancel cell', exact: true })
@@ -2214,17 +2279,8 @@ test.describe('Case Policies matrix', () => {
       await expect(cell).not.toHaveClass(/policy-cell-unsaved/);
       editor = await open();
       await editor
-        .getByRole('combobox', {
-          name: 'Requirement 1 applicability',
-          exact: true,
-        })
-        .click();
-      await page
-        .getByRole('option', {
-          name: additional ? 'Required' : 'Optional',
-          exact: true,
-        })
-        .click();
+        .getByRole('switch', { name: 'Requirement 1 Required', exact: true })
+        .setChecked(additional);
       await editor
         .getByRole('button', { name: 'Apply to draft', exact: true })
         .click();
@@ -2525,12 +2581,8 @@ test.describe('Case Policies matrix', () => {
       )
     ).toBeVisible();
     await editor
-      .getByRole('combobox', {
-        name: 'Requirement 1 applicability',
-        exact: true,
-      })
-      .click();
-    await page.getByRole('option', { name: 'Optional', exact: true }).click();
+      .getByRole('switch', { name: 'Requirement 1 Required', exact: true })
+      .setChecked(false);
     await editor
       .getByRole('button', { name: 'Apply to draft', exact: true })
       .click();
@@ -2553,22 +2605,14 @@ test.describe('Case Policies matrix', () => {
       })
     ).toBeVisible();
     await editor
-      .getByRole('combobox', {
-        name: 'Requirement 1 applicability',
-        exact: true,
-      })
-      .click();
-    await page.getByRole('option', { name: 'Required', exact: true }).click();
+      .getByRole('switch', { name: 'Requirement 1 Required', exact: true })
+      .setChecked(true);
     await editor
       .getByRole('button', { name: 'Add Closeout', exact: true })
       .click();
     await editor
-      .getByRole('combobox', {
-        name: 'Requirement 2 applicability',
-        exact: true,
-      })
-      .click();
-    await page.getByRole('option', { name: 'Optional', exact: true }).click();
+      .getByRole('switch', { name: 'Requirement 2 Required', exact: true })
+      .setChecked(false);
     await editor
       .getByRole('button', { name: 'Apply to draft', exact: true })
       .click();
@@ -2722,6 +2766,13 @@ test.describe('Case Policies matrix', () => {
     await expect(cell.getByText(/Evaluation uses whole days/)).toBeVisible();
     await expect(editor.getByText(/Duplicate or mixed-source/)).toBeVisible();
     await expect(editor.getByText(/Evaluation uses whole days/)).toBeVisible();
+    await expect(editor.getByRole('switch')).toHaveCount(1);
+    await expect(
+      editor.getByRole('switch', {
+        name: 'Requirement 1 Required',
+        exact: true,
+      })
+    ).toBeChecked();
     await expect(
       editor.getByRole('button', { name: 'Add Setup', exact: true })
     ).toHaveCount(0);
@@ -2743,12 +2794,8 @@ test.describe('Case Policies matrix', () => {
     await cell.click();
     let editor = page.getByRole('dialog', { name: /^Edit Form/ });
     await editor
-      .getByRole('combobox', {
-        name: 'Requirement 1 applicability',
-        exact: true,
-      })
-      .click();
-    await page.getByRole('option', { name: 'Optional', exact: true }).click();
+      .getByRole('switch', { name: 'Requirement 1 Required', exact: true })
+      .setChecked(false);
     await editor.press('Escape');
     await expect(
       page.getByRole('button', { name: 'Save changes', exact: true })
@@ -3558,12 +3605,11 @@ for (const width of [320, 390, 768, 1440]) {
     const requests = await backend(page, false, false, caseMatrixPolicy());
     await mount(page, 'casePolicy', undefined, true);
     const editor = await openMatrixCell(page);
-    const applicability = editor.getByRole('combobox', {
-      name: 'Requirement 1 applicability',
+    const applicability = editor.getByRole('switch', {
+      name: 'Requirement 1 Required',
       exact: true,
     });
-    await applicability.click();
-    await page.getByRole('option', { name: 'Optional', exact: true }).click();
+    await applicability.uncheck();
     await page
       .getByRole('link', {
         name: 'Location B',
@@ -3589,7 +3635,8 @@ for (const width of [320, 390, 768, 1440]) {
     await page.keyboard.press('Escape');
     await expect(confirmation).toBeHidden();
     await expect(page).toHaveURL('/org/org/a/settings/case-policies');
-    await expect(applicability).toHaveText('Optional');
+    await expect(applicability).not.toBeChecked();
+    await expect(applicability).toHaveAccessibleDescription('Optional');
     await page
       .getByRole('link', {
         name: 'Location B',

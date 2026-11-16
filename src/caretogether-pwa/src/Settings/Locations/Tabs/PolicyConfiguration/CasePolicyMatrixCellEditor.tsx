@@ -1,14 +1,16 @@
 import {
   Alert,
   Button,
+  FormControlLabel,
   MenuItem,
   Paper,
   Popper,
   Stack,
+  Switch,
   TextField,
   Typography,
 } from '@mui/material';
-import { useRef, useState } from 'react';
+import { useId, useRef, useState } from 'react';
 import type { GridRenderEditCellParams } from '@mui/x-data-grid-premium';
 import {
   matrixPhases,
@@ -42,6 +44,7 @@ export function CasePolicyMatrixCellEditor({
     }));
   const [values, setValues] = useState<MatrixEdit[]>(initial);
   const [error, setError] = useState<string>();
+  const editorId = useId();
   const nextId = useRef(0);
   const protectedRows = requirements.filter((item) => item.readOnlyReason);
   const occupied = new Set(
@@ -211,21 +214,33 @@ export function CasePolicyMatrixCellEditor({
                     </MenuItem>
                   ))}
                 </TextField>
-                <TextField
-                  select
-                  fullWidth
-                  size="small"
-                  label={`Requirement ${index + 1} applicability`}
-                  value={item.isRequired ? 'Required' : 'Optional'}
-                  onChange={(event) =>
-                    update(index, {
-                      isRequired: event.target.value === 'Required',
-                    })
-                  }
-                >
-                  <MenuItem value="Required">Required</MenuItem>
-                  <MenuItem value="Optional">Optional</MenuItem>
-                </TextField>
+                <Stack sx={{ minWidth: 140 }}>
+                  <FormControlLabel
+                    label="Required"
+                    control={
+                      <Switch
+                        checked={item.isRequired}
+                        onChange={(_event, checked) =>
+                          update(index, { isRequired: checked })
+                        }
+                        slotProps={{
+                          input: {
+                            role: 'switch',
+                            'aria-label': `Requirement ${index + 1} Required`,
+                            'aria-describedby': `${editorId}-${index}-applicability`,
+                          },
+                        }}
+                      />
+                    }
+                  />
+                  <Typography
+                    id={`${editorId}-${index}-applicability`}
+                    variant="caption"
+                    color="text.secondary"
+                  >
+                    {item.isRequired ? 'Required' : 'Optional'}
+                  </Typography>
+                </Stack>
               </Stack>
               {item.phase === 'Monitoring' && (
                 <MatrixScheduleFields
