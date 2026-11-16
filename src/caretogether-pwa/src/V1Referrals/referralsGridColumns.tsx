@@ -340,7 +340,7 @@ export function buildReferralsColumns(
               width: '100%',
             }}
           >
-            <Typography {...v2Typography.browserCell}>
+            <Typography {...v2Typography.browserCell} sx={{ fontWeight: 'bold' }}>
               {displayValue(row.title)}
             </Typography>
             {expanded && preview && (
