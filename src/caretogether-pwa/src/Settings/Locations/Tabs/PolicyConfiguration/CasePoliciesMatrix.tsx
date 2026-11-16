@@ -135,7 +135,7 @@ function MatrixGroupHeader({
   readOnly = false,
 }: {
   name: string;
-  kind: 'arrangement type' | 'function';
+  kind: 'arrangement type' | 'function' | 'variant';
   readOnly?: boolean;
 }) {
   return (
@@ -364,7 +364,10 @@ export function CasePoliciesMatrix({
     },
     ...scopes.map((scope) => ({
       field: scope.field,
-      headerName: scope.label,
+      headerName: scope.functionName ? scope.label + ' (variant)' : scope.label,
+      renderHeader: scope.functionName
+        ? () => <MatrixGroupHeader name={scope.label} kind="variant" />
+        : undefined,
       width: 280,
       minWidth: 230,
       editable: true,

@@ -2932,7 +2932,10 @@ test.describe('Case Policies matrix', () => {
       grid.getByRole('columnheader', { name: 'Base', exact: true })
     ).toHaveCount(2);
     await expect(
-      grid.getByRole('columnheader', { name: 'First profile', exact: true })
+      grid.getByRole('columnheader', {
+        name: 'First profile (variant)',
+        exact: true,
+      })
     ).toHaveCount(3);
     const fields = ['Hosting', 'Another arrangement'].map(
       (arrangementName) =>
@@ -2976,6 +2979,90 @@ test.describe('Case Policies matrix', () => {
     }
     expect(requests.puts()).toBe(0);
   });
+});
+
+test('variant headers preserve duplicate identities and long names without changing Base or group headers', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  const initial = caseMatrixPolicy();
+  const arrangement = initial.referralPolicy.arrangementPolicies[0];
+  const original = arrangement.arrangementFunctions[0];
+  const name =
+    'A long dynamically configured variant name that requires truncation';
+  const variant = { ...original.variants[0], variantName: name };
+  arrangement.arrangementFunctions = [
+    { ...original, variants: [variant] },
+    { ...original, functionName: 'Another function', variants: [variant] },
+  ];
+  const requests = await backend(page, false, false, initial);
+  await mount(page, 'casePolicy', undefined, true);
+  const grid = page.getByRole('grid', {
+    name: 'Case Policies requirements matrix',
+    exact: true,
+  });
+  const headers = grid.getByRole('columnheader', {
+    name: name + ' (variant)',
+    exact: true,
+  });
+  await expect(headers).toHaveCount(2);
+  expect(
+    await headers.evaluateAll((elements) =>
+      elements.map((element) => element.getAttribute('data-field'))
+    )
+  ).toEqual([
+    JSON.stringify(['Hosting', original.functionName, name]),
+    JSON.stringify(['Hosting', 'Another function', name]),
+  ]);
+  await expect(
+    grid.getByRole('columnheader', { name: 'Base', exact: true })
+  ).toBeVisible();
+  await expect(
+    grid.getByRole('columnheader', { name: 'Base (variant)', exact: true })
+  ).toHaveCount(0);
+  await expect(
+    grid.getByRole('columnheader', {
+      name: 'Hosting (arrangement type)',
+      exact: true,
+    })
+  ).toBeVisible();
+  await expect(
+    grid.getByRole('columnheader', {
+      name: original.functionName + ' (function)',
+      exact: true,
+    })
+  ).toBeVisible();
+  for (const width of [320, 390, 768, 1440]) {
+    await page.setViewportSize({ width, height: 900 });
+    await grid.locator('.MuiDataGrid-virtualScroller').evaluate((element) => {
+      element.scrollLeft = element.scrollWidth;
+    });
+    const header = headers.last();
+    await expect(header).toBeVisible();
+    await expect(header).toHaveAttribute(
+      'data-field',
+      JSON.stringify(['Hosting', 'Another function', name])
+    );
+    const suffix = header.getByText('(variant)', { exact: true });
+    await expect(suffix).toHaveCSS('font-weight', '400');
+    const label = header.getByText(name, { exact: true });
+    await expect(label).toHaveAttribute('title', name);
+    expect(
+      await label.evaluate((element) => getComputedStyle(element).fontWeight)
+    ).toBe(
+      await grid
+        .getByRole('columnheader', { name: 'Actions', exact: true })
+        .locator('.MuiDataGrid-columnHeaderTitle')
+        .evaluate((element) => getComputedStyle(element).fontWeight)
+    );
+    const bounds = (await suffix.boundingBox())!;
+    const headerBounds = (await header.boundingBox())!;
+    expect(bounds.x).toBeGreaterThanOrEqual(headerBounds.x);
+    expect(bounds.x + bounds.width).toBeLessThanOrEqual(
+      headerBounds.x + headerBounds.width
+    );
+  }
+  expect(requests.puts()).toBe(0);
 });
 
 test('initial Settings policy page shows warnings once and never saves', async ({
