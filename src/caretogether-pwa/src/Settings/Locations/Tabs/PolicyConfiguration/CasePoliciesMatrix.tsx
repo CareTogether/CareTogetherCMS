@@ -53,6 +53,78 @@ type MatrixRow = {
   cells: Record<string, MatrixCell>;
 };
 
+function MatrixCellContents({
+  cell,
+  additional,
+}: {
+  cell: MatrixCell;
+  additional: boolean;
+}) {
+  return (
+    <Stack
+      spacing={0.5}
+      sx={{
+        py: 1,
+        whiteSpace: 'normal',
+        width: '100%',
+        overflowWrap: 'anywhere',
+      }}
+    >
+      {cell.dirty && (
+        <Box
+          component="span"
+          sx={{
+            position: 'absolute',
+            width: '1px',
+            height: '1px',
+            p: 0,
+            margin: '-1px',
+            overflow: 'hidden',
+            clip: 'rect(0, 0, 0, 0)',
+            whiteSpace: 'nowrap',
+            border: 0,
+          }}
+        >
+          Unsaved changes
+        </Box>
+      )}
+      {cell.own.length + cell.shared.length === 0 && (
+        <Typography variant="body2" color="text.secondary">
+          Not used
+        </Typography>
+      )}
+      {[
+        ...cell.shared.map((item) => ({ item, shared: true })),
+        ...cell.own.map((item) => ({
+          item,
+          shared: !additional,
+        })),
+      ].map(({ item, shared }, index) => (
+        <Stack key={index} spacing={0.25}>
+          <Chip
+            size="small"
+            variant={shared ? 'filled' : 'outlined'}
+            color={shared ? 'primary' : 'default'}
+            label={`${shared ? 'Shared' : 'Additional'} · ${item.phase} · ${item.isRequired ? 'Required' : 'Optional'}`}
+            sx={{ maxWidth: '100%', alignSelf: 'flex-start' }}
+          />
+          {item.phase === 'Monitoring' &&
+            variantScheduleSummary(item.recurrence).map((line, i) => (
+              <Typography variant="caption" key={i}>
+                {line}
+              </Typography>
+            ))}
+          {item.readOnlyReason && (
+            <Typography variant="caption" color="text.secondary">
+              {item.readOnlyReason}
+            </Typography>
+          )}
+        </Stack>
+      ))}
+    </Stack>
+  );
+}
+
 function summary(cell: MatrixCell, additional: boolean) {
   return (
     [
@@ -238,84 +310,32 @@ export function CasePoliciesMatrix({
           [scope.field]: { ...row.cells[scope.field], edits },
         },
       }),
-      renderCell: ({ row }: { row: MatrixRow }) => {
-        const cell = row.cells[scope.field];
-        return (
-          <Stack
-            spacing={0.5}
-            sx={{
-              py: 1,
-              whiteSpace: 'normal',
-              width: '100%',
-              overflowWrap: 'anywhere',
-            }}
-          >
-            {cell.dirty && (
-              <Box
-                component="span"
-                sx={{
-                  position: 'absolute',
-                  width: '1px',
-                  height: '1px',
-                  p: 0,
-                  margin: '-1px',
-                  overflow: 'hidden',
-                  clip: 'rect(0, 0, 0, 0)',
-                  whiteSpace: 'nowrap',
-                  border: 0,
-                }}
-              >
-                Unsaved changes
-              </Box>
-            )}
-            {cell.own.length + cell.shared.length === 0 && (
-              <Typography variant="body2" color="text.secondary">
-                Not used
-              </Typography>
-            )}
-            {[
-              ...cell.shared.map((item) => ({ item, shared: true })),
-              ...cell.own.map((item) => ({
-                item,
-                shared: !scope.functionName,
-              })),
-            ].map(({ item, shared }, index) => (
-              <Stack key={index} spacing={0.25}>
-                <Chip
-                  size="small"
-                  variant={shared ? 'filled' : 'outlined'}
-                  color={shared ? 'primary' : 'default'}
-                  label={`${shared ? 'Shared' : 'Additional'} · ${item.phase} · ${item.isRequired ? 'Required' : 'Optional'}`}
-                  sx={{ maxWidth: '100%', alignSelf: 'flex-start' }}
-                />
-                {item.phase === 'Monitoring' &&
-                  variantScheduleSummary(item.recurrence).map((line, i) => (
-                    <Typography variant="caption" key={i}>
-                      {line}
-                    </Typography>
-                  ))}
-                {item.readOnlyReason && (
-                  <Typography variant="caption" color="text.secondary">
-                    {item.readOnlyReason}
-                  </Typography>
-                )}
-              </Stack>
-            ))}
-          </Stack>
-        );
-      },
-      renderEditCell: (params: GridRenderEditCellParams<MatrixRow>) => (
-        <CasePolicyMatrixCellEditor
-          params={params}
-          requirements={params.row.cells[scope.field].own}
-          shared={params.row.cells[scope.field].shared}
-          scopeLabel={
-            scope.functionName
-              ? scope.functionName + ' / ' + scope.variant
-              : scope.arrangement + ' / Shared'
-          }
-          onFinished={() => setEditing(false)}
+      renderCell: ({ row }: { row: MatrixRow }) => (
+        <MatrixCellContents
+          cell={row.cells[scope.field]}
+          additional={!!scope.functionName}
         />
+      ),
+      renderEditCell: (params: GridRenderEditCellParams<MatrixRow>) => (
+        <>
+          <Box aria-hidden="true" sx={{ width: '100%' }}>
+            <MatrixCellContents
+              cell={params.row.cells[scope.field]}
+              additional={!!scope.functionName}
+            />
+          </Box>
+          <CasePolicyMatrixCellEditor
+            params={params}
+            requirements={params.row.cells[scope.field].own}
+            shared={params.row.cells[scope.field].shared}
+            scopeLabel={
+              scope.functionName
+                ? scope.functionName + ' / ' + scope.variant
+                : scope.arrangement + ' / Shared'
+            }
+            onFinished={() => setEditing(false)}
+          />
+        </>
       ),
     })),
   ];

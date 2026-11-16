@@ -2022,6 +2022,83 @@ async function applyApplicability(
 }
 
 test.describe('Case Policies matrix', () => {
+  for (const additional of [false, true]) {
+    test(`cell contents remain visible through editing, Cancel and Apply (${additional ? 'variant' : 'shared'})`, async ({
+      page,
+    }) => {
+      const requests = await backend(page, false, false, caseMatrixPolicy());
+      await mount(page, 'casePolicy', undefined, true);
+      const fn = additional ? 'Provider function' : null;
+      const variant = additional ? 'First profile' : null;
+      const cell = matrixCell(page, 'Form', fn, variant);
+      const before = await cell.innerText();
+      const open = () => openMatrixCell(page, fn, variant);
+      let editor = await open();
+      await expect(cell).toHaveText(before, { useInnerText: true });
+      await expect(cell).not.toHaveClass(/policy-cell-unsaved/);
+      await expect(cell.locator('[aria-hidden="true"]')).toHaveCount(1);
+      await expect(cell.getByRole('button')).toHaveCount(0);
+      await expect(
+        page.getByRole('dialog', { name: /^Edit Form/ })
+      ).toHaveCount(1);
+      await editor
+        .getByRole('combobox', {
+          name: 'Requirement 1 applicability',
+          exact: true,
+        })
+        .click();
+      await page
+        .getByRole('option', {
+          name: additional ? 'Required' : 'Optional',
+          exact: true,
+        })
+        .click();
+      await expect(cell).toHaveText(before, { useInnerText: true });
+      await editor
+        .getByRole('button', { name: 'Cancel cell', exact: true })
+        .click();
+      await expect(cell).toHaveText(before, { useInnerText: true });
+      await expect(cell).not.toHaveClass(/policy-cell-unsaved/);
+      editor = await open();
+      await editor
+        .getByRole('combobox', {
+          name: 'Requirement 1 applicability',
+          exact: true,
+        })
+        .click();
+      await page
+        .getByRole('option', {
+          name: additional ? 'Required' : 'Optional',
+          exact: true,
+        })
+        .click();
+      await editor
+        .getByRole('button', { name: 'Apply to draft', exact: true })
+        .click();
+      await expect(cell).toHaveClass(/policy-cell-unsaved/);
+      await expect(
+        cell.getByText(
+          additional
+            ? 'Additional · Setup · Required'
+            : 'Shared · Setup · Optional',
+          { exact: true }
+        )
+      ).toBeVisible();
+      const staged = await cell.innerText();
+      editor = await open();
+      await expect(cell).toHaveText(staged, { useInnerText: true });
+      if (additional)
+        await expect(
+          cell.getByText('Shared · Setup · Required', { exact: true })
+        ).toBeVisible();
+      await editor
+        .getByRole('button', { name: 'Cancel cell', exact: true })
+        .click();
+      await expect(cell).toHaveText(staged, { useInnerText: true });
+      expect(requests.puts()).toBe(0);
+    });
+  }
+
   test('unsaved outlines mark authoritative cells, revert independently and clear only after a successful save', async ({
     page,
   }) => {
@@ -2443,7 +2520,12 @@ test.describe('Case Policies matrix', () => {
     });
     const requests = await backend(page, false, false, initial);
     await mount(page, 'casePolicy', undefined, true);
+    const cell = matrixCell(page, 'Form');
+    const contents = await cell.innerText();
     const editor = await openMatrixCell(page);
+    await expect(cell).toHaveText(contents, { useInnerText: true });
+    await expect(cell.getByText(/Duplicate or mixed-source/)).toBeVisible();
+    await expect(cell.getByText(/Evaluation uses whole days/)).toBeVisible();
     await expect(editor.getByText(/Duplicate or mixed-source/)).toBeVisible();
     await expect(editor.getByText(/Evaluation uses whole days/)).toBeVisible();
     await expect(
