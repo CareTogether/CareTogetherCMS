@@ -2511,7 +2511,10 @@ test.describe('Case Policies matrix', () => {
       })
     ).toBeVisible();
     await expect(
-      grid.getByRole('columnheader', { name: 'Provider function', exact: true })
+      grid.getByRole('columnheader', {
+        name: 'Provider function (function)',
+        exact: true,
+      })
     ).toBeVisible();
     let editor = await openMatrixCell(page);
     await expect(editor).toHaveAccessibleName('Edit Form — Hosting / Base');
@@ -2851,6 +2854,109 @@ test.describe('Case Policies matrix', () => {
       await expect(
         header.getByText('(read-only)', { exact: true })
       ).toBeVisible();
+      const label = header.getByText(name, { exact: true });
+      await expect(label).toHaveAttribute('title', name);
+      expect(
+        await label.evaluate((element) => getComputedStyle(element).fontWeight)
+      ).toBe(
+        await grid
+          .getByRole('columnheader', { name: 'Actions', exact: true })
+          .locator('.MuiDataGrid-columnHeaderTitle')
+          .evaluate((element) => getComputedStyle(element).fontWeight)
+      );
+      const bounds = (await suffix.boundingBox())!;
+      const headerBounds = (await header.boundingBox())!;
+      expect(bounds.x).toBeGreaterThanOrEqual(headerBounds.x);
+      expect(bounds.x + bounds.width).toBeLessThanOrEqual(
+        headerBounds.x + headerBounds.width
+      );
+    }
+    expect(requests.puts()).toBe(0);
+  });
+
+  test('function headers preserve dynamic grouping and long names without creating empty groups', async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    const initial = caseMatrixPolicy();
+    const arrangement = initial.referralPolicy.arrangementPolicies[0];
+    const originalFunction = arrangement.arrangementFunctions[0];
+    const name =
+      'A long dynamically configured function name that requires truncation';
+    const fn = {
+      ...originalFunction,
+      functionName: name,
+      variants: [originalFunction.variants[0]],
+    };
+    arrangement.arrangementFunctions = [
+      fn,
+      { ...fn, functionName: 'Another function' },
+      { ...fn, functionName: 'Empty function', variants: [] },
+    ];
+    initial.referralPolicy.arrangementPolicies.push({
+      ...arrangement,
+      arrangementType: 'Another arrangement',
+      arrangementFunctions: [fn],
+    });
+    const requests = await backend(page, false, false, initial);
+    await mount(page, 'casePolicy', undefined, true);
+    const grid = page.getByRole('grid', {
+      name: 'Case Policies requirements matrix',
+      exact: true,
+    });
+    await expect(
+      grid.getByRole('columnheader', {
+        name: name + ' (function)',
+        exact: true,
+      })
+    ).toHaveCount(2);
+    await expect(
+      grid.getByRole('columnheader', {
+        name: 'Another function (function)',
+        exact: true,
+      })
+    ).toBeVisible();
+    await expect(
+      grid.getByRole('columnheader', {
+        name: 'Empty function (function)',
+        exact: true,
+      })
+    ).toHaveCount(0);
+    await expect(
+      grid.getByRole('columnheader', {
+        name: 'Hosting (arrangement type)',
+        exact: true,
+      })
+    ).toBeVisible();
+    await expect(
+      grid.getByRole('columnheader', { name: 'Base', exact: true })
+    ).toHaveCount(2);
+    await expect(
+      grid.getByRole('columnheader', { name: 'First profile', exact: true })
+    ).toHaveCount(3);
+    const fields = ['Hosting', 'Another arrangement'].map(
+      (arrangementName) =>
+        '|-' + JSON.stringify([arrangementName, name, 'First profile']) + '-|'
+    );
+    const headers = grid.getByRole('columnheader', {
+      name: name + ' (function)',
+      exact: true,
+    });
+    expect(
+      await headers.evaluateAll((elements) =>
+        elements.map((element) => element.getAttribute('data-fields'))
+      )
+    ).toEqual(fields);
+    for (const width of [320, 390, 768, 1440]) {
+      await page.setViewportSize({ width, height: 900 });
+      await grid.locator('.MuiDataGrid-virtualScroller').evaluate((element) => {
+        element.scrollLeft = element.scrollWidth;
+      });
+      const header = headers.last();
+      await expect(header).toBeVisible();
+      await expect(header).toHaveAttribute('data-fields', fields[1]);
+      const suffix = header.getByText('(function)', { exact: true });
+      await expect(suffix).toHaveCSS('font-weight', '400');
       const label = header.getByText(name, { exact: true });
       await expect(label).toHaveAttribute('title', name);
       expect(

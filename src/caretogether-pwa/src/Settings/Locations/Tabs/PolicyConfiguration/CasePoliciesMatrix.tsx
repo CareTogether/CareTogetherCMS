@@ -129,6 +129,57 @@ function MatrixCellContents({
   );
 }
 
+function MatrixGroupHeader({
+  name,
+  kind,
+  readOnly = false,
+}: {
+  name: string;
+  kind: 'arrangement type' | 'function';
+  readOnly?: boolean;
+}) {
+  return (
+    <Box
+      component="span"
+      sx={{
+        display: 'flex',
+        alignItems: 'center',
+        gap: 0.5,
+        minWidth: 0,
+        maxWidth: '100%',
+      }}
+    >
+      <Box
+        component="span"
+        title={name}
+        sx={{
+          overflow: 'hidden',
+          textOverflow: 'ellipsis',
+          whiteSpace: 'nowrap',
+          fontWeight: 'var(--unstable_DataGrid-headWeight)',
+        }}
+      >
+        {name}
+      </Box>
+      {readOnly && (
+        <Box component="span" sx={{ flexShrink: 0 }}>
+          (read-only)
+        </Box>
+      )}
+      <Box
+        component="span"
+        sx={{
+          fontWeight: 'fontWeightRegular',
+          flexShrink: 0,
+          whiteSpace: 'nowrap',
+        }}
+      >
+        {`(${kind})`}
+      </Box>
+    </Box>
+  );
+}
+
 function summary(cell: MatrixCell, additional: boolean) {
   return (
     [
@@ -257,44 +308,11 @@ export function CasePoliciesMatrix({
           (scope.readOnlyReason ? ' (read-only)' : '') +
           ' (arrangement type)',
         renderHeaderGroup: () => (
-          <Box
-            component="span"
-            sx={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: 0.5,
-              minWidth: 0,
-              maxWidth: '100%',
-            }}
-          >
-            <Box
-              component="span"
-              title={scope.arrangement}
-              sx={{
-                overflow: 'hidden',
-                textOverflow: 'ellipsis',
-                whiteSpace: 'nowrap',
-                fontWeight: 'var(--unstable_DataGrid-headWeight)',
-              }}
-            >
-              {scope.arrangement}
-            </Box>
-            {scope.readOnlyReason && (
-              <Box component="span" sx={{ flexShrink: 0 }}>
-                (read-only)
-              </Box>
-            )}
-            <Box
-              component="span"
-              sx={{
-                fontWeight: 'fontWeightRegular',
-                flexShrink: 0,
-                whiteSpace: 'nowrap',
-              }}
-            >
-              (arrangement type)
-            </Box>
-          </Box>
+          <MatrixGroupHeader
+            name={scope.arrangement}
+            kind="arrangement type"
+            readOnly={!!scope.readOnlyReason}
+          />
         ),
         children: [],
       };
@@ -315,7 +333,10 @@ export function CasePoliciesMatrix({
     if (!fn) {
       fn = {
         groupId: functionId,
-        headerName: scope.functionName,
+        headerName: scope.functionName + ' (function)',
+        renderHeaderGroup: () => (
+          <MatrixGroupHeader name={scope.functionName!} kind="function" />
+        ),
         children: [],
       };
       group.children.push(fn);
