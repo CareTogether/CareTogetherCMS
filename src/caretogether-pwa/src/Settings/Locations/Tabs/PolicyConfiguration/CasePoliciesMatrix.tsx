@@ -283,7 +283,7 @@ export function CasePoliciesMatrix({
   const columns: GridColDef<MatrixRow>[] = [
     {
       field: 'actionName',
-      headerName: 'Action Definition',
+      headerName: 'Actions',
       minWidth: 140,
       width: compact ? 140 : 240,
       renderCell: ({ row }) => (

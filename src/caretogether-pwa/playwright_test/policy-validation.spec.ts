@@ -2497,6 +2497,9 @@ test.describe('Case Policies matrix', () => {
       exact: true,
     });
     await expect(
+      grid.getByRole('columnheader', { name: 'Actions', exact: true })
+    ).toHaveAttribute('data-field', 'actionName');
+    await expect(
       grid.getByRole('columnheader', { name: 'Hosting', exact: true })
     ).toBeVisible();
     await expect(
