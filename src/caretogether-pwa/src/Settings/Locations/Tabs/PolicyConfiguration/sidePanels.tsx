@@ -1096,6 +1096,79 @@ export function ArrangementFunctionSidePanel({
   );
 }
 
+export function ArrangementFunctionVariantSidePanel({
+  variantName,
+  existingVariantNames,
+  onClose,
+  onSave,
+}: {
+  variantName?: string;
+  existingVariantNames: string[];
+  onClose: () => void;
+  onSave: (
+    previousName: string | undefined,
+    variantName: string
+  ) => Promise<boolean>;
+}) {
+  const [draftName, setDraftName] = useState(variantName ?? '');
+  const { saving, saveFailed, runSave } = usePanelSave();
+  const trimmedName = draftName.trim();
+  const duplicateName =
+    trimmedName.length > 0 &&
+    trimmedName !== variantName &&
+    existingVariantNames.includes(trimmedName);
+  const canSave = trimmedName.length > 0 && !duplicateName;
+
+  function save() {
+    if (!canSave) return;
+
+    void runSave(() => onSave(variantName, trimmedName));
+  }
+
+  return (
+    <Grid
+      container
+      spacing={2}
+      maxWidth={520}
+      component="form"
+      onSubmit={(event) => {
+        event.preventDefault();
+        save();
+      }}
+    >
+      <Grid item xs={12}>
+        <Typography variant="h6">
+          {variantName ? 'Rename Function Variant' : 'Add Function Variant'}
+        </Typography>
+      </Grid>
+
+      <Grid item xs={12}>
+        <TextField
+          fullWidth
+          required
+          autoFocus
+          label="Variant"
+          value={draftName}
+          error={duplicateName}
+          helperText={
+            duplicateName
+              ? 'Variant must be unique within this function.'
+              : undefined
+          }
+          onChange={(event) => setDraftName(event.target.value)}
+        />
+      </Grid>
+
+      <SidePanelSaveActions
+        canSave={canSave}
+        saving={saving}
+        saveFailed={saveFailed}
+        onClose={onClose}
+      />
+    </Grid>
+  );
+}
+
 export function FunctionAssignmentPolicySidePanel({
   title,
   policy,
@@ -1352,6 +1425,7 @@ export function ArrangementPolicySidePanel({
           requiredMonitoringActionsNew:
             arrangement?.requiredMonitoringActionsNew ?? [],
           requiredCloseoutActions: arrangement?.requiredCloseoutActions ?? [],
+          policyVersions: arrangement?.policyVersions,
           supersededAtUtc:
             draft.superseded && draft.supersededAtUtc
               ? supersededDateToApi(draft.supersededAtUtc)

@@ -1,4 +1,9 @@
 import { EffectiveLocationPolicy } from '../../../../GeneratedClient';
+import {
+  arrangementRequirementLists,
+  intakeRequirements,
+  variantRequirementLists,
+} from './requirementListsModel';
 import type { NamedPolicyReference } from './types';
 
 export function getRequirementUsage(policy: EffectiveLocationPolicy) {
@@ -16,7 +21,7 @@ export function getRequirementUsage(policy: EffectiveLocationPolicy) {
     ]);
   };
 
-  policy.referralPolicy?.intakeRequirements?.forEach((requirement) =>
+  intakeRequirements(policy.referralPolicy).forEach((requirement) =>
     addReference(
       requirement.actionName,
       'CasePolicy.IntakeRequirements',
@@ -26,22 +31,23 @@ export function getRequirementUsage(policy: EffectiveLocationPolicy) {
 
   policy.referralPolicy?.arrangementPolicies?.forEach((arrangement) => {
     const owner = arrangement.arrangementType;
+    const lists = arrangementRequirementLists(arrangement);
 
-    arrangement.requiredSetupActions?.forEach((requirement) =>
+    lists.setup.forEach((requirement) =>
       addReference(
         requirement.actionName,
         'CasePolicy.ArrangementPolicies.RequiredSetupActions',
         owner
       )
     );
-    arrangement.requiredMonitoringActionsNew?.forEach((requirement) =>
+    lists.monitoring.forEach((requirement) =>
       addReference(
         requirement.action?.actionName,
         'CasePolicy.ArrangementPolicies.RequiredMonitoringActions',
         owner
       )
     );
-    arrangement.requiredCloseoutActions?.forEach((requirement) =>
+    lists.closeout.forEach((requirement) =>
       addReference(
         requirement.actionName,
         'CasePolicy.ArrangementPolicies.RequiredCloseoutActions',
@@ -52,21 +58,22 @@ export function getRequirementUsage(policy: EffectiveLocationPolicy) {
     arrangement.arrangementFunctions?.forEach((arrangementFunction) => {
       arrangementFunction.variants?.forEach((variant) => {
         const variantOwner = `${owner} / ${arrangementFunction.functionName} / ${variant.variantName}`;
-        variant.requiredSetupActions?.forEach((requirement) =>
+        const variantLists = variantRequirementLists(variant);
+        variantLists.setup.forEach((requirement) =>
           addReference(
             requirement.actionName,
             'CasePolicy.ArrangementFunctionVariant.RequiredSetupActions',
             variantOwner
           )
         );
-        variant.requiredMonitoringActionsNew?.forEach((requirement) =>
+        variantLists.monitoring.forEach((requirement) =>
           addReference(
             requirement.action?.actionName,
             'CasePolicy.ArrangementFunctionVariant.RequiredMonitoringActions',
             variantOwner
           )
         );
-        variant.requiredCloseoutActions?.forEach((requirement) =>
+        variantLists.closeout.forEach((requirement) =>
           addReference(
             requirement.actionName,
             'CasePolicy.ArrangementFunctionVariant.RequiredCloseoutActions',
@@ -107,4 +114,3 @@ export function getRequirementUsage(policy: EffectiveLocationPolicy) {
 
   return references;
 }
-

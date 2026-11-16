@@ -2,6 +2,7 @@ import {
   Accordion,
   AccordionDetails,
   AccordionSummary,
+  Button,
   Stack,
   Table,
   TableBody,
@@ -11,21 +12,20 @@ import {
   TableRow,
   Typography,
 } from '@mui/material';
+import { Edit as EditIcon } from '@mui/icons-material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import { useState } from 'react';
 import {
   ArrangementFunction,
+  ArrangementFunctionVariant,
   ArrangementPolicy,
   FunctionRequirement,
-  MonitoringRequirement,
-  RequirementDefinition,
 } from '../../../../GeneratedClient';
 import { useSidePanel } from '../../../../Hooks/useSidePanel';
 import type { PersonOption } from './types';
 import {
   ArrangementFunctionSidePanel,
-  MonitoringRequirementSidePanel,
-  RequirementSidePanel,
+  ArrangementFunctionVariantSidePanel,
 } from './sidePanels';
 import {
   enumName,
@@ -41,7 +41,14 @@ import {
   EmptyRow,
   ValuesText,
 } from './sharedUi';
-import { MonitoringRequirementsTable, RequirementsTable } from './tables';
+import { RequirementListsEditor } from './RequirementListsEditor';
+import {
+  arrangementRequirementLists,
+  newVariant,
+  variantRequirementLists,
+  withArrangementRequirementLists,
+  withVariantRequirementLists,
+} from './requirementListsModel';
 
 function ArrangementFunctionSummary({
   arrangementFunction,
@@ -68,10 +75,6 @@ function ArrangementFunctionSummary({
   );
 }
 
-function monitoringRequirementName(requirement: MonitoringRequirement) {
-  return requirement.action?.actionName ?? '';
-}
-
 export function ArrangementPolicyDetails({
   arrangement,
   actionNames,
@@ -88,45 +91,22 @@ export function ArrangementPolicyDetails({
   onArrangementChange: (arrangement: ArrangementPolicy) => Promise<boolean>;
 }) {
   const {
-    SidePanel: SetupRequirementPanel,
-    openSidePanel: openSetupRequirementPanel,
-    closeSidePanel: closeSetupRequirementPanel,
-  } = useSidePanel({ className: 'ph-unmask' });
-  const {
-    SidePanel: MonitoringRequirementPanel,
-    openSidePanel: openMonitoringRequirementPanel,
-    closeSidePanel: closeMonitoringRequirementPanel,
-  } = useSidePanel({ className: 'ph-unmask' });
-  const {
-    SidePanel: CloseoutRequirementPanel,
-    openSidePanel: openCloseoutRequirementPanel,
-    closeSidePanel: closeCloseoutRequirementPanel,
-  } = useSidePanel({ className: 'ph-unmask' });
-  const {
     SidePanel: ArrangementFunctionPanel,
     openSidePanel: openArrangementFunctionPanel,
     closeSidePanel: closeArrangementFunctionPanel,
   } = useSidePanel({ className: 'ph-unmask' });
-  const [workingSetupRequirement, setWorkingSetupRequirement] = useState<
-    RequirementDefinition | undefined
-  >();
-  const [workingMonitoringRequirement, setWorkingMonitoringRequirement] =
-    useState<MonitoringRequirement | undefined>();
-  const [workingCloseoutRequirement, setWorkingCloseoutRequirement] = useState<
-    RequirementDefinition | undefined
-  >();
+  const {
+    SidePanel: VariantPanel,
+    openSidePanel: openVariantPanel,
+    closeSidePanel: closeVariantPanel,
+  } = useSidePanel({ className: 'ph-unmask' });
   const [workingArrangementFunction, setWorkingArrangementFunction] = useState<
     ArrangementFunction | undefined
   >();
-  const setupActions =
-    arrangement.requiredSetupActions ??
-    arrangement.requiredSetupActions_PRE_MIGRATION;
-  const monitoringActions =
-    arrangement.requiredMonitoringActionsNew ??
-    arrangement.requiredMonitoringActions_PRE_MIGRATION;
-  const closeoutActions =
-    arrangement.requiredCloseoutActions ??
-    arrangement.requiredCloseoutActionNames_PRE_MIGRATION;
+  const [workingVariant, setWorkingVariant] = useState<
+    | { arrangementFunction: ArrangementFunction; variantName?: string }
+    | undefined
+  >();
   const arrangementFunctions = arrangement.arrangementFunctions ?? [];
 
   function updateArrangement(update: Partial<ArrangementPolicy>) {
@@ -144,42 +124,33 @@ export function ArrangementPolicyDetails({
     return saved;
   }
 
-  function duplicateRequirement(
-    requirements: RequirementDefinition[],
-    requirement: RequirementDefinition
+  function updateVariants(
+    arrangementFunction: ArrangementFunction,
+    variants: ArrangementFunctionVariant[]
   ) {
-    return upsertByName(
-      requirements,
-      undefined,
-      new RequirementDefinition({
-        ...requirement,
-        actionName: nextCopyName(
-          requirement.actionName,
-          requirements.map((item) => item.actionName)
-        ),
-      }),
-      (item) => item.actionName
-    );
+    return updateArrangement({
+      arrangementFunctions: upsertByName(
+        arrangementFunctions,
+        arrangementFunction.functionName,
+        new ArrangementFunction({ ...arrangementFunction, variants }),
+        (item) => item.functionName
+      ),
+    });
   }
 
-  function duplicateMonitoringRequirement(
-    requirements: MonitoringRequirement[],
-    requirement: MonitoringRequirement
+  function upsertVariant(
+    arrangementFunction: ArrangementFunction,
+    previousName: string | undefined,
+    variant: ArrangementFunctionVariant
   ) {
-    return upsertByName(
-      requirements,
-      undefined,
-      new MonitoringRequirement({
-        ...requirement,
-        action: new RequirementDefinition({
-          ...requirement.action,
-          actionName: nextCopyName(
-            monitoringRequirementName(requirement),
-            requirements.map(monitoringRequirementName)
-          ),
-        }),
-      }),
-      monitoringRequirementName
+    return updateVariants(
+      arrangementFunction,
+      upsertByName(
+        arrangementFunction.variants,
+        previousName,
+        variant,
+        (item) => item.variantName
+      )
     );
   }
 
@@ -202,129 +173,24 @@ export function ArrangementPolicyDetails({
     });
   }
 
+  const workingVariantFunction = workingVariant
+    ? arrangementFunctions.find(
+        (item) =>
+          item.functionName === workingVariant.arrangementFunction.functionName
+      )
+    : undefined;
+
   return (
     <Stack spacing={2}>
-      <Accordion variant="outlined">
-        <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-          <Typography>Required Setup Actions</Typography>
-        </AccordionSummary>
-        <AccordionDetails>
-          <Stack spacing={2}>
-            <EditableActions
-              onAdd={() => {
-                setWorkingSetupRequirement(undefined);
-                openSetupRequirementPanel();
-              }}
-            />
-            <RequirementsTable
-              requirements={setupActions}
-              emptyLabel="No setup requirements configured."
-              onEdit={(requirement) => {
-                setWorkingSetupRequirement(requirement);
-                openSetupRequirementPanel();
-              }}
-              onDuplicate={(requirement) =>
-                updateArrangement({
-                  requiredSetupActions: duplicateRequirement(
-                    setupActions,
-                    requirement
-                  ),
-                })
-              }
-              onDelete={(requirement) =>
-                updateArrangement({
-                  requiredSetupActions: removeByName(
-                    setupActions,
-                    requirement.actionName,
-                    (item) => item.actionName
-                  ),
-                })
-              }
-            />
-          </Stack>
-        </AccordionDetails>
-      </Accordion>
-
-      <Accordion variant="outlined">
-        <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-          <Typography>Required Monitoring Actions</Typography>
-        </AccordionSummary>
-        <AccordionDetails>
-          <Stack spacing={2}>
-            <EditableActions
-              onAdd={() => {
-                setWorkingMonitoringRequirement(undefined);
-                openMonitoringRequirementPanel();
-              }}
-            />
-            <MonitoringRequirementsTable
-              requirements={monitoringActions}
-              onEdit={(requirement) => {
-                setWorkingMonitoringRequirement(requirement);
-                openMonitoringRequirementPanel();
-              }}
-              onDuplicate={(requirement) =>
-                updateArrangement({
-                  requiredMonitoringActionsNew: duplicateMonitoringRequirement(
-                    monitoringActions,
-                    requirement
-                  ),
-                })
-              }
-              onDelete={(requirement) =>
-                updateArrangement({
-                  requiredMonitoringActionsNew: removeByName(
-                    monitoringActions,
-                    monitoringRequirementName(requirement),
-                    monitoringRequirementName
-                  ),
-                })
-              }
-            />
-          </Stack>
-        </AccordionDetails>
-      </Accordion>
-
-      <Accordion variant="outlined">
-        <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-          <Typography>Required Closeout Actions</Typography>
-        </AccordionSummary>
-        <AccordionDetails>
-          <Stack spacing={2}>
-            <EditableActions
-              onAdd={() => {
-                setWorkingCloseoutRequirement(undefined);
-                openCloseoutRequirementPanel();
-              }}
-            />
-            <RequirementsTable
-              requirements={closeoutActions}
-              emptyLabel="No closeout requirements configured."
-              onEdit={(requirement) => {
-                setWorkingCloseoutRequirement(requirement);
-                openCloseoutRequirementPanel();
-              }}
-              onDuplicate={(requirement) =>
-                updateArrangement({
-                  requiredCloseoutActions: duplicateRequirement(
-                    closeoutActions,
-                    requirement
-                  ),
-                })
-              }
-              onDelete={(requirement) =>
-                updateArrangement({
-                  requiredCloseoutActions: removeByName(
-                    closeoutActions,
-                    requirement.actionName,
-                    (item) => item.actionName
-                  ),
-                })
-              }
-            />
-          </Stack>
-        </AccordionDetails>
-      </Accordion>
+      <RequirementListsEditor
+        lists={arrangementRequirementLists(arrangement)}
+        actionNames={actionNames}
+        onChange={(lists) =>
+          onArrangementChange(
+            withArrangementRequirementLists(arrangement, lists)
+          )
+        }
+      />
 
       <Accordion variant="outlined">
         <AccordionSummary expandIcon={<ExpandMoreIcon />}>
@@ -425,94 +291,106 @@ export function ArrangementPolicyDetails({
         </AccordionDetails>
       </Accordion>
 
-      <SetupRequirementPanel>
-        <RequirementSidePanel
-          key={workingSetupRequirement?.actionName ?? 'new-setup-requirement'}
-          title={
-            workingSetupRequirement
-              ? 'Edit Required Setup Action'
-              : 'Add Required Setup Action'
-          }
-          requirement={workingSetupRequirement}
-          actionNames={actionNames}
-          existingActionNames={setupActions.map((item) => item.actionName)}
-          onClose={closeSetupRequirementPanel}
-          onSave={(previousName, requirement) =>
-            updateArrangementAndClose(
-              {
-                requiredSetupActions: upsertByName(
-                  setupActions,
-                  previousName,
-                  requirement,
-                  (item) => item.actionName
-                ),
-              },
-              closeSetupRequirementPanel
-            )
-          }
-        />
-      </SetupRequirementPanel>
+      <Accordion variant="outlined">
+        <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+          <Typography>Function Variants</Typography>
+        </AccordionSummary>
+        <AccordionDetails>
+          <Stack spacing={3}>
+            {arrangementFunctions.length === 0 && (
+              <Typography variant="body2" color="text.secondary">
+                Add an arrangement function to configure its variants.
+              </Typography>
+            )}
+            {arrangementFunctions.map((arrangementFunction) => {
+              const variants = arrangementFunction.variants ?? [];
 
-      <MonitoringRequirementPanel>
-        <MonitoringRequirementSidePanel
-          key={
-            workingMonitoringRequirement?.action?.actionName ??
-            'new-monitoring-requirement'
-          }
-          title={
-            workingMonitoringRequirement
-              ? 'Edit Required Monitoring Action'
-              : 'Add Required Monitoring Action'
-          }
-          requirement={workingMonitoringRequirement}
-          actionNames={actionNames}
-          existingActionNames={monitoringActions.map(monitoringRequirementName)}
-          onClose={closeMonitoringRequirementPanel}
-          onSave={(previousName, requirement) =>
-            updateArrangementAndClose(
-              {
-                requiredMonitoringActionsNew: upsertByName(
-                  monitoringActions,
-                  previousName,
-                  requirement,
-                  monitoringRequirementName
-                ),
-              },
-              closeMonitoringRequirementPanel
-            )
-          }
-        />
-      </MonitoringRequirementPanel>
-
-      <CloseoutRequirementPanel>
-        <RequirementSidePanel
-          key={
-            workingCloseoutRequirement?.actionName ?? 'new-closeout-requirement'
-          }
-          title={
-            workingCloseoutRequirement
-              ? 'Edit Required Closeout Action'
-              : 'Add Required Closeout Action'
-          }
-          requirement={workingCloseoutRequirement}
-          actionNames={actionNames}
-          existingActionNames={closeoutActions.map((item) => item.actionName)}
-          onClose={closeCloseoutRequirementPanel}
-          onSave={(previousName, requirement) =>
-            updateArrangementAndClose(
-              {
-                requiredCloseoutActions: upsertByName(
-                  closeoutActions,
-                  previousName,
-                  requirement,
-                  (item) => item.actionName
-                ),
-              },
-              closeCloseoutRequirementPanel
-            )
-          }
-        />
-      </CloseoutRequirementPanel>
+              return (
+                <Stack key={arrangementFunction.functionName} spacing={1.5}>
+                  <Stack
+                    direction="row"
+                    spacing={1}
+                    sx={{
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                    }}
+                  >
+                    <Typography variant="subtitle1">
+                      {arrangementFunction.functionName}
+                    </Typography>
+                    <EditableActions
+                      onAdd={() => {
+                        setWorkingVariant({ arrangementFunction });
+                        openVariantPanel();
+                      }}
+                    />
+                  </Stack>
+                  {variants.length === 0 && (
+                    <Typography variant="body2" color="text.secondary">
+                      No variants configured.
+                    </Typography>
+                  )}
+                  {variants.map((variant) => (
+                    <Accordion key={variant.variantName} variant="outlined">
+                      <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+                        <Typography>{variant.variantName}</Typography>
+                      </AccordionSummary>
+                      <AccordionDetails>
+                        <Stack spacing={2}>
+                          <Stack
+                            direction="row"
+                            spacing={0.5}
+                            sx={{ justifyContent: 'flex-end' }}
+                          >
+                            <Button
+                              size="small"
+                              startIcon={<EditIcon />}
+                              onClick={() => {
+                                setWorkingVariant({
+                                  arrangementFunction,
+                                  variantName: variant.variantName,
+                                });
+                                openVariantPanel();
+                              }}
+                            >
+                              Rename
+                            </Button>
+                            <DeleteRowAction
+                              label={variant.variantName}
+                              onClick={() =>
+                                updateVariants(
+                                  arrangementFunction,
+                                  removeByName(
+                                    variants,
+                                    variant.variantName,
+                                    (item) => item.variantName
+                                  )
+                                )
+                              }
+                            />
+                          </Stack>
+                          <RequirementListsEditor
+                            plain
+                            lists={variantRequirementLists(variant)}
+                            actionNames={actionNames}
+                            onChange={(lists) =>
+                              upsertVariant(
+                                arrangementFunction,
+                                variant.variantName,
+                                withVariantRequirementLists(variant, lists)
+                              )
+                            }
+                          />
+                        </Stack>
+                      </AccordionDetails>
+                    </Accordion>
+                  ))}
+                </Stack>
+              );
+            })}
+          </Stack>
+        </AccordionDetails>
+      </Accordion>
 
       <ArrangementFunctionPanel>
         <ArrangementFunctionSidePanel
@@ -543,6 +421,35 @@ export function ArrangementPolicyDetails({
           }
         />
       </ArrangementFunctionPanel>
+      <VariantPanel>
+        {workingVariant && workingVariantFunction && (
+          <ArrangementFunctionVariantSidePanel
+            key={`${workingVariantFunction.functionName}/${
+              workingVariant.variantName ?? 'new-variant'
+            }`}
+            variantName={workingVariant.variantName}
+            existingVariantNames={(workingVariantFunction.variants ?? []).map(
+              (item) => item.variantName
+            )}
+            onClose={closeVariantPanel}
+            onSave={async (previousName, variantName) => {
+              const existing = workingVariantFunction.variants?.find(
+                (item) => item.variantName === previousName
+              );
+              const variant = existing
+                ? new ArrangementFunctionVariant({ ...existing, variantName })
+                : newVariant(variantName);
+              const saved = await upsertVariant(
+                workingVariantFunction,
+                previousName,
+                variant
+              );
+              if (saved) closeVariantPanel();
+              return saved;
+            }}
+          />
+        )}
+      </VariantPanel>
     </Stack>
   );
 }

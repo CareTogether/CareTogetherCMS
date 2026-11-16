@@ -36,6 +36,10 @@ import {
   upsertCustomField,
 } from './policyUtils';
 import { EditableActions, SectionHeader } from './sharedUi';
+import {
+  intakeRequirements as mergedIntakeRequirements,
+  intakeRequirementsUpdate,
+} from './requirementListsModel';
 
 export function V1ReferralPolicyTab({
   policy,
@@ -47,9 +51,7 @@ export function V1ReferralPolicyTab({
   onPolicyChange: (policy: EffectiveLocationPolicy) => Promise<boolean>;
 }) {
   const casePolicy = policy.referralPolicy;
-  const intakeRequirements =
-    casePolicy?.intakeRequirements ??
-    casePolicy?.intakeRequirements_PRE_MIGRATION;
+  const intakeRequirements = mergedIntakeRequirements(casePolicy);
   const actionNames = Object.keys(policy.actionDefinitions ?? {});
   const volunteerRoles = Object.keys(
     policy.volunteerPolicy?.volunteerRoles ?? {}
@@ -117,13 +119,15 @@ export function V1ReferralPolicyTab({
   }
 
   function deleteReferralIntakeRequirement(requirement: RequirementDefinition) {
-    updateCasePolicy({
-      intakeRequirements: removeByName(
-        casePolicy?.intakeRequirements,
-        requirement.actionName,
-        (item) => item.actionName
-      ),
-    });
+    updateCasePolicy(
+      intakeRequirementsUpdate(
+        removeByName(
+          intakeRequirements,
+          requirement.actionName,
+          (item) => item.actionName
+        )
+      )
+    );
   }
 
   function deleteReferralCustomField(field: CustomField) {
@@ -272,20 +276,21 @@ export function V1ReferralPolicyTab({
           }
           requirement={workingRequirement}
           actionNames={actionNames}
-          existingActionNames={
-            intakeRequirements?.map((requirement) => requirement.actionName) ??
-            []
-          }
+          existingActionNames={intakeRequirements.map(
+            (requirement) => requirement.actionName
+          )}
           onClose={closeRequirementPanel}
           onSave={async (previousName, requirement) => {
-            const saved = await updateCasePolicy({
-              intakeRequirements: upsertByName(
-                casePolicy?.intakeRequirements ?? [],
-                previousName,
-                requirement,
-                (item) => item.actionName
-              ),
-            });
+            const saved = await updateCasePolicy(
+              intakeRequirementsUpdate(
+                upsertByName(
+                  intakeRequirements,
+                  previousName,
+                  requirement,
+                  (item) => item.actionName
+                )
+              )
+            );
             if (saved) closeRequirementPanel();
             return saved;
           }}
