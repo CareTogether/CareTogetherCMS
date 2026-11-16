@@ -2018,6 +2018,161 @@ async function applyApplicability(
 }
 
 test.describe('Case Policies matrix', () => {
+  test('Phase radios preserve multiple requirements, keyboard changes, Cancel and history', async ({
+    page,
+  }) => {
+    const initial = caseMatrixPolicy();
+    const requests = await backend(page, false, false, initial);
+    let saved: EffectiveLocationPolicy | undefined;
+    page.on('request', (request) => {
+      if (request.method() === 'PUT') saved = request.postDataJSON();
+    });
+    await mount(page, 'casePolicy', undefined, true);
+    let editor = await openMatrixCell(page);
+    await expect(editor.getByRole('radiogroup')).toHaveCount(3);
+    for (const [index, phase] of [
+      'Setup',
+      'Monitoring',
+      'Closeout',
+    ].entries()) {
+      const group = editor.getByRole('radiogroup', {
+        name: `Requirement ${index + 1} phase`,
+        exact: true,
+      });
+      await expect(group.getByRole('radio')).toHaveCount(3);
+      await expect(group.getByRole('radio', { checked: true })).toHaveCount(1);
+      await expect(
+        group.getByRole('radio', { name: phase, exact: true })
+      ).toBeChecked();
+      for (const other of ['Setup', 'Monitoring', 'Closeout'].filter(
+        (item) => item !== phase
+      ))
+        await expect(
+          group.getByRole('radio', { name: other, exact: true })
+        ).toBeDisabled();
+    }
+    await expect(
+      editor.getByRole('spinbutton', {
+        name: 'Stage 1 interval (days)',
+        exact: true,
+      })
+    ).toHaveValue('2');
+    await editor
+      .getByRole('button', { name: 'Cancel cell', exact: true })
+      .click();
+    const open = () =>
+      openMatrixCell(page, 'Provider function', 'First profile');
+    editor = await open();
+    let group = editor.getByRole('radiogroup', {
+      name: 'Requirement 1 phase',
+      exact: true,
+    });
+    await group.getByRole('radio', { name: 'Setup', exact: true }).focus();
+    await page.keyboard.press('ArrowLeft');
+    await expect(
+      group.getByRole('radio', { name: 'Closeout', exact: true })
+    ).toBeChecked();
+    await expect(
+      group.getByRole('radio', { name: 'Closeout', exact: true })
+    ).toBeFocused();
+    await group.getByRole('radio', { name: 'Setup', exact: true }).check();
+    await expect(
+      editor.getByRole('button', { name: 'Apply to draft', exact: true })
+    ).toBeDisabled();
+    await group.getByRole('radio', { name: 'Closeout', exact: true }).check();
+    await editor
+      .getByRole('button', { name: 'Cancel cell', exact: true })
+      .click();
+    const cell = matrixCell(page, 'Form', 'Provider function', 'First profile');
+    await expect(cell).not.toHaveClass(/policy-cell-unsaved/);
+    editor = await open();
+    group = editor.getByRole('radiogroup', {
+      name: 'Requirement 1 phase',
+      exact: true,
+    });
+    const setup = group.getByRole('radio', { name: 'Setup', exact: true });
+    await expect(setup).toBeChecked();
+    await setup.focus();
+    await page.keyboard.press('ArrowRight');
+    await expect(
+      group.getByRole('radio', { name: 'Monitoring', exact: true })
+    ).toBeChecked();
+    await expect(
+      editor.getByRole('combobox', { name: 'Schedule type', exact: true })
+    ).toHaveText('One-time');
+    page.once('dialog', async (dialog) => {
+      expect(dialog.message()).toBe(
+        'Changing phase removes this monitoring schedule. Continue?'
+      );
+      await dialog.dismiss();
+    });
+    await group.getByRole('radio', { name: 'Closeout', exact: true }).click();
+    await expect(
+      group.getByRole('radio', { name: 'Monitoring', exact: true })
+    ).toBeChecked();
+    await expect(
+      editor.getByRole('combobox', { name: 'Schedule type', exact: true })
+    ).toHaveText('One-time');
+    page.once('dialog', (dialog) => dialog.accept());
+    await group.getByRole('radio', { name: 'Closeout', exact: true }).click();
+    await expect(
+      group.getByRole('radio', { name: 'Closeout', exact: true })
+    ).toBeChecked();
+    await expect(
+      editor.getByRole('combobox', { name: 'Schedule type', exact: true })
+    ).toHaveCount(0);
+    await expect(
+      editor.getByRole('switch', {
+        name: 'Requirement 1 Required',
+        exact: true,
+      })
+    ).not.toBeChecked();
+    await editor
+      .getByRole('button', { name: 'Apply to draft', exact: true })
+      .click();
+    await expect(
+      cell.getByText('Additional · Closeout · Optional', { exact: true })
+    ).toBeVisible();
+    await page.getByRole('button', { name: 'Undo', exact: true }).click();
+    await expect(
+      cell.getByText('Additional · Setup · Optional', { exact: true })
+    ).toBeVisible();
+    await expect(cell).not.toHaveClass(/policy-cell-unsaved/);
+    await page.getByRole('button', { name: 'Redo', exact: true }).click();
+    await expect(
+      cell.getByText('Additional · Closeout · Optional', { exact: true })
+    ).toBeVisible();
+    expect(requests.puts()).toBe(0);
+    await page
+      .getByRole('button', { name: 'Save changes', exact: true })
+      .click();
+    await expect.poll(requests.puts).toBe(1);
+    await expect(cell).not.toHaveClass(/policy-cell-unsaved/);
+    const arrangement = saved!.referralPolicy.arrangementPolicies[0];
+    const original = initial.referralPolicy.arrangementPolicies[0];
+    expect(arrangement.requiredSetupActions).toEqual(
+      original.requiredSetupActions
+    );
+    expect(arrangement.requiredMonitoringActionsNew).toEqual(
+      original.requiredMonitoringActionsNew
+    );
+    expect(arrangement.requiredCloseoutActions).toEqual(
+      original.requiredCloseoutActions
+    );
+    expect(arrangement.arrangementFunctions[0].variants[1]).toEqual(
+      original.arrangementFunctions[0].variants[1]
+    );
+    expect(
+      arrangement.arrangementFunctions[0].variants[0].requiredSetupActions
+    ).toEqual([]);
+    expect(
+      arrangement.arrangementFunctions[0].variants[0].requiredCloseoutActions
+    ).toEqual([
+      ...original.arrangementFunctions[0].variants[0].requiredCloseoutActions,
+      { actionName: 'Form', isRequired: false },
+    ]);
+  });
+
   test('Required switches preserve Optional, no-op, Cancel and keyboard staging semantics', async ({
     page,
   }) => {
@@ -2039,8 +2194,10 @@ test.describe('Case Policies matrix', () => {
     await expect(required).not.toBeChecked();
     await expect(required).toHaveAccessibleDescription('Optional');
     await expect(
-      editor.getByRole('combobox', { name: 'Requirement 1 phase', exact: true })
-    ).toHaveText('Setup');
+      editor
+        .getByRole('radiogroup', { name: 'Requirement 1 phase', exact: true })
+        .getByRole('radio', { name: 'Setup', exact: true })
+    ).toBeChecked();
     await expect(
       editor.getByRole('spinbutton', {
         name: 'Stage 1 interval (days)',
@@ -2767,6 +2924,19 @@ test.describe('Case Policies matrix', () => {
     await expect(editor.getByText(/Duplicate or mixed-source/)).toBeVisible();
     await expect(editor.getByText(/Evaluation uses whole days/)).toBeVisible();
     await expect(editor.getByRole('switch')).toHaveCount(1);
+    const protectedGroup = editor.getByRole('radiogroup', {
+      name: 'Requirement 1 phase',
+      exact: true,
+    });
+    await expect(
+      protectedGroup.getByRole('radio', { name: 'Closeout', exact: true })
+    ).toBeChecked();
+    await expect(
+      protectedGroup.getByRole('radio', { name: 'Setup', exact: true })
+    ).toBeDisabled();
+    await expect(
+      protectedGroup.getByRole('radio', { name: 'Monitoring', exact: true })
+    ).toBeDisabled();
     await expect(
       editor.getByRole('switch', {
         name: 'Requirement 1 Required',

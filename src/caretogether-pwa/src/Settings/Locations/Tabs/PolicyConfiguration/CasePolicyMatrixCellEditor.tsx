@@ -1,13 +1,15 @@
 import {
   Alert,
   Button,
+  FormControl,
   FormControlLabel,
-  MenuItem,
+  FormLabel,
   Paper,
   Popper,
+  Radio,
+  RadioGroup,
   Stack,
   Switch,
-  TextField,
   Typography,
 } from '@mui/material';
 import { useId, useRef, useState } from 'react';
@@ -177,43 +179,50 @@ export function CasePolicyMatrixCellEditor({
               sx={{ p: 1, border: 1, borderColor: 'divider', borderRadius: 1 }}
             >
               <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
-                <TextField
-                  select
-                  fullWidth
-                  size="small"
-                  label={`Requirement ${index + 1} phase`}
-                  value={item.phase}
-                  onChange={(event) => {
-                    const phase = event.target.value as MatrixEdit['phase'];
-                    if (
-                      item.phase === 'Monitoring' &&
-                      phase !== 'Monitoring' &&
-                      !window.confirm(
-                        'Changing phase removes this monitoring schedule. Continue?'
+                <FormControl component="fieldset" sx={{ flex: 1, minWidth: 0 }}>
+                  <FormLabel
+                    component="legend"
+                    id={`${editorId}-${index}-phase`}
+                  >
+                    {`Requirement ${index + 1} phase`}
+                  </FormLabel>
+                  <RadioGroup
+                    row
+                    aria-labelledby={`${editorId}-${index}-phase`}
+                    name={`${editorId}-${index}-phase`}
+                    value={item.phase}
+                    onChange={(event) => {
+                      const phase = event.target.value as MatrixEdit['phase'];
+                      if (
+                        item.phase === 'Monitoring' &&
+                        phase !== 'Monitoring' &&
+                        !window.confirm(
+                          'Changing phase removes this monitoring schedule. Continue?'
+                        )
                       )
-                    )
-                      return;
-                    update(index, {
-                      phase,
-                      recurrence:
-                        phase === 'Monitoring' ? item.recurrence : undefined,
-                      schedule:
-                        phase === 'Monitoring'
-                          ? (item.schedule ?? defaultMatrixSchedule())
-                          : undefined,
-                    });
-                  }}
-                >
-                  {matrixPhases.map((phase) => (
-                    <MenuItem
-                      key={phase}
-                      value={phase}
-                      disabled={phase !== item.phase && occupied.has(phase)}
-                    >
-                      {phase}
-                    </MenuItem>
-                  ))}
-                </TextField>
+                        return;
+                      update(index, {
+                        phase,
+                        recurrence:
+                          phase === 'Monitoring' ? item.recurrence : undefined,
+                        schedule:
+                          phase === 'Monitoring'
+                            ? (item.schedule ?? defaultMatrixSchedule())
+                            : undefined,
+                      });
+                    }}
+                  >
+                    {matrixPhases.map((phase) => (
+                      <FormControlLabel
+                        key={phase}
+                        value={phase}
+                        control={<Radio size="small" />}
+                        label={phase}
+                        disabled={phase !== item.phase && occupied.has(phase)}
+                      />
+                    ))}
+                  </RadioGroup>
+                </FormControl>
                 <Stack sx={{ minWidth: 140 }}>
                   <FormControlLabel
                     label="Required"
