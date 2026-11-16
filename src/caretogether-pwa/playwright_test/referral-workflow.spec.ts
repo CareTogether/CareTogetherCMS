@@ -31,7 +31,9 @@ test.describe('referral workflow @workflow @pr', () => {
     });
     await openCaseForReferral(page);
 
-    await page.getByRole('button', { name: familyName, exact: true }).click();
+    await page
+      .getByRole('button', { name: `${familyName} Family`, exact: true })
+      .click();
     await page.getByRole('button', { name: 'Child', exact: true }).click();
     const addChildTitle = page.getByRole('heading', { name: /^Add Child to / });
     await expect(addChildTitle).toBeVisible();
