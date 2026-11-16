@@ -44,6 +44,7 @@ using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Microsoft.FeatureManagement;
 using Microsoft.FeatureManagement.FeatureFilters;
@@ -57,6 +58,8 @@ namespace CareTogether.Api
     {
         public IHostEnvironment HostEnvironment { get; }
         public IConfiguration Configuration { get; }
+
+        private PolicyEvaluationEngine? policyEvaluationEngine;
 
         public Startup(IHostEnvironment hostEnvironment, IConfiguration configuration)
         {
@@ -272,6 +275,7 @@ namespace CareTogether.Api
             );
             var accountsResource = new AccountsResource(accountsEventLog, personAccessEventLog);
             var v1CasesResource = new V1CasesResource(v1CasesEventLog);
+            services.AddSingleton<IV1CasesResource>(v1CasesResource);
             var v1ReferralsResource = new V1ReferralsResource(v1ReferralsEventLog, uploadsStore);
 
             var notesResource = new NotesResource(notesEventLog, draftNotesStore);
@@ -315,6 +319,7 @@ namespace CareTogether.Api
             );
             services.AddSingleton<IAuthorizationEngine>(authorizationEngine); //TODO: Temporary workaround for UsersController
             var policyEvaluationEngine = new PolicyEvaluationEngine(policiesResource);
+            this.policyEvaluationEngine = policyEvaluationEngine;
 
             // Shared family info formatting logic used by all manager services
             var combinedFamilyInfoFormatter = new CombinedFamilyInfoFormatter(
@@ -577,8 +582,15 @@ namespace CareTogether.Api
             });
         }
 
-        public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
+        public void Configure(
+            IApplicationBuilder app,
+            IWebHostEnvironment env,
+            ILogger<PolicyEvaluationEngine> policyEvaluationLogger
+        )
         {
+            if (policyEvaluationEngine != null)
+                policyEvaluationEngine.Logger = policyEvaluationLogger;
+
             if (env.IsDevelopment())
             {
                 IdentityModelEventSource.ShowPII = true;

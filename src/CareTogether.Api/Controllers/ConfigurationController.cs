@@ -8,6 +8,7 @@ using CareTogether.Resources.Approvals;
 using CareTogether.Resources.Communities;
 using CareTogether.Resources.Directory;
 using CareTogether.Resources.Policies;
+using CareTogether.Resources.V1Cases;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -49,6 +50,7 @@ namespace CareTogether.Api.Controllers
         private readonly IFeatureManager featureManager;
         private readonly IAuthorizationEngine authorizationEngine;
         private readonly ICommunitiesResource communitiesResource;
+        private readonly IV1CasesResource v1CasesResource;
 
         public ConfigurationController(
             IPoliciesResource policiesResource,
@@ -57,7 +59,8 @@ namespace CareTogether.Api.Controllers
             IApprovalsResource approvalsResource,
             IFeatureManager featureManager,
             IAuthorizationEngine authorizationEngine,
-            ICommunitiesResource communitiesResource
+            ICommunitiesResource communitiesResource,
+            IV1CasesResource v1CasesResource
         )
         {
             this.policiesResource = policiesResource;
@@ -67,6 +70,7 @@ namespace CareTogether.Api.Controllers
             this.featureManager = featureManager;
             this.authorizationEngine = authorizationEngine;
             this.communitiesResource = communitiesResource;
+            this.v1CasesResource = v1CasesResource;
         }
 
         [HttpGet("/api/{organizationId:guid}/[controller]")]
@@ -542,6 +546,14 @@ namespace CareTogether.Api.Controllers
             )
                 return Forbid();
 
+            var arrangementTypeUsage = await ValidateArrangementTypeUsageAsync(
+                organizationId,
+                locationId,
+                policy
+            );
+            if (arrangementTypeUsage.Errors.Count > 0)
+                return BadRequest(new { errors = arrangementTypeUsage.Errors });
+
             try
             {
                 var result = await policiesResource.UpsertEffectiveLocationPolicyAsync(
@@ -578,7 +590,41 @@ namespace CareTogether.Api.Controllers
                 organizationId,
                 policy
             );
-            return Ok(result);
+            var arrangementTypeUsage = await ValidateArrangementTypeUsageAsync(
+                organizationId,
+                locationId,
+                policy
+            );
+            return Ok(ArrangementTypeUsageValidator.Merge(result, arrangementTypeUsage));
+        }
+
+        private async Task<PolicyValidationResult> ValidateArrangementTypeUsageAsync(
+            Guid organizationId,
+            Guid locationId,
+            EffectiveLocationPolicy proposedPolicy
+        )
+        {
+            var v1Cases = await v1CasesResource.ListV1CasessAsync(organizationId, locationId);
+            var arrangementTypesInUse = v1Cases
+                .SelectMany(v1Case =>
+                    v1Case.Arrangements.Values.Select(arrangement => arrangement.ArrangementType)
+                )
+                .ToImmutableList();
+
+            if (
+                ArrangementTypeUsageValidator.DefinesAllTypes(
+                    proposedPolicy,
+                    arrangementTypesInUse
+                )
+            )
+                return ArrangementTypeUsageValidator.NoProblems;
+
+            var currentPolicy = await policiesResource.GetCurrentPolicy(organizationId, locationId);
+            return ArrangementTypeUsageValidator.Validate(
+                currentPolicy,
+                proposedPolicy,
+                arrangementTypesInUse
+            );
         }
 
         [HttpGet("/api/{organizationId:guid}/{locationId:guid}/[controller]/flags")]

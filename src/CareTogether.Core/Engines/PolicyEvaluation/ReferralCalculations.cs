@@ -13,7 +13,8 @@ namespace CareTogether.Engines.PolicyEvaluation
             EffectiveLocationPolicy locationPolicy,
             V1CasePolicy v1CasePolicy,
             V1CaseEntry v1CaseEntry,
-            DateOnly today
+            DateOnly today,
+            Action<string>? reportPolicyMismatch = null
         )
         {
             var missingIntakeRequirements = v1CasePolicy
@@ -48,7 +49,8 @@ namespace CareTogether.Engines.PolicyEvaluation
                 {
                     var arrangementPolicy = GetArrangementPolicyForEvaluation(
                         v1CasePolicy,
-                        arrangement.Value
+                        arrangement.Value,
+                        reportPolicyMismatch
                     );
 
                     return CalculateArrangementStatus(
@@ -69,23 +71,39 @@ namespace CareTogether.Engines.PolicyEvaluation
 
         internal static ArrangementPolicy GetArrangementPolicyForEvaluation(
             V1CasePolicy v1CasePolicy,
-            ArrangementEntry arrangement
+            ArrangementEntry arrangement,
+            Action<string>? reportPolicyMismatch = null
         )
         {
-            var arrangementPolicy = v1CasePolicy.ArrangementPolicies.Single(p =>
+            // A policy edit can remove or rename an arrangement type that existing arrangements
+            // still use. Evaluating those arrangements must not fail the whole request, so they
+            // are evaluated against an empty policy (phase only, no requirements) instead.
+            var arrangementPolicy = v1CasePolicy.ArrangementPolicies.FirstOrDefault(p =>
                 p.ArrangementType == arrangement.ArrangementType
             );
+
+            if (arrangementPolicy == null)
+            {
+                reportPolicyMismatch?.Invoke(
+                    $"The arrangement type '{arrangement.ArrangementType}' does not exist in the case policy; the arrangement was evaluated without requirements."
+                );
+                return EmptyArrangementPolicy(arrangement.ArrangementType);
+            }
 
             if (arrangement.ArrangementPolicyVersion == null)
                 return arrangementPolicy;
 
-            var policyVersion =
-                arrangementPolicy.PolicyVersions?.SingleOrDefault(version =>
-                    version.Version == arrangement.ArrangementPolicyVersion
-                )
-                ?? throw new InvalidOperationException(
-                    $"The arrangement policy version '{arrangement.ArrangementPolicyVersion}' does not exist for arrangement type '{arrangement.ArrangementType}'."
+            var policyVersion = arrangementPolicy.PolicyVersions?.FirstOrDefault(version =>
+                version.Version == arrangement.ArrangementPolicyVersion
+            );
+
+            if (policyVersion == null)
+            {
+                reportPolicyMismatch?.Invoke(
+                    $"The arrangement policy version '{arrangement.ArrangementPolicyVersion}' does not exist for arrangement type '{arrangement.ArrangementType}'; the current policy was used instead."
                 );
+                return arrangementPolicy;
+            }
 
             return new ArrangementPolicy(
                 arrangementPolicy.ArrangementType,
@@ -100,6 +118,16 @@ namespace CareTogether.Engines.PolicyEvaluation
                 policyVersion.SupersededAtUtc
             );
         }
+
+        internal static ArrangementPolicy EmptyArrangementPolicy(string arrangementType) =>
+            new(
+                arrangementType,
+                ChildInvolvement.NoChildInvolvement,
+                ImmutableList<ArrangementFunction>.Empty,
+                ImmutableList<string>.Empty,
+                ImmutableList<MonitoringRequirementOld>.Empty,
+                ImmutableList<string>.Empty
+            );
 
         internal static ArrangementStatus CalculateArrangementStatus(
             ArrangementEntry arrangement,
