@@ -28,7 +28,8 @@ interface InboxMessageProps {
 
 function getMessageProps(
   item: QueueItem,
-  appNavigate: AppNavigate
+  appNavigate: AppNavigate,
+  isV2: boolean
 ): InboxMessageProps {
   switch (item.type) {
     case 'ChildOver18':
@@ -96,6 +97,34 @@ function getMessageProps(
               Missing last name:{' '}
             </Typography>
             <PersonName person={item.person} />
+          </>
+        ),
+        secondaryContent: <FamilyName family={item.family} />,
+      };
+
+    case 'MissingChildDateOfBirth':
+      return {
+        icon: <EmojiPeople color="warning" />,
+        onClick: () => {
+          const familyId = item.family.family?.id;
+          if (!familyId) return;
+
+          if (isV2 && item.child.id) {
+            appNavigate.family(familyId, { familyMemberId: item.child.id });
+            return;
+          }
+
+          appNavigate.family(familyId);
+        },
+        primaryContent: (
+          <>
+            <Typography
+              variant="body1"
+              sx={{ display: 'inline', fontWeight: 'bold' }}
+            >
+              Missing child date of birth:{' '}
+            </Typography>
+            <PersonName person={item.child} />
           </>
         ),
         secondaryContent: <FamilyName family={item.family} />,
@@ -210,12 +239,12 @@ function InboxMessage({
   );
 }
 
-function MessageList() {
+function MessageList({ isV2 }: { isV2: boolean }) {
   const appNavigate = useAppNavigate();
   const queueItems = useQueueItems();
 
   const messages = (queueItems ?? []).map((item) =>
-    getMessageProps(item, appNavigate)
+    getMessageProps(item, appNavigate, isV2)
   );
 
   return (
@@ -246,7 +275,7 @@ export function InboxScreen() {
           Inbox
         </Typography>
       )}
-      <MessageList />
+      <MessageList isV2={isV2} />
     </Container>
   );
 }
