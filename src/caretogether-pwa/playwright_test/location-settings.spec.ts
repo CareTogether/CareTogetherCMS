@@ -1,6 +1,7 @@
 import {
   settingsSections,
   settingsSectionPath,
+  settingsCategoryForSection,
 } from '../src/Settings/settingsSections';
 import { SELF_SERVICE_POLICY_FEATURE_FLAG } from '../src/featureFlags';
 import { expect, test } from './support/fixtures';
@@ -11,6 +12,7 @@ import {
 } from './support/constants';
 
 test.describe('location settings @smoke @pr', () => {
+  test.use({ featureFlags: { [SELF_SERVICE_POLICY_FEATURE_FLAG]: true } });
   test('opens the selected location configuration from Settings', async ({
     page,
   }) => {
@@ -25,7 +27,13 @@ test.describe('location settings @smoke @pr', () => {
     );
     const breadcrumb = page.getByLabel('breadcrumb');
     await expect(breadcrumb).toContainText('Settings');
-    await expect(breadcrumb).toContainText('Atlantis');
+    await expect(breadcrumb).toContainText('Location Settings');
+    await expect(
+      breadcrumb.getByText('Location', { exact: true })
+    ).toBeVisible();
+    await expect(
+      page.getByRole('heading', { name: 'Editing Atlantis configuration' })
+    ).toBeVisible();
     await expect(
       breadcrumb.getByText('Locations', { exact: true })
     ).toHaveCount(0);
@@ -62,13 +70,25 @@ test.describe('location settings @smoke @pr', () => {
       `/org/${ATLANTIS_ORGANIZATION_ID}/${ATLANTIS_LOCATION_ID}/settings`
     );
 
+    await page.getByRole('button', { name: /^Location Settings/ }).click();
+    await expect(page).toHaveURL(
+      `/org/${ATLANTIS_ORGANIZATION_ID}/${ATLANTIS_LOCATION_ID}/settings/location-settings`
+    );
     await expect(
-      page.getByRole('heading', { name: 'Location', exact: true })
+      page.getByRole('button', {
+        name: /^Location Configure basic administration/,
+      })
     ).toBeVisible();
     await expect(
       page.getByText(
         'Configure basic administration for the selected location.'
       )
+    ).toBeVisible();
+    await page
+      .getByRole('button', { name: /^Location Configure basic administration/ })
+      .click();
+    await expect(
+      page.getByRole('heading', { name: 'Editing Atlantis configuration' })
     ).toBeVisible();
   });
 
@@ -76,10 +96,10 @@ test.describe('location settings @smoke @pr', () => {
     const editedLocationPolicyPath =
       `/api/${ATLANTIS_ORGANIZATION_ID}/${EL_DORADO_LOCATION_ID}` +
       '/Configuration/policy';
-    const editedLocationPolicyRequest = page.waitForRequest(
-      (request) =>
-        request.method() === 'GET' &&
-        new URL(request.url()).pathname === editedLocationPolicyPath
+    const editedLocationPolicyResponse = page.waitForResponse(
+      (response) =>
+        response.request().method() === 'GET' &&
+        new URL(response.url()).pathname === editedLocationPolicyPath
     );
 
     await page.goto(
@@ -87,7 +107,24 @@ test.describe('location settings @smoke @pr', () => {
         `/settings/locations/${EL_DORADO_LOCATION_ID}?tab=casePolicy`
     );
 
-    await editedLocationPolicyRequest;
+    expect((await editedLocationPolicyResponse).ok()).toBe(true);
+    await expect(page).toHaveURL(
+      settingsSectionPath(
+        ATLANTIS_ORGANIZATION_ID,
+        EL_DORADO_LOCATION_ID,
+        'casePolicy'
+      )
+    );
+    await expect(
+      page.getByRole('combobox', { name: 'Location', exact: true })
+    ).toContainText('El Dorado');
+    await expect(
+      page.getByRole('grid', { name: 'Case Policies requirements matrix' })
+    ).toBeVisible();
+    await page.reload();
+    await expect(
+      page.getByRole('grid', { name: 'Case Policies requirements matrix' })
+    ).toBeVisible();
   });
 });
 
@@ -107,16 +144,25 @@ test.describe('dedicated Settings sidebar', () => {
       const navigation = page.getByRole('list', {
         name: 'secondary navigation',
       });
-      const item = navigation.getByRole('button', {
-        name: section.label,
+      const category = settingsCategoryForSection(section.id);
+      const item = navigation.getByRole('link', {
+        name: category.label,
         exact: true,
       });
       await item.scrollIntoViewIfNeeded();
       await expect(item).toHaveClass(/Mui-selected/);
-      for (const other of settingsSections)
-        await expect(
-          navigation.getByRole('button', { name: other.label, exact: true })
-        ).toBeVisible();
+      await expect(item).toHaveAttribute('aria-current', 'location');
+      await item.click();
+      await page
+        .getByRole('button', { name: new RegExp('^' + section.label) })
+        .click();
+      await expect(page).toHaveURL(
+        settingsSectionPath(
+          ATLANTIS_ORGANIZATION_ID,
+          ATLANTIS_LOCATION_ID,
+          section.id
+        )
+      );
     }
   });
 });
