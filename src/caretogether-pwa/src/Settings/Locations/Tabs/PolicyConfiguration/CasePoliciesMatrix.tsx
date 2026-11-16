@@ -253,7 +253,49 @@ export function CasePoliciesMatrix({
       group = {
         groupId,
         headerName:
-          scope.arrangement + (scope.readOnlyReason ? ' (read-only)' : ''),
+          scope.arrangement +
+          (scope.readOnlyReason ? ' (read-only)' : '') +
+          ' (arrangement type)',
+        renderHeaderGroup: () => (
+          <Box
+            component="span"
+            sx={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 0.5,
+              minWidth: 0,
+              maxWidth: '100%',
+            }}
+          >
+            <Box
+              component="span"
+              title={scope.arrangement}
+              sx={{
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                whiteSpace: 'nowrap',
+                fontWeight: 'var(--unstable_DataGrid-headWeight)',
+              }}
+            >
+              {scope.arrangement}
+            </Box>
+            {scope.readOnlyReason && (
+              <Box component="span" sx={{ flexShrink: 0 }}>
+                (read-only)
+              </Box>
+            )}
+            <Box
+              component="span"
+              sx={{
+                fontWeight: 'fontWeightRegular',
+                flexShrink: 0,
+                whiteSpace: 'nowrap',
+              }}
+            >
+              (arrangement type)
+            </Box>
+          </Box>
+        ),
         children: [],
       };
       grouping.push(group);

@@ -2505,7 +2505,10 @@ test.describe('Case Policies matrix', () => {
       grid.getByRole('columnheader', { name: 'Shared', exact: true })
     ).toHaveCount(0);
     await expect(
-      grid.getByRole('columnheader', { name: 'Hosting', exact: true })
+      grid.getByRole('columnheader', {
+        name: 'Hosting (arrangement type)',
+        exact: true,
+      })
     ).toBeVisible();
     await expect(
       grid.getByRole('columnheader', { name: 'Provider function', exact: true })
@@ -2780,6 +2783,14 @@ test.describe('Case Policies matrix', () => {
       await page.setViewportSize({ width, height: 900 });
       const requests = await backend(page, false, false, caseMatrixPolicy());
       await mount(page, 'casePolicy', undefined, true);
+      const header = page.getByRole('columnheader', {
+        name: 'Hosting (arrangement type)',
+        exact: true,
+      });
+      await expect(header).toBeVisible();
+      await expect(
+        header.getByText('(arrangement type)', { exact: true })
+      ).toHaveCSS('font-weight', '400');
       const cell = matrixCell(page, 'Form');
       await expect(cell).toBeVisible();
       const originalBounds = (await cell.boundingBox())!;
@@ -2802,6 +2813,63 @@ test.describe('Case Policies matrix', () => {
       expect(changedBounds.height).toBeCloseTo(originalBounds.height, 0);
       expect(requests.puts()).toBe(0);
     });
+
+  test('arrangement headers preserve identities, emphasis and read-only labels for long dynamic names', async ({
+    page,
+  }) => {
+    const initial = caseMatrixPolicy();
+    const name =
+      'A long dynamically configured arrangement name that requires truncation';
+    initial.referralPolicy.arrangementPolicies.push({
+      ...initial.referralPolicy.arrangementPolicies[0],
+      arrangementType: name,
+      arrangementFunctions: [],
+      supersededAtUtc: '2024-01-01T00:00:00Z',
+    });
+    const requests = await backend(page, false, false, initial);
+    await mount(page, 'casePolicy', undefined, true);
+    const grid = page.getByRole('grid', {
+      name: 'Case Policies requirements matrix',
+      exact: true,
+    });
+    for (const width of [320, 390, 768, 1440]) {
+      await page.setViewportSize({ width, height: 900 });
+      await grid.locator('.MuiDataGrid-virtualScroller').evaluate((element) => {
+        element.scrollLeft = element.scrollWidth;
+      });
+      const header = grid.getByRole('columnheader', {
+        name: name + ' (read-only) (arrangement type)',
+        exact: true,
+      });
+      await expect(header).toBeVisible();
+      await expect(header).toHaveAttribute(
+        'data-fields',
+        '|-' + JSON.stringify([name, null, null]) + '-|'
+      );
+      const suffix = header.getByText('(arrangement type)', { exact: true });
+      await expect(suffix).toHaveCSS('font-weight', '400');
+      await expect(
+        header.getByText('(read-only)', { exact: true })
+      ).toBeVisible();
+      const label = header.getByText(name, { exact: true });
+      await expect(label).toHaveAttribute('title', name);
+      expect(
+        await label.evaluate((element) => getComputedStyle(element).fontWeight)
+      ).toBe(
+        await grid
+          .getByRole('columnheader', { name: 'Actions', exact: true })
+          .locator('.MuiDataGrid-columnHeaderTitle')
+          .evaluate((element) => getComputedStyle(element).fontWeight)
+      );
+      const bounds = (await suffix.boundingBox())!;
+      const headerBounds = (await header.boundingBox())!;
+      expect(bounds.x).toBeGreaterThanOrEqual(headerBounds.x);
+      expect(bounds.x + bounds.width).toBeLessThanOrEqual(
+        headerBounds.x + headerBounds.width
+      );
+    }
+    expect(requests.puts()).toBe(0);
+  });
 });
 
 test('initial Settings policy page shows warnings once and never saves', async ({
