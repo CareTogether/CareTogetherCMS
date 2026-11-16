@@ -8,12 +8,16 @@ import {
   resolvePolicyGridDraft,
   savePolicyGridDraft,
   samePolicyGridValue,
+  stagePolicyGridDraft,
+  movePolicyGridHistory,
+  cancelPolicyGridDraft,
 } from './policyGridDraft';
 
 export function usePolicyGridDraft<T>(
   loaded: T,
   save: (value: T) => Promise<boolean>,
-  key = ''
+  key = '',
+  historyEnabled = false
 ) {
   const location = useLocation();
   const scope = `${location.pathname}/${key}`;
@@ -39,13 +43,13 @@ export function usePolicyGridDraft<T>(
   function stage(value: T | ((current: T) => T)) {
     if (savingRef.current) return;
     setSaveNotice(undefined);
-    const next = {
-      ...ref.current,
-      value:
-        typeof value === 'function'
-          ? (value as (current: T) => T)(ref.current.value)
-          : value,
-    };
+    const next = stagePolicyGridDraft(
+      ref.current,
+      typeof value === 'function'
+        ? (value as (current: T) => T)(ref.current.value)
+        : value,
+      historyEnabled
+    );
     ref.current = next;
     setState(next);
     setError(undefined);
@@ -87,16 +91,32 @@ export function usePolicyGridDraft<T>(
   }
 
   function cancel() {
+    if (savingRef.current) return;
     setSaveNotice(undefined);
-    const target = samePolicyGridValue(ref.current.loaded, loaded)
-      ? ref.current.base
-      : loaded;
-    const next = { scope, loaded, base: target, value: target };
+    const next = cancelPolicyGridDraft(ref.current, loaded);
     ref.current = next;
     setState(next);
     setError(undefined);
   }
+  function moveHistory(direction: 'undo' | 'redo') {
+    if (
+      !historyEnabled ||
+      savingRef.current ||
+      document.querySelector('.MuiDataGrid-cell--editing')
+    )
+      return;
+    const next = movePolicyGridHistory(ref.current, direction);
+    if (next === ref.current) return;
+    ref.current = next;
+    setState(next);
+    setSaveNotice(undefined);
+    setError(undefined);
+  }
   return {
+    canUndo: historyEnabled && !saving && current.past.length > 0,
+    canRedo: historyEnabled && !saving && current.future.length > 0,
+    undo: () => moveHistory('undo'),
+    redo: () => moveHistory('redo'),
     base: current.base,
     value: current.value,
     dirty,

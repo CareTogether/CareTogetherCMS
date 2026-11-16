@@ -39,6 +39,10 @@ import {
 } from './casePolicyMatrix';
 import { CasePolicyMatrixCellEditor } from './CasePolicyMatrixCellEditor';
 import { variantScheduleSummary } from './arrangementVariantRequirements';
+import {
+  CasePolicyMatrixToolbar,
+  CasePolicyMatrixHistory,
+} from './CasePolicyMatrixToolbar';
 
 type MatrixCell = {
   dirty: boolean;
@@ -155,7 +159,7 @@ export function CasePoliciesMatrix({
 }) {
   const theme = useTheme();
   const compact = useMediaQuery(theme.breakpoints.down('sm'));
-  const draft = usePolicyGridDraft(policy, onPolicyChange);
+  const draft = usePolicyGridDraft(policy, onPolicyChange, '', true);
   const [editing, setEditing] = useState(false);
   useEffect(() => {
     onEditingStateChange?.({
@@ -340,223 +344,251 @@ export function CasePoliciesMatrix({
     })),
   ];
   return (
-    <Stack spacing={2} sx={{ minWidth: 0 }}>
-      <Typography variant="body2">
-        Shared requirements apply to every variant. Additional requirements
-        apply only to the selected assignment variant; they do not override
-        Shared. Click a cell or press Enter to edit all of its phases.
-      </Typography>
-      <PolicyGridDraftActions
-        saveSuccessId={draft.saveSuccessId}
-        changeCount={draft.changeCount}
-        saving={draft.saving}
-        editing={editing}
-        error={draft.error}
-        onSave={() => void draft.save()}
-        onCancel={() => {
-          if (apiRef.current) discardPolicyGridCellEdits(apiRef.current);
-          draft.cancel();
-          setEditing(false);
-        }}
-      />
-      {issues.length > 0 && (
-        <Alert severity="warning">
-          Ambiguous scopes are excluded from the matrix and remain available in
-          Manage Arrangements &amp; Functions. {issues.join('; ')}
-        </Alert>
-      )}
-      {scopes.length === 0 && (
-        <Alert severity="info">
-          No uniquely named arrangements are available. Configure arrangements
-          and functions using Manage Arrangements &amp; Functions.
-        </Alert>
-      )}
-      {rows.length === 0 && (
-        <Alert severity="info">
-          No Action Definitions or requirement references are configured.
-        </Alert>
-      )}
-      <Box
-        sx={{
-          ...v2DataGridStyles(theme),
-          height: { xs: '65vh', md: 650 },
-          minWidth: 0,
-        }}
-      >
-        <DataGridPremium<MatrixRow>
-          apiRef={apiRef}
-          aria-label="Case Policies requirements matrix"
-          rows={rows}
-          getCellClassName={({ row, field }) =>
-            row.cells[field]?.dirty ? 'policy-cell-unsaved' : ''
-          }
-          columns={columns}
-          columnGroupingModel={grouping}
-          columnGroupHeaderHeight={42}
-          getRowHeight={() => 'auto'}
-          getEstimatedRowHeight={() => 120}
-          showToolbar
-          slotProps={{
-            baseButton: { disabled: editing },
-            baseIconButton: { disabled: editing },
-            baseTextField: { disabled: editing },
-          }}
-          initialState={{
-            pinnedColumns: { left: ['actionName'] },
-            density: 'compact',
-          }}
-          disableRowSelectionOnClick
-          disableClipboardPaste
-          disableAggregation
-          disablePivoting
-          disableRowGrouping
-          disableColumnMenu={editing}
-          disableColumnFilter={editing}
-          disableColumnSelector={editing}
-          disableColumnReorder={editing}
-          disableColumnSorting={editing}
-          isCellEditable={({ row, field }) => {
-            const scope = scopes.find((item) => item.field === field);
-            const own: MatrixRequirement[] = row.cells[field]?.own ?? [];
-            return (
-              !!scope &&
-              !draft.saving &&
-              !scope.readOnlyReason &&
-              !row.unresolved &&
-              (own.some((item) => !item.readOnlyReason) ||
-                matrixPhases.some(
-                  (phase) => !own.some((item) => item.phase === phase)
-                ))
-            );
-          }}
-          onCellClick={(params) => {
-            if (
-              params.isEditable &&
-              apiRef.current!.getCellMode(params.id, params.field) === 'view'
-            ) {
-              setEditing(true);
-              apiRef.current!.startCellEditMode({
-                id: params.id,
-                field: params.field,
-              });
-            }
-          }}
-          onCellEditStart={() => setEditing(true)}
-          onCellEditStop={(params, event) => {
-            if (params.reason === 'cellFocusOut')
-              event.defaultMuiPrevented = true;
-            if (params.reason === 'escapeKeyDown') setEditing(false);
-          }}
-          processRowUpdate={(updated: MatrixRow, original: MatrixRow) => {
-            const scope = scopes.find(
-              (item) =>
-                updated.cells[item.field]?.edits !==
-                original.cells[item.field]?.edits
-            );
-            if (!scope) {
-              setEditing(false);
-              return original;
-            }
-            let candidate = draft.value;
-            draft.stage((current) => {
-              candidate = applyMatrixEdits(
-                current,
-                policy,
-                scope,
-                updated.actionName,
-                updated.cells[scope.field].edits!,
-                (edit, previous) => {
-                  const action = new RequirementDefinition({
-                    actionName: updated.actionName,
-                    isRequired: edit.isRequired,
-                  });
-                  if (edit.phase !== 'Monitoring') return action;
-                  const data = edit.schedule ?? edit.recurrence?.toJSON();
-                  const recurrence =
-                    previous?.recurrence &&
-                    JSON.stringify(data) ===
-                      JSON.stringify(previous.recurrence.toJSON())
-                      ? previous.recurrence
-                      : RecurrencePolicy.fromJS(data);
-                  return new MonitoringRequirement({ action, recurrence });
-                }
-              );
-              return candidate;
-            });
+    <CasePolicyMatrixHistory
+      value={{
+        canUndo: draft.canUndo && !editing,
+        canRedo: draft.canRedo && !editing,
+        undo: draft.undo,
+        redo: draft.redo,
+      }}
+    >
+      <Stack spacing={2} sx={{ minWidth: 0 }}>
+        <Typography variant="body2">
+          Shared requirements apply to every variant. Additional requirements
+          apply only to the selected assignment variant; they do not override
+          Shared. Click a cell or press Enter to edit all of its phases.
+        </Typography>
+        <PolicyGridDraftActions
+          saveSuccessId={draft.saveSuccessId}
+          changeCount={draft.changeCount}
+          saving={draft.saving}
+          editing={editing}
+          error={draft.error}
+          onSave={() => void draft.save()}
+          onCancel={() => {
+            if (apiRef.current) discardPolicyGridCellEdits(apiRef.current);
+            draft.cancel();
             setEditing(false);
-            const baselineFields = new Set(
-              matrixScopes(policy).scopes.map((item) => item.field)
-            );
-            const baseFields = new Set(
-              matrixScopes(draft.base).scopes.map((item) => item.field)
-            );
-            const projected = new Map(
-              scopes.map((item) => {
-                const owner = matrixOwner(candidate, item);
-                return [
-                  item.field,
-                  matrixRequirements(
-                    owner,
-                    baselineFields.has(item.field)
-                      ? matrixOwner(policy, item)
-                      : owner
-                  ).filter(
-                    (requirement) =>
-                      requirement.actionName === updated.actionName
-                  ),
-                ];
-              })
-            );
-            return {
-              ...updated,
-              cells: Object.fromEntries(
-                scopes.map((item) => [
-                  item.field,
-                  {
-                    dirty:
-                      baseFields.has(item.field) &&
-                      matrixCellHasChanges(
-                        matrixOwner(draft.base, item),
-                        matrixOwner(candidate, item),
-                        updated.actionName
-                      ),
-                    own: projected.get(item.field)!,
-                    shared: item.functionName
-                      ? projected.get(
-                          scopes.find(
-                            (shared) =>
-                              shared.arrangement === item.arrangement &&
-                              !shared.functionName
-                          )!.field
-                        )!
-                      : [],
-                  },
-                ])
-              ),
-            };
-          }}
-          onProcessRowUpdateError={(error) =>
-            draft.setError(
-              error instanceof Error
-                ? error.message
-                : 'The cell could not be applied.'
-            )
-          }
-          sx={{
-            '& .MuiDataGrid-cell.policy-cell-unsaved, & .MuiDataGrid-cell.policy-cell-unsaved:focus, & .MuiDataGrid-cell.policy-cell-unsaved:focus-within':
-              {
-                outline: '1px solid',
-                outlineColor: 'error.main',
-                outlineOffset: '-1px',
-              },
-            '& .MuiDataGrid-cell--editable': {
-              cursor: 'pointer',
-              '&:hover': { bgcolor: 'action.hover' },
-            },
-            '& .MuiDataGrid-cell': { alignItems: 'flex-start' },
           }}
         />
-      </Box>
-    </Stack>
+        {issues.length > 0 && (
+          <Alert severity="warning">
+            Ambiguous scopes are excluded from the matrix and remain available
+            in Manage Arrangements &amp; Functions. {issues.join('; ')}
+          </Alert>
+        )}
+        {scopes.length === 0 && (
+          <Alert severity="info">
+            No uniquely named arrangements are available. Configure arrangements
+            and functions using Manage Arrangements &amp; Functions.
+          </Alert>
+        )}
+        {rows.length === 0 && (
+          <Alert severity="info">
+            No Action Definitions or requirement references are configured.
+          </Alert>
+        )}
+        <Box
+          onKeyDown={(event) => {
+            if (
+              !(event.ctrlKey || event.metaKey) ||
+              event.altKey ||
+              editing ||
+              draft.saving
+            )
+              return;
+            const target = event.target as HTMLElement;
+            if (target.closest('input, textarea, [contenteditable="true"]'))
+              return;
+            const key = event.key.toLowerCase();
+            if (key !== 'z' && key !== 'y') return;
+            event.preventDefault();
+            if (key === 'y' || event.shiftKey) draft.redo();
+            else draft.undo();
+          }}
+          sx={{
+            ...v2DataGridStyles(theme),
+            height: { xs: '65vh', md: 650 },
+            minWidth: 0,
+          }}
+        >
+          <DataGridPremium<MatrixRow>
+            apiRef={apiRef}
+            aria-label="Case Policies requirements matrix"
+            rows={rows}
+            getCellClassName={({ row, field }) =>
+              row.cells[field]?.dirty ? 'policy-cell-unsaved' : ''
+            }
+            columns={columns}
+            columnGroupingModel={grouping}
+            columnGroupHeaderHeight={42}
+            getRowHeight={() => 'auto'}
+            getEstimatedRowHeight={() => 120}
+            showToolbar
+            historyStackSize={0}
+            slots={{ toolbar: CasePolicyMatrixToolbar }}
+            slotProps={{
+              baseButton: { disabled: editing },
+              baseIconButton: { disabled: editing },
+              baseTextField: { disabled: editing },
+            }}
+            initialState={{
+              pinnedColumns: { left: ['actionName'] },
+              density: 'compact',
+            }}
+            disableRowSelectionOnClick
+            disableClipboardPaste
+            disableAggregation
+            disablePivoting
+            disableRowGrouping
+            disableColumnMenu={editing}
+            disableColumnFilter={editing}
+            disableColumnSelector={editing}
+            disableColumnReorder={editing}
+            disableColumnSorting={editing}
+            isCellEditable={({ row, field }) => {
+              const scope = scopes.find((item) => item.field === field);
+              const own: MatrixRequirement[] = row.cells[field]?.own ?? [];
+              return (
+                !!scope &&
+                !draft.saving &&
+                !scope.readOnlyReason &&
+                !row.unresolved &&
+                (own.some((item) => !item.readOnlyReason) ||
+                  matrixPhases.some(
+                    (phase) => !own.some((item) => item.phase === phase)
+                  ))
+              );
+            }}
+            onCellClick={(params) => {
+              if (
+                params.isEditable &&
+                apiRef.current!.getCellMode(params.id, params.field) === 'view'
+              ) {
+                setEditing(true);
+                apiRef.current!.startCellEditMode({
+                  id: params.id,
+                  field: params.field,
+                });
+              }
+            }}
+            onCellEditStart={() => setEditing(true)}
+            onCellEditStop={(params, event) => {
+              if (params.reason === 'cellFocusOut')
+                event.defaultMuiPrevented = true;
+              if (params.reason === 'escapeKeyDown') setEditing(false);
+            }}
+            processRowUpdate={(updated: MatrixRow, original: MatrixRow) => {
+              const scope = scopes.find(
+                (item) =>
+                  updated.cells[item.field]?.edits !==
+                  original.cells[item.field]?.edits
+              );
+              if (!scope) {
+                setEditing(false);
+                return original;
+              }
+              let candidate = draft.value;
+              draft.stage((current) => {
+                candidate = applyMatrixEdits(
+                  current,
+                  policy,
+                  scope,
+                  updated.actionName,
+                  updated.cells[scope.field].edits!,
+                  (edit, previous) => {
+                    const action = new RequirementDefinition({
+                      actionName: updated.actionName,
+                      isRequired: edit.isRequired,
+                    });
+                    if (edit.phase !== 'Monitoring') return action;
+                    const data = edit.schedule ?? edit.recurrence?.toJSON();
+                    const recurrence =
+                      previous?.recurrence &&
+                      JSON.stringify(data) ===
+                        JSON.stringify(previous.recurrence.toJSON())
+                        ? previous.recurrence
+                        : RecurrencePolicy.fromJS(data);
+                    return new MonitoringRequirement({ action, recurrence });
+                  }
+                );
+                return candidate;
+              });
+              setEditing(false);
+              const baselineFields = new Set(
+                matrixScopes(policy).scopes.map((item) => item.field)
+              );
+              const baseFields = new Set(
+                matrixScopes(draft.base).scopes.map((item) => item.field)
+              );
+              const projected = new Map(
+                scopes.map((item) => {
+                  const owner = matrixOwner(candidate, item);
+                  return [
+                    item.field,
+                    matrixRequirements(
+                      owner,
+                      baselineFields.has(item.field)
+                        ? matrixOwner(policy, item)
+                        : owner
+                    ).filter(
+                      (requirement) =>
+                        requirement.actionName === updated.actionName
+                    ),
+                  ];
+                })
+              );
+              return {
+                ...updated,
+                cells: Object.fromEntries(
+                  scopes.map((item) => [
+                    item.field,
+                    {
+                      dirty:
+                        baseFields.has(item.field) &&
+                        matrixCellHasChanges(
+                          matrixOwner(draft.base, item),
+                          matrixOwner(candidate, item),
+                          updated.actionName
+                        ),
+                      own: projected.get(item.field)!,
+                      shared: item.functionName
+                        ? projected.get(
+                            scopes.find(
+                              (shared) =>
+                                shared.arrangement === item.arrangement &&
+                                !shared.functionName
+                            )!.field
+                          )!
+                        : [],
+                    },
+                  ])
+                ),
+              };
+            }}
+            onProcessRowUpdateError={(error) =>
+              draft.setError(
+                error instanceof Error
+                  ? error.message
+                  : 'The cell could not be applied.'
+              )
+            }
+            sx={{
+              '& .MuiDataGrid-cell.policy-cell-unsaved, & .MuiDataGrid-cell.policy-cell-unsaved:focus, & .MuiDataGrid-cell.policy-cell-unsaved:focus-within':
+                {
+                  outline: '1px solid',
+                  outlineColor: 'error.main',
+                  outlineOffset: '-1px',
+                },
+              '& .MuiDataGrid-cell--editable': {
+                cursor: 'pointer',
+                '&:hover': { bgcolor: 'action.hover' },
+              },
+              '& .MuiDataGrid-cell': { alignItems: 'flex-start' },
+            }}
+          />
+        </Box>
+      </Stack>
+    </CasePolicyMatrixHistory>
   );
 }

@@ -6,7 +6,148 @@ import {
   policyGridHasChanges,
   resolvePolicyGridDraft,
   savePolicyGridDraft,
+  stagePolicyGridDraft,
+  movePolicyGridHistory,
+  cancelPolicyGridDraft,
 } from './policyGridDraft.ts';
+
+test('history starts empty and records exactly one transition per changed draft', () => {
+  const initial = createPolicyGridDraft({ value: 1 }, 'a');
+  assert.deepEqual(initial.past, []);
+  assert.deepEqual(initial.future, []);
+  assert.equal(movePolicyGridHistory(initial, 'undo'), initial);
+  assert.equal(movePolicyGridHistory(initial, 'redo'), initial);
+  const edited = stagePolicyGridDraft(initial, { value: 2 }, true);
+  assert.deepEqual(edited.past, [initial.value]);
+  const undone = movePolicyGridHistory(edited, 'undo');
+  assert.equal(undone.value, initial.value);
+  assert.equal(policyGridHasChanges(undone), false);
+  assert.equal(movePolicyGridHistory(undone, 'redo').value, edited.value);
+});
+
+test('history replays multiple edits in order and a new edit invalidates redo', () => {
+  const initial = createPolicyGridDraft({ value: 1 }, 'a');
+  const first = stagePolicyGridDraft(initial, { value: 2 }, true);
+  const second = stagePolicyGridDraft(first, { value: 3 }, true);
+  const back = movePolicyGridHistory(second, 'undo');
+  assert.equal(back.value, first.value);
+  const start = movePolicyGridHistory(back, 'undo');
+  assert.equal(start.value, initial.value);
+  const forward = movePolicyGridHistory(start, 'redo');
+  assert.equal(forward.value, first.value);
+  assert.equal(movePolicyGridHistory(forward, 'redo').value, second.value);
+  const branched = stagePolicyGridDraft(back, { value: 4 }, true);
+  assert.deepEqual(branched.future, []);
+  assert.equal(movePolicyGridHistory(branched, 'redo'), branched);
+});
+
+test('equivalent edits do not record history or invalidate redo', () => {
+  const initial = createPolicyGridDraft({ value: 1 }, 'a');
+  const edited = stagePolicyGridDraft(initial, { value: 2 }, true);
+  assert.equal(stagePolicyGridDraft(edited, { value: 2 }, true), edited);
+  const undone = movePolicyGridHistory(edited, 'undo');
+  assert.equal(stagePolicyGridDraft(undone, { value: 1 }, true), undone);
+});
+
+test('successful save clears history and establishes the undo boundary', async () => {
+  const initial = createPolicyGridDraft({ value: 1 }, 'a');
+  const edited = stagePolicyGridDraft(initial, { value: 2 }, true);
+  let writes = 0;
+  const saved = await savePolicyGridDraft(
+    edited,
+    initial.loaded,
+    async (value) => {
+      writes++;
+      assert.equal(value, edited.value);
+      return true;
+    }
+  );
+  assert.equal(writes, 1);
+  assert.equal(saved.base, edited.value);
+  assert.deepEqual(saved.past, []);
+  assert.deepEqual(saved.future, []);
+  assert.equal(movePolicyGridHistory(saved, 'undo'), saved);
+});
+
+test('failed saves preserve history for rejection and exceptions', async () => {
+  const initial = createPolicyGridDraft({ value: 1 }, 'a');
+  const edited = stagePolicyGridDraft(initial, { value: 2 }, true);
+  for (const save of [
+    async () => false,
+    async () => {
+      throw new Error('network');
+    },
+  ]) {
+    await assert.rejects(savePolicyGridDraft(edited, initial.loaded, save));
+    assert.deepEqual(edited.past, [initial.value]);
+    assert.equal(movePolicyGridHistory(edited, 'undo').value, initial.value);
+  }
+});
+
+test('Cancel clears past and future and restores the baseline', () => {
+  const initial = createPolicyGridDraft({ value: 1 }, 'a');
+  const first = stagePolicyGridDraft(initial, { value: 2 }, true);
+  const second = stagePolicyGridDraft(first, { value: 3 }, true);
+  const cancelled = cancelPolicyGridDraft(
+    movePolicyGridHistory(second, 'undo'),
+    initial.loaded
+  );
+  assert.equal(cancelled.value, initial.base);
+  assert.deepEqual(cancelled.past, []);
+  assert.deepEqual(cancelled.future, []);
+});
+
+test('scope and policy replacements reset history without losing a conflicting draft', () => {
+  const initial = createPolicyGridDraft({ value: 1 }, 'a');
+  const edited = stagePolicyGridDraft(initial, { value: 2 }, true);
+  const replacement = { value: 9 };
+  const otherLocation = resolvePolicyGridDraft(edited, replacement, 'b');
+  assert.equal(otherLocation.value, replacement);
+  assert.deepEqual(otherLocation.past, []);
+  const conflict = resolvePolicyGridDraft(edited, replacement, 'a');
+  assert.equal(conflict.value, edited.value);
+  assert.deepEqual(conflict.past, []);
+  assert.deepEqual(conflict.future, []);
+  assert.equal(cancelPolicyGridDraft(conflict, replacement).value, replacement);
+});
+
+test('history preserves model instances, staged schedules and unrelated references', () => {
+  class Model {
+    stages: { delay: string; maxOccurrences: number | null }[];
+    constructor(stages: { delay: string; maxOccurrences: number | null }[]) {
+      this.stages = stages;
+    }
+    toJSON() {
+      return { stages: this.stages };
+    }
+  }
+  const recurrence = new Model([
+    { delay: '2.00:00:00', maxOccurrences: 3 },
+    { delay: '7.00:00:00', maxOccurrences: null },
+  ]);
+  const changed = new Model([
+    { delay: '3.00:00:00', maxOccurrences: 3 },
+    ...recurrence.stages.slice(1),
+  ]);
+  const unrelated = {
+    legacy: ['Protected'],
+    variants: ['Sibling'],
+    policyVersions: ['Historical'],
+  };
+  const initial = createPolicyGridDraft({ recurrence, unrelated }, 'a');
+  const edited = stagePolicyGridDraft(
+    initial,
+    { recurrence: changed, unrelated },
+    true
+  );
+  const undone = movePolicyGridHistory(edited, 'undo');
+  const redone = movePolicyGridHistory(undone, 'redo');
+  assert.equal(undone.value.recurrence, recurrence);
+  assert.equal(redone.value.recurrence, changed);
+  assert.equal(redone.value.unrelated, unrelated);
+  assert.ok(redone.value.recurrence instanceof Model);
+  assert.deepEqual(redone.value.recurrence.toJSON().stages, changed.stages);
+});
 
 test('change counts distinguish clean, single, multiple and added requirement values', () => {
   const original = {

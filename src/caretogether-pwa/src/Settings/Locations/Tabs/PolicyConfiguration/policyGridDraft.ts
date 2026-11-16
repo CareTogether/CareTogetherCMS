@@ -74,13 +74,58 @@ export type PolicyGridDraft<T> = {
   loaded: T;
   base: T;
   value: T;
+  past: T[];
+  future: T[];
 };
 
 export function createPolicyGridDraft<T>(
   value: T,
   scope: string
 ): PolicyGridDraft<T> {
-  return { scope, loaded: value, base: value, value };
+  return { scope, loaded: value, base: value, value, past: [], future: [] };
+}
+
+export function stagePolicyGridDraft<T>(
+  draft: PolicyGridDraft<T>,
+  value: T,
+  recordHistory = false
+) {
+  if (samePolicyGridValue(draft.value, value)) return draft;
+  return {
+    ...draft,
+    value,
+    past: recordHistory ? [...draft.past, draft.value] : [],
+    future: [],
+  };
+}
+
+export function movePolicyGridHistory<T>(
+  draft: PolicyGridDraft<T>,
+  direction: 'undo' | 'redo'
+) {
+  const source = direction === 'undo' ? draft.past : draft.future;
+  if (!source.length) return draft;
+  const value = source[source.length - 1];
+  return direction === 'undo'
+    ? {
+        ...draft,
+        value,
+        past: draft.past.slice(0, -1),
+        future: [...draft.future, draft.value],
+      }
+    : {
+        ...draft,
+        value,
+        past: [...draft.past, draft.value],
+        future: draft.future.slice(0, -1),
+      };
+}
+
+export function cancelPolicyGridDraft<T>(draft: PolicyGridDraft<T>, loaded: T) {
+  const target = samePolicyGridValue(draft.loaded, loaded)
+    ? draft.base
+    : loaded;
+  return { ...createPolicyGridDraft(target, draft.scope), loaded };
 }
 
 export function policyGridHasChanges<T>(draft: PolicyGridDraft<T>) {
@@ -97,6 +142,11 @@ export function resolvePolicyGridDraft<T>(
     (!policyGridHasChanges(draft) && !samePolicyGridValue(draft.loaded, loaded))
   )
     return createPolicyGridDraft(loaded, scope);
+  if (
+    !samePolicyGridValue(draft.loaded, loaded) &&
+    (draft.past.length || draft.future.length)
+  )
+    return { ...draft, past: [], future: [] };
   return draft;
 }
 
@@ -114,5 +164,5 @@ export async function savePolicyGridDraft<T>(
     throw new Error(
       'Changes could not be saved. Your draft is retained. Review the policy errors and try again.'
     );
-  return { ...draft, base: draft.value };
+  return { ...draft, base: draft.value, past: [], future: [] };
 }

@@ -2022,6 +2022,159 @@ async function applyApplicability(
 }
 
 test.describe('Case Policies matrix', () => {
+  test('draft history replays policy changes, branches and clears at Save and Cancel', async ({
+    page,
+  }) => {
+    const requests = await backend(page, false, false, caseMatrixPolicy());
+    await mount(page, 'casePolicy', undefined, true);
+    const undo = page.getByRole('button', { name: 'Undo', exact: true });
+    const redo = page.getByRole('button', { name: 'Redo', exact: true });
+    await expect(undo).toHaveCount(1);
+    await expect(redo).toHaveCount(1);
+    await expect(undo).toBeDisabled();
+    await expect(redo).toBeDisabled();
+    await applyApplicability(page, 'Optional');
+    await applyApplicability(
+      page,
+      'Required',
+      'Provider function',
+      'First profile'
+    );
+    const shared = matrixCell(page, 'Form');
+    const variant = matrixCell(
+      page,
+      'Form',
+      'Provider function',
+      'First profile'
+    );
+    await expect(shared).toHaveClass(/policy-cell-unsaved/);
+    await expect(variant).toHaveClass(/policy-cell-unsaved/);
+    await undo.click();
+    await expect(variant).not.toHaveClass(/policy-cell-unsaved/);
+    await expect(shared).toHaveClass(/policy-cell-unsaved/);
+    await undo.click();
+    await expect(shared).not.toHaveClass(/policy-cell-unsaved/);
+    await expect(undo).toBeDisabled();
+    await expect(
+      page.getByRole('button', { name: 'Save changes', exact: true })
+    ).toBeDisabled();
+    await shared.focus();
+    await shared.press('Control+Shift+Z');
+    await expect(
+      shared.getByText('Shared · Setup · Optional', { exact: true })
+    ).toBeVisible();
+    const editor = await openMatrixCell(page);
+    await expect(undo).toBeDisabled();
+    await expect(redo).toBeDisabled();
+    await editor
+      .getByRole('button', { name: 'Cancel cell', exact: true })
+      .click();
+    await expect(undo).toBeEnabled();
+    await expect(redo).toBeEnabled();
+    await applyApplicability(
+      page,
+      'Required',
+      'Provider function',
+      'First profile'
+    );
+    await expect(redo).toBeDisabled();
+    expect(requests.puts()).toBe(0);
+    let payload: EffectiveLocationPolicy | undefined;
+    page.on('request', (request) => {
+      if (request.method() === 'PUT') payload = request.postDataJSON();
+    });
+    await page
+      .getByRole('button', { name: 'Save changes', exact: true })
+      .click();
+    await expect.poll(requests.puts).toBe(1);
+    await expect(undo).toBeDisabled();
+    await expect(redo).toBeDisabled();
+    expect(
+      payload?.referralPolicy.arrangementPolicies[0].requiredSetupActions[0]
+        .isRequired
+    ).toBe(false);
+    expect(
+      payload?.referralPolicy.arrangementPolicies[0].arrangementFunctions[0]
+        .variants[0].requiredSetupActions[0].isRequired
+    ).toBe(true);
+    await applyApplicability(page, 'Required');
+    await expect(undo).toBeEnabled();
+    await cancelPolicyForm(page);
+    await expect(undo).toBeDisabled();
+    await expect(redo).toBeDisabled();
+    await expect(
+      shared.getByText('Shared · Setup · Optional', { exact: true })
+    ).toBeVisible();
+    expect(requests.puts()).toBe(1);
+  });
+
+  test('failed saves retain draft history and location replacement clears it', async ({
+    page,
+  }) => {
+    const requests = await backend(page, true, false, caseMatrixPolicy());
+    await mount(page, 'casePolicy', undefined, true);
+    const undo = page.getByRole('button', { name: 'Undo', exact: true });
+    const redo = page.getByRole('button', { name: 'Redo', exact: true });
+    await applyApplicability(page, 'Optional');
+    await page
+      .getByRole('button', { name: 'Save changes', exact: true })
+      .click();
+    await expect(page.getByTestId('policy-save-errors')).toContainText(
+      blockingError
+    );
+    await expect(undo).toBeEnabled();
+    await undo.click();
+    await expect(matrixCell(page, 'Form')).not.toHaveClass(
+      /policy-cell-unsaved/
+    );
+    await redo.click();
+    await expect(matrixCell(page, 'Form')).toHaveClass(/policy-cell-unsaved/);
+    expect(requests.puts()).toBe(1);
+    await cancelPolicyForm(page);
+    await page.getByRole('link', { name: 'Location B', exact: true }).click();
+    await expect(page).toHaveURL('/org/org/b/settings/case-policies');
+    await expect(undo).toBeDisabled();
+    await expect(redo).toBeDisabled();
+  });
+
+  test('pending saves block history until the new baseline is confirmed', async ({
+    page,
+  }) => {
+    await backend(page, false, false, caseMatrixPolicy());
+    let release!: () => void;
+    const pending = new Promise<void>((resolve) => {
+      release = resolve;
+    });
+    await page.route('**/Configuration/policy', async (route) => {
+      if (route.request().method() !== 'PUT') return route.fallback();
+      await pending;
+      await route.fulfill({ json: route.request().postDataJSON() });
+    });
+    await mount(page, 'casePolicy', undefined, true);
+    await applyApplicability(page, 'Optional');
+    const undo = page.getByRole('button', { name: 'Undo', exact: true });
+    const redo = page.getByRole('button', { name: 'Redo', exact: true });
+    await expect(undo).toBeEnabled();
+    await page
+      .getByRole('button', { name: 'Save changes', exact: true })
+      .click();
+    try {
+      await expect(
+        page.getByRole('button', { name: 'Saving…', exact: true })
+      ).toBeVisible();
+      await expect(undo).toBeDisabled();
+      await expect(redo).toBeDisabled();
+      await expect(matrixCell(page, 'Form')).toHaveClass(/policy-cell-unsaved/);
+    } finally {
+      release();
+    }
+    await expect(matrixCell(page, 'Form')).not.toHaveClass(
+      /policy-cell-unsaved/
+    );
+    await expect(undo).toBeDisabled();
+    await expect(redo).toBeDisabled();
+  });
+
   for (const additional of [false, true]) {
     test(`cell contents remain visible through editing, Cancel and Apply (${additional ? 'variant' : 'shared'})`, async ({
       page,
@@ -2477,6 +2630,21 @@ test.describe('Case Policies matrix', () => {
       .getByRole('button', { name: 'Apply to draft', exact: true })
       .click();
     await expect(matrixCell(page, 'Form')).toHaveClass(/policy-cell-unsaved/);
+    expect(requests.puts()).toBe(0);
+    const staged = await matrixCell(page, 'Form').innerText();
+    await page.getByRole('button', { name: 'Undo', exact: true }).click();
+    await expect(matrixCell(page, 'Form')).not.toHaveClass(
+      /policy-cell-unsaved/
+    );
+    await expect(
+      matrixCell(page, 'Form').getByText('Stage 1: 2 days; 3 occurrence(s)', {
+        exact: true,
+      })
+    ).toBeVisible();
+    await page.getByRole('button', { name: 'Redo', exact: true }).click();
+    await expect(matrixCell(page, 'Form')).toHaveText(staged, {
+      useInnerText: true,
+    });
     expect(requests.puts()).toBe(0);
     await page
       .getByRole('button', { name: 'Save changes', exact: true })
