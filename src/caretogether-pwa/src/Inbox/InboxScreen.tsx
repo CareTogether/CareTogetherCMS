@@ -101,6 +101,37 @@ function getMessageProps(
         secondaryContent: <FamilyName family={item.family} />,
       };
 
+    case 'MissingChildDateOfBirth':
+      return {
+        icon: <EmojiPeople color="warning" />,
+        onClick: () => {
+          const familyId = item.family.family?.id;
+          const familyMemberId = item.child.id;
+
+          if (familyId && familyMemberId) {
+            appNavigate.family(familyId, { familyMemberId });
+            return;
+          }
+
+          if (familyId) {
+            appNavigate.family(familyId);
+          }
+        },
+        primaryContent: (
+          <>
+            <Typography
+              className="ph-unmask"
+              variant="body1"
+              sx={{ display: 'inline', fontWeight: 'bold' }}
+            >
+              Missing child date of birth:{' '}
+            </Typography>
+            <PersonName person={item.child} />
+          </>
+        ),
+        secondaryContent: <FamilyName family={item.family} />,
+      };
+
     case 'ChildNotReturned':
       return {
         icon: <EmojiPeople sx={{ color: 'red' }} />,

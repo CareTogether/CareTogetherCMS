@@ -33,6 +33,10 @@ import { useBackdrop } from '../Hooks/useBackdrop';
 import { subYears } from 'date-fns';
 import { useVisibleFamilies } from '../Model/Data';
 import { familyLastName } from './FamilyUtils';
+import {
+  canSubmitChildDateOfBirth,
+  isClientOnlyFamily,
+} from './childDateOfBirth';
 
 interface AddChildDrawerProps {
   onClose: (event: object | undefined, reason: string) => void;
@@ -77,10 +81,13 @@ export function AddChildDrawer({ onClose }: AddChildDrawerProps) {
   const ethnicities = useEthnicities();
 
   const [dobError, setDobError] = useState(false);
+  const canSubmit = canSubmitChildDateOfBirth(family, dateOfBirth, dobError);
 
   const withBackdrop = useBackdrop();
 
   async function addChild() {
+    if (!canSubmit) return;
+
     await withBackdrop(async () => {
       if (firstName.length <= 0 || lastName.length <= 0) {
         alert('First and last name are required. Try again.');
@@ -277,10 +284,11 @@ export function AddChildDrawer({ onClose }: AddChildDrawerProps) {
                 onChange={(date) => setFields({ ...fields, dateOfBirth: date })}
                 minDate={subYears(new Date(), 18)}
                 disableFuture
+                validateIncomplete
                 openTo="year"
                 onErrorChange={setDobError}
                 textFieldProps={{
-                  required: true,
+                  required: !isClientOnlyFamily(family),
                   size: 'small',
                   fullWidth: true,
                 }}
@@ -379,7 +387,7 @@ export function AddChildDrawer({ onClose }: AddChildDrawerProps) {
           onClick={addChild}
           variant="contained"
           color="primary"
-          disabled={!dateOfBirth || dobError}
+          disabled={!canSubmit}
         >
           Add to Family
         </Button>

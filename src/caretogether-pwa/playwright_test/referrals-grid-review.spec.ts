@@ -1,5 +1,6 @@
 import { expect, test } from '@playwright/test';
 import { build } from 'rolldown';
+import { ignoreModuleLevelDirectives } from './support/harnessBuild';
 import { fileURLToPath } from 'node:url';
 
 let bundle: string;
@@ -10,6 +11,7 @@ test.beforeAll(async () => {
     ),
     platform: 'browser',
     tsconfig: false,
+    onLog: ignoreModuleLevelDirectives,
     transform: {
       jsx: { runtime: 'automatic' },
       define: { 'process.env.NODE_ENV': JSON.stringify('production') },

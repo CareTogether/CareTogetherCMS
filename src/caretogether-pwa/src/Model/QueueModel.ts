@@ -14,11 +14,16 @@ import {
   type ArrangementDueToStart,
   type ClosedCaseInvalidArrangementStatus,
 } from './arrangementInboxItems';
+import {
+  missingChildDateOfBirthInboxItemsForFamilies,
+  type MissingChildDateOfBirth,
+} from './missingChildDateOfBirthInboxItems';
 
 export type QueueItem =
   | ChildOver18
   | MissingPrimaryContact
   | MissingLastName
+  | MissingChildDateOfBirth
   | ChildNotReturned
   | ArrangementDueToStart
   | ClosedCaseInvalidArrangementStatus;
@@ -119,6 +124,14 @@ const missingLastNamesAtom = atom((get) => {
   );
 });
 
+const missingChildDatesOfBirthAtom = atom((get) => {
+  const visibleFamilies = get(visibleFamiliesAtom);
+  return mapLoadedValue(
+    visibleFamilies,
+    missingChildDateOfBirthInboxItemsForFamilies
+  );
+});
+
 function partneringFamilyArrangements(families: CombinedFamilyInfo[]) {
   return families.flatMap((family) => {
     if (!family.partneringFamilyInfo) return [];
@@ -200,6 +213,9 @@ function combineQueueItems(
     | MissingPrimaryContact[]
     | Promise<MissingPrimaryContact[]>,
   missingLastNames: MissingLastName[] | Promise<MissingLastName[]>,
+  missingChildDatesOfBirth:
+    | MissingChildDateOfBirth[]
+    | Promise<MissingChildDateOfBirth[]>,
   childNotReturned: ChildNotReturned[] | Promise<ChildNotReturned[]>,
   arrangementsDueToStart:
     | (ArrangementDueToStart | ClosedCaseInvalidArrangementStatus)[]
@@ -209,6 +225,7 @@ function combineQueueItems(
     childrenOver18 instanceof Promise ||
     missingPrimaryContacts instanceof Promise ||
     missingLastNames instanceof Promise ||
+    missingChildDatesOfBirth instanceof Promise ||
     childNotReturned instanceof Promise ||
     arrangementsDueToStart instanceof Promise
   ) {
@@ -216,6 +233,7 @@ function combineQueueItems(
       childrenOver18,
       missingPrimaryContacts,
       missingLastNames,
+      missingChildDatesOfBirth,
       childNotReturned,
       arrangementsDueToStart,
     ]).then(
@@ -223,12 +241,14 @@ function combineQueueItems(
         childrenOver18,
         missingPrimaryContacts,
         missingLastNames,
+        missingChildDatesOfBirth,
         childNotReturned,
         arrangementsDueToStart,
       ]) => [
         ...childrenOver18,
         ...missingPrimaryContacts,
         ...missingLastNames,
+        ...missingChildDatesOfBirth,
         ...childNotReturned,
         ...arrangementsDueToStart,
       ]
@@ -239,6 +259,7 @@ function combineQueueItems(
     ...childrenOver18,
     ...missingPrimaryContacts,
     ...missingLastNames,
+    ...missingChildDatesOfBirth,
     ...childNotReturned,
     ...arrangementsDueToStart,
   ];
@@ -248,12 +269,14 @@ const queueItemsAtom = atom((get) => {
   const childrenOver18 = get(childrenOver18Atom);
   const missingPrimaryContacts = get(missingPrimaryContactsAtom);
   const missingLastNames = get(missingLastNamesAtom);
+  const missingChildDatesOfBirth = get(missingChildDatesOfBirthAtom);
   const childNotReturned = get(childNotReturnedAtom);
   const arrangementsDueToStart = get(arrangementInboxItemsAtom);
   return combineQueueItems(
     childrenOver18,
     missingPrimaryContacts,
     missingLastNames,
+    missingChildDatesOfBirth,
     childNotReturned,
     arrangementsDueToStart
   );
