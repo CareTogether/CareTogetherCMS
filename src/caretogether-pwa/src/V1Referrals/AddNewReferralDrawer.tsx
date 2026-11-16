@@ -72,9 +72,11 @@ export function AddNewReferralDrawer({ onClose }: AddNewReferralDrawerProps) {
       slotProps={{
         paper: {
           sx: {
-            width: 500,
+            width: { xs: '100%', sm: 500 },
+            boxSizing: 'border-box',
             p: 3,
             top: 45,
+            height: 'calc(100% - 45px)',
           },
         },
       }}
@@ -149,11 +151,23 @@ export function AddNewReferralDrawer({ onClose }: AddNewReferralDrawerProps) {
             </Typography>
           </Grid>
 
-          <Grid size={12} sx={{ textAlign: 'right' }}>
+          <Grid
+            size={12}
+            sx={{
+              textAlign: 'right',
+              display: { xs: 'flex', sm: 'block' },
+              flexDirection: 'column',
+              gap: { xs: 2, sm: 0 },
+              '& > .MuiButton-root': {
+                width: { xs: '100%', sm: 'auto' },
+                minHeight: { xs: 44, sm: 'auto' },
+              },
+            }}
+          >
             <Button
               color="secondary"
               variant="contained"
-              sx={{ mr: 2 }}
+              sx={{ mr: { xs: 0, sm: 2 } }}
               onClick={onClose}
               disabled={isSubmitting}
             >

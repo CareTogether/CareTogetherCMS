@@ -105,7 +105,10 @@ export function AssignArrangementFunctionDialog({
       }
       key={handle.key}
       aria-labelledby="assign-volunteer-title"
-      sx={{ '& .MuiDialog-paperFullWidth': { overflowY: 'visible' } }}
+      sx={{
+        overflowWrap: 'anywhere',
+        '& .MuiDialog-paperFullWidth': { overflowY: 'visible' },
+      }}
     >
       <DialogTitle id="assign-volunteer-title" sx={{ paddingBottom: '20px' }}>
         Assign {arrangementFunction.functionName}
@@ -173,7 +176,7 @@ export function AssignArrangementFunctionDialog({
                     option.id === value.id
                   }
                   groupBy={(option) => option.candidateType}
-                  sx={{ width: 400 }}
+                  sx={{ width: 400, maxWidth: '100%', minWidth: 0 }}
                   renderInput={(params) => (
                     <TextField
                       required

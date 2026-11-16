@@ -545,8 +545,8 @@ export class FilesClient {
         this.baseUrl = baseUrl ?? "";
     }
 
-    getFamilyDocumentReadValetUrl(organizationId: string, locationId: string, familyId: string, documentId: string): Promise<string> {
-        let url_ = this.baseUrl + "/api/{organizationId}/{locationId}/Files/family/{familyId}/{documentId}";
+    getFamilyDocumentReadValetUrl(organizationId: string, locationId: string, familyId: string, documentId: string, inline: boolean | undefined): Promise<string> {
+        let url_ = this.baseUrl + "/api/{organizationId}/{locationId}/Files/family/{familyId}/{documentId}?";
         if (organizationId === undefined || organizationId === null)
             throw new globalThis.Error("The parameter 'organizationId' must be defined.");
         url_ = url_.replace("{organizationId}", encodeURIComponent("" + organizationId));
@@ -559,6 +559,10 @@ export class FilesClient {
         if (documentId === undefined || documentId === null)
             throw new globalThis.Error("The parameter 'documentId' must be defined.");
         url_ = url_.replace("{documentId}", encodeURIComponent("" + documentId));
+        if (inline === null)
+            throw new globalThis.Error("The parameter 'inline' cannot be null.");
+        else if (inline !== undefined)
+            url_ += "inline=" + encodeURIComponent("" + inline) + "&";
         url_ = url_.replace(/[?&]$/, "");
 
         let options_: RequestInit = {
@@ -638,8 +642,8 @@ export class FilesClient {
         return Promise.resolve<DocumentUploadInfo>(null as any);
     }
 
-    getCommunityDocumentReadValetUrl(organizationId: string, locationId: string, communityId: string, documentId: string): Promise<string> {
-        let url_ = this.baseUrl + "/api/{organizationId}/{locationId}/Files/community/{communityId}/{documentId}";
+    getCommunityDocumentReadValetUrl(organizationId: string, locationId: string, communityId: string, documentId: string, inline: boolean | undefined): Promise<string> {
+        let url_ = this.baseUrl + "/api/{organizationId}/{locationId}/Files/community/{communityId}/{documentId}?";
         if (organizationId === undefined || organizationId === null)
             throw new globalThis.Error("The parameter 'organizationId' must be defined.");
         url_ = url_.replace("{organizationId}", encodeURIComponent("" + organizationId));
@@ -652,6 +656,10 @@ export class FilesClient {
         if (documentId === undefined || documentId === null)
             throw new globalThis.Error("The parameter 'documentId' must be defined.");
         url_ = url_.replace("{documentId}", encodeURIComponent("" + documentId));
+        if (inline === null)
+            throw new globalThis.Error("The parameter 'inline' cannot be null.");
+        else if (inline !== undefined)
+            url_ += "inline=" + encodeURIComponent("" + inline) + "&";
         url_ = url_.replace(/[?&]$/, "");
 
         let options_: RequestInit = {
@@ -731,8 +739,8 @@ export class FilesClient {
         return Promise.resolve<DocumentUploadInfo>(null as any);
     }
 
-    getV1ReferralDocumentReadValetUrl(organizationId: string, locationId: string, referralId: string, documentId: string): Promise<string> {
-        let url_ = this.baseUrl + "/api/{organizationId}/{locationId}/Files/v1referral/{referralId}/{documentId}";
+    getV1ReferralDocumentReadValetUrl(organizationId: string, locationId: string, referralId: string, documentId: string, inline: boolean | undefined): Promise<string> {
+        let url_ = this.baseUrl + "/api/{organizationId}/{locationId}/Files/v1referral/{referralId}/{documentId}?";
         if (organizationId === undefined || organizationId === null)
             throw new globalThis.Error("The parameter 'organizationId' must be defined.");
         url_ = url_.replace("{organizationId}", encodeURIComponent("" + organizationId));
@@ -745,6 +753,10 @@ export class FilesClient {
         if (documentId === undefined || documentId === null)
             throw new globalThis.Error("The parameter 'documentId' must be defined.");
         url_ = url_.replace("{documentId}", encodeURIComponent("" + documentId));
+        if (inline === null)
+            throw new globalThis.Error("The parameter 'inline' cannot be null.");
+        else if (inline !== undefined)
+            url_ += "inline=" + encodeURIComponent("" + inline) + "&";
         url_ = url_.replace(/[?&]$/, "");
 
         let options_: RequestInit = {
@@ -12305,6 +12317,7 @@ export interface IAddCommunityRoleAssignment extends ICommunityCommand {
 export class CreateCommunity extends CommunityCommand implements ICreateCommunity {
     name!: string;
     description!: string;
+    categoryIds?: string[] | undefined;
 
     constructor(data?: ICreateCommunity) {
         super(data);
@@ -12316,6 +12329,11 @@ export class CreateCommunity extends CommunityCommand implements ICreateCommunit
         if (_data) {
             this.name = _data["name"];
             this.description = _data["description"];
+            if (Array.isArray(_data["categoryIds"])) {
+                this.categoryIds = [] as any;
+                for (let item of _data["categoryIds"])
+                    this.categoryIds!.push(item);
+            }
         }
     }
 
@@ -12330,6 +12348,11 @@ export class CreateCommunity extends CommunityCommand implements ICreateCommunit
         data = typeof data === 'object' ? data : {};
         data["name"] = this.name;
         data["description"] = this.description;
+        if (Array.isArray(this.categoryIds)) {
+            data["categoryIds"] = [];
+            for (let item of this.categoryIds)
+                data["categoryIds"].push(item);
+        }
         super.toJSON(data);
         return data;
     }
@@ -12338,6 +12361,7 @@ export class CreateCommunity extends CommunityCommand implements ICreateCommunit
 export interface ICreateCommunity extends ICommunityCommand {
     name: string;
     description: string;
+    categoryIds?: string[] | undefined;
 }
 
 export class DeleteUploadedCommunityDocument extends CommunityCommand implements IDeleteUploadedCommunityDocument {

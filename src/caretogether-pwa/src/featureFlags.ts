@@ -10,6 +10,10 @@ export const ORGANIZATION_APPROVALS_FEATURE_FLAG = 'organization-approvals';
 export const REFERRALS_FEATURE_FLAG = 'referrals';
 export const UPDATE_TEST_FAMILY_FEATURE_FLAG = 'updateTestFamilyFlag';
 export const PERMISSIONS_AUTOCOMPLETE_FEATURE_FLAG = 'permissionsAutocomplete';
+// Lets expired and prospective volunteers be assigned to arrangements.
+// The key keeps its original name because the flag already exists in PostHog.
+export const UNAPPROVED_VOLUNTEER_ASSIGNMENTS_FEATURE_FLAG =
+  'expired-volunteer-assignments';
 
 export const FEATURE_FLAG_KEYS = [
   FAMILY_SCREEN_V2_EARLY_ACCESS_FEATURE_FLAG,
@@ -22,6 +26,7 @@ export const FEATURE_FLAG_KEYS = [
   REFERRALS_FEATURE_FLAG,
   UPDATE_TEST_FAMILY_FEATURE_FLAG,
   PERMISSIONS_AUTOCOMPLETE_FEATURE_FLAG,
+  UNAPPROVED_VOLUNTEER_ASSIGNMENTS_FEATURE_FLAG,
 ] as const;
 
 export type FeatureFlagKey = (typeof FEATURE_FLAG_KEYS)[number];

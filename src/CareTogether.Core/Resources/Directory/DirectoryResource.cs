@@ -153,13 +153,17 @@ namespace CareTogether.Resources.Directory
             Guid organizationId,
             Guid locationId,
             Guid familyId,
-            Guid documentId
+            Guid documentId,
+            FileReadDisposition disposition
         )
         {
             var family = await FindFamilyAsync(organizationId, locationId, familyId);
+            var document = family?.UploadedDocuments.FirstOrDefault(doc =>
+                doc.UploadedDocumentId == documentId
+            );
             if (
                 family == null
-                || !family.UploadedDocuments.Any(doc => doc.UploadedDocumentId == documentId)
+                || document == null
                 || family.DeletedDocuments.Any(doc => doc == documentId)
             )
                 throw new Exception("The specified family document does not exist.");
@@ -169,7 +173,8 @@ namespace CareTogether.Resources.Directory
             var valetUrl = await fileStore.GetValetReadUrlAsync(
                 organizationId,
                 locationId,
-                documentId
+                documentId,
+                new FileReadOptions(document.UploadedFileName, disposition)
             );
 
             return valetUrl;

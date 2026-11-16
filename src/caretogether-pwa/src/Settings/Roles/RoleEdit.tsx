@@ -224,6 +224,11 @@ export function RoleEdit({
               <TableRow>
                 <TableCell>
                   <IconButton
+                    aria-label="Add permission set"
+                    sx={{
+                      minWidth: { xs: 44, sm: 0 },
+                      minHeight: { xs: 44, sm: 0 },
+                    }}
                     onClick={(event) =>
                       setAddPermissionSetMenuAnchorEl(event.currentTarget)
                     }

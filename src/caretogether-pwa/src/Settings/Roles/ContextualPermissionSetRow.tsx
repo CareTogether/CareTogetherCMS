@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useId, useState } from 'react';
 import {
   TableRow,
   TableCell,
@@ -33,6 +33,8 @@ export function ContextualPermissionSetRow({
   onDelete,
   onUpdate,
 }: ContextualPermissionSetRowProps) {
+  const rowId = useId();
+  const contextId = `${rowId}-context`;
   const [addPermissionMenuAnchorEl, setAddPermissionMenuAnchorEl] =
     useState<null | HTMLElement>(null);
   const [currentPermissionSet, setCurrentPermissionSet] =
@@ -78,14 +80,20 @@ export function ContextualPermissionSetRow({
     <TableRow>
       <TableCell>
         {editable ? (
-          <IconButton onClick={onDelete}>
+          <IconButton
+            id={`${rowId}-remove-set`}
+            aria-label="Remove permission set"
+            aria-labelledby={`${rowId}-remove-set ${contextId}`}
+            onClick={onDelete}
+            sx={{ minWidth: { xs: 44, sm: 0 }, minHeight: { xs: 44, sm: 0 } }}
+          >
             <DeleteIcon />
           </IconButton>
         ) : (
           <></>
         )}
       </TableCell>
-      <TableCell>
+      <TableCell id={contextId}>
         <PermissionContextCell
           context={permissionSet.context!}
           editable={editable}
@@ -99,6 +107,13 @@ export function ContextualPermissionSetRow({
               <ListItem key={permission.toString()} disablePadding>
                 {editable && (
                   <IconButton
+                    id={`${rowId}-remove-${permission}`}
+                    aria-label={`Remove ${formatPermissionName(Permission[permission])} from permission set`}
+                    aria-labelledby={`${rowId}-remove-${permission} ${contextId}`}
+                    sx={{
+                      minWidth: { xs: 44, sm: 0 },
+                      minHeight: { xs: 44, sm: 0 },
+                    }}
                     edge="start"
                     onClick={() => removePermission(permission)}
                   >
@@ -120,6 +135,13 @@ export function ContextualPermissionSetRow({
           {editable && (
             <ListItem disablePadding>
               <IconButton
+                id={`${rowId}-add`}
+                aria-label="Add permission to permission set"
+                aria-labelledby={`${rowId}-add ${contextId}`}
+                sx={{
+                  minWidth: { xs: 44, sm: 0 },
+                  minHeight: { xs: 44, sm: 0 },
+                }}
                 edge="start"
                 onClick={(event) =>
                   openAddPermissionMenu(permissionSet, event.currentTarget)

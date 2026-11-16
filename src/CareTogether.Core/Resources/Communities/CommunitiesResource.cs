@@ -44,6 +44,9 @@ namespace CareTogether.Resources.Communities
             Guid userId
         )
         {
+            if (command is CreateCommunity { CategoryIds.Count: > 0 } create)
+                await ValidateOrganizationCategoriesAsync(organizationId, create.CategoryIds);
+
             if (command is SetOrganizationCategories setCategories)
                 await ValidateOrganizationCategoriesAsync(
                     organizationId,
@@ -131,14 +134,15 @@ namespace CareTogether.Resources.Communities
             Guid organizationId,
             Guid locationId,
             Guid communityId,
-            Guid documentId
+            Guid documentId,
+            FileReadDisposition disposition
         )
         {
             var community = await FindCommunityAsync(organizationId, locationId, communityId);
-            if (
-                community == null
-                || !community.UploadedDocuments.Any(doc => doc.UploadedDocumentId == documentId)
-            )
+            var document = community?.UploadedDocuments.FirstOrDefault(doc =>
+                doc.UploadedDocumentId == documentId
+            );
+            if (community == null || document == null)
                 throw new Exception("The specified organization document does not exist.");
 
             var documentSubpath = GetCommunityDocumentSubpath(communityId, documentId);
@@ -146,7 +150,8 @@ namespace CareTogether.Resources.Communities
             var valetUrl = await fileStore.GetValetReadUrlAsync(
                 organizationId,
                 locationId,
-                documentSubpath
+                documentSubpath,
+                new FileReadOptions(document.UploadedFileName, disposition)
             );
 
             return valetUrl;

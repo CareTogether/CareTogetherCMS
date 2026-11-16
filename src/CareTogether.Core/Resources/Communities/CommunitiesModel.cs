@@ -52,7 +52,10 @@ namespace CareTogether.Resources.Communities
                     ImmutableList<Guid>.Empty,
                     ImmutableList<CommunityRoleAssignment>.Empty,
                     ImmutableList<UploadedDocumentInfo>.Empty
-                );
+                )
+                {
+                    CategoryIds = create.CategoryIds ?? [],
+                };
             else
             {
                 if (!communities.TryGetValue(command.CommunityId, out community))

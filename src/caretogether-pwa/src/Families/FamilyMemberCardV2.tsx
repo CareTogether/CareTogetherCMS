@@ -240,11 +240,11 @@ export function FamilyMemberCardV2({ row, onClick }: FamilyMemberCardV2Props) {
 
   return (
     <Card
+      data-tour="family-member-card"
       variant="outlined"
       sx={{
         bgcolor: 'background.paper',
         borderColor: 'divider',
-        height: '100%',
         transition: (theme) =>
           theme.transitions.create(
             ['border-color', 'box-shadow', 'transform'],

@@ -65,7 +65,8 @@ export async function downloadFamilyFile(
       organizationId,
       locationId,
       familyId,
-      documentId
+      documentId,
+      false
     )
   );
 }
@@ -97,7 +98,8 @@ export async function downloadCommunityFile(
       organizationId,
       locationId,
       communityId,
-      documentId
+      documentId,
+      false
     )
   );
 }
@@ -129,7 +131,38 @@ export async function downloadV1ReferralFile(
       organizationId,
       locationId,
       referralId,
-      documentId
+      documentId,
+      false
     )
+  );
+}
+
+export async function getFamilyFilePreviewUrl(
+  organizationId: string,
+  locationId: string,
+  familyId: string,
+  documentId: string
+) {
+  return api.files.getFamilyDocumentReadValetUrl(
+    organizationId,
+    locationId,
+    familyId,
+    documentId,
+    true
+  );
+}
+
+export async function getV1ReferralFilePreviewUrl(
+  organizationId: string,
+  locationId: string,
+  referralId: string,
+  documentId: string
+) {
+  return api.files.getV1ReferralDocumentReadValetUrl(
+    organizationId,
+    locationId,
+    referralId,
+    documentId,
+    true
   );
 }

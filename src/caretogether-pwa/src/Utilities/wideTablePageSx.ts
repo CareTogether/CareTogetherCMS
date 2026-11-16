@@ -5,7 +5,7 @@ import {
   SHELL_APP_BAR_HEIGHT,
 } from '../Shell/shellLayoutConstants';
 
-function wideTablePageSx(hasFeaturebaseChat: boolean) {
+function pageContentHeight(hasFeaturebaseChat: boolean) {
   const bottomOffset = hasFeaturebaseChat
     ? {
         xs: `${MOBILE_BOTTOM_SAFE_AREA}px`,
@@ -18,15 +18,19 @@ function wideTablePageSx(hasFeaturebaseChat: boolean) {
         md: '0px',
       };
 
+  return {
+    xs: `calc(100dvh - ${SHELL_APP_BAR_HEIGHT.xs} - ${bottomOffset.xs})`,
+    sm: `calc(100dvh - ${SHELL_APP_BAR_HEIGHT.sm} - ${bottomOffset.sm})`,
+    md: `calc(100dvh - ${SHELL_APP_BAR_HEIGHT.md} - ${bottomOffset.md})`,
+  };
+}
+
+function wideTablePageSx(hasFeaturebaseChat: boolean) {
   const sx = {
     display: 'flex',
     flexDirection: 'column',
     flexWrap: 'nowrap',
-    height: {
-      xs: `calc(100dvh - ${SHELL_APP_BAR_HEIGHT.xs} - ${bottomOffset.xs})`,
-      sm: `calc(100dvh - ${SHELL_APP_BAR_HEIGHT.sm} - ${bottomOffset.sm})`,
-      md: `calc(100dvh - ${SHELL_APP_BAR_HEIGHT.md} - ${bottomOffset.md})`,
-    },
+    height: pageContentHeight(hasFeaturebaseChat),
     // ShellRootLayout always reserves Featurebase space; reclaim it when chat is hidden.
     minHeight: 0,
     overflow: 'hidden',
@@ -42,4 +46,4 @@ function wideTablePageSx(hasFeaturebaseChat: boolean) {
   } as const;
 }
 
-export { wideTablePageSx };
+export { pageContentHeight, wideTablePageSx };

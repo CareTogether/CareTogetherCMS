@@ -1,4 +1,5 @@
 import { useMemo } from 'react';
+import { useFeatureFlagEnabled } from 'posthog-js/react';
 import {
   Arrangement,
   ArrangementFunction,
@@ -8,6 +9,7 @@ import {
 } from '../../GeneratedClient';
 import { usePersonAndFamilyLookup } from '../../Model/DirectoryModel';
 import { useVisibleFamilies } from '../../Model/Data';
+import { UNAPPROVED_VOLUNTEER_ASSIGNMENTS_FEATURE_FLAG } from '../../featureFlags';
 import { getFamilyName } from './arrangementAssignmentPresentationHelpersV2';
 
 type Family = NonNullable<CombinedFamilyInfo['family']>;
@@ -15,6 +17,7 @@ type Family = NonNullable<CombinedFamilyInfo['family']>;
 type Candidate = {
   family: Family;
   person: Person | null;
+  status: RoleApprovalStatus | undefined;
 };
 
 export type ArrangementFunctionCandidateAssignee = {
@@ -31,11 +34,30 @@ type UseArrangementFunctionCandidateAssigneesParameters = {
   missingPrimaryContactFamilyName?: string;
 };
 
-function isApprovedOrOnboarded(status: RoleApprovalStatus | undefined) {
-  return (
+function isAssignableStatus(
+  status: RoleApprovalStatus | undefined,
+  allowUnapproved: boolean
+) {
+  if (
     status === RoleApprovalStatus.Approved ||
     status === RoleApprovalStatus.Onboarded
+  )
+    return true;
+  return (
+    allowUnapproved &&
+    (status === RoleApprovalStatus.Expired ||
+      status === RoleApprovalStatus.Prospective)
   );
+}
+
+function withStatusLabel(
+  displayName: string,
+  status: RoleApprovalStatus | undefined
+) {
+  if (status === RoleApprovalStatus.Expired) return `${displayName} (expired)`;
+  if (status === RoleApprovalStatus.Prospective)
+    return `${displayName} (prospective)`;
+  return displayName;
 }
 
 function familyPrimaryContact(family: Family) {
@@ -70,7 +92,9 @@ function familyCandidateDisplayName(
   missingPrimaryContactFamilyName: string
 ) {
   const primaryContact = familyPrimaryContact(family);
-  return primaryContact ? getFamilyName(primaryContact) : missingPrimaryContactFamilyName;
+  return primaryContact
+    ? getFamilyName(primaryContact)
+    : missingPrimaryContactFamilyName;
 }
 
 export function useArrangementFunctionCandidateAssignees({
@@ -80,6 +104,9 @@ export function useArrangementFunctionCandidateAssignees({
 }: UseArrangementFunctionCandidateAssigneesParameters) {
   const visibleFamilies = useVisibleFamilies();
   const familyAndPersonLookup = usePersonAndFamilyLookup();
+  const allowUnapproved =
+    useFeatureFlagEnabled(UNAPPROVED_VOLUNTEER_ASSIGNMENTS_FEATURE_FLAG) ===
+    true;
 
   return useMemo<ArrangementFunctionCandidateAssignee[]>(() => {
     if (!arrangement || !arrangementFunction) return [];
@@ -99,9 +126,10 @@ export function useArrangementFunctionCandidateAssignees({
                   assignment.personId === personResult.person?.id
               )
           )
-          .map((personResult) => ({
+          .map<Candidate>((personResult) => ({
             family: personResult.family!,
             person: personResult.person || null,
+            status: undefined,
           }))
       : [];
 
@@ -124,8 +152,9 @@ export function useArrangementFunctionCandidateAssignees({
                           arrangementFunction.eligibleIndividualVolunteerRoles!.find(
                             (eligibleRole) => eligibleRole === roleName
                           ) &&
-                          isApprovedOrOnboarded(
-                            roleApprovalStatus.currentStatus
+                          isAssignableStatus(
+                            roleApprovalStatus.currentStatus,
+                            allowUnapproved
                           ) &&
                           !arrangement.individualVolunteerAssignments?.find(
                             (assignment) =>
@@ -141,6 +170,7 @@ export function useArrangementFunctionCandidateAssignees({
                                     family.family!.adults!.find(
                                       (adult) => adult.item1!.id === volunteerId
                                     )!.item1 || null,
+                                  status: roleApprovalStatus.currentStatus,
                                 },
                               ]
                             : []
@@ -161,14 +191,23 @@ export function useArrangementFunctionCandidateAssignees({
                   arrangementFunction.eligibleVolunteerFamilyRoles!.find(
                     (eligibleRole) => eligibleRole === roleName
                   ) &&
-                  isApprovedOrOnboarded(roleApprovalStatus.currentStatus) &&
+                  isAssignableStatus(
+                    roleApprovalStatus.currentStatus,
+                    allowUnapproved
+                  ) &&
                   !arrangement.familyVolunteerAssignments?.find(
                     (assignment) =>
                       assignment.arrangementFunction ===
                         arrangementFunction.functionName &&
                       assignment.familyId === family.family!.id
                   )
-                    ? [{ family: family.family!, person: null as Person | null }]
+                    ? [
+                        {
+                          family: family.family!,
+                          person: null as Person | null,
+                          status: roleApprovalStatus.currentStatus,
+                        },
+                      ]
                     : []
                 )
               : []
@@ -188,9 +227,12 @@ export function useArrangementFunctionCandidateAssignees({
             familyId: candidate.family.id!,
             personId: null,
             key: candidate.family.id!,
-            displayName: familyCandidateDisplayName(
-              candidate.family,
-              missingPrimaryContactFamilyName
+            displayName: withStatusLabel(
+              familyCandidateDisplayName(
+                candidate.family,
+                missingPrimaryContactFamilyName
+              ),
+              candidate.status
             ),
             candidateType: 'Families',
           };
@@ -200,11 +242,15 @@ export function useArrangementFunctionCandidateAssignees({
           familyId: candidate.family.id!,
           personId: candidate.person.id!,
           key: `${candidate.family.id!}|${candidate.person.id || ''}`,
-          displayName: `${candidate.person.firstName} ${candidate.person.lastName}`,
+          displayName: withStatusLabel(
+            `${candidate.person.firstName} ${candidate.person.lastName}`,
+            candidate.status
+          ),
           candidateType: 'Individuals',
         };
       });
   }, [
+    allowUnapproved,
     arrangement,
     arrangementFunction,
     familyAndPersonLookup,

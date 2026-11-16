@@ -1,0 +1,240 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --teal: #00838f;
+    --teal-dark: #006a73;
+    --teal-deep: #0b4f57;
+    --ink: #0f2a2e;
+    --muted: #5b6f72;
+    --line: #e3eaeb;
+    --amber: #f5a524;
+    --green: #2fb67c;
+    --red: #e5534b;
+    --purple: #8b5cf6;
+    --blue: #3b82f6;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { width: 1600px; height: 800px; overflow: hidden; }
+  body {
+    font-family: Inter, Roboto, sans-serif;
+    color: var(--ink);
+    background: linear-gradient(135deg, #eef9f8 0%, #dff3f2 45%, #e6f1fb 100%);
+    position: relative;
+  }
+  .blob { position: absolute; border-radius: 50%; filter: blur(2px); }
+  .b1 { width: 760px; height: 760px; left: -260px; top: 330px; background: radial-gradient(circle, #bfe7e3 0%, rgba(191,231,227,0) 70%); }
+  .b2 { width: 900px; height: 900px; right: -300px; top: -380px; background: radial-gradient(circle, #cfe9f7 0%, rgba(207,233,247,0) 70%); }
+  .b3 { width: 700px; height: 380px; right: -120px; bottom: -200px; background: radial-gradient(ellipse, #c7ece6 0%, rgba(199,236,230,0) 70%); }
+
+  /* Left copy */
+  .copy { position: absolute; left: 70px; top: 60px; width: 560px; z-index: 5; }
+  .pill {
+    display: inline-flex; align-items: center; gap: 12px;
+    background: #c9efe9; color: var(--teal-deep);
+    font: 800 28px 'Plus Jakarta Sans', sans-serif;
+    padding: 14px 30px 14px 22px; border-radius: 40px;
+  }
+  .pill svg { width: 34px; height: 34px; }
+  h1 {
+    margin-top: 34px;
+    font: 800 70px/0.98 'Plus Jakarta Sans', sans-serif;
+    letter-spacing: -2.5px; color: #0c2226;
+  }
+  h1 .accent { color: var(--teal); }
+  .sub-h { font: 600 44px/1.1 'Plus Jakarta Sans', sans-serif; color: #17383d; margin-top: 10px; letter-spacing: -1px; }
+  .lede { margin-top: 18px; font: 500 21px/1.4 Inter, sans-serif; color: #3d5a5e; width: 440px; }
+  .spark { position: absolute; }
+  .spark i { position: absolute; display: block; width: 26px; height: 6px; border-radius: 4px; background: var(--amber); }
+
+  /* App mockup */
+  .stage { position: absolute; left: 560px; top: 210px; width: 980px; height: 640px; perspective: 2200px; z-index: 2; }
+  .app {
+    width: 100%; height: 100%;
+    transform: rotateY(-9deg) rotateX(4deg) rotateZ(-2.5deg);
+    transform-origin: left center;
+    background: #fff; border-radius: 18px; overflow: hidden;
+    box-shadow: 0 40px 80px rgba(11,79,87,0.22), 0 8px 24px rgba(11,79,87,0.12);
+    display: grid; grid-template-columns: 150px 1fr; grid-template-rows: 46px 1fr;
+  }
+  .app.shot { display: block; height: auto; aspect-ratio: 16 / 9; }
+  .app.shot img { display: block; width: 100%; height: 100%; }
+  .topbar { grid-column: 1 / 3; background: var(--teal); display: flex; align-items: center; padding: 0 16px; gap: 14px; }
+  .brand { color: #fff; font: 700 13px Inter; width: 118px; line-height: 1.1; }
+  .brand small { display: block; font-weight: 600; font-size: 10px; background: rgba(255,255,255,0.18); padding: 2px 6px; border-radius: 4px; margin-top: 3px; width: max-content; }
+  .search { margin-left: 140px; width: 300px; height: 28px; background: rgba(255,255,255,0.16); border-radius: 6px; color: rgba(255,255,255,0.85); font-size: 11px; display: flex; align-items: center; padding: 0 10px; }
+  .avatar { margin-left: auto; width: 26px; height: 26px; border-radius: 50%; background: rgba(255,255,255,0.9); }
+  .side { background: var(--teal-dark); padding: 14px 0; }
+  .nav { color: rgba(255,255,255,0.85); font: 500 11.5px Inter; padding: 8px 18px; display: flex; gap: 9px; align-items: center; }
+  .nav b { width: 12px; height: 12px; border-radius: 3px; background: rgba(255,255,255,0.45); display: inline-block; }
+  .nav.on { background: rgba(255,255,255,0.14); color: #fff; font-weight: 700; }
+  .main { padding: 18px 22px; background: #fbfdfd; overflow: hidden; }
+  .fhead { display: flex; justify-content: space-between; align-items: flex-start; }
+  .fname { font: 800 22px 'Plus Jakarta Sans'; }
+  .chips { display: flex; gap: 6px; margin-top: 6px; }
+  .chip { font: 600 10px Inter; padding: 3px 8px; border-radius: 10px; border: 1px solid var(--line); color: var(--muted); background: #fff; }
+  .chip.g { background: #e3f6ee; color: #1e8a5c; border-color: #bfe8d4; }
+  .chip.t { background: #e0f2f3; color: var(--teal-dark); border-color: #b9e0e3; }
+  .contact { margin-top: 7px; font-size: 10.5px; color: var(--muted); display: flex; gap: 16px; }
+  .actions { display: flex; gap: 6px; }
+  .btn { background: var(--teal); color: #fff; font: 700 10.5px Inter; padding: 7px 11px; border-radius: 6px; display: flex; gap: 5px; align-items: center; box-shadow: 0 2px 6px rgba(0,131,143,0.25); }
+  .btn.more { background: #fff; color: var(--teal); border: 1px solid #b9dfe2; box-shadow: none; padding: 7px 9px; }
+  .tabs { display: flex; gap: 16px; border-bottom: 1px solid var(--line); margin-top: 16px; }
+  .tab { font: 600 11.5px Inter; color: var(--muted); padding: 9px 0; display: flex; gap: 6px; align-items: center; }
+  .tab.on { color: var(--teal); border-bottom: 2.5px solid var(--teal); }
+  .cnt { font: 600 9.5px Inter; border: 1px solid #cfd9da; border-radius: 9px; padding: 1px 6px; color: var(--muted); }
+  .warn { font: 700 9.5px Inter; background: #fde8bf; color: #8a5a00; border-radius: 9px; padding: 2px 7px; }
+  .err { font: 700 9.5px Inter; background: #fde0de; color: #a8322b; border-radius: 9px; padding: 2px 7px; }
+  .body { display: grid; grid-template-columns: 1.55fr 1fr; gap: 16px; margin-top: 14px; }
+  .sec { font: 700 12px 'Plus Jakarta Sans'; margin-bottom: 8px; color: #1d3a3e; }
+  .members { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+  .mem { border: 1px solid var(--line); border-radius: 9px; padding: 9px 10px; background: #fff; display: flex; gap: 8px; align-items: center; }
+  .mem .av { width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center; font: 700 10px Inter; color: #fff; }
+  .mem p { font: 700 10.5px Inter; }
+  .mem span { font-size: 9.5px; color: var(--muted); }
+  .roles { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 12px; }
+  .role { border: 1px solid var(--line); border-radius: 9px; padding: 10px; background: #fff; }
+  .role h4 { font: 700 11px Inter; display: flex; justify-content: space-between; align-items: center; }
+  .bar { height: 5px; border-radius: 3px; background: #edf2f2; margin: 8px 0 6px; overflow: hidden; }
+  .bar i { display: block; height: 100%; border-radius: 3px; }
+  .role small { font-size: 9.5px; color: var(--muted); }
+  .role .see { color: var(--teal); font-weight: 700; float: right; }
+  .panel { border: 1px solid var(--line); border-radius: 9px; padding: 10px 12px; background: #fff; }
+  .act { display: flex; gap: 8px; padding: 7px 0; border-bottom: 1px solid #f0f4f4; }
+  .act:last-child { border-bottom: 0; }
+  .dot { width: 8px; height: 8px; border-radius: 50%; margin-top: 4px; flex: none; }
+  .act p { font: 600 10px Inter; }
+  .act span { font-size: 9px; color: var(--muted); }
+  .org { margin-top: 10px; }
+  .orgrow { display: flex; gap: 8px; align-items: center; border: 1px solid var(--line); border-radius: 7px; padding: 7px 8px; font: 600 10px Inter; margin-top: 6px; }
+  .orgrow i { width: 16px; height: 16px; border-radius: 4px; background: #d6eff0; }
+
+  /* Floating feature tiles */
+  .tile {
+    position: absolute; z-index: 6; background: #fff; border-radius: 22px;
+    box-shadow: 0 14px 34px rgba(11,79,87,0.14);
+    width: 124px; height: 112px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 9px;
+    font: 700 16px 'Plus Jakarta Sans'; color: #13343a; text-align: center; line-height: 1.1;
+  }
+  .tile svg { width: 40px; height: 40px; }
+  .dash { position: absolute; z-index: 1; }
+
+  /* Floating cards */
+  .card {
+    position: absolute; z-index: 7; background: #fff; border-radius: 22px;
+    box-shadow: 0 18px 40px rgba(11,79,87,0.16);
+    padding: 22px 26px;
+  }
+  .card h3 { font: 800 24px/1.1 'Plus Jakarta Sans'; color: #0f2a2e; letter-spacing: -0.5px; }
+  .check { display: flex; align-items: center; gap: 12px; font: 500 17px Inter; color: #33504f; margin-top: 10px; }
+  .check i { width: 24px; height: 24px; border-radius: 6px; background: var(--teal); display: grid; place-items: center; flex: none; }
+  .gear { position: absolute; width: 74px; height: 74px; border-radius: 20px; background: #6fd0b8; display: grid; place-items: center; box-shadow: 0 10px 24px rgba(47,182,124,0.3); }
+  .note-card p { font: 500 15px/1.35 Inter; color: #3b5658; margin-top: 10px; }
+  .note-card .row { display: flex; gap: 8px; margin-top: 14px; }
+  .note-card .b { font: 700 13px Inter; padding: 7px 12px; border-radius: 8px; }
+  .toggle-row { display: flex; align-items: center; justify-content: space-between; gap: 18px; margin-top: 12px; font: 600 17px Inter; color: #24423f; }
+  .sw { width: 50px; height: 28px; border-radius: 14px; background: var(--teal); position: relative; flex: none; }
+  .sw::after { content: ''; position: absolute; right: 3px; top: 3px; width: 22px; height: 22px; border-radius: 50%; background: #fff; }
+  .leaf { position: absolute; z-index: 3; }
+</style>
+</head>
+<body>
+  <div class="blob b1"></div><div class="blob b2"></div><div class="blob b3"></div>
+
+  <!-- leaves -->
+  <svg class="leaf" style="left:-40px; bottom:-30px" width="330" height="330" viewBox="0 0 330 330">
+    <path d="M40 330 C 40 200, 120 110, 250 70 C 220 190, 150 280, 40 330 Z" fill="#3aa58f"/>
+    <path d="M40 330 C 110 230, 170 160, 250 70" stroke="#2a7f6d" stroke-width="4" fill="none"/>
+    <path d="M10 330 C -10 240, 20 170, 90 120 C 100 210, 70 280, 10 330 Z" fill="#5cc0a5"/>
+    <path d="M60 330 C 120 300, 200 300, 290 250 C 230 330, 140 345, 60 330 Z" fill="#7ad0b8"/>
+  </svg>
+
+  <!-- copy -->
+  <div class="copy">
+    <div class="pill">
+      <svg viewBox="0 0 24 24" fill="#0b4f57"><path d="M3 10v4c0 .55.45 1 1 1h2l4 4V5L6 9H4c-.55 0-1 .45-1 1zm13.5 2A4.5 4.5 0 0 0 14 7.97v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/></svg>
+      What's New
+    </div>
+    <h1>Introducing<br>the New<br><span class="accent">Family Screen</span></h1>
+    <div class="sub-h">in CareTogether</div>
+    <p class="lede">Everything about a family in clear tabs, with the actions you use most one click away.</p>
+  </div>
+  <div class="spark" style="left:560px; top:70px">
+    <i style="transform: rotate(-55deg); left:0; top:0"></i>
+    <i style="transform: rotate(-20deg); left:14px; top:26px"></i>
+  </div>
+
+  <!-- dashed connector across tiles -->
+  <svg class="dash" style="left:640px; top:40px" width="900" height="200" viewBox="0 0 900 200">
+    <path d="M10 120 C 120 40, 200 150, 320 80 S 520 40, 600 110 S 780 60, 880 120" stroke="#5aa9b0" stroke-width="2.5" stroke-dasharray="7 8" fill="none"/>
+  </svg>
+
+  <!-- feature tiles -->
+  <div class="tile" style="left:660px; top:42px">
+    <svg viewBox="0 0 24 24" fill="#00838f"><path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z"/></svg>
+    Overview
+  </div>
+  <div class="tile" style="left:806px; top:96px">
+    <svg viewBox="0 0 24 24" fill="#2fb67c"><path d="M12 1 3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm-2 16-4-4 1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z"/></svg>
+    Approvals
+  </div>
+  <div class="tile" style="left:952px; top:30px">
+    <svg viewBox="0 0 24 24" fill="#3b82f6"><path d="M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/></svg>
+    Documents
+  </div>
+  <div class="tile" style="left:1098px; top:92px; width:138px">
+    <svg viewBox="0 0 24 24" fill="#f5a524"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04a1 1 0 0 0 0-1.41l-2.34-2.34a1 1 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>
+    Timeline<br>&amp; Notes
+  </div>
+  <div class="tile" style="left:1258px; top:30px">
+    <svg viewBox="0 0 24 24" fill="#8b5cf6"><path d="M21 3H3c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h18c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16h-7V5h7v14z"/></svg>
+    Side<br>Panels
+  </div>
+  <div class="tile" style="left:1410px; top:98px">
+    <svg viewBox="0 0 24 24" fill="#e5534b"><path d="M13 3 4 14h7l-1 7 9-11h-7l1-7z"/></svg>
+    Quick<br>Actions
+  </div>
+
+  <!-- real screenshot of the new Family screen (Atlantis test org) -->
+  <div class="stage">
+    <div class="app shot"><img src="thumbnail-screen.jpg" alt=""></div>
+  </div>
+
+  <!-- left card: faster approvals -->
+  <div class="card" style="left:60px; top:572px; width:330px; padding:18px 24px; transform: rotate(-3deg)">
+    <h3 style="font-size:22px">Faster Approvals</h3>
+    <div class="check"><i><svg width="16" height="16" viewBox="0 0 24 24" fill="#fff"><path d="M9 16.17 4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg></i>Click any role card</div>
+    <div class="check"><i><svg width="16" height="16" viewBox="0 0 24 24" fill="#fff"><path d="M9 16.17 4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg></i>Complete or exempt</div>
+    <div class="check"><i><svg width="16" height="16" viewBox="0 0 24 24" fill="#fff"><path d="M9 16.17 4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg></i>Complete any action</div>
+  </div>
+  <div class="gear" style="left:350px; top:540px; width:62px; height:62px; z-index:8; transform: rotate(8deg)">
+    <svg width="40" height="40" viewBox="0 0 24 24" fill="#0b4f57"><path d="M12 1 3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm-2 16-4-4 1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z"/></svg>
+  </div>
+
+  <!-- right card: awaiting review -->
+  <div class="card note-card" style="right:40px; top:430px; width:300px; transform: rotate(3deg)">
+    <span class="warn" style="font-size:13px; padding:4px 10px">1 Awaiting Review</span>
+    <h3 style="margin-top:12px; font-size:21px">Approve notes<br>right from Overview</h3>
+    <div class="row">
+      <span class="b" style="background:var(--teal); color:#fff">✓ Approve</span>
+      <span class="b" style="border:1px solid #cfe1e2; color:var(--teal)">Edit</span>
+    </div>
+  </div>
+
+  <!-- right-bottom card: beta toggle -->
+  <div class="card" style="left:760px; bottom:40px; width:340px; transform: rotate(-2deg)">
+    <h3 style="font-size:21px">Beta Features</h3>
+    <div class="toggle-row">Family Screen V2 <span class="sw"></span></div>
+    <div style="font: 500 14px Inter; color:#5b6f72; margin-top:8px">Switch back anytime.</div>
+  </div>
+
+  <div class="spark" style="right:330px; top:400px">
+    <i style="transform: rotate(-60deg); left:0; top:0; background:#f5a524"></i>
+    <i style="transform: rotate(-25deg); left:16px; top:24px; background:#f5a524"></i>
+  </div>
+</body>
+</html>

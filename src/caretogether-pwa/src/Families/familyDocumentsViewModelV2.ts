@@ -5,12 +5,18 @@ import {
   V1Referral,
 } from '../GeneratedClient';
 import { formatUtcDateOnly } from '../Utilities/dateUtils';
+import {
+  documentFileExtension,
+  documentPreviewKind,
+  DocumentPreviewKind,
+} from './documentPreview';
 
 export type FamilyDocumentSourceTypeV2 = 'family' | 'referral';
 
 export type FamilyDocumentPermissionFlagsV2 = {
   canDelete: boolean;
   canDownload: boolean;
+  canPreview: boolean;
 };
 
 export type FamilyDocumentFamilySourceV2 = {
@@ -33,6 +39,7 @@ export type FamilyDocumentRowV2 = {
   sourceType: FamilyDocumentSourceTypeV2;
   ownerId: string;
   permissionFlags: FamilyDocumentPermissionFlagsV2;
+  previewKind?: DocumentPreviewKind;
   source: FamilyDocumentFamilySourceV2 | FamilyDocumentReferralSourceV2;
   sourceLabel: string;
   uploadDateLabel: string;
@@ -86,10 +93,7 @@ function documentName(document: UploadedDocumentInfo) {
 }
 
 function documentFileType(document: UploadedDocumentInfo) {
-  const fileName = document.uploadedFileName?.trim();
-  const extension = fileName?.includes('.')
-    ? fileName.split('.').pop()?.trim()
-    : undefined;
+  const extension = documentFileExtension(document.uploadedFileName);
 
   return extension ? extension.toLocaleUpperCase() : '-';
 }
@@ -111,29 +115,35 @@ function buildFamilyDocumentRows({
   const canDelete = permissions(Permission.DeleteFamilyDocuments);
 
   return (
-    family.uploadedDocuments?.map((document, index) => ({
-      documentName: documentName(document),
-      fileTypeLabel: documentFileType(document),
-      id: familyDocumentRowId(familyId, document, index),
-      sourceType: 'family' as const,
-      ownerId: familyId,
-      permissionFlags: {
-        canDelete,
-        canDownload: canRead,
-      },
-      source: {
-        document,
-        familyId,
-        type: 'family' as const,
-      },
-      sourceLabel: 'Family',
-      uploadDateLabel: documentUploadDate(document),
-      uploadedDocumentId: document.uploadedDocumentId,
-      uploadedFileName: document.uploadedFileName,
-      uploadedAtUtc: document.timestampUtc,
-      uploadedByLabel: uploaderLabel?.(document.userId),
-      uploadedByUserId: document.userId,
-    })) ?? []
+    family.uploadedDocuments?.map((document, index) => {
+      const previewKind = documentPreviewKind(document.uploadedFileName);
+
+      return {
+        documentName: documentName(document),
+        fileTypeLabel: documentFileType(document),
+        id: familyDocumentRowId(familyId, document, index),
+        sourceType: 'family' as const,
+        ownerId: familyId,
+        permissionFlags: {
+          canDelete,
+          canDownload: canRead,
+          canPreview: canRead && previewKind !== undefined,
+        },
+        previewKind,
+        source: {
+          document,
+          familyId,
+          type: 'family' as const,
+        },
+        sourceLabel: 'Family',
+        uploadDateLabel: documentUploadDate(document),
+        uploadedDocumentId: document.uploadedDocumentId,
+        uploadedFileName: document.uploadedFileName,
+        uploadedAtUtc: document.timestampUtc,
+        uploadedByLabel: uploaderLabel?.(document.userId),
+        uploadedByUserId: document.userId,
+      };
+    }) ?? []
   );
 }
 
@@ -144,6 +154,7 @@ function buildReferralDocumentRows(
   return referrals.flatMap((referral, referralIndex) =>
     (referral.uploadedDocuments ?? []).map((document, documentIndex) => {
       const referralTitle = referral.title ?? 'Referral';
+      const previewKind = documentPreviewKind(document.uploadedFileName);
 
       return {
         documentName: documentName(document),
@@ -159,7 +170,9 @@ function buildReferralDocumentRows(
         permissionFlags: {
           canDelete: false,
           canDownload: true,
+          canPreview: previewKind !== undefined,
         },
+        previewKind,
         source: {
           document,
           referral,
