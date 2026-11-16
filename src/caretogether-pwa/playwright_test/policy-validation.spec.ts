@@ -2061,7 +2061,7 @@ test.describe('Case Policies matrix', () => {
     await shared.focus();
     await shared.press('Control+Shift+Z');
     await expect(
-      shared.getByText('Shared · Setup · Optional', { exact: true })
+      shared.getByText('Base · Setup · Optional', { exact: true })
     ).toBeVisible();
     const editor = await openMatrixCell(page);
     await expect(undo).toBeDisabled();
@@ -2103,7 +2103,7 @@ test.describe('Case Policies matrix', () => {
     await expect(undo).toBeDisabled();
     await expect(redo).toBeDisabled();
     await expect(
-      shared.getByText('Shared · Setup · Optional', { exact: true })
+      shared.getByText('Base · Setup · Optional', { exact: true })
     ).toBeVisible();
     expect(requests.puts()).toBe(1);
   });
@@ -2233,7 +2233,7 @@ test.describe('Case Policies matrix', () => {
         cell.getByText(
           additional
             ? 'Additional · Setup · Required'
-            : 'Shared · Setup · Optional',
+            : 'Base · Setup · Optional',
           { exact: true }
         )
       ).toBeVisible();
@@ -2242,7 +2242,7 @@ test.describe('Case Policies matrix', () => {
       await expect(cell).toHaveText(staged, { useInnerText: true });
       if (additional)
         await expect(
-          cell.getByText('Shared · Setup · Required', { exact: true })
+          cell.getByText('Base · Setup · Required', { exact: true })
         ).toBeVisible();
       await editor
         .getByRole('button', { name: 'Cancel cell', exact: true })
@@ -2474,10 +2474,9 @@ test.describe('Case Policies matrix', () => {
     await cancelPolicyForm(page);
     await expect(page.getByRole('searchbox')).toHaveValue('Form');
     await expect(
-      matrixCell(page, 'Form').getByText(
-        'Shared \u00b7 Setup \u00b7 Required',
-        { exact: true }
-      )
+      matrixCell(page, 'Form').getByText('Base \u00b7 Setup \u00b7 Required', {
+        exact: true,
+      })
     ).toBeVisible();
     expect(requests.puts()).toBe(0);
   });
@@ -2500,12 +2499,25 @@ test.describe('Case Policies matrix', () => {
       grid.getByRole('columnheader', { name: 'Actions', exact: true })
     ).toHaveAttribute('data-field', 'actionName');
     await expect(
+      grid.getByRole('columnheader', { name: 'Base', exact: true })
+    ).toHaveAttribute('data-field', JSON.stringify(['Hosting', null, null]));
+    await expect(
+      grid.getByRole('columnheader', { name: 'Shared', exact: true })
+    ).toHaveCount(0);
+    await expect(
       grid.getByRole('columnheader', { name: 'Hosting', exact: true })
     ).toBeVisible();
     await expect(
       grid.getByRole('columnheader', { name: 'Provider function', exact: true })
     ).toBeVisible();
     let editor = await openMatrixCell(page);
+    await expect(editor).toHaveAccessibleName('Edit Form — Hosting / Base');
+    await expect(
+      editor.getByText(
+        'Base requirements apply to every variant. Additional variant requirements never override Base. Use the Base column to change base requirements.',
+        { exact: true }
+      )
+    ).toBeVisible();
     await editor
       .getByRole('combobox', {
         name: 'Requirement 1 applicability',
@@ -2518,17 +2530,22 @@ test.describe('Case Policies matrix', () => {
       .click();
     await expect(
       matrixCell(page, 'Form', 'Provider function', 'First profile').getByText(
-        'Shared \u00b7 Setup \u00b7 Optional',
+        'Base \u00b7 Setup \u00b7 Optional',
         { exact: true }
       )
     ).toBeVisible();
     await expect(
       matrixCell(page, 'Form', 'Provider function', 'Second profile').getByText(
-        'Shared \u00b7 Setup \u00b7 Optional',
+        'Base \u00b7 Setup \u00b7 Optional',
         { exact: true }
       )
     ).toBeVisible();
     editor = await openMatrixCell(page, 'Provider function', 'First profile');
+    await expect(
+      editor.getByText('Base · Setup · Optional (edit in the Base column)', {
+        exact: true,
+      })
+    ).toBeVisible();
     await editor
       .getByRole('combobox', {
         name: 'Requirement 1 applicability',
@@ -2556,7 +2573,7 @@ test.describe('Case Policies matrix', () => {
       'First profile'
     );
     await expect(
-      first.getByText('Shared \u00b7 Setup \u00b7 Optional', { exact: true })
+      first.getByText('Base \u00b7 Setup \u00b7 Optional', { exact: true })
     ).toBeVisible();
     await expect(
       first.getByText('Additional \u00b7 Setup \u00b7 Required', {
@@ -2750,11 +2767,11 @@ test.describe('Case Policies matrix', () => {
       blockingError
     );
     await expect(
-      cell.getByText('Shared \u00b7 Setup \u00b7 Required', { exact: true })
+      cell.getByText('Base \u00b7 Setup \u00b7 Required', { exact: true })
     ).toHaveCount(0);
     await cancelPolicyForm(page);
     await expect(
-      cell.getByText('Shared \u00b7 Setup \u00b7 Required', { exact: true })
+      cell.getByText('Base \u00b7 Setup \u00b7 Required', { exact: true })
     ).toBeVisible();
   });
 

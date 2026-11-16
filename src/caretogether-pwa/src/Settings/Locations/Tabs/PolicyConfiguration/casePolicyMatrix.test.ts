@@ -309,6 +309,7 @@ test('matrix identifiers follow dynamic names and remain stable across arrangeme
   const { scopes, issues } = matrixScopes(value);
   assert.equal(scopes.length, 3);
   assert.deepEqual(issues, []);
+  assert.equal(scopes[0].label, 'Base');
   assert.equal(
     scopes[0].field,
     JSON.stringify(['Dynamic arrangement', null, null])

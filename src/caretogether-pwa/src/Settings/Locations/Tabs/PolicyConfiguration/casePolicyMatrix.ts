@@ -74,7 +74,7 @@ export function matrixScopes(policy: EffectiveLocationPolicy) {
     scopes.push({
       ...base,
       field: JSON.stringify([base.arrangement, null, null]),
-      label: 'Shared',
+      label: 'Base',
     });
     for (const fn of arrangement.arrangementFunctions ?? []) {
       if (

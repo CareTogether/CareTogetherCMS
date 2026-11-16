@@ -109,7 +109,7 @@ function MatrixCellContents({
             size="small"
             variant={shared ? 'filled' : 'outlined'}
             color={shared ? 'primary' : 'default'}
-            label={`${shared ? 'Shared' : 'Additional'} · ${item.phase} · ${item.isRequired ? 'Required' : 'Optional'}`}
+            label={`${shared ? 'Base' : 'Additional'} · ${item.phase} · ${item.isRequired ? 'Required' : 'Optional'}`}
             sx={{ maxWidth: '100%', alignSelf: 'flex-start' }}
           />
           {item.phase === 'Monitoring' &&
@@ -134,11 +134,11 @@ function summary(cell: MatrixCell, additional: boolean) {
     [
       ...cell.shared.map(
         (item) =>
-          `Shared ${item.phase} ${item.isRequired ? 'Required' : 'Optional'}`
+          `Base ${item.phase} ${item.isRequired ? 'Required' : 'Optional'}`
       ),
       ...cell.own.map(
         (item) =>
-          `${additional ? 'Additional' : 'Shared'} ${item.phase} ${item.isRequired ? 'Required' : 'Optional'}`
+          `${additional ? 'Additional' : 'Base'} ${item.phase} ${item.isRequired ? 'Required' : 'Optional'}`
       ),
     ].join('; ') || 'Not used'
   );
@@ -335,7 +335,7 @@ export function CasePoliciesMatrix({
             scopeLabel={
               scope.functionName
                 ? scope.functionName + ' / ' + scope.variant
-                : scope.arrangement + ' / Shared'
+                : scope.arrangement + ' / Base'
             }
             onFinished={() => setEditing(false)}
           />
@@ -354,9 +354,9 @@ export function CasePoliciesMatrix({
     >
       <Stack spacing={2} sx={{ minWidth: 0 }}>
         <Typography variant="body2">
-          Shared requirements apply to every variant. Additional requirements
+          Base requirements apply to every variant. Additional requirements
           apply only to the selected assignment variant; they do not override
-          Shared. Click a cell or press Enter to edit all of its phases.
+          Base. Click a cell or press Enter to edit all of its phases.
         </Typography>
         <PolicyGridDraftActions
           saveSuccessId={draft.saveSuccessId}

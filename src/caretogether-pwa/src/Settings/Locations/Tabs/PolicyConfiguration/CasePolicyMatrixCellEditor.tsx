@@ -132,15 +132,14 @@ export function CasePolicyMatrixCellEditor({
             {String(params.id)} — {scopeLabel}
           </Typography>
           <Typography variant="caption">
-            Shared requirements apply to every variant. Additional variant
-            requirements never override Shared. Use the Shared column to change
-            shared requirements.
+            Base requirements apply to every variant. Additional variant
+            requirements never override Base. Use the Base column to change base
+            requirements.
           </Typography>
           {shared.map((item) => (
             <Typography key={item.id} variant="body2" color="primary">
-              Shared · {item.phase} ·{' '}
-              {item.isRequired ? 'Required' : 'Optional'} (edit in the Shared
-              column)
+              Base · {item.phase} · {item.isRequired ? 'Required' : 'Optional'}{' '}
+              (edit in the Base column)
             </Typography>
           ))}
           {protectedRows.map((item) => (
