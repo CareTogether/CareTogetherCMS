@@ -86,7 +86,7 @@ export function AddChildDrawer({ onClose }: AddChildDrawerProps) {
   const withBackdrop = useBackdrop();
 
   async function addChild() {
-    if (!canSubmitChildDateOfBirth(family, dateOfBirth, dobError)) return;
+    if (!canSubmit) return;
 
     await withBackdrop(async () => {
       if (firstName.length <= 0 || lastName.length <= 0) {

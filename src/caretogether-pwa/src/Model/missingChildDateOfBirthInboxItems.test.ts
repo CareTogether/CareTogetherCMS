@@ -17,16 +17,12 @@ function family(
   } as unknown as CombinedFamilyInfo;
 }
 
-test('warns once per active client child with genuinely missing age', () => {
+test('warns for each active child with a missing age', () => {
   const candidate = family([
     { id: 'child-1', active: true },
     { id: 'child-2', active: true, age: null },
-    { id: 'child-1', active: true },
   ]);
-  const items = missingChildDateOfBirthInboxItemsForFamilies([
-    candidate,
-    candidate,
-  ]);
+  const items = missingChildDateOfBirthInboxItemsForFamilies([candidate]);
   assert.deepEqual(
     items.map((item) => item.child.id),
     ['child-1', 'child-2']
@@ -35,13 +31,10 @@ test('warns once per active client child with genuinely missing age', () => {
   assert.equal(items[0].family, candidate);
 });
 
-test('ignores adults, inactive children, absent IDs and known or redacted ages', () => {
+test('ignores inactive children and known or redacted ages', () => {
   const candidate = family([
     { id: 'inactive', active: false },
     { id: 'unknown-active-status' },
-    { active: true },
-    { id: '', active: true },
-    { id: '   ', active: true },
     {
       id: 'exact',
       active: true,
@@ -57,27 +50,20 @@ test('ignores adults, inactive children, absent IDs and known or redacted ages',
     missingChildDateOfBirthInboxItemsForFamilies([candidate]),
     []
   );
-  for (const id of [undefined, '', '   ']) {
-    const missingFamilyId = family([{ id: 'child', active: true }]);
-    Object.assign(missingFamilyId.family!, { id });
-    assert.deepEqual(
-      missingChildDateOfBirthInboxItemsForFamilies([missingFamilyId]),
-      []
-    );
-  }
 });
 
-test('does not warn for volunteer-only, dual-role or unclassified families', () => {
+test('warns regardless of family type', () => {
   for (const markers of [
+    { partneringFamilyInfo: {} },
     { volunteerFamilyInfo: {} },
     { partneringFamilyInfo: {}, volunteerFamilyInfo: {} },
     {},
   ]) {
-    assert.deepEqual(
+    assert.equal(
       missingChildDateOfBirthInboxItemsForFamilies([
         family([{ id: 'child', active: true }], markers),
-      ]),
-      []
+      ]).length,
+      1
     );
   }
 });

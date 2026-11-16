@@ -11,7 +11,6 @@ function family(markers: object): CombinedFamilyInfo {
 }
 
 const client = family({ partneringFamilyInfo: {} });
-const now = new Date(2026, 5, 15, 12);
 
 test('client markers allow unknown DOB without requiring an active case', () => {
   for (const partneringFamilyInfo of [
@@ -22,7 +21,7 @@ test('client markers allow unknown DOB without requiring an active case', () => 
   ]) {
     const candidate = family({ partneringFamilyInfo });
     assert.equal(isClientOnlyFamily(candidate), true);
-    assert.equal(canSubmitChildDateOfBirth(candidate, null, false, now), true);
+    assert.equal(canSubmitChildDateOfBirth(candidate, null, false), true);
   }
 });
 
@@ -33,38 +32,19 @@ test('volunteer, dual-role and unclassified families still require DOB', () => {
     family({}),
   ]) {
     assert.equal(isClientOnlyFamily(candidate), false);
-    assert.equal(canSubmitChildDateOfBirth(candidate, null, false, now), false);
+    assert.equal(canSubmitChildDateOfBirth(candidate, null, false), false);
     assert.equal(
-      canSubmitChildDateOfBirth(candidate, new Date(2020, 0, 1), false, now),
+      canSubmitChildDateOfBirth(candidate, new Date(2020, 0, 1), false),
       true
     );
   }
 });
 
-test('malformed, incomplete and out-of-range dates cannot be submitted', () => {
+test('picker errors and invalid dates cannot be submitted', () => {
+  assert.equal(canSubmitChildDateOfBirth(client, new Date(NaN), false), false);
+  assert.equal(canSubmitChildDateOfBirth(client, null, true), false);
   assert.equal(
-    canSubmitChildDateOfBirth(client, new Date(NaN), false, now),
+    canSubmitChildDateOfBirth(client, new Date(2020, 0, 1), true),
     false
-  );
-  assert.equal(canSubmitChildDateOfBirth(client, null, true, now), false);
-  assert.equal(
-    canSubmitChildDateOfBirth(client, new Date(2020, 0, 1), true, now),
-    false
-  );
-  assert.equal(
-    canSubmitChildDateOfBirth(client, new Date(1899, 11, 31), false, now),
-    false
-  );
-  assert.equal(
-    canSubmitChildDateOfBirth(client, new Date(2026, 5, 16), false, now),
-    false
-  );
-  assert.equal(canSubmitChildDateOfBirth(client, now, false, now), true);
-});
-
-test('submission does not introduce a new age-limit rule', () => {
-  assert.equal(
-    canSubmitChildDateOfBirth(client, new Date(1900, 0, 1), false, now),
-    true
   );
 });

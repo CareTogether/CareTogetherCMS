@@ -28,8 +28,7 @@ interface InboxMessageProps {
 
 function getMessageProps(
   item: QueueItem,
-  appNavigate: AppNavigate,
-  isV2: boolean
+  appNavigate: AppNavigate
 ): InboxMessageProps {
   switch (item.type) {
     case 'ChildOver18':
@@ -107,18 +106,21 @@ function getMessageProps(
         icon: <EmojiPeople color="warning" />,
         onClick: () => {
           const familyId = item.family.family?.id;
-          if (!familyId) return;
+          const familyMemberId = item.child.id;
 
-          if (isV2 && item.child.id) {
-            appNavigate.family(familyId, { familyMemberId: item.child.id });
+          if (familyId && familyMemberId) {
+            appNavigate.family(familyId, { familyMemberId });
             return;
           }
 
-          appNavigate.family(familyId);
+          if (familyId) {
+            appNavigate.family(familyId);
+          }
         },
         primaryContent: (
           <>
             <Typography
+              className="ph-unmask"
               variant="body1"
               sx={{ display: 'inline', fontWeight: 'bold' }}
             >
@@ -239,12 +241,12 @@ function InboxMessage({
   );
 }
 
-function MessageList({ isV2 }: { isV2: boolean }) {
+function MessageList() {
   const appNavigate = useAppNavigate();
   const queueItems = useQueueItems();
 
   const messages = (queueItems ?? []).map((item) =>
-    getMessageProps(item, appNavigate, isV2)
+    getMessageProps(item, appNavigate)
   );
 
   return (
@@ -275,7 +277,7 @@ export function InboxScreen() {
           Inbox
         </Typography>
       )}
-      <MessageList isV2={isV2} />
+      <MessageList />
     </Container>
   );
 }
