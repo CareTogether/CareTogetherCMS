@@ -409,7 +409,10 @@ function buildColumns(
       valueFormatter: (_value, row) => approvalLedgerValidUntilText(row),
       renderCell: ({ row }) => {
         const text = (
-          <Typography {...v2Typography.browserSecondary}>
+          <Typography
+            {...v2Typography.browserSecondary}
+            sx={{ fontWeight: row.status === 'expired' ? 'bold' : undefined }}
+          >
             {approvalLedgerValidUntilText(row)}
           </Typography>
         );
