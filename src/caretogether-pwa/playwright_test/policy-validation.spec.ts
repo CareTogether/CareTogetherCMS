@@ -746,6 +746,11 @@ test('integrated arrangement CRUD refreshes matrix columns and preserves search 
     }
   });
   await mount(page, 'casePolicy', undefined, true);
+  const visibilityPanel = await openArrangementVisibility(page);
+  await visibilityPanel
+    .getByRole('checkbox', { name: 'Hosting', exact: true })
+    .uncheck();
+  await visibilityPanel.getByRole('checkbox').press('Escape');
   await page.getByRole('button', { name: 'Search', exact: true }).click();
   await page.getByRole('searchbox').fill('Form');
   await page
@@ -768,6 +773,12 @@ test('integrated arrangement CRUD refreshes matrix columns and preserves search 
   await expect(
     matrix.getByText('New arrangement', { exact: true })
   ).toBeVisible();
+  await expect(
+    matrix.getByRole('columnheader', {
+      name: 'Hosting (arrangement type)',
+      exact: true,
+    })
+  ).toHaveCount(0);
   await page
     .getByRole('button', {
       name: 'Manage Arrangements & Functions',
@@ -825,6 +836,23 @@ test('integrated arrangement CRUD refreshes matrix columns and preserves search 
   ).toHaveCount(0);
   await expect(page.getByRole('searchbox')).toHaveValue('Form');
   expect(stored.referralPolicy.arrangementPolicies).toHaveLength(2);
+  const refreshedVisibility = await openArrangementVisibility(page);
+  await expect(
+    refreshedVisibility.getByRole('checkbox', {
+      name: 'Renamed Hosting',
+      exact: true,
+    })
+  ).toBeChecked();
+  await expect(
+    refreshedVisibility.getByRole('checkbox', {
+      name: 'New arrangement',
+      exact: true,
+    })
+  ).toBeChecked();
+  await expect(
+    refreshedVisibility.getByRole('checkbox', { name: 'Hosting', exact: true })
+  ).toHaveCount(0);
+  await refreshedVisibility.getByRole('checkbox').first().press('Escape');
 });
 
 test('integrated function and case assignment CRUD reuse eligibility forms and preserve siblings', async ({
@@ -1762,11 +1790,8 @@ test.describe('Settings category navigation', () => {
     await mount(page, 'casePolicy', undefined, true);
     const editor = await openMatrixCell(page);
     await editor
-      .getByRole('button', {
-        name: 'Not used \u2014 remove requirement 1',
-        exact: true,
-      })
-      .click();
+      .getByRole('switch', { name: 'Requirement 1 Required', exact: true })
+      .uncheck();
     await editor
       .getByRole('button', { name: 'Apply to draft', exact: true })
       .click();
@@ -2000,7 +2025,6 @@ async function openMatrixCell(
   variant: string | null = null
 ) {
   const cell = matrixCell(page, 'Form', fn, variant);
-  await cell.scrollIntoViewIfNeeded();
   await cell.click();
   return page.getByRole('dialog', { name: /^Edit Form/ });
 }
@@ -2019,6 +2043,635 @@ async function applyApplicability(
     .getByRole('button', { name: 'Apply to draft', exact: true })
     .click();
 }
+
+async function openArrangementVisibility(page: Page) {
+  await page
+    .getByRole('button', { name: 'Manage columns', exact: true })
+    .click();
+  const panel = page.getByRole('group', {
+    name: 'Arrangement visibility',
+    exact: true,
+  });
+  await expect(panel).toBeVisible();
+  return panel;
+}
+
+test.describe('matrix arrangement visibility', () => {
+  test('empty and excluded arrangements provide a usable empty panel without policy writes', async ({
+    page,
+  }) => {
+    const initial = policy();
+    initial.referralPolicy.arrangementPolicies = [
+      { ...initial.referralPolicy.arrangementPolicies[0], arrangementType: '' },
+    ];
+    const requests = await backend(page, false, false, initial);
+    await mount(page, 'casePolicy', undefined, true);
+    const panel = await openArrangementVisibility(page);
+    await expect(panel.getByRole('checkbox')).toHaveCount(0);
+    await expect(
+      panel.getByText('No valid arrangement types are available.')
+    ).toBeVisible();
+    await page.keyboard.press('Escape');
+    await expect(panel).toBeHidden();
+    expect(requests.puts()).toBe(0);
+  });
+  for (const width of [320, 390, 768, 1440]) {
+    test(`arrangement toggles control complete hierarchies and restore focus at ${width}px`, async ({
+      page,
+    }) => {
+      await page.setViewportSize({ width, height: 900 });
+      const initial = caseMatrixPolicy();
+      const name =
+        'A long superseded arrangement name for visibility management';
+      initial.referralPolicy.arrangementPolicies.push({
+        ...initial.referralPolicy.arrangementPolicies[0],
+        arrangementType: name,
+        supersededAtUtc: '2024-01-01T00:00:00Z',
+      });
+      const requests = await backend(page, false, false, initial);
+      await mount(page, 'casePolicy', undefined, true);
+      const grid = page.getByRole('grid', {
+        name: 'Case Policies requirements matrix',
+        exact: true,
+      });
+      const trigger = page.getByRole('button', {
+        name: 'Manage columns',
+        exact: true,
+      });
+      let panel = await openArrangementVisibility(page);
+      await expect(panel.getByRole('checkbox')).toHaveCount(2);
+      const hosting = panel.getByRole('checkbox', {
+        name: 'Hosting',
+        exact: true,
+      });
+      const other = panel.getByRole('checkbox', { name, exact: true });
+      await expect(hosting).toBeChecked();
+      await expect(other).toBeChecked();
+      await expect(
+        panel.getByRole('checkbox', {
+          name: /^(Actions|Base|Provider function|First profile)$/,
+        })
+      ).toHaveCount(0);
+      await hosting.focus();
+      await hosting.press('Space');
+      await expect(hosting).not.toBeChecked();
+      await expect(
+        grid.getByRole('columnheader', {
+          name: 'Hosting (arrangement type)',
+          exact: true,
+        })
+      ).toHaveCount(0);
+      await other.uncheck();
+      await expect(
+        grid.getByRole('columnheader', { name: /\(arrangement type\)/ })
+      ).toHaveCount(0);
+      await expect(
+        grid.getByRole('columnheader', { name: 'Actions', exact: true })
+      ).toBeVisible();
+      const bounds = (await panel.boundingBox())!;
+      expect(bounds.x).toBeGreaterThanOrEqual(0);
+      expect(bounds.x + bounds.width).toBeLessThanOrEqual(width);
+      await hosting.press('Escape');
+      await expect(panel).toBeHidden();
+      await expect(trigger).toBeFocused();
+      await expect(
+        page.getByRole('button', { name: 'Undo', exact: true })
+      ).toBeDisabled();
+      panel = await openArrangementVisibility(page);
+      await panel
+        .getByRole('checkbox', { name: 'Hosting', exact: true })
+        .check();
+      await panel
+        .getByRole('checkbox', { name: 'Hosting', exact: true })
+        .press('Escape');
+      await expect(
+        grid.getByRole('columnheader', {
+          name: 'Hosting (arrangement type)',
+          exact: true,
+        })
+      ).toBeVisible();
+      await expect(
+        grid.getByRole('columnheader', {
+          name: name + ' (read-only) (arrangement type)',
+          exact: true,
+        })
+      ).toHaveCount(0);
+      await expect(
+        grid.getByRole('columnheader', { name: 'Base', exact: true })
+      ).toHaveCount(1);
+      await expect(
+        grid.getByRole('columnheader', {
+          name: 'First profile (variant)',
+          exact: true,
+        })
+      ).toHaveCount(1);
+      expect(requests.puts()).toBe(0);
+    });
+  }
+
+  test('leaf menus cannot hide Actions, Base or variants and retain unrelated menu actions', async ({
+    page,
+  }) => {
+    const requests = await backend(page, false, false, caseMatrixPolicy());
+    await mount(page, 'casePolicy', undefined, true);
+    for (const [name, field] of [
+      ['Actions', 'actionName'],
+      ['Base', JSON.stringify(['Hosting', null, null])],
+      [
+        'First profile (variant)',
+        JSON.stringify(['Hosting', 'Provider function', 'First profile']),
+      ],
+    ]) {
+      const header = page
+        .getByRole('grid')
+        .locator('[role="columnheader"][data-field=\'' + field + "']");
+      await header.scrollIntoViewIfNeeded();
+      await header.hover();
+      await header
+        .getByRole('button', { name: name + ' column menu', exact: true })
+        .click();
+      const menu = page.getByRole('menu', {
+        name: name + ' column menu',
+        exact: true,
+      });
+      await expect(
+        menu.getByRole('menuitem', { name: 'Hide column', exact: true })
+      ).toHaveCount(0);
+      await expect(
+        menu.getByRole('menuitem', { name: 'Sort by ASC', exact: true })
+      ).toBeVisible();
+      await menu
+        .getByRole('menuitem', { name: 'Manage columns', exact: true })
+        .click();
+      const panel = page.getByRole('group', {
+        name: 'Arrangement visibility',
+        exact: true,
+      });
+      await expect(panel.getByRole('checkbox')).toHaveCount(1);
+      await panel.getByRole('checkbox').press('Escape');
+      await expect(panel).toBeHidden();
+      await page.keyboard.press('Escape');
+    }
+    const editor = await openMatrixCell(page);
+    await expect(
+      page.getByRole('button', { name: 'Manage columns', exact: true })
+    ).toHaveCount(0);
+    await editor.press('Escape');
+    expect(requests.puts()).toBe(0);
+  });
+
+  test('hidden arrangement drafts, sorting, quick filters and Save Cancel history remain independent', async ({
+    page,
+  }) => {
+    const initial = caseMatrixPolicy();
+    const requests = await backend(page, false, false, initial);
+    let saved: EffectiveLocationPolicy | undefined;
+    page.on('request', (request) => {
+      if (request.method() === 'PUT') saved = request.postDataJSON();
+    });
+    await mount(page, 'casePolicy', undefined, true);
+    await applyApplicability(page, 'Optional');
+    const actions = page
+      .getByRole('grid')
+      .locator('[role="columnheader"][data-field="actionName"]');
+    await actions.click();
+    await expect(actions).toHaveAttribute('aria-sort', 'ascending');
+    await page.getByRole('button', { name: 'Search', exact: true }).click();
+    await page.getByRole('searchbox').fill('Optional');
+    await expect(matrixCell(page, 'Form')).toBeVisible();
+    let panel = await openArrangementVisibility(page);
+    await panel
+      .getByRole('checkbox', { name: 'Hosting', exact: true })
+      .uncheck();
+    await panel.getByRole('checkbox').press('Escape');
+    await expect(page.getByRole('searchbox')).toHaveValue('Optional');
+    await expect(
+      page.getByRole('grid').locator('[data-id="Form"]')
+    ).toHaveCount(0);
+    await expect(
+      page.getByRole('status', { name: 'Policy draft status' })
+    ).toContainText('1 unsaved change');
+    await page.getByRole('button', { name: 'Undo', exact: true }).click();
+    await expect(
+      page.getByRole('button', { name: 'Save changes', exact: true })
+    ).toBeDisabled();
+    await page.getByRole('button', { name: 'Redo', exact: true }).click();
+    await expect(
+      page.getByRole('button', { name: 'Save changes', exact: true })
+    ).toBeEnabled();
+    expect(requests.puts()).toBe(0);
+    await page
+      .getByRole('button', { name: 'Save changes', exact: true })
+      .click();
+    await expect.poll(requests.puts).toBe(1);
+    await expect(
+      page.getByRole('button', { name: 'Undo', exact: true })
+    ).toBeDisabled();
+    expect(
+      saved!.referralPolicy.arrangementPolicies[0].requiredSetupActions[0]
+        .isRequired
+    ).toBe(false);
+    expect(
+      saved!.referralPolicy.arrangementPolicies[0].arrangementFunctions
+    ).toEqual(
+      initial.referralPolicy.arrangementPolicies[0].arrangementFunctions
+    );
+    await expect(actions).toHaveAttribute('aria-sort', 'ascending');
+    panel = await openArrangementVisibility(page);
+    await expect(panel.getByRole('checkbox')).not.toBeChecked();
+    await panel.getByRole('checkbox').check();
+    await panel.getByRole('checkbox').press('Escape');
+    await page.getByRole('searchbox').fill('');
+    await applyApplicability(page, 'Required');
+    panel = await openArrangementVisibility(page);
+    await panel.getByRole('checkbox').uncheck();
+    await panel.getByRole('checkbox').press('Escape');
+    await cancelPolicyForm(page);
+    panel = await openArrangementVisibility(page);
+    await expect(panel.getByRole('checkbox')).not.toBeChecked();
+    await panel.getByRole('checkbox').press('Escape');
+    await page.getByRole('link', { name: 'Location B', exact: true }).click();
+    await expect(page).toHaveURL('/org/org/b/settings/case-policies');
+    await expect(
+      page.getByRole('columnheader', {
+        name: 'Hosting (arrangement type)',
+        exact: true,
+      })
+    ).toBeVisible();
+    expect(requests.puts()).toBe(1);
+  });
+
+  test('Add Action can configure a hidden arrangement without changing visibility', async ({
+    page,
+  }) => {
+    const initial = policy();
+    initial.actionDefinitions = { New: { documentLink: 0, noteEntry: 0 } };
+    const requests = await backend(page, false, false, initial);
+    await mount(page, 'casePolicy', undefined, true);
+    let panel = await openArrangementVisibility(page);
+    await panel.getByRole('checkbox').uncheck();
+    await panel.getByRole('checkbox').press('Escape');
+    await page.getByRole('button', { name: 'Add Action', exact: true }).click();
+    const dialog = page.getByRole('dialog', {
+      name: 'Add Action',
+      exact: true,
+    });
+    await dialog
+      .getByRole('combobox', {
+        name: 'Existing Action Definition',
+        exact: true,
+      })
+      .fill('New');
+    await page.getByRole('option', { name: 'New', exact: true }).click();
+    await dialog
+      .getByRole('combobox', { name: 'Target scope', exact: true })
+      .click();
+    await page
+      .getByRole('option', { name: 'Hosting / Base', exact: true })
+      .click();
+    await dialog.getByRole('radio', { name: 'Setup', exact: true }).check();
+    await dialog
+      .getByRole('button', { name: 'Apply to draft', exact: true })
+      .click();
+    await expect(
+      page.getByRole('grid').locator('[data-id="New"]')
+    ).toBeVisible();
+    await expect(
+      page.getByRole('columnheader', { name: 'Base', exact: true })
+    ).toHaveCount(0);
+    panel = await openArrangementVisibility(page);
+    await expect(panel.getByRole('checkbox')).not.toBeChecked();
+    await panel.getByRole('checkbox').check();
+    await panel.getByRole('checkbox').press('Escape');
+    await expect(
+      page.getByText('Base · Setup · Required', { exact: true })
+    ).toBeVisible();
+    expect(requests.puts()).toBe(0);
+  });
+});
+
+test.describe('location-wide arrangement phases', () => {
+  function phasePolicy() {
+    const initial = caseMatrixPolicy();
+    initial.actionDefinitions.Consistent = { documentLink: 0, noteEntry: 0 };
+    initial.actionDefinitions.Fresh = { documentLink: 0, noteEntry: 0 };
+    initial.referralPolicy.arrangementPolicies[0].requiredSetupActions.push({
+      actionName: 'Consistent',
+      isRequired: true,
+    });
+    return initial;
+  }
+  async function chooseAction(page: Page, name: string) {
+    await page.getByRole('button', { name: 'Add Action', exact: true }).click();
+    const dialog = page.getByRole('dialog', {
+      name: 'Add Action',
+      exact: true,
+    });
+    await dialog
+      .getByRole('combobox', {
+        name: 'Existing Action Definition',
+        exact: true,
+      })
+      .fill(name);
+    await page.getByRole('option', { name, exact: true }).click();
+    return dialog;
+  }
+  async function chooseScope(page: Page, variant = false) {
+    await page
+      .getByRole('combobox', { name: 'Target scope', exact: true })
+      .click();
+    await page
+      .getByRole('option', {
+        name: variant
+          ? 'Hosting / Provider function / First profile (additional)'
+          : 'Hosting / Base',
+        exact: true,
+      })
+      .click();
+  }
+  test('hidden and filtered usages lock Add Action to their established phase and preserve complete Save payloads', async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 390, height: 900 });
+    const initial = phasePolicy();
+    const requests = await backend(page, false, false, initial);
+    let saved: EffectiveLocationPolicy | undefined;
+    page.on('request', (request) => {
+      if (request.method() === 'PUT') saved = request.postDataJSON();
+    });
+    await mount(page, 'casePolicy', undefined, true);
+    const panel = await openArrangementVisibility(page);
+    await panel
+      .getByRole('checkbox', { name: 'Hosting', exact: true })
+      .uncheck();
+    await panel.getByRole('checkbox').press('Escape');
+    if (!(await page.getByRole('searchbox').isVisible()))
+      await page.getByRole('button', { name: 'Search', exact: true }).click();
+    await page.getByRole('searchbox').fill('Form');
+    let dialog = await chooseAction(page, 'Consistent');
+    await expect(
+      dialog.getByText(/Setup is the established arrangement phase/)
+    ).toBeVisible();
+    await expect(
+      dialog.getByRole('radio', { name: 'Setup', exact: true })
+    ).toBeChecked();
+    for (const phase of ['Monitoring', 'Closeout'])
+      await expect(
+        dialog.getByRole('radio', { name: phase, exact: true })
+      ).toBeDisabled();
+    await chooseScope(page);
+    await expect(
+      dialog.getByText(/This scope already contains this action/)
+    ).toBeVisible();
+    await expect(
+      dialog.getByRole('button', { name: 'Apply to draft', exact: true })
+    ).toBeDisabled();
+    await chooseScope(page, true);
+    await dialog
+      .getByRole('switch', { name: 'Requirement 1 Required', exact: true })
+      .uncheck();
+    await dialog
+      .getByRole('button', { name: 'Apply to draft', exact: true })
+      .click();
+    expect(requests.puts()).toBe(0);
+    await expect(page.getByRole('searchbox')).toHaveValue('Form');
+    await expect(
+      page.getByRole('columnheader', { name: 'Base', exact: true })
+    ).toHaveCount(0);
+    await page
+      .getByRole('button', { name: 'Save changes', exact: true })
+      .click();
+    await expect.poll(requests.puts).toBe(1);
+    const arrangement = saved!.referralPolicy.arrangementPolicies[0];
+    expect(arrangement.requiredSetupActions).toEqual(
+      initial.referralPolicy.arrangementPolicies[0].requiredSetupActions
+    );
+    expect(arrangement.requiredMonitoringActionsNew).toEqual(
+      initial.referralPolicy.arrangementPolicies[0].requiredMonitoringActionsNew
+    );
+    expect(arrangement.policyVersions).toEqual(
+      initial.referralPolicy.arrangementPolicies[0].policyVersions
+    );
+    expect(saved!.volunteerPolicy).toEqual(initial.volunteerPolicy);
+    expect(
+      arrangement.arrangementFunctions[0].variants[0].requiredSetupActions
+    ).toContainEqual({ actionName: 'Consistent', isRequired: false });
+    dialog = await chooseAction(page, 'Consistent');
+    await dialog
+      .getByRole('button', { name: 'Find in matrix', exact: true })
+      .click();
+    await expect(
+      page.getByRole('button', {
+        name: 'Reveal action (clear filters)',
+        exact: true,
+      })
+    ).toBeVisible();
+  });
+  test('first-phase choice, Undo Redo, failed Save, Cancel and location changes derive restrictions from the current draft', async ({
+    page,
+  }) => {
+    const initial = phasePolicy();
+    const requests = await backend(page, false, false, initial);
+    await mount(page, 'casePolicy', undefined, true);
+    let dialog = await chooseAction(page, 'Fresh');
+    await expect(dialog.getByRole('radio', { checked: true })).toHaveCount(0);
+    await chooseScope(page);
+    await expect(
+      dialog.getByRole('button', { name: 'Apply to draft', exact: true })
+    ).toBeDisabled();
+    await dialog
+      .getByRole('radio', { name: 'Monitoring', exact: true })
+      .check();
+    await dialog
+      .getByRole('spinbutton', { name: 'Delay (days)', exact: true })
+      .fill('3');
+    await dialog
+      .getByRole('switch', { name: 'Requirement 1 Required', exact: true })
+      .uncheck();
+    await dialog
+      .getByRole('button', { name: 'Apply to draft', exact: true })
+      .click();
+    await page.getByRole('button', { name: 'Undo', exact: true }).click();
+    dialog = await chooseAction(page, 'Fresh');
+    await expect(dialog.getByRole('radio', { checked: true })).toHaveCount(0);
+    await dialog.getByRole('button', { name: 'Cancel', exact: true }).click();
+    await page.getByRole('button', { name: 'Redo', exact: true }).click();
+    dialog = await chooseAction(page, 'Fresh');
+    await expect(
+      dialog.getByRole('radio', { name: 'Monitoring', exact: true })
+    ).toBeChecked();
+    await expect(
+      dialog.getByRole('radio', { name: 'Setup', exact: true })
+    ).toBeDisabled();
+    await chooseScope(page, true);
+    await dialog
+      .getByRole('button', { name: 'Apply to draft', exact: true })
+      .click();
+    await page.route('**/Configuration/policy', async (route) => {
+      if (route.request().method() !== 'PUT') return route.fallback();
+      await route.fulfill({
+        status: 400,
+        json: { errors: ['Phase save failed'] },
+      });
+    });
+    await page
+      .getByRole('button', { name: 'Save changes', exact: true })
+      .click();
+    await expect(
+      page.getByText('Phase save failed', { exact: true })
+    ).toBeVisible();
+    await expect(
+      page.getByRole('button', { name: 'Undo', exact: true })
+    ).toBeEnabled();
+    dialog = await chooseAction(page, 'Fresh');
+    await expect(
+      dialog.getByRole('radio', { name: 'Monitoring', exact: true })
+    ).toBeChecked();
+    await dialog.getByRole('button', { name: 'Cancel', exact: true }).click();
+    await cancelPolicyForm(page);
+    dialog = await chooseAction(page, 'Fresh');
+    await expect(dialog.getByRole('radio', { checked: true })).toHaveCount(0);
+    await dialog.getByRole('button', { name: 'Cancel', exact: true }).click();
+    const otherLocation = phasePolicy();
+    otherLocation.actionDefinitions['Location B only'] = {
+      documentLink: 0,
+      noteEntry: 0,
+    };
+    otherLocation.referralPolicy.arrangementPolicies[0].requiredSetupActions.push(
+      { actionName: 'Location B only', isRequired: true }
+    );
+    await page.route('**/org/b/Configuration/policy', async (route) => {
+      if (route.request().method() !== 'GET') return route.fallback();
+      await route.fulfill({ json: otherLocation });
+    });
+    await page.getByRole('link', { name: 'Location B', exact: true }).click();
+    await expect(
+      page.getByRole('grid').locator('[data-id="Location B only"]')
+    ).toBeVisible();
+    dialog = await chooseAction(page, 'Fresh');
+    await expect(dialog.getByRole('radio', { checked: true })).toHaveCount(0);
+    expect(requests.puts()).toBe(0);
+  });
+  test('single-phase cell editing is locked until the last requirement is explicitly removed', async ({
+    page,
+  }) => {
+    const initial = phasePolicy();
+    const requests = await backend(page, false, false, initial);
+    await mount(page, 'casePolicy', undefined, true);
+    const cell = matrixCell(page, 'Consistent');
+    await cell.click();
+    let editor = page.getByRole('dialog', { name: /^Edit Consistent/ });
+    await expect(
+      editor.getByText(/Setup is the established arrangement phase/)
+    ).toBeVisible();
+    await expect(
+      editor.getByRole('radio', { name: 'Monitoring', exact: true })
+    ).toBeDisabled();
+    await expect(editor.getByRole('button', { name: /^Add / })).toHaveCount(0);
+    await editor.getByRole('button', { name: /Not used/ }).click();
+    await editor
+      .getByRole('button', { name: 'Apply to draft', exact: true })
+      .click();
+    await expect(
+      cell.getByRole('img', { name: 'Not used', exact: true })
+    ).toHaveText('—');
+    await expect(cell.getByText('—', { exact: true })).toBeVisible();
+    const status = await page
+      .getByRole('status', { name: 'Policy draft status' })
+      .textContent();
+    await cell.click();
+    editor = page.getByRole('dialog', { name: /^Edit Consistent/ });
+    await expect(cell.getByText('—', { exact: true })).toBeVisible();
+    await expect(
+      page.getByRole('status', { name: 'Policy draft status' })
+    ).toHaveText('Cell edit in progress \u00b7 ' + status);
+    await expect(
+      editor.getByRole('button', { name: 'Add Monitoring', exact: true })
+    ).toBeVisible();
+    await editor
+      .getByRole('button', { name: 'Add Monitoring', exact: true })
+      .click();
+    await expect(
+      editor.getByRole('radio', { name: 'Monitoring', exact: true })
+    ).toBeChecked();
+    await editor
+      .getByRole('button', { name: 'Apply to draft', exact: true })
+      .click();
+    await expect(
+      cell.getByText('Base \u00b7 Monitoring \u00b7 Required', { exact: true })
+    ).toBeVisible();
+    await page.getByRole('button', { name: 'Undo', exact: true }).click();
+    await expect(
+      cell.getByRole('img', { name: 'Not used', exact: true })
+    ).toHaveText('—');
+    await expect(cell.getByText('—', { exact: true })).toBeVisible();
+    await page.getByRole('button', { name: 'Undo', exact: true }).click();
+    await expect(
+      cell.getByText('Base \u00b7 Setup \u00b7 Required', { exact: true })
+    ).toBeVisible();
+    expect(requests.puts()).toBe(0);
+  });
+  test('conflicts remain visible and block additions while unrelated edits and Save remain available', async ({
+    page,
+  }) => {
+    const initial = phasePolicy();
+    const requests = await backend(page, false, false, initial);
+    let saved: EffectiveLocationPolicy | undefined;
+    page.on('request', (request) => {
+      if (request.method() === 'PUT') saved = request.postDataJSON();
+    });
+    await mount(page, 'casePolicy', undefined, true);
+    await expect(
+      page
+        .getByRole('grid')
+        .locator('[data-id="Form"] [data-field="actionName"]')
+        .getByText(/Phase conflict: Setup, Monitoring, Closeout/)
+    ).toBeVisible();
+    const dialog = await chooseAction(page, 'Form');
+    await expect(
+      dialog.getByText(/Conflicting arrangement phases:/)
+    ).toBeVisible();
+    await expect(dialog.getByRole('radio', { checked: true })).toHaveCount(0);
+    for (const phase of ['Setup', 'Monitoring', 'Closeout'])
+      await expect(
+        dialog.getByRole('radio', { name: phase, exact: true })
+      ).toBeDisabled();
+    await expect(
+      dialog.getByRole('button', { name: 'Apply to draft', exact: true })
+    ).toBeDisabled();
+    await dialog
+      .getByRole('button', { name: 'Find in matrix', exact: true })
+      .click();
+    const cell = matrixCell(page, 'Consistent');
+    await cell.click();
+    const editor = page.getByRole('dialog', { name: /^Edit Consistent/ });
+    await editor
+      .getByRole('switch', { name: 'Requirement 1 Required', exact: true })
+      .uncheck();
+    await editor
+      .getByRole('button', { name: 'Apply to draft', exact: true })
+      .click();
+    await page
+      .getByRole('button', { name: 'Save changes', exact: true })
+      .click();
+    await expect.poll(requests.puts).toBe(1);
+    const arrangement = saved!.referralPolicy.arrangementPolicies[0];
+    expect(arrangement.requiredMonitoringActionsNew).toEqual(
+      initial.referralPolicy.arrangementPolicies[0].requiredMonitoringActionsNew
+    );
+    expect(arrangement.requiredCloseoutActions).toEqual(
+      initial.referralPolicy.arrangementPolicies[0].requiredCloseoutActions
+    );
+    expect(arrangement.arrangementFunctions).toEqual(
+      initial.referralPolicy.arrangementPolicies[0].arrangementFunctions
+    );
+    expect(
+      arrangement.requiredSetupActions.find(
+        (item: { actionName: string }) => item.actionName === 'Form'
+      )
+    ).toEqual({ actionName: 'Form', isRequired: true });
+  });
+});
 
 test.describe('Case Policies matrix', () => {
   for (const variant of [false, true]) {
@@ -2190,7 +2843,7 @@ test.describe('Case Policies matrix', () => {
         .click();
       await expect(
         dialog.getByRole('button', { name: 'Apply to draft', exact: true })
-      ).toHaveCount(0);
+      ).toBeDisabled();
       await dialog
         .getByRole('button', { name: 'Find in matrix', exact: true })
         .click();
@@ -2397,7 +3050,10 @@ test.describe('Case Policies matrix', () => {
       .click();
     await expect(row).toBeVisible();
     await expect(cell).toHaveClass(/policy-cell-unsaved/);
-    await expect(cell.getByText('Not used', { exact: true })).toBeVisible();
+    await expect(
+      cell.getByRole('img', { name: 'Not used', exact: true })
+    ).toHaveText('—');
+    await expect(cell.getByText('—', { exact: true })).toBeVisible();
     await page.getByRole('button', { name: 'Undo', exact: true }).click();
     await expect(
       cell.getByText('Base · Setup · Required', { exact: true })
@@ -2498,33 +3154,11 @@ test.describe('Case Policies matrix', () => {
     await editor
       .getByRole('button', { name: 'Cancel cell', exact: true })
       .click();
-    const open = () =>
-      openMatrixCell(page, 'Provider function', 'First profile');
-    editor = await open();
-    let group = editor.getByRole('radiogroup', {
-      name: 'Requirement 1 phase',
-      exact: true,
-    });
-    await group.getByRole('radio', { name: 'Setup', exact: true }).focus();
-    await page.keyboard.press('ArrowLeft');
+    editor = await openMatrixCell(page, 'Provider function', 'First profile');
     await expect(
-      group.getByRole('radio', { name: 'Closeout', exact: true })
-    ).toBeChecked();
-    await expect(
-      group.getByRole('radio', { name: 'Closeout', exact: true })
-    ).toBeFocused();
-    await group.getByRole('radio', { name: 'Setup', exact: true }).check();
-    await expect(
-      editor.getByRole('button', { name: 'Apply to draft', exact: true })
-    ).toBeDisabled();
-    await group.getByRole('radio', { name: 'Closeout', exact: true }).check();
-    await editor
-      .getByRole('button', { name: 'Cancel cell', exact: true })
-      .click();
-    const cell = matrixCell(page, 'Form', 'Provider function', 'First profile');
-    await expect(cell).not.toHaveClass(/policy-cell-unsaved/);
-    editor = await open();
-    group = editor.getByRole('radiogroup', {
+      editor.getByText(/Conflicting arrangement phases:/)
+    ).toBeVisible();
+    const group = editor.getByRole('radiogroup', {
       name: 'Requirement 1 phase',
       exact: true,
     });
@@ -2532,60 +3166,56 @@ test.describe('Case Policies matrix', () => {
     await expect(setup).toBeChecked();
     await setup.focus();
     await page.keyboard.press('ArrowRight');
+    await expect(setup).toBeChecked();
+    for (const phase of ['Monitoring', 'Closeout'])
+      await expect(
+        group.getByRole('radio', { name: phase, exact: true })
+      ).toBeDisabled();
     await expect(
-      group.getByRole('radio', { name: 'Monitoring', exact: true })
-    ).toBeChecked();
-    await expect(
-      editor.getByRole('combobox', { name: 'Schedule type', exact: true })
-    ).toHaveText('One-time');
-    page.once('dialog', async (dialog) => {
-      expect(dialog.message()).toBe(
-        'Changing phase removes this monitoring schedule. Continue?'
-      );
-      await dialog.dismiss();
-    });
-    await group.getByRole('radio', { name: 'Closeout', exact: true }).click();
-    await expect(
-      group.getByRole('radio', { name: 'Monitoring', exact: true })
-    ).toBeChecked();
-    await expect(
-      editor.getByRole('combobox', { name: 'Schedule type', exact: true })
-    ).toHaveText('One-time');
-    page.once('dialog', (dialog) => dialog.accept());
-    await group.getByRole('radio', { name: 'Closeout', exact: true }).click();
-    await expect(
-      group.getByRole('radio', { name: 'Closeout', exact: true })
-    ).toBeChecked();
-    await expect(
-      editor.getByRole('combobox', { name: 'Schedule type', exact: true })
+      editor.getByRole('button', { name: /^Add (Setup|Monitoring|Closeout)$/ })
     ).toHaveCount(0);
     await expect(
-      editor.getByRole('switch', {
-        name: 'Requirement 1 Required',
-        exact: true,
-      })
-    ).not.toBeChecked();
+      editor.getByRole('button', { name: /Not used/ })
+    ).toBeDisabled();
+    const required = editor.getByRole('switch', {
+      name: 'Requirement 1 Required',
+      exact: true,
+    });
+    await required.check();
+    await required.uncheck();
+    await expect(
+      editor.getByRole('button', { name: 'Apply to draft', exact: true })
+    ).toBeDisabled();
+    await required.check();
+    await editor
+      .getByRole('button', { name: 'Cancel cell', exact: true })
+      .click();
+    const cell = matrixCell(page, 'Form', 'Provider function', 'First profile');
+    await expect(cell).not.toHaveClass(/policy-cell-unsaved/);
+    editor = await openMatrixCell(page, 'Provider function', 'First profile');
+    await editor
+      .getByRole('switch', { name: 'Requirement 1 Required', exact: true })
+      .check();
     await editor
       .getByRole('button', { name: 'Apply to draft', exact: true })
       .click();
     await expect(
-      cell.getByText('Additional · Closeout · Optional', { exact: true })
+      cell.getByText('Additional \u00b7 Setup \u00b7 Required', { exact: true })
     ).toBeVisible();
     await page.getByRole('button', { name: 'Undo', exact: true }).click();
     await expect(
-      cell.getByText('Additional · Setup · Optional', { exact: true })
+      cell.getByText('Additional \u00b7 Setup \u00b7 Optional', { exact: true })
     ).toBeVisible();
     await expect(cell).not.toHaveClass(/policy-cell-unsaved/);
     await page.getByRole('button', { name: 'Redo', exact: true }).click();
     await expect(
-      cell.getByText('Additional · Closeout · Optional', { exact: true })
+      cell.getByText('Additional \u00b7 Setup \u00b7 Required', { exact: true })
     ).toBeVisible();
     expect(requests.puts()).toBe(0);
     await page
       .getByRole('button', { name: 'Save changes', exact: true })
       .click();
     await expect.poll(requests.puts).toBe(1);
-    await expect(cell).not.toHaveClass(/policy-cell-unsaved/);
     const arrangement = saved!.referralPolicy.arrangementPolicies[0];
     const original = initial.referralPolicy.arrangementPolicies[0];
     expect(arrangement.requiredSetupActions).toEqual(
@@ -2602,13 +3232,12 @@ test.describe('Case Policies matrix', () => {
     );
     expect(
       arrangement.arrangementFunctions[0].variants[0].requiredSetupActions
-    ).toEqual([]);
+    ).toEqual([{ actionName: 'Form', isRequired: true }]);
     expect(
       arrangement.arrangementFunctions[0].variants[0].requiredCloseoutActions
-    ).toEqual([
-      ...original.arrangementFunctions[0].variants[0].requiredCloseoutActions,
-      { actionName: 'Form', isRequired: false },
-    ]);
+    ).toEqual(
+      original.arrangementFunctions[0].variants[0].requiredCloseoutActions
+    );
   });
 
   test('Required switches preserve Optional, no-op, Cancel and keyboard staging semantics', async ({
@@ -2833,6 +3462,9 @@ test.describe('Case Policies matrix', () => {
       ).toBeVisible();
       await expect(undo).toBeDisabled();
       await expect(redo).toBeDisabled();
+      await expect(
+        page.getByRole('button', { name: 'Manage columns', exact: true })
+      ).toHaveCount(0);
       await expect(matrixCell(page, 'Form')).toHaveClass(/policy-cell-unsaved/);
     } finally {
       release();
@@ -3113,11 +3745,8 @@ test.describe('Case Policies matrix', () => {
     await decision11;
     await expect(editor).toBeVisible();
     await editor
-      .getByRole('button', {
-        name: 'Not used \u2014 remove requirement 1',
-        exact: true,
-      })
-      .click();
+      .getByRole('switch', { name: 'Requirement 1 Required', exact: true })
+      .uncheck();
     await editor
       .getByRole('button', { name: 'Apply to draft', exact: true })
       .click();
@@ -3142,6 +3771,9 @@ test.describe('Case Policies matrix', () => {
     page,
   }) => {
     const initial = caseMatrixPolicy();
+    initial.referralPolicy.arrangementPolicies[0].arrangementFunctions[0].variants[0].requiredCloseoutActions.push(
+      { actionName: 'Form', isRequired: true }
+    );
     const requests = await backend(page, false, false, initial);
     let saved: EffectiveLocationPolicy | undefined;
     page.on('request', (request) => {
@@ -3208,9 +3840,9 @@ test.describe('Case Policies matrix', () => {
     await editor
       .getByRole('switch', { name: 'Requirement 1 Required', exact: true })
       .setChecked(true);
-    await editor
-      .getByRole('button', { name: 'Add Closeout', exact: true })
-      .click();
+    await expect(
+      editor.getByRole('button', { name: 'Add Closeout', exact: true })
+    ).toHaveCount(0);
     await editor
       .getByRole('switch', { name: 'Requirement 2 Required', exact: true })
       .setChecked(false);
@@ -3249,11 +3881,14 @@ test.describe('Case Policies matrix', () => {
     ).toBe(true);
     expect(
       arrangement.arrangementFunctions[0].variants[0].requiredCloseoutActions
-    ).toEqual([
-      ...initial.referralPolicy.arrangementPolicies[0].arrangementFunctions[0]
-        .variants[0].requiredCloseoutActions,
-      { actionName: 'Form', isRequired: false },
-    ]);
+    ).toEqual(
+      initial.referralPolicy.arrangementPolicies[0].arrangementFunctions[0].variants[0].requiredCloseoutActions.map(
+        (item: { actionName: string }) =>
+          item.actionName === 'Form'
+            ? { actionName: 'Form', isRequired: false }
+            : item
+      )
+    );
     expect(arrangement.arrangementFunctions[0].variants[1]).toEqual(
       initial.referralPolicy.arrangementPolicies[0].arrangementFunctions[0]
         .variants[1]
@@ -3418,11 +4053,8 @@ test.describe('Case Policies matrix', () => {
     await cell.press('Enter');
     editor = page.getByRole('dialog', { name: /^Edit Form/ });
     await editor
-      .getByRole('button', {
-        name: 'Not used \u2014 remove requirement 1',
-        exact: true,
-      })
-      .click();
+      .getByRole('switch', { name: 'Requirement 1 Required', exact: true })
+      .uncheck();
     await editor
       .getByRole('button', { name: 'Apply to draft', exact: true })
       .click();

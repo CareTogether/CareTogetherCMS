@@ -22,16 +22,19 @@ import {
 import { defaultMatrixSchedule, scheduleValidation } from './matrixSchedule';
 import { MatrixScheduleFields } from './MatrixScheduleFields';
 import { variantScheduleSummary } from './arrangementVariantRequirements';
+import type { ActionPhaseResolution } from './casePolicyActionPhases';
 
 export function MatrixRequirementFields({
   value,
   index = 0,
   occupied,
+  phaseLocked = false,
   onChange,
 }: {
   value: Omit<MatrixEdit, 'phase'> & { phase: MatrixEdit['phase'] | '' };
   index?: number;
   occupied: ReadonlySet<MatrixEdit['phase']>;
+  phaseLocked?: boolean;
   onChange: (changes: Partial<MatrixEdit>) => void;
 }) {
   const editorId = useId();
@@ -74,7 +77,9 @@ export function MatrixRequirementFields({
                 value={phase}
                 control={<Radio size="small" />}
                 label={phase}
-                disabled={phase !== value.phase && occupied.has(phase)}
+                disabled={
+                  phase !== value.phase && (phaseLocked || occupied.has(phase))
+                }
               />
             ))}
           </RadioGroup>
@@ -122,12 +127,14 @@ export function CasePolicyMatrixCellEditor({
   requirements,
   shared,
   scopeLabel,
+  phaseResolution,
   onFinished,
 }: {
   params: GridRenderEditCellParams;
   requirements: MatrixRequirement[];
   shared: MatrixRequirement[];
   scopeLabel: string;
+  phaseResolution: ActionPhaseResolution;
   onFinished: () => void;
 }) {
   const initial = requirements
@@ -145,7 +152,17 @@ export function CasePolicyMatrixCellEditor({
   const occupied = new Set(
     [...protectedRows, ...values].map((item) => item.phase)
   );
-  const available = matrixPhases.filter((phase) => !occupied.has(phase));
+  const available = matrixPhases.filter(
+    (phase) =>
+      !occupied.has(phase) &&
+      (phaseResolution.status === 'unused'
+        ? values.length === 0
+        : phaseResolution.status === 'single' &&
+          phase === phaseResolution.phase)
+  );
+  const preserveAssignments =
+    phaseResolution.status === 'conflict' ||
+    phaseResolution.status === 'ambiguous';
   const invalid = values
     .map((item) =>
       item.phase === 'Monitoring'
@@ -234,6 +251,11 @@ export function CasePolicyMatrixCellEditor({
             requirements never override Base. Use the Base column to change base
             requirements.
           </Typography>
+          {phaseResolution.message && (
+            <Alert severity={preserveAssignments ? 'warning' : 'info'}>
+              {phaseResolution.message}
+            </Alert>
+          )}
           {shared.map((item) => (
             <Typography key={item.id} variant="body2" color="primary">
               Base · {item.phase} · {item.isRequired ? 'Required' : 'Optional'}{' '}
@@ -275,10 +297,12 @@ export function CasePolicyMatrixCellEditor({
                 value={item}
                 index={index}
                 occupied={occupied}
+                phaseLocked={phaseResolution.status !== 'unused'}
                 onChange={(changes) => update(index, changes)}
               />
               <Button
                 color="error"
+                disabled={preserveAssignments}
                 onClick={() =>
                   setValues((current) => current.filter((_, i) => i !== index))
                 }
@@ -318,7 +342,9 @@ export function CasePolicyMatrixCellEditor({
             <Button
               variant="contained"
               disabled={
-                !!invalid || JSON.stringify(values) === JSON.stringify(initial)
+                phaseResolution.status === 'ambiguous' ||
+                !!invalid ||
+                JSON.stringify(values) === JSON.stringify(initial)
               }
               onClick={() => void apply()}
             >

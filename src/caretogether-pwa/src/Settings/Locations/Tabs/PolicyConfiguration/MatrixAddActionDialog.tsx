@@ -20,16 +20,23 @@ import {
   type MatrixEdit,
   type MatrixScope,
 } from './casePolicyMatrix';
-import { scheduleValidation } from './matrixSchedule';
+import { defaultMatrixSchedule, scheduleValidation } from './matrixSchedule';
+import {
+  matrixActionPhase,
+  matrixOwner,
+  matrixRequirements,
+} from './casePolicyMatrix';
 
 export function MatrixAddActionDialog({
   policy,
+  baseline,
   visibleActions,
   onClose,
   onFind,
   onApply,
 }: {
   policy: EffectiveLocationPolicy;
+  baseline: EffectiveLocationPolicy;
   visibleActions: string[];
   onClose: () => void;
   onFind: (actionName: string) => void;
@@ -51,6 +58,23 @@ export function MatrixAddActionDialog({
   const scope = scopes.find((item) => item.field === field);
   const stale = policy !== openedPolicy.current;
   const existing = !!actionName && visibleActions.includes(actionName);
+  const phaseResolution = actionName
+    ? matrixActionPhase(policy, baseline, actionName)
+    : undefined;
+  const blockedPhase =
+    phaseResolution?.status === 'conflict' ||
+    phaseResolution?.status === 'ambiguous';
+  const occupied = new Set(
+    scope && actionName
+      ? matrixRequirements(
+          matrixOwner(policy, scope),
+          matrixOwner(baseline, scope)
+        )
+          .filter((item) => item.actionName === actionName)
+          .map((item) => item.phase)
+      : []
+  );
+  const occupiedScope = occupied.size > 0;
   const invalid =
     value.phase === 'Monitoring'
       ? scheduleValidation(value.schedule)
@@ -69,6 +93,8 @@ export function MatrixAddActionDialog({
       !choices.includes(actionName) ||
       !scope ||
       !value.phase ||
+      blockedPhase ||
+      occupiedScope ||
       invalid
     )
       return;
@@ -121,6 +147,16 @@ export function MatrixAddActionDialog({
             }}
             onChange={(_event, name) => {
               setActionName(name);
+              const phase = name
+                ? matrixActionPhase(policy, baseline, name).phase
+                : undefined;
+              setValue({
+                id: 'new-action',
+                phase: phase ?? '',
+                isRequired: true,
+                schedule:
+                  phase === 'Monitoring' ? defaultMatrixSchedule() : undefined,
+              });
               setError(undefined);
             }}
             disabled={stale}
@@ -132,53 +168,64 @@ export function MatrixAddActionDialog({
               />
             )}
           />
-          {existing ? (
+          {phaseResolution?.message && (
+            <Alert severity={blockedPhase ? 'warning' : 'info'}>
+              {phaseResolution.message}
+            </Alert>
+          )}
+          {existing && (
             <Alert severity="info">
               This action already has a matrix row. Find it to configure another
               available scope in the cell editor.
             </Alert>
-          ) : (
-            <>
-              <Autocomplete
-                options={scopes}
-                value={scope ?? null}
-                inputValue={scopeInput}
-                onInputChange={(_event, input, reason) => {
-                  if (reason === 'reset' && !field) return;
-                  setScopeInput(input);
-                  if (reason === 'input') setField(undefined);
-                }}
-                isOptionEqualToValue={(left, right) =>
-                  left.field === right.field
-                }
-                getOptionLabel={(item) =>
-                  item.functionName
-                    ? `${item.arrangement} / ${item.functionName} / ${item.variant} (additional)`
-                    : `${item.arrangement} / Base`
-                }
-                onChange={(_event, item) => {
-                  setField(item?.field);
-                  setError(undefined);
-                }}
-                disabled={stale}
-                renderInput={(params) => (
-                  <TextField {...params} label="Target scope" />
-                )}
-              />
-              <Typography variant="body2">
-                Base requirements apply to every variant. Variant requirements
-                are additional, not overrides.
-              </Typography>
-              <MatrixRequirementFields
-                value={value}
-                occupied={new Set()}
-                onChange={(changes) => {
-                  setValue((current) => ({ ...current, ...changes }));
-                  setError(undefined);
-                }}
-              />
-            </>
           )}
+          {occupiedScope && (
+            <Alert severity="info">
+              This scope already contains this action. Use Find in matrix to
+              edit its requirements.
+            </Alert>
+          )}
+          <>
+            <Autocomplete
+              options={scopes}
+              value={scope ?? null}
+              inputValue={scopeInput}
+              onInputChange={(_event, input, reason) => {
+                if (reason === 'reset' && !field) return;
+                setScopeInput(input);
+                if (reason === 'input') setField(undefined);
+              }}
+              isOptionEqualToValue={(left, right) => left.field === right.field}
+              getOptionLabel={(item) =>
+                item.functionName
+                  ? `${item.arrangement} / ${item.functionName} / ${item.variant} (additional)`
+                  : `${item.arrangement} / Base`
+              }
+              onChange={(_event, item) => {
+                setField(item?.field);
+                setError(undefined);
+              }}
+              disabled={stale}
+              renderInput={(params) => (
+                <TextField {...params} label="Target scope" />
+              )}
+            />
+            <Typography variant="body2">
+              Base requirements apply to every variant. Variant requirements are
+              additional, not overrides.
+            </Typography>
+            <MatrixRequirementFields
+              value={value}
+              occupied={new Set()}
+              phaseLocked={
+                phaseResolution?.status !== 'unused' && !!phaseResolution
+              }
+              onChange={(changes) => {
+                setValue((current) => ({ ...current, ...changes }));
+                setError(undefined);
+              }}
+            />
+          </>
           {(invalid || error) && (
             <Alert severity="error">{invalid || error}</Alert>
           )}
@@ -186,7 +233,7 @@ export function MatrixAddActionDialog({
       </DialogContent>
       <DialogActions sx={{ flexWrap: 'wrap' }}>
         <Button onClick={onClose}>Cancel</Button>
-        {existing ? (
+        {existing && (
           <Button
             variant="contained"
             disabled={stale}
@@ -196,22 +243,23 @@ export function MatrixAddActionDialog({
           >
             Find in matrix
           </Button>
-        ) : (
-          <Button
-            variant="contained"
-            disabled={
-              stale ||
-              !actionName ||
-              !choices.includes(actionName) ||
-              !scope ||
-              !value.phase ||
-              !!invalid
-            }
-            onClick={apply}
-          >
-            Apply to draft
-          </Button>
         )}
+        <Button
+          variant="contained"
+          disabled={
+            stale ||
+            !actionName ||
+            !choices.includes(actionName) ||
+            !scope ||
+            !value.phase ||
+            blockedPhase ||
+            occupiedScope ||
+            !!invalid
+          }
+          onClick={apply}
+        >
+          Apply to draft
+        </Button>
       </DialogActions>
     </Dialog>
   );

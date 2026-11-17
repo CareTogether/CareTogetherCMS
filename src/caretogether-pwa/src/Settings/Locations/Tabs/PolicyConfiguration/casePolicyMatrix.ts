@@ -7,6 +7,11 @@ import type {
   RecurrencePolicy,
 } from '../../../../GeneratedClient.ts';
 import { scheduleValidation } from './matrixSchedule.ts';
+import {
+  resolveActionPhases,
+  validateActionPhaseEdits,
+  type ActionPhaseContribution,
+} from './casePolicyActionPhases.ts';
 
 export const matrixPhases = ['Setup', 'Monitoring', 'Closeout'] as const;
 export type MatrixPhase = (typeof matrixPhases)[number];
@@ -339,6 +344,53 @@ export function matrixActionChoices(policy: EffectiveLocationPolicy) {
   );
 }
 
+export function matrixActionPhase(
+  policy: EffectiveLocationPolicy,
+  baseline: EffectiveLocationPolicy,
+  actionName: string
+) {
+  const baselineOwners = matrixOwners(baseline);
+  const validScopes = new Set(
+    matrixScopes(policy).scopes.map((item) => item.field)
+  );
+  const definitions = policy.actionDefinitions ?? {};
+  const aliases = definitions[actionName]?.alternateNames ?? [];
+  const contributions: ActionPhaseContribution[] = [];
+  for (const [key, owners] of matrixOwners(policy))
+    owners.forEach((owner, index) => {
+      for (const row of matrixRequirements(
+        owner,
+        baselineOwners.get(key)?.[index] ?? owner
+      )) {
+        const exact = row.actionName === actionName;
+        const related =
+          row.actionName?.trim().toLowerCase() ===
+            actionName.trim().toLowerCase() ||
+          (!Object.hasOwn(definitions, row.actionName) &&
+            aliases.includes(row.actionName));
+        if (!exact && !related) continue;
+        const path = JSON.parse(key) as (string | null)[];
+        contributions.push({
+          scope:
+            path.filter((item) => item !== null).join(' / ') +
+            (path[1] === null ? ' / Base' : ''),
+          phase: row.phase,
+          source: row.source,
+          ambiguous:
+            !exact ||
+            !validScopes.has(key) ||
+            owners.length !== 1 ||
+            row.readOnlyReason ===
+              'Duplicate or mixed-source contribution; read-only.',
+        });
+      }
+    });
+  return resolveActionPhases(
+    matrixActionIsResolved(policy, actionName),
+    contributions
+  );
+}
+
 export function applyMatrixEdits(
   policy: EffectiveLocationPolicy,
   baseline: EffectiveLocationPolicy,
@@ -400,6 +452,11 @@ export function applyMatrixEdits(
     )
       throw new Error('The schedule changed. Review the current requirement.');
   }
+  validateActionPhaseEdits(
+    matrixActionPhase(policy, baseline, actionName),
+    editable,
+    edits
+  );
   const changes: Partial<MatrixOwner> = {};
   for (const phase of matrixPhases) {
     const key =

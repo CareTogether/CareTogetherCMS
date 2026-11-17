@@ -297,6 +297,10 @@ test('dirty cells compare their own sources without marking inherited shared cop
 
 test('variant dirty cells include multiple phases and remain independent of shared and sibling requirements', () => {
   const base = policy();
+  base.referralPolicy.arrangementPolicies[0].arrangementFunctions[0].variants[0].requiredCloseoutActions =
+    [
+      { actionName: 'Form', isRequired: true },
+    ] as (typeof base.referralPolicy.arrangementPolicies)[0]['requiredCloseoutActions'];
   const scopes = matrixScopes(base).scopes;
   const value = applyMatrixEdits(
     base,
@@ -309,7 +313,11 @@ test('variant dirty cells include multiple phases and remain independent of shar
         phase: 'Setup',
         isRequired: true,
       },
-      { id: 'additional', phase: 'Closeout', isRequired: false },
+      {
+        id: JSON.stringify(['Closeout', 'Current', 0]),
+        phase: 'Closeout',
+        isRequired: false,
+      },
     ],
     materialize()
   );
@@ -427,7 +435,17 @@ test('compatibility mirrors and shifted source indices cannot create false dirty
 test('dirty markers follow successful saves, failed saves, Cancel, reloads and location-scoped baselines', async () => {
   const base = policy();
   const scope = matrixScopes(base).scopes[1];
-  const value = applyMatrixEdits(base, base, scope, 'Form', [], materialize());
+  const value = applyMatrixEdits(
+    base,
+    base,
+    scope,
+    'Form',
+    matrixRequirements(matrixOwner(base, scope)).map((row) => ({
+      ...row,
+      isRequired: !row.isRequired,
+    })),
+    materialize()
+  );
   const staged = { ...createPolicyGridDraft(base, 'org/location-a'), value };
   const changed = (state: typeof staged) =>
     matrixCellHasChanges(
@@ -521,6 +539,10 @@ test('shared changes synchronize by projection without writing copies into varia
 
 test('variant edits preserve shared and sibling contributions, histories and multiple phases', () => {
   const value = policy();
+  value.referralPolicy.arrangementPolicies[0].arrangementFunctions[0].variants[0].requiredCloseoutActions =
+    [
+      { actionName: 'Form', isRequired: true },
+    ] as (typeof value.referralPolicy.arrangementPolicies)[0]['requiredCloseoutActions'];
   const scope = matrixScopes(value).scopes[1];
   const owner = matrixOwner(value, scope);
   const original = matrixRequirements(owner);
@@ -531,7 +553,7 @@ test('variant edits preserve shared and sibling contributions, histories and mul
     'Form',
     [
       { id: original[0].id, phase: 'Setup', isRequired: true },
-      { id: 'new-closeout', phase: 'Closeout', isRequired: false },
+      { id: original[1].id, phase: 'Closeout', isRequired: false },
     ],
     materialize()
   );
@@ -559,6 +581,7 @@ test('variant edits preserve shared and sibling contributions, histories and mul
 
 test('Not used removes only editable contributions and no-op edits return the original policy', () => {
   const value = policy();
+  value.referralPolicy.arrangementPolicies[0].requiredMonitoringActionsNew = [];
   const scope = matrixScopes(value).scopes[0];
   const rows = matrixRequirements(matrixOwner(value, scope));
   const same = applyMatrixEdits(

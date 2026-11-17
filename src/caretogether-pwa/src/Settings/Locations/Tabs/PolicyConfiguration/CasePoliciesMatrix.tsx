@@ -16,6 +16,7 @@ import {
   type GridColumnGroupingModel,
 } from '@mui/x-data-grid-premium';
 import { useEffect, useMemo, useState } from 'react';
+import { useLocation } from 'react-router-dom';
 import {
   EffectiveLocationPolicy,
   MonitoringRequirement,
@@ -30,6 +31,7 @@ import { discardPolicyGridCellEdits } from './policyGridDraft';
 import {
   arrangementUsedActions,
   matrixActionIsResolved,
+  matrixActionPhase,
   type MatrixScope,
   matrixOwner,
   matrixCellHasChanges,
@@ -42,6 +44,13 @@ import {
 } from './casePolicyMatrix';
 import { CasePolicyMatrixCellEditor } from './CasePolicyMatrixCellEditor';
 import { MatrixAddActionDialog } from './MatrixAddActionDialog';
+import { MatrixColumnsManagement } from './MatrixColumnsManagement';
+import {
+  arrangementColumns,
+  arrangementVisibilityModel,
+  reconcileHiddenArrangements,
+  toggleArrangementVisibility,
+} from './matrixColumnVisibility';
 import { variantScheduleSummary } from './arrangementVariantRequirements';
 import {
   CasePolicyMatrixToolbar,
@@ -97,8 +106,13 @@ function MatrixCellContents({
         </Box>
       )}
       {cell.own.length + cell.shared.length === 0 && (
-        <Typography variant="body2" color="text.secondary">
-          Not used
+        <Typography
+          variant="body2"
+          color="text.secondary"
+          role="img"
+          aria-label="Not used"
+        >
+          —
         </Typography>
       )}
       {[
@@ -262,6 +276,47 @@ export function CasePoliciesMatrix({
     () => matrixScopes(draft.value),
     [draft.value]
   );
+  const { pathname } = useLocation();
+  const groups = useMemo(() => arrangementColumns(scopes), [scopes]);
+  const [visibility, setVisibility] = useState<{
+    scope: string;
+    hidden: ReadonlySet<string>;
+  }>(() => ({ scope: pathname, hidden: new Set() }));
+  const hidden = useMemo(
+    () =>
+      visibility.scope === pathname
+        ? reconcileHiddenArrangements(visibility.hidden, groups)
+        : new Set<string>(),
+    [visibility, groups, pathname]
+  );
+  const columnVisibilityModel = useMemo(
+    () => arrangementVisibilityModel(groups, hidden),
+    [groups, hidden]
+  );
+  useEffect(() => {
+    setVisibility((current) => {
+      const next =
+        current.scope === pathname
+          ? reconcileHiddenArrangements(current.hidden, groups)
+          : new Set<string>();
+      return current.scope === pathname && current.hidden === next
+        ? current
+        : { scope: pathname, hidden: next };
+    });
+  }, [groups, pathname]);
+  function toggleVisibility(id: string) {
+    if (editing || draft.saving || !groups.some((group) => group.id === id))
+      return;
+    setVisibility((current) => ({
+      scope: pathname,
+      hidden: toggleArrangementVisibility(
+        current.scope === pathname
+          ? reconcileHiddenArrangements(current.hidden, groups)
+          : new Set(),
+        id
+      ),
+    }));
+  }
   const rows: MatrixRow[] = useMemo(() => {
     const baseFields = new Set(
       matrixScopes(draft.base).scopes.map((item) => item.field)
@@ -323,6 +378,16 @@ export function CasePoliciesMatrix({
       ),
     }));
   }, [draft.base, draft.value, policy, scopes]);
+  const actionPhases = useMemo(
+    () =>
+      new Map(
+        rows.map((row) => [
+          row.actionName,
+          matrixActionPhase(draft.value, policy, row.actionName),
+        ])
+      ),
+    [rows, draft.value, policy]
+  );
   useEffect(() => {
     const api = apiRef.current;
     if (!api || !finding || editing) return;
@@ -394,6 +459,7 @@ export function CasePoliciesMatrix({
   const columns: GridColDef<MatrixRow>[] = [
     {
       field: 'actionName',
+      hideable: false,
       headerName: 'Actions',
       minWidth: 140,
       width: compact ? 140 : 240,
@@ -407,11 +473,29 @@ export function CasePoliciesMatrix({
               Unresolved reference · read-only
             </Typography>
           )}
+          {['conflict', 'ambiguous'].includes(
+            actionPhases.get(row.actionName)!.status
+          ) &&
+            !row.unresolved && (
+              <Typography variant="caption" color="warning.main">
+                {actionPhases.get(row.actionName)!.status === 'conflict'
+                  ? 'Phase conflict: ' +
+                    [
+                      ...new Set(
+                        actionPhases
+                          .get(row.actionName)!
+                          .contributions.map((item) => item.phase)
+                      ),
+                    ].join(', ')
+                  : 'Ambiguous arrangement phase'}
+              </Typography>
+            )}
         </Stack>
       ),
     },
     ...scopes.map((scope) => ({
       field: scope.field,
+      hideable: false,
       headerName: scope.functionName ? scope.label + ' (variant)' : scope.label,
       renderHeader: scope.functionName
         ? () => <MatrixGroupHeader name={scope.label} kind="variant" />
@@ -446,6 +530,7 @@ export function CasePoliciesMatrix({
             params={params}
             requirements={params.row.cells[scope.field].own}
             shared={params.row.cells[scope.field].shared}
+            phaseResolution={actionPhases.get(params.row.actionName)!}
             scopeLabel={
               scope.functionName
                 ? scope.functionName + ' / ' + scope.variant
@@ -534,6 +619,7 @@ export function CasePoliciesMatrix({
         {adding && (
           <MatrixAddActionDialog
             policy={draft.value}
+            baseline={policy}
             visibleActions={rows.map((row) => row.actionName)}
             onClose={() => setAdding(false)}
             onFind={(name) => {
@@ -600,13 +686,25 @@ export function CasePoliciesMatrix({
             }
             columns={columns}
             columnGroupingModel={grouping}
+            columnVisibilityModel={columnVisibilityModel}
             columnGroupHeaderHeight={42}
             getRowHeight={() => 'auto'}
             getEstimatedRowHeight={() => 120}
             showToolbar
             historyStackSize={0}
-            slots={{ toolbar: CasePolicyMatrixToolbar }}
+            slots={{
+              toolbar: CasePolicyMatrixToolbar,
+              columnsManagement: MatrixColumnsManagement,
+            }}
             slotProps={{
+              columnsManagement: {
+                arrangementVisibility: {
+                  groups,
+                  hidden,
+                  disabled: editing || draft.saving,
+                  onToggle: toggleVisibility,
+                },
+              },
               toolbar: { sx: { flexWrap: 'wrap', flex: '0 0 auto' } },
               baseButton: { disabled: editing },
               baseIconButton: { disabled: editing },
@@ -621,9 +719,9 @@ export function CasePoliciesMatrix({
             disableAggregation
             disablePivoting
             disableRowGrouping
-            disableColumnMenu={editing}
+            disableColumnMenu={editing || draft.saving}
             disableColumnFilter={editing}
-            disableColumnSelector={editing}
+            disableColumnSelector={editing || draft.saving}
             disableColumnReorder={editing}
             disableColumnSorting={editing}
             isCellEditable={({ row, field }) => {
