@@ -253,13 +253,13 @@ namespace CareTogether.Resources.Policies
         ImmutableList<ArrangementPolicyVersion>? PolicyVersions = null
     )
     {
-        public ImmutableList<RequirementDefinition> RequiredSetupActions_PRE_MIGRATION =
+        public ImmutableList<RequirementDefinition> RequiredSetupActions_PRE_MIGRATION =>
             RequiredSetupActionNames
                 .Select(requirementName => new RequirementDefinition(requirementName, true))
                 .Concat(RequiredSetupActions ?? ImmutableList<RequirementDefinition>.Empty)
                 .ToImmutableList();
 
-        public ImmutableList<MonitoringRequirement> RequiredMonitoringActions_PRE_MIGRATION =
+        public ImmutableList<MonitoringRequirement> RequiredMonitoringActions_PRE_MIGRATION =>
             RequiredMonitoringActions
                 .Select(requirement => new MonitoringRequirement(
                     new RequirementDefinition(requirement.ActionName, true),
@@ -268,7 +268,7 @@ namespace CareTogether.Resources.Policies
                 .Concat(RequiredMonitoringActionsNew ?? ImmutableList<MonitoringRequirement>.Empty)
                 .ToImmutableList();
 
-        public ImmutableList<RequirementDefinition> RequiredCloseoutActionNames_PRE_MIGRATION =
+        public ImmutableList<RequirementDefinition> RequiredCloseoutActionNames_PRE_MIGRATION =>
             RequiredCloseoutActionNames
                 .Select(requirementName => new RequirementDefinition(requirementName, true))
                 .Concat(RequiredCloseoutActions ?? ImmutableList<RequirementDefinition>.Empty)
@@ -354,13 +354,13 @@ namespace CareTogether.Resources.Policies
         ImmutableList<RequirementDefinition>? RequiredCloseoutActions
     )
     {
-        public ImmutableList<RequirementDefinition> RequiredSetupActionNames_PRE_MIGRATION =
+        public ImmutableList<RequirementDefinition> RequiredSetupActionNames_PRE_MIGRATION =>
             RequiredSetupActionNames
                 .Select(requirementName => new RequirementDefinition(requirementName, true))
                 .Concat(RequiredSetupActions ?? ImmutableList<RequirementDefinition>.Empty)
                 .ToImmutableList();
 
-        public ImmutableList<MonitoringRequirement> RequiredMonitoringActions_PRE_MIGRATION =
+        public ImmutableList<MonitoringRequirement> RequiredMonitoringActions_PRE_MIGRATION =>
             RequiredMonitoringActions
                 .Select(requirement => new MonitoringRequirement(
                     new RequirementDefinition(requirement.ActionName, true),
@@ -369,7 +369,7 @@ namespace CareTogether.Resources.Policies
                 .Concat(RequiredMonitoringActionsNew ?? ImmutableList<MonitoringRequirement>.Empty)
                 .ToImmutableList();
 
-        public ImmutableList<RequirementDefinition> RequiredCloseoutActionNames_PRE_MIGRATION =
+        public ImmutableList<RequirementDefinition> RequiredCloseoutActionNames_PRE_MIGRATION =>
             RequiredCloseoutActionNames
                 .Select(requirementName => new RequirementDefinition(requirementName, true))
                 .Concat(RequiredCloseoutActions ?? ImmutableList<RequirementDefinition>.Empty)

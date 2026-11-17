@@ -1,11 +1,23 @@
+import {
+  settingsSections,
+  settingsSectionPath,
+} from '../src/Settings/settingsSections';
 import { type Page } from '@playwright/test';
+import { createTheme } from '@mui/material/styles';
 import { expect, test } from './support/fixtures';
-import { SELF_SERVICE_POLICY_FEATURE_FLAG } from '../src/featureFlags';
+import {
+  SELF_SERVICE_POLICY_FEATURE_FLAG,
+  ORGANIZATION_CATEGORIES_FEATURE_FLAG,
+} from '../src/featureFlags';
 import { build } from 'rolldown';
 import { ignoreModuleLevelDirectives } from './support/harnessBuild';
 import { fileURLToPath } from 'node:url';
 import { readFileSync } from 'node:fs';
-import { EffectiveLocationPolicy } from '../src/GeneratedClient';
+import {
+  EffectiveLocationPolicy,
+  DocumentLinkRequirement,
+  NoteEntryRequirement,
+} from '../src/GeneratedClient';
 
 let bundle: string;
 const warning =
@@ -16,33 +28,23 @@ const blockingError =
 test.use({
   storageState: { cookies: [], origins: [] },
   video: 'off',
-  featureFlags: { [SELF_SERVICE_POLICY_FEATURE_FLAG]: true },
+  featureFlags: {
+    [SELF_SERVICE_POLICY_FEATURE_FLAG]: true,
+  },
 });
 
 test.beforeAll(async () => {
   const mocks: Record<string, string> = {
-    ConfigurationModel: `export function useOrganizationConfiguration() { return { locations: [{id:'a',name:'Location A'}, {id:'b',name:'Location B'}], roles: [] }; }`,
-    SessionModel: `export function useGlobalPermissions() { return () => true; }`,
-    Data: `export function useRequiredSelectedLocationContext() { return { organizationId: 'org', locationId: 'a' }; }
+    ConfigurationModel: `import { atom } from 'jotai'; export const organizationConfigurationEdited = atom(null); export function useOrganizationConfiguration() { return { locations: [{id:'a',name:'Location A'}, {id:'b',name:'Location B'}], roles: window.__QA_ROLES__ ?? [] }; } export const useOrganizationConfigurationLoadable = useOrganizationConfiguration;`,
+    SessionModel: `export function useGlobalPermissions() { return () => window.__QA_ALLOWED__ !== false; } export function useUserIsOrganizationAdministrator() { return window.__QA_ADMIN__ === true; } export const useGlobalPermissionsLoadable = useGlobalPermissions; export const useUserIsOrganizationAdministratorLoadable = useUserIsOrganizationAdministrator;`,
+    Data: `import { useParams, useLocation } from 'react-router-dom'; export function useRequiredSelectedLocationContext() { const params = useParams(); const parts = useLocation().pathname.split('/'); return { organizationId: params.organizationId ?? parts[2] ?? 'org', locationId: params.locationId ?? parts[3] ?? 'a' }; }
       export function useSelectedLocationContext() { return useRequiredSelectedLocationContext(); }
-      const families = []; export function useVisibleFamilies() { return families; }`,
+      const families = []; export function useVisibleFamilies() { return window.__QA_VISIBLE_FAMILIES__ ?? families; }`,
     AuthenticatedHttp: `export const authenticatingFetch = { fetch: (...args) => window.fetch(...args) };`,
     ShellScreenTitle: `export function useScreenTitle() {}`,
-    useAppNavigate: `export function useAppNavigate() { return { dashboard() {} }; }`,
-    BasicConfiguration: `export default function BasicConfiguration() { return 'Basic configuration'; }`,
-    AccessLevels: `export default function AccessLevels() { return null; }`,
     'posthog-js/react': `export function useFeatureFlagEnabled(flag) { return window.__CARETOGETHER_E2E_FEATURE_FLAGS__?.[flag] ?? true; }
       const posthog = { featureFlags: { hasLoadedFlags: true } }; export function usePostHog() { return posthog; }`,
   };
-  for (const name of [
-    'ActionDefinitionsTab',
-    'CustomFamilyFieldsTab',
-    'V1ReferralPolicyTab',
-    'VolunteerPolicyTab',
-    'OrganizationPolicyTab',
-  ])
-    mocks[name] = `export function ${name}() { return null; }`;
-
   const result = await build({
     input: fileURLToPath(
       new URL('./policy-validation-harness.tsx', import.meta.url)
@@ -73,7 +75,7 @@ test.beforeAll(async () => {
         },
       },
     ],
-    output: { format: 'iife' },
+    output: { format: 'iife', name: 'PolicySettingsHarness' },
     write: false,
   });
   const output = result.output.find((item) => item.type === 'chunk');
@@ -112,19 +114,54 @@ function policy() {
   };
 }
 
-async function mount(page: Page, tab = 'basic') {
-  await page.route('**/settings/locations/*', (route) =>
+async function mount(
+  page: Page,
+  tab = 'basic',
+  initialUrl?: string,
+  matrix = false
+) {
+  await page.route('**/settings**', (route) =>
     route.fulfill({
       contentType: 'text/html',
       body: '<html><body><div id="root"></div></body></html>',
     })
   );
-  await page.goto(`/org/org/a/settings/locations/a?tab=${tab}`);
+  await page.goto(
+    initialUrl ??
+      settingsSectionPath(
+        'org',
+        'a',
+        tab === 'basic'
+          ? 'actionDefinitions'
+          : (tab as (typeof settingsSections)[number]['id'])
+      )
+  );
   await page.addScriptTag({ content: bundle });
+  if (tab === 'casePolicy' && !matrix) {
+    const action = page.getByRole('button', {
+      name: 'Manage Arrangements & Functions',
+      exact: true,
+    });
+    await expect(
+      action
+        .or(
+          page
+            .getByRole('alert')
+            .filter({ hasText: 'This location is restricted or unavailable.' })
+        )
+        .or(page.getByRole('heading', { name: 'Settings', level: 1 }))
+    ).toBeVisible();
+    if (await action.isVisible()) await openCaseAdministration(page);
+  }
 }
-
-async function backend(page: Page, saveFails = false, keepWarnings = false) {
-  let stored = policy();
+async function backend(
+  page: Page,
+  saveFails = false,
+  keepWarnings = false,
+  initialPolicy = policy()
+) {
+  await page.route('**/api/**', (route) => route.abort());
+  let stored = initialPolicy;
   let puts = 0;
   let validations = 0;
   await page.route('**/Configuration/policy', async (route) => {
@@ -150,15 +187,71 @@ async function backend(page: Page, saveFails = false, keepWarnings = false) {
   return { puts: () => puts, validations: () => validations };
 }
 
+async function policyDecision(page: Page, leave: boolean) {
+  const dialog = page.getByRole('dialog', {
+    name: 'Unsaved changes',
+    exact: true,
+  });
+  await expect(dialog).toBeVisible();
+  await dialog
+    .getByRole('button', {
+      name: leave ? 'Discard & Leave' : 'Keep Editing',
+      exact: true,
+    })
+    .click();
+  await expect(dialog).toBeHidden();
+}
+
+async function keepDuringSave(page: Page) {
+  const dialog = page.getByRole('dialog', {
+    name: 'Save in progress',
+    exact: true,
+  });
+  await expect(dialog).toBeVisible();
+  await expect(
+    dialog.getByRole('button', { name: 'Discard & Leave', exact: true })
+  ).toHaveCount(0);
+  await dialog
+    .getByRole('button', { name: 'Keep Editing', exact: true })
+    .click();
+  await expect(dialog).toBeHidden();
+}
+
+async function cancelPolicyForm(page: Page) {
+  await page.getByRole('button', { name: 'Cancel', exact: true }).click();
+  const dialog = page.getByRole('dialog', {
+    name: 'Unsaved changes',
+    exact: true,
+  });
+  if (await dialog.isVisible()) await policyDecision(page, true);
+}
+async function openCaseAdministration(page: Page) {
+  const action = page.getByRole('button', {
+    name: 'Manage Arrangements & Functions',
+    exact: true,
+  });
+  const drawer = page.getByRole('dialog', {
+    name: 'Manage Arrangements & Functions',
+    exact: true,
+  });
+  await expect(action.or(drawer)).toBeVisible();
+  if (await action.isVisible()) await action.click();
+  await expect(drawer).toBeVisible();
+}
 async function addFunction(
   page: Page,
   arrangement = 'Hosting',
   role = 'Family Friend'
 ) {
-  await page.getByText('Arrangements', { exact: true }).click();
-  await page.getByText(arrangement, { exact: true }).click();
-  await page.getByText('Arrangement Functions', { exact: true }).click();
-  const section = page
+  await openCaseAdministration(page);
+  const management = page.getByRole('dialog', {
+    name: 'Manage Arrangements & Functions',
+    exact: true,
+  });
+  await management.getByText('Arrangements', { exact: true }).click();
+  await management.getByText(arrangement, { exact: true }).click();
+  await management.getByText('Arrangement Functions', { exact: true }).click();
+  const section = management
     .locator('.MuiAccordion-root')
     .filter({ has: page.getByText('Arrangement Functions', { exact: true }) })
     .last();
@@ -173,13 +266,4837 @@ async function addFunction(
   await page.getByRole('textbox', { name: 'Function', exact: true }).click();
 }
 
-test('initial Basic Settings shows warnings once and never saves', async ({
+function requirementPolicy() {
+  const initial = policy();
+  Object.assign(initial.actionDefinitions, {
+    Form: { documentLink: 0, noteEntry: 0 },
+    'New activity': { documentLink: 0, noteEntry: 0 },
+  });
+  Object.assign(initial.referralPolicy.arrangementPolicies[0], {
+    requiredSetupActions: [{ actionName: 'Form', isRequired: true }],
+    requiredCloseoutActions: [{ actionName: 'Form', isRequired: true }],
+    requiredMonitoringActionsNew: [
+      {
+        action: { actionName: 'Form', isRequired: true },
+        recurrence: {
+          discriminator: 'DurationStagesRecurrencePolicy',
+          stages: [{ delay: '2.00:00:00', maxOccurrences: 3 }],
+        },
+      },
+    ],
+    policyVersions: [
+      {
+        version: 'Historical',
+        requiredSetupActions: [{ actionName: 'Form', isRequired: true }],
+      },
+    ],
+  });
+  return initial;
+}
+
+function variantViewerPolicy() {
+  const initial = requirementPolicy();
+  Object.assign(initial.referralPolicy.arrangementPolicies[0], {
+    arrangementFunctions: [
+      {
+        functionName: 'Provider function',
+        requirement: 0,
+        variants: [
+          {
+            variantName: 'First profile',
+            requiredSetupActions: [
+              { actionName: 'First setup', isRequired: true },
+            ],
+            requiredMonitoringActionsNew: [
+              {
+                action: { actionName: 'First monitoring', isRequired: false },
+                recurrence: {
+                  discriminator:
+                    'DurationStagesPerChildLocationRecurrencePolicy',
+                  stages: [
+                    { delay: '2.00:00:00', maxOccurrences: 1 },
+                    { delay: '7.00:00:00', maxOccurrences: null },
+                  ],
+                },
+              },
+            ],
+            requiredCloseoutActions: [
+              { actionName: 'First closeout', isRequired: true },
+            ],
+          },
+          {
+            variantName: 'Second profile',
+            requiredSetupActions: [
+              { actionName: 'Second setup', isRequired: true },
+            ],
+            requiredMonitoringActionsNew: [
+              {
+                action: { actionName: 'Second monitoring', isRequired: true },
+                recurrence: {
+                  discriminator: 'OneTimeRecurrencePolicy',
+                  delay: '3.00:00:00',
+                },
+              },
+            ],
+            requiredCloseoutActions: [],
+          },
+          {
+            variantName: 'Empty profile',
+            requiredSetupActions: [],
+            requiredMonitoringActionsNew: [],
+            requiredCloseoutActions: [],
+          },
+        ],
+      },
+      {
+        functionName: 'Coordinator function',
+        requirement: 0,
+        variants: [
+          {
+            variantName: 'Coordinator profile',
+            requiredSetupActions: [
+              { actionName: 'Coordinator setup', isRequired: true },
+            ],
+          },
+        ],
+      },
+      { functionName: 'No variants function', requirement: 0, variants: [] },
+    ],
+  });
+  return initial;
+}
+
+function editableVariantPolicy() {
+  const value = variantViewerPolicy();
+  const model = EffectiveLocationPolicy.fromJS(value);
+  for (const arrangement of model.referralPolicy.arrangementPolicies)
+    for (const fn of arrangement.arrangementFunctions)
+      for (const variant of fn.variants) {
+        for (const item of [
+          ...(variant.requiredSetupActions ?? []),
+          ...(variant.requiredCloseoutActions ?? []),
+          ...(variant.requiredMonitoringActionsNew ?? []).map(
+            (item) => item.action
+          ),
+        ])
+          Object.assign(value.actionDefinitions, {
+            [item.actionName]: { documentLink: 0, noteEntry: 0 },
+          });
+      }
+  return value;
+}
+
+for (const section of settingsSections)
+  test(
+    'dedicated Settings route renders ' + section.label,
+    async ({ page }) => {
+      const requests = await backend(page);
+      await mount(page, section.id, undefined, section.id === 'casePolicy');
+      await expect(
+        page
+          .getByRole('navigation', { name: 'breadcrumb' })
+          .getByText(section.label, { exact: true })
+      ).toBeVisible();
+      await expect(page.getByText(/^Location:/)).toHaveCount(0);
+      await expect(
+        page.getByRole('heading', { name: section.label, exact: true })
+      ).toHaveCount(0);
+      await expect(
+        page.getByRole('region', { name: section.label, exact: true })
+      ).toBeVisible();
+      const content = {
+        actionDefinitions: () =>
+          page.getByRole('grid', { name: 'Action Definitions', exact: true }),
+        customFamilyFields: () =>
+          page.getByRole('button', { name: 'Add', exact: true }),
+        casePolicy: () =>
+          page.getByRole('grid', {
+            name: 'Case Policies requirements matrix',
+            exact: true,
+          }),
+        v1ReferralPolicy: () =>
+          page.getByText('Intake Requirements', { exact: true }),
+        volunteerPolicy: () =>
+          page.getByText('Volunteer Roles', { exact: true }),
+        organizationPolicy: () =>
+          page.getByRole('heading', {
+            name: 'Organization approval roles',
+            exact: true,
+          }),
+        accessLevels: () =>
+          page.getByText('No access levels yet for this location.', {
+            exact: true,
+          }),
+      };
+      await expect(content[section.id]()).toBeVisible();
+      expect(requests.puts()).toBe(0);
+    }
+  );
+
+test('Case Policies opens integrated administration without leaving the matrix', async ({
+  page,
+}) => {
+  const requests = await backend(page);
+  await mount(page, 'casePolicy', undefined, true);
+  for (const name of ['Add Arrangement', 'Manage Arrangements & Functions']) {
+    await expect(page.getByRole('button', { name, exact: true })).toHaveClass(
+      /(?=.*MuiButton-contained)(?=.*MuiButton-colorPrimary)/
+    );
+  }
+  await expect(
+    page.getByRole('group', { name: 'Case Policies view' })
+  ).toHaveCount(0);
+  await expect(
+    page.getByRole('button', { name: /^(Requirements matrix|Policy editor)$/i })
+  ).toHaveCount(0);
+  await expect(
+    page.getByRole('heading', { name: /Requirements matrix/i })
+  ).toHaveCount(0);
+  await expect(
+    page.getByRole('grid', {
+      name: 'Case Policies requirements matrix',
+      exact: true,
+    })
+  ).toBeVisible();
+  await page
+    .getByRole('button', {
+      name: 'Manage Arrangements & Functions',
+      exact: true,
+    })
+    .click();
+  await expect(page).toHaveURL('/org/org/a/settings/case-policies');
+  await expect(
+    page.getByRole('dialog', {
+      name: 'Manage Arrangements & Functions',
+      exact: true,
+    })
+  ).toBeVisible();
+  await expect(page.getByText('Arrangements', { exact: true })).toBeVisible();
+  const management = page.getByRole('dialog', {
+    name: 'Manage Arrangements & Functions',
+    exact: true,
+  });
+  await expect(management.getByRole('grid')).toHaveCount(0);
+  await expect(
+    management.getByRole('button', { name: 'Save changes', exact: true })
+  ).toHaveCount(0);
+  await expect(
+    management.getByText(/Required (Setup|Monitoring|Closeout) Actions/)
+  ).toHaveCount(0);
+  await expect(
+    page.getByRole('button', { name: 'Back to Case Policies', exact: true })
+  ).toHaveCount(0);
+  await expect(
+    page.getByRole('link', { name: 'Open administration page', exact: true })
+  ).toHaveCount(0);
+  await expect(
+    page.getByRole('heading', { name: 'Case Policies', exact: true })
+  ).toHaveCount(0);
+  await page
+    .getByRole('button', { name: 'Close administration', exact: true })
+    .click();
+  await expect(page).toHaveURL('/org/org/a/settings/case-policies');
+  await expect(
+    page.getByRole('grid', {
+      name: 'Case Policies requirements matrix',
+      exact: true,
+    })
+  ).toBeVisible();
+  expect(requests.puts()).toBe(0);
+});
+
+test('administration retains arrangement forms, eligibility and case function controls', async ({
+  page,
+}) => {
+  const requests = await backend(page);
+  await mount(
+    page,
+    'casePolicy',
+    '/org/org/a/settings/case-policies/administration'
+  );
+  await expect(page.getByText('Functions', { exact: true })).toBeVisible();
+  await page.getByText('Arrangements', { exact: true }).click();
+  const arrangements = page
+    .locator('.MuiAccordion-root')
+    .filter({ has: page.getByText('Arrangements', { exact: true }) })
+    .first();
+  await arrangements.getByRole('button', { name: 'Add', exact: true }).click();
+  await expect(
+    page.getByRole('textbox', { name: 'Arrangement Type', exact: true })
+  ).toBeVisible();
+  await expect(
+    page.getByRole('combobox', { name: 'Child Involvement', exact: true })
+  ).toBeVisible();
+  await expect(page.getByLabel('Superseded', { exact: true })).toBeVisible();
+  await cancelPolicyForm(page);
+  await page.getByText('Arrangements', { exact: true }).click();
+  await addFunction(page);
+  await expect(
+    page.getByRole('combobox', { name: 'Requirement', exact: true })
+  ).toBeVisible();
+  await expect(
+    page.getByRole('combobox', {
+      name: 'Eligible Individual Volunteer Roles',
+      exact: true,
+    })
+  ).toBeVisible();
+  await expect(
+    page.getByRole('combobox', {
+      name: 'Eligible Volunteer Family Roles',
+      exact: true,
+    })
+  ).toBeVisible();
+  await cancelPolicyForm(page);
+  expect(requests.puts()).toBe(0);
+});
+
+test('arrangement metadata saves preserve historical versions and duplication keeps existing semantics', async ({
+  page,
+}) => {
+  const initial = caseMatrixPolicy();
+  const original = initial.referralPolicy.arrangementPolicies[0];
+  original.policyVersions = [
+    {
+      ...original,
+      version: 'historic',
+      supersededAtUtc: '2024-01-01T00:00:00Z',
+      policyVersions: undefined,
+    },
+  ];
+  original.supersededAtUtc = '2025-01-01T00:00:00Z';
+  const expected =
+    EffectiveLocationPolicy.fromJS(initial).toJSON().referralPolicy
+      .arrangementPolicies[0];
+  const requests = await backend(page, false, false, initial);
+  let payload: ReturnType<typeof caseMatrixPolicy> | undefined;
+  page.on('request', (request) => {
+    if (request.method() === 'PUT') payload = request.postDataJSON();
+  });
+  await mount(page, 'casePolicy');
+  await page.getByText('Arrangements', { exact: true }).click();
+  await page.getByRole('button', { name: 'Edit', exact: true }).click();
+  await page
+    .getByRole('textbox', { name: 'Arrangement Type', exact: true })
+    .fill('Renamed Hosting');
+  await page
+    .getByRole('combobox', { name: 'Child Involvement', exact: true })
+    .click();
+  await page
+    .getByRole('option', { name: 'No Child Involvement', exact: true })
+    .click();
+  await page.getByLabel('Superseded', { exact: true }).uncheck();
+  await page.getByRole('button', { name: 'Save', exact: true }).click();
+  await expect.poll(requests.puts).toBe(1);
+  await expect(
+    page.getByRole('textbox', { name: 'Arrangement Type', exact: true })
+  ).toHaveCount(0);
+  const saved =
+    EffectiveLocationPolicy.fromJS(payload).toJSON().referralPolicy
+      .arrangementPolicies[0];
+  expect(saved.policyVersions).toEqual(expected.policyVersions);
+  expect(saved.arrangementFunctions).toEqual(expected.arrangementFunctions);
+  expect(saved.requiredMonitoringActionsNew).toEqual(
+    expected.requiredMonitoringActionsNew
+  );
+  expect(saved.arrangementType).toBe('Renamed Hosting');
+  expect(saved.childInvolvement).not.toBe(expected.childInvolvement);
+  expect(saved.supersededAtUtc).toBeUndefined();
+  await page
+    .getByRole('button', { name: 'Duplicate Renamed Hosting', exact: true })
+    .click();
+  await page.getByRole('button', { name: 'Yes', exact: true }).click();
+  await expect.poll(requests.puts).toBe(2);
+  const copies =
+    EffectiveLocationPolicy.fromJS(payload).toJSON().referralPolicy
+      .arrangementPolicies;
+  expect(copies).toHaveLength(2);
+  expect(copies[1].policyVersions).toEqual(expected.policyVersions);
+  expect(copies[0]).toEqual(saved);
+  const arrangements = page
+    .locator('.MuiAccordion-root')
+    .filter({ has: page.getByText('Arrangements', { exact: true }) })
+    .first();
+  await arrangements
+    .getByRole('button', { name: 'Add', exact: true })
+    .first()
+    .click();
+  await page
+    .getByRole('textbox', { name: 'Arrangement Type', exact: true })
+    .fill('Brand new arrangement');
+  await page.getByRole('button', { name: 'Save', exact: true }).click();
+  await expect.poll(requests.puts).toBe(3);
+  const created = payload!.referralPolicy.arrangementPolicies.find(
+    (item: { arrangementType: string }) =>
+      item.arrangementType === 'Brand new arrangement'
+  );
+  expect(created.policyVersions).toBeUndefined();
+});
+
+test('matrix administration requires Save or Cancel for active and staged edits', async ({
+  page,
+}) => {
+  const requests = await backend(page, false, false, caseMatrixPolicy());
+  await mount(page, 'casePolicy', undefined, true);
+  const editor = await openMatrixCell(page);
+  await page
+    .getByRole('button', {
+      name: 'Manage Arrangements & Functions',
+      exact: true,
+    })
+    .click();
+  await expect(editor).toBeVisible();
+  await expect(page).toHaveURL('/org/org/a/settings/case-policies');
+  await editor
+    .getByRole('button', { name: 'Cancel cell', exact: true })
+    .click();
+  await applyApplicability(page, 'Optional');
+
+  await page
+    .getByRole('button', {
+      name: 'Manage Arrangements & Functions',
+      exact: true,
+    })
+    .click();
+  await expect(
+    page.getByRole('dialog', { name: 'Unsaved changes', exact: true })
+  ).toHaveCount(0);
+  await expect(matrixCell(page, 'Form')).toHaveClass(/policy-cell-unsaved/);
+
+  await cancelPolicyForm(page);
+  await page
+    .getByRole('button', {
+      name: 'Manage Arrangements & Functions',
+      exact: true,
+    })
+    .click();
+  await expect(page).toHaveURL('/org/org/a/settings/case-policies');
+  await expect(
+    page.getByRole('dialog', {
+      name: 'Manage Arrangements & Functions',
+      exact: true,
+    })
+  ).toBeVisible();
+  expect(requests.puts()).toBe(0);
+});
+
+test('pending matrix saves block administration, browser back and location navigation without discard prompts', async ({
+  page,
+}) => {
+  const initial = caseMatrixPolicy();
+  await backend(page, false, false, initial);
+  let release!: () => void;
+  let writes = 0;
+  let stored = initial;
+  const pending = new Promise<void>((resolve) => {
+    release = resolve;
+  });
+  await page.route('**/Configuration/policy', async (route) => {
+    if (route.request().method() === 'PUT') {
+      writes++;
+      expect(route.request().url()).toContain('/org/a/');
+      await pending;
+      stored = route.request().postDataJSON();
+    }
+    await route.fulfill({ json: stored });
+  });
+  await mount(page, 'casePolicy', undefined, true);
+  await page.getByRole('link', { name: 'Location B', exact: true }).click();
+  await page.getByRole('link', { name: 'Location A', exact: true }).click();
+  await applyApplicability(page, 'Optional');
+  await page.getByRole('button', { name: 'Save changes', exact: true }).click();
+  await expect.poll(() => writes).toBe(1);
+  await page
+    .getByRole('button', {
+      name: 'Manage Arrangements & Functions',
+      exact: true,
+    })
+    .click();
+  await keepDuringSave(page);
+  await page.getByRole('link', { name: 'Location B', exact: true }).click();
+  await keepDuringSave(page);
+  await page.goBack();
+  await keepDuringSave(page);
+  await expect(page).toHaveURL('/org/org/a/settings/case-policies');
+  release();
+  await expect(
+    page.getByRole('button', { name: 'Save changes', exact: true })
+  ).toBeDisabled();
+  await page
+    .getByRole('button', {
+      name: 'Manage Arrangements & Functions',
+      exact: true,
+    })
+    .click();
+  await expect(
+    page.getByRole('dialog', {
+      name: 'Manage Arrangements & Functions',
+      exact: true,
+    })
+  ).toBeVisible();
+  expect(writes).toBe(1);
+});
+
+test('integrated arrangement CRUD refreshes matrix columns and preserves search and history', async ({
+  page,
+}) => {
+  const initial = requirementPolicy();
+  const requests = await backend(page, false, false, initial);
+  let stored: ReturnType<typeof caseMatrixPolicy> = initial;
+  page.on('request', (request) => {
+    if (request.method() === 'PUT') {
+      expect(request.url()).toContain('/org/a/');
+      stored = request.postDataJSON();
+    }
+  });
+  await mount(page, 'casePolicy', undefined, true);
+  const visibilityPanel = await openArrangementVisibility(page);
+  await visibilityPanel
+    .getByRole('checkbox', { name: 'Hosting', exact: true })
+    .uncheck();
+  await visibilityPanel.getByRole('checkbox').press('Escape');
+  await page.getByRole('button', { name: 'Search', exact: true }).click();
+  await page.getByRole('searchbox').fill('Form');
+  await page
+    .getByRole('button', { name: 'Add Arrangement', exact: true })
+    .click();
+  await page
+    .getByRole('textbox', { name: 'Arrangement Type', exact: true })
+    .fill('New arrangement');
+  await page.getByRole('button', { name: 'Save', exact: true }).click();
+  await expect.poll(requests.puts).toBe(1);
+  await expect(
+    page.getByRole('textbox', { name: 'Arrangement Type', exact: true })
+  ).toHaveCount(0);
+  await expect(page.locator('.MuiDrawer-root')).toHaveCount(0);
+  await expect(page.getByRole('searchbox')).toHaveValue('Form');
+  const matrix = page.getByRole('grid', {
+    name: 'Case Policies requirements matrix',
+    exact: true,
+  });
+  await expect(
+    matrix.getByText('New arrangement', { exact: true })
+  ).toBeVisible();
+  await expect(
+    matrix.getByRole('columnheader', {
+      name: 'Hosting (arrangement type)',
+      exact: true,
+    })
+  ).toHaveCount(0);
+  await page
+    .getByRole('button', {
+      name: 'Manage Arrangements & Functions',
+      exact: true,
+    })
+    .click();
+  await page.getByText('Arrangements', { exact: true }).click();
+  await page.getByRole('button', { name: 'Edit', exact: true }).first().click();
+  await page
+    .getByRole('textbox', { name: 'Arrangement Type', exact: true })
+    .fill('Renamed Hosting');
+  await page.getByRole('button', { name: 'Save', exact: true }).click();
+  await expect.poll(requests.puts).toBe(2);
+  expect(stored.referralPolicy.arrangementPolicies[0].policyVersions).toEqual(
+    EffectiveLocationPolicy.fromJS(initial).toJSON().referralPolicy
+      .arrangementPolicies[0].policyVersions
+  );
+  await page
+    .getByRole('button', { name: 'Duplicate Renamed Hosting', exact: true })
+    .click();
+  await page.getByRole('button', { name: 'Yes', exact: true }).click();
+  await expect.poll(requests.puts).toBe(3);
+  await page
+    .getByRole('button', { name: 'Delete Renamed Hosting Copy', exact: true })
+    .click();
+  const refreshed = page.waitForResponse(
+    (response) =>
+      response.request().method() === 'GET' &&
+      response.url().endsWith('/Configuration/policy')
+  );
+  const deleted = page.waitForResponse(
+    (response) =>
+      response.request().method() === 'PUT' &&
+      response.url().endsWith('/Configuration/policy')
+  );
+  await page.getByRole('button', { name: 'Yes', exact: true }).click();
+  await deleted;
+  await refreshed;
+  await expect.poll(requests.puts).toBe(4);
+  await expect(
+    page.getByRole('button', {
+      name: 'Delete Renamed Hosting Copy',
+      exact: true,
+    })
+  ).toHaveCount(0);
+  await page
+    .getByRole('button', { name: 'Close administration', exact: true })
+    .click();
+  await expect(
+    matrix.getByText('Renamed Hosting', { exact: true })
+  ).toBeVisible();
+  await expect(matrix.getByText('Hosting', { exact: true })).toHaveCount(0);
+  await expect(
+    matrix.getByText('Renamed Hosting Copy', { exact: true })
+  ).toHaveCount(0);
+  await expect(page.getByRole('searchbox')).toHaveValue('Form');
+  expect(stored.referralPolicy.arrangementPolicies).toHaveLength(2);
+  const refreshedVisibility = await openArrangementVisibility(page);
+  await expect(
+    refreshedVisibility.getByRole('checkbox', {
+      name: 'Renamed Hosting',
+      exact: true,
+    })
+  ).toBeChecked();
+  await expect(
+    refreshedVisibility.getByRole('checkbox', {
+      name: 'New arrangement',
+      exact: true,
+    })
+  ).toBeChecked();
+  await expect(
+    refreshedVisibility.getByRole('checkbox', { name: 'Hosting', exact: true })
+  ).toHaveCount(0);
+  await refreshedVisibility.getByRole('checkbox').first().press('Escape');
+});
+
+test('integrated function and case assignment CRUD reuse eligibility forms and preserve siblings', async ({
+  page,
+}) => {
+  await page.addInitScript(() => {
+    Reflect.set(window, '__QA_ROLES__', [{ roleName: 'QA Coordinator' }]);
+    Reflect.set(window, '__QA_VISIBLE_FAMILIES__', [
+      {
+        family: {
+          adults: [
+            {
+              item1: {
+                id: '22222222-2222-4222-8222-222222222222',
+                firstName: 'QA',
+                lastName: 'Person',
+              },
+            },
+          ],
+          children: [],
+        },
+      },
+    ]);
+  });
+  const initial = policy();
+  Object.assign(initial.volunteerPolicy.volunteerFamilyRoles, {
+    Household: { volunteerFamilyRoleType: 'Household', policyVersions: [] },
+  });
+  const requests = await backend(page, false, false, initial);
+  let stored: ReturnType<typeof caseMatrixPolicy> = initial;
+  page.on('request', (request) => {
+    if (request.method() === 'PUT') stored = request.postDataJSON();
+  });
+  await mount(page, 'casePolicy', undefined, true);
+  await page
+    .getByRole('button', {
+      name: 'Manage Arrangements & Functions',
+      exact: true,
+    })
+    .click();
+  const management = page.getByRole('dialog', {
+    name: 'Manage Arrangements & Functions',
+    exact: true,
+  });
+  await management.getByText('Arrangements', { exact: true }).click();
+  await management.getByText('Hosting', { exact: true }).click();
+  await management.getByText('Arrangement Functions', { exact: true }).click();
+  const functions = management
+    .locator('.MuiAccordion-root')
+    .filter({ has: page.getByText('Arrangement Functions', { exact: true }) })
+    .last();
+  await functions.getByRole('button', { name: 'Add', exact: true }).click();
+  await page
+    .getByRole('textbox', { name: 'Function', exact: true })
+    .fill('Local function');
+  await page
+    .getByRole('combobox', {
+      name: 'Eligible Individual Volunteer Roles',
+      exact: true,
+    })
+    .click();
+  await page
+    .getByRole('option', { name: 'Family Friend', exact: true })
+    .click();
+  await page.getByRole('textbox', { name: 'Function', exact: true }).click();
+  await expect(
+    page.getByRole('combobox', {
+      name: 'Eligible Volunteer Family Roles',
+      exact: true,
+    })
+  ).toBeVisible();
+  await page
+    .getByRole('combobox', {
+      name: 'Eligible Volunteer Family Roles',
+      exact: true,
+    })
+    .click();
+  await page.getByRole('option', { name: 'Household', exact: true }).click();
+  await page.getByRole('textbox', { name: 'Function', exact: true }).click();
+  await expect(
+    page.getByRole('combobox', { name: 'Eligible People', exact: true })
+  ).toBeVisible();
+  await page
+    .getByRole('combobox', { name: 'Eligible People', exact: true })
+    .click();
+  await page.getByRole('option', { name: 'QA Person', exact: true }).click();
+  await page.getByRole('textbox', { name: 'Function', exact: true }).click();
+  await page.getByRole('button', { name: 'Save', exact: true }).click();
+  await expect.poll(requests.puts).toBe(1);
+  expect(
+    stored.referralPolicy.arrangementPolicies[0].arrangementFunctions[0]
+      .eligibleIndividualVolunteerRoles
+  ).toEqual(['Family Friend']);
+  expect(
+    stored.referralPolicy.arrangementPolicies[0].arrangementFunctions[0]
+      .eligibleVolunteerFamilyRoles
+  ).toEqual(['Household']);
+  expect(
+    stored.referralPolicy.arrangementPolicies[0].arrangementFunctions[0]
+      .eligiblePeople
+  ).toEqual(['22222222-2222-4222-8222-222222222222']);
+  const editFunction = functions.getByRole('button', {
+    name: 'Edit function Local function',
+    exact: true,
+  });
+  await editFunction.focus();
+  await editFunction.press('Space');
+  for (const field of [
+    'Eligible Individual Volunteer Roles',
+    'Eligible Volunteer Family Roles',
+    'Eligible People',
+  ]) {
+    const selected = page.getByRole('combobox', { name: field, exact: true });
+    if (field === 'Eligible People') {
+      expect(
+        await selected.evaluate((el) => el.closest('.ph-unmask') !== null)
+      ).toBe(false);
+      expect(
+        await selected.evaluate((el) => el.closest('.ph-no-capture') !== null)
+      ).toBe(true);
+      expect(
+        await page
+          .getByText('QA Person', { exact: true })
+          .evaluate((el) => el.closest('.ph-unmask') !== null)
+      ).toBe(false);
+    }
+    await selected.focus();
+    await selected.press('Backspace');
+  }
+  await page
+    .getByRole('textbox', { name: 'Function', exact: true })
+    .fill('Edited function');
+  await page.getByRole('button', { name: 'Save', exact: true }).click();
+  await expect.poll(requests.puts).toBe(2);
+  for (const field of [
+    'eligibleIndividualVolunteerRoles',
+    'eligibleVolunteerFamilyRoles',
+    'eligiblePeople',
+  ]) {
+    expect(
+      (
+        stored.referralPolicy.arrangementPolicies[0]
+          .arrangementFunctions[0] as unknown as Record<string, unknown>
+      )[field]
+    ).toEqual([]);
+  }
+  await page
+    .getByRole('button', { name: 'Duplicate Edited function', exact: true })
+    .click();
+  await page.getByRole('button', { name: 'Yes', exact: true }).click();
+  await expect.poll(requests.puts).toBe(3);
+  await page
+    .getByRole('button', { name: 'Delete Edited function Copy', exact: true })
+    .click();
+  const functionRefresh = page.waitForResponse(
+    (response) =>
+      response.request().method() === 'GET' &&
+      response.url().endsWith('/Configuration/policy')
+  );
+  await page.getByRole('button', { name: 'Yes', exact: true }).click();
+  await expect.poll(requests.puts).toBe(4);
+  await functionRefresh;
+  await expect(
+    page.getByRole('button', {
+      name: 'Delete Edited function Copy',
+      exact: true,
+    })
+  ).toHaveCount(0);
+  const assignments = management
+    .locator('.MuiAccordion-root')
+    .filter({ has: page.getByText('Functions', { exact: true }) })
+    .first();
+  await assignments.getByRole('button', { name: 'Add', exact: true }).click();
+  await page
+    .getByRole('textbox', { name: 'Function', exact: true })
+    .fill('Case coordinator');
+  await page
+    .getByRole('combobox', { name: 'Eligible Location Roles', exact: true })
+    .click();
+  await page
+    .getByRole('option', { name: 'QA Coordinator', exact: true })
+    .click();
+  await page.getByRole('textbox', { name: 'Function', exact: true }).click();
+  await page
+    .getByRole('combobox', { name: 'Eligible People', exact: true })
+    .click();
+  await page.getByRole('option', { name: 'QA Person', exact: true }).click();
+  await page.getByRole('textbox', { name: 'Function', exact: true }).click();
+  await page
+    .getByRole('combobox', {
+      name: 'Eligible Individual Volunteer Roles',
+      exact: true,
+    })
+    .click();
+  await page
+    .getByRole('option', { name: 'Family Friend', exact: true })
+    .click();
+  await page.getByRole('textbox', { name: 'Function', exact: true }).click();
+  await page.getByRole('button', { name: 'Save', exact: true }).click();
+  await expect.poll(requests.puts).toBe(5);
+  expect(
+    stored.referralPolicy.functionAssignmentPolicies[0].eligibility
+      .eligibleLocationRoles
+  ).toEqual(['QA Coordinator']);
+  expect(
+    stored.referralPolicy.functionAssignmentPolicies[0].eligibility
+      .eligiblePeople
+  ).toEqual(['22222222-2222-4222-8222-222222222222']);
+  await assignments.getByText('Case coordinator', { exact: true }).click();
+  await page
+    .getByRole('textbox', { name: 'Function', exact: true })
+    .fill('Edited coordinator');
+  await page.getByRole('button', { name: 'Save', exact: true }).click();
+  await expect.poll(requests.puts).toBe(6);
+  await page
+    .getByRole('button', { name: 'Duplicate Edited coordinator', exact: true })
+    .click();
+  await page.getByRole('button', { name: 'Yes', exact: true }).click();
+  await expect.poll(requests.puts).toBe(7);
+  await page
+    .getByRole('button', {
+      name: 'Delete Edited coordinator Copy',
+      exact: true,
+    })
+    .click();
+  await page.getByRole('button', { name: 'Yes', exact: true }).click();
+  await expect.poll(requests.puts).toBe(8);
+  expect(stored.referralPolicy.functionAssignmentPolicies).toHaveLength(1);
+  expect(
+    stored.referralPolicy.arrangementPolicies[0].arrangementFunctions
+  ).toHaveLength(1);
+  await page
+    .getByRole('button', { name: 'Close administration', exact: true })
+    .click();
+  await expect(page).toHaveURL('/org/org/a/settings/case-policies');
+});
+
+test('function metadata preserves inherited and explicitly empty eligibility', async ({
+  page,
+}) => {
+  const initial = policy();
+  Object.assign(initial.referralPolicy, {
+    functionPolicies: [
+      {
+        functionName: 'Inherited',
+        eligibility: {
+          eligibleIndividualVolunteerRoles: ['Family Friend'],
+          eligibleVolunteerFamilyRoles: [],
+          eligiblePeople: [],
+        },
+      },
+    ],
+  });
+  const empty = {
+    eligibleIndividualVolunteerRoles: [],
+    eligibleVolunteerFamilyRoles: [],
+    eligiblePeople: [],
+  };
+  Object.assign(initial.referralPolicy.arrangementPolicies[0], {
+    arrangementFunctions: [
+      { functionName: 'Inherited', requirement: 0, variants: [] },
+      {
+        functionName: 'Explicit empty',
+        requirement: 0,
+        variants: [],
+        ...empty,
+      },
+    ],
+  });
+  const requests = await backend(page, false, false, initial);
+  let stored: ReturnType<typeof caseMatrixPolicy> = initial;
+  page.on('request', (request) => {
+    if (request.method() === 'PUT') stored = request.postDataJSON();
+  });
+  await mount(page, 'casePolicy');
+  const management = page.getByRole('dialog', {
+    name: 'Manage Arrangements & Functions',
+    exact: true,
+  });
+  await management.getByText('Arrangements', { exact: true }).click();
+  await management.getByText('Hosting', { exact: true }).click();
+  await management.getByText('Arrangement Functions', { exact: true }).click();
+  for (const [index, name] of ['Inherited', 'Explicit empty'].entries()) {
+    const edit = management.getByRole('button', {
+      name: 'Edit function ' + name,
+      exact: true,
+    });
+    await edit.focus();
+    await edit.press('Enter');
+    await page
+      .getByRole('combobox', { name: 'Requirement', exact: true })
+      .click();
+    await page
+      .getByRole('option', { name: 'Exactly One', exact: true })
+      .click();
+    await page.getByRole('button', { name: 'Save', exact: true }).click();
+    await expect.poll(requests.puts).toBe(index + 1);
+    await expect(
+      page.getByRole('textbox', { name: 'Function', exact: true })
+    ).toHaveCount(0);
+  }
+  const functions =
+    EffectiveLocationPolicy.fromJS(stored).toJSON().referralPolicy
+      .arrangementPolicies[0].arrangementFunctions;
+  for (const field of Object.keys(empty)) {
+    expect(functions[0][field]).toBeUndefined();
+    expect(functions[1][field]).toEqual([]);
+  }
+  expect(
+    functions.map((item: { requirement: number }) => item.requirement)
+  ).toEqual([1, 1]);
+});
+
+test('integrated creation failures retain the form until confirmed discard', async ({
+  page,
+}) => {
+  const requests = await backend(page, true, false, requirementPolicy());
+  await mount(page, 'casePolicy', undefined, true);
+  await page
+    .getByRole('button', { name: 'Add Arrangement', exact: true })
+    .click();
+  await page
+    .getByRole('textbox', { name: 'Arrangement Type', exact: true })
+    .fill('Retained arrangement');
+  await page.getByRole('button', { name: 'Save', exact: true }).click();
+  await expect.poll(requests.puts).toBe(1);
+  await expect(
+    page.getByRole('textbox', { name: 'Arrangement Type', exact: true })
+  ).toHaveValue('Retained arrangement');
+  await expect(page.getByText(/The changes could not be saved/)).toBeVisible();
+  await cancelPolicyForm(page);
+  await expect(page.locator('.MuiDrawer-root')).toHaveCount(0);
+  await expect(matrixCell(page, 'Form')).not.toHaveClass(/policy-cell-unsaved/);
+  expect(requests.puts()).toBe(1);
+});
+test('management close control blocks closing during an administration save', async ({
+  page,
+}) => {
+  const initial = policy();
+  await backend(page, false, false, initial);
+  let stored = initial;
+  let writes = 0;
+  let release!: () => void;
+  const pending = new Promise<void>((resolve) => {
+    release = resolve;
+  });
+  await page.route('**/Configuration/policy', async (route) => {
+    if (route.request().method() === 'PUT') {
+      writes++;
+      await pending;
+      stored = route.request().postDataJSON();
+    }
+    await route.fulfill({ json: stored });
+  });
+  await mount(page, 'casePolicy', undefined, true);
+  await page
+    .getByRole('button', {
+      name: 'Manage Arrangements & Functions',
+      exact: true,
+    })
+    .click();
+  await page.getByText('Arrangements', { exact: true }).click();
+  await page
+    .getByRole('button', { name: 'Duplicate Hosting', exact: true })
+    .click();
+  await page.getByRole('button', { name: 'Yes', exact: true }).click();
+  await expect.poll(() => writes).toBe(1);
+  const close = page.getByRole('button', {
+    name: 'Close administration',
+    exact: true,
+  });
+  await close.click();
+  await keepDuringSave(page);
+  await expect(close).toBeVisible();
+  const refreshed = page.waitForResponse(
+    (response) =>
+      response.request().method() === 'GET' &&
+      response.url().endsWith('/Configuration/policy')
+  );
+  release();
+  await refreshed;
+  await close.click();
+  await expect(page.locator('.MuiDrawer-root')).toHaveCount(0);
+  await expect(
+    page.getByRole('grid', {
+      name: 'Case Policies requirements matrix',
+      exact: true,
+    })
+  ).toBeVisible();
+  expect(writes).toBe(1);
+});
+
+test('administration drawer edits are protected by browser back and retained when navigation is canceled', async ({
+  page,
+}) => {
+  const requests = await backend(page);
+  await mount(page, 'casePolicy', undefined, true);
+  await page.getByRole('link', { name: 'Location B', exact: true }).click();
+  await page.getByRole('link', { name: 'Location A', exact: true }).click();
+  await openCaseAdministration(page);
+  await addFunction(page);
+  const decision0 = policyDecision(page, false);
+  await page.goBack();
+  await decision0;
+  await expect(page).toHaveURL('/org/org/a/settings/case-policies');
+  await expect(
+    page.getByRole('textbox', { name: 'Function', exact: true })
+  ).toHaveValue('New Function');
+  await cancelPolicyForm(page);
+  await page
+    .getByRole('button', { name: 'Close administration', exact: true })
+    .click();
+  await expect(page).toHaveURL('/org/org/a/settings/case-policies');
+  expect(requests.puts()).toBe(0);
+});
+
+test('legacy administration links replace history, preserve scope and open only the matrix', async ({
+  page,
+}) => {
+  const requests = await backend(page);
+  await mount(
+    page,
+    'casePolicy',
+    '/org/tenant/b/settings/location-settings',
+    true
+  );
+  const historyLength = await page.evaluate(() => window.history.length);
+  await page.goto('/org/tenant/b/settings/case-policies/administration');
+  await page.addScriptTag({ content: bundle });
+  await expect(page).toHaveURL('/org/tenant/b/settings/case-policies');
+  await expect(
+    page.getByRole('grid', {
+      name: 'Case Policies requirements matrix',
+      exact: true,
+    })
+  ).toBeVisible();
+  await expect(
+    page.getByRole('navigation', { name: 'breadcrumb' })
+  ).toContainText('Location Settings');
+  await expect(
+    page.getByRole('link', { name: 'Open administration page', exact: true })
+  ).toHaveCount(0);
+  await expect(page.locator('.MuiDrawer-root')).toHaveCount(0);
+  expect(await page.evaluate(() => window.history.length)).toBe(
+    historyLength + 1
+  );
+  await page.goBack();
+  await expect(page).toHaveURL('/org/tenant/b/settings/location-settings');
+  await page.goForward();
+  await expect(page).toHaveURL('/org/tenant/b/settings/case-policies');
+  expect(requests.puts()).toBe(0);
+});
+
+test('unsaved function drawers guard location switches and preserve selected scope', async ({
+  page,
+}) => {
+  const requests = await backend(page);
+  await mount(page, 'casePolicy', undefined, true);
+  await addFunction(page);
+  const decision1 = policyDecision(page, false);
+  await page
+    .getByRole('link', { name: 'Location B', exact: true, includeHidden: true })
+    .dispatchEvent('click');
+  await decision1;
+  await expect(page).toHaveURL('/org/org/a/settings/case-policies');
+  await expect(
+    page.getByRole('textbox', { name: 'Function', exact: true })
+  ).toHaveValue('New Function');
+  const decision2 = policyDecision(page, true);
+  await page
+    .getByRole('link', { name: 'Location B', exact: true, includeHidden: true })
+    .dispatchEvent('click');
+  await decision2;
+  await expect(page).toHaveURL('/org/org/b/settings/case-policies');
+  await expect(page.locator('.MuiDrawer-root')).toHaveCount(0);
+  await expect(
+    page.getByRole('grid', {
+      name: 'Case Policies requirements matrix',
+      exact: true,
+    })
+  ).toBeVisible();
+  expect(requests.puts()).toBe(0);
+});
+
+test('administration direct access rejects restricted users without policy requests', async ({
+  page,
+}) => {
+  const requests = await backend(page);
+  await page.addInitScript('window.__QA_ALLOWED__ = false');
+  await mount(
+    page,
+    'casePolicy',
+    '/org/org/a/settings/case-policies/administration'
+  );
+  await expect(page.getByRole('alert')).toContainText(
+    'This location is restricted or unavailable.'
+  );
+  expect(requests.puts()).toBe(0);
+  expect(requests.validations()).toBe(0);
+});
+
+for (const width of [320, 390, 768, 1440])
+  test(
+    'matrix and administration navigation fits ' + width + 'px',
+    async ({ page }) => {
+      await page.setViewportSize({ width, height: 900 });
+      const requests = await backend(page);
+      await mount(page, 'casePolicy', undefined, true);
+      const action = page.getByRole('button', {
+        name: 'Manage Arrangements & Functions',
+        exact: true,
+      });
+      const bounds = (await action.boundingBox())!;
+      expect(bounds.x).toBeGreaterThanOrEqual(0);
+      expect(bounds.x + bounds.width).toBeLessThanOrEqual(width);
+      await action.click();
+      const back = page.getByRole('button', {
+        name: 'Close administration',
+        exact: true,
+      });
+      await expect(back).toBeVisible();
+      const backBounds = (await back.boundingBox())!;
+      expect(backBounds.x).toBeGreaterThanOrEqual(0);
+      expect(backBounds.x + backBounds.width).toBeLessThanOrEqual(width);
+      await back.click();
+      await expect(
+        page.getByRole('grid', {
+          name: 'Case Policies requirements matrix',
+          exact: true,
+        })
+      ).toBeVisible();
+      expect(requests.puts()).toBe(0);
+    }
+  );
+
+for (const width of [320, 390, 768, 1440]) {
+  test(`administration uses one accessible drawer for creation, metadata, functions and confirmations at ${width}px`, async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width, height: 900 });
+    const requests = await backend(page);
+    await mount(page, 'casePolicy', undefined, true);
+    const add = page.getByRole('button', {
+      name: 'Add Arrangement',
+      exact: true,
+    });
+    const manage = page.getByRole('button', {
+      name: 'Manage Arrangements & Functions',
+      exact: true,
+    });
+    await expect(add).toHaveClass(
+      /(?=.*MuiButton-contained)(?=.*MuiButton-colorPrimary)/
+    );
+    await expect(manage).toHaveClass(
+      /(?=.*MuiButton-contained)(?=.*MuiButton-colorPrimary)/
+    );
+    const drawer = page.getByRole('dialog', {
+      name: 'Manage Arrangements & Functions',
+      exact: true,
+    });
+    async function oneDrawer() {
+      await expect(
+        drawer.getByRole('button', {
+          name: 'Back to Case Policies',
+          exact: true,
+        })
+      ).toHaveCount(0);
+      await expect(page.locator('.MuiDrawer-root')).toHaveCount(1);
+      await expect(page.locator('.MuiBackdrop-root:visible')).toHaveCount(1);
+      await expect(page.locator('.MuiDialog-root')).toHaveCount(0);
+      const bounds = (await drawer.boundingBox())!;
+      expect(bounds.x).toBeGreaterThanOrEqual(-1);
+      expect(bounds.x + bounds.width).toBeLessThanOrEqual(width + 1);
+      expect(
+        await drawer.evaluate(
+          (element) => element.scrollWidth <= element.clientWidth
+        )
+      ).toBe(true);
+    }
+    await add.click();
+    const arrangementName = page.getByRole('textbox', {
+      name: 'Arrangement Type',
+      exact: true,
+    });
+    await expect(arrangementName).toBeFocused();
+    await oneDrawer();
+    await page.keyboard.press('Escape');
+    await expect(page.locator('.MuiDrawer-root')).toHaveCount(0);
+    await expect(add).toBeFocused();
+    await manage.click();
+    await oneDrawer();
+    await drawer.getByText('Arrangements', { exact: true }).click();
+    const edit = drawer.getByRole('button', { name: 'Edit', exact: true });
+    await edit.click();
+    await expect(arrangementName).toHaveValue('Hosting');
+    await oneDrawer();
+    await arrangementName.fill('Pending name');
+    const decision3 = policyDecision(page, false);
+    await page.keyboard.press('Escape');
+    await decision3;
+    await expect(arrangementName).toHaveValue('Pending name');
+    await oneDrawer();
+    const decision4 = policyDecision(page, true);
+    await page.keyboard.press('Escape');
+    await decision4;
+    await expect(edit).toBeVisible();
+    await expect(edit).toBeFocused();
+    await oneDrawer();
+    await drawer.getByText('Hosting', { exact: true }).click();
+    await drawer.getByText('Arrangement Functions', { exact: true }).click();
+    const functions = drawer
+      .locator('.MuiAccordion-root')
+      .filter({ has: page.getByText('Arrangement Functions', { exact: true }) })
+      .last();
+    await functions.getByRole('button', { name: 'Add', exact: true }).click();
+    await expect(
+      page.getByRole('textbox', { name: 'Function', exact: true })
+    ).toBeVisible();
+    await oneDrawer();
+    await cancelPolicyForm(page);
+    await expect(functions).toBeVisible();
+    await drawer
+      .getByRole('button', { name: 'Duplicate Hosting', exact: true })
+      .click();
+    await expect(
+      drawer.getByText('Duplicate Hosting?', { exact: true })
+    ).toBeVisible();
+    await oneDrawer();
+    await drawer.getByRole('button', { name: 'No', exact: true }).click();
+    await expect(edit).toBeVisible();
+    await drawer
+      .getByRole('button', { name: 'Close administration', exact: true })
+      .click();
+    await expect(page.locator('.MuiDrawer-root')).toHaveCount(0);
+    await expect(manage).toBeFocused();
+    expect(requests.puts()).toBe(0);
+  });
+}
+
+test('Location basic configuration retains its separate page heading', async ({
+  page,
+}) => {
+  const requests = await backend(page);
+  await mount(page, 'basic', '/org/org/a/settings/locations');
+  await expect(
+    page.getByRole('heading', {
+      name: 'Editing Location A configuration',
+      exact: true,
+    })
+  ).toBeVisible();
+  expect(requests.puts()).toBe(0);
+});
+
+for (const scenario of [
+  { administrator: true, categories: true, policy: true },
+  { administrator: false, categories: true, policy: true },
+  { administrator: true, categories: false, policy: true },
+  { administrator: true, categories: true, policy: false },
+])
+  test.describe('Settings card ordering ' + JSON.stringify(scenario), () => {
+    test.use({
+      featureFlags: {
+        [SELF_SERVICE_POLICY_FEATURE_FLAG]: scenario.policy,
+        [ORGANIZATION_CATEGORIES_FEATURE_FLAG]: scenario.categories,
+      },
+    });
+    test('administration precedes policies and unavailable sections remain hidden', async ({
+      page,
+    }) => {
+      await page.addInitScript((administrator) => {
+        Object.assign(window, { __QA_ADMIN__: administrator });
+      }, scenario.administrator);
+      const requests = await backend(page);
+      await mount(page, 'basic', '/org/org/a/settings');
+      await expect(page.getByRole('heading', { level: 6 })).toHaveText([
+        'Tenant Settings',
+        'Location Settings',
+      ]);
+      await page.getByRole('button', { name: /^Tenant Settings/ }).click();
+      await expect(page.getByRole('heading', { level: 6 })).toHaveText([
+        'Roles',
+        ...(scenario.administrator && scenario.categories
+          ? ['Organization Categories']
+          : []),
+      ]);
+      await page.getByRole('button', { name: /^Roles/ }).click();
+      await expect(page).toHaveURL('/org/org/a/settings/roles');
+      await expect(
+        page.getByRole('navigation', { name: 'breadcrumb' })
+      ).toHaveText('SettingsTenant SettingsRoles');
+      await page.getByRole('link', { name: 'Settings', exact: true }).click();
+      await page.getByRole('button', { name: /^Location Settings/ }).click();
+      await expect(page.getByRole('heading', { level: 6 })).toHaveText([
+        'Location',
+        ...(scenario.policy
+          ? settingsSections
+              .filter((item) => item.id !== 'accessLevels')
+              .map((item) => item.label)
+          : []),
+        'Access Levels',
+      ]);
+      expect(requests.puts()).toBe(0);
+    });
+  });
+
+for (const width of [320, 390, 768, 1440])
+  test(
+    'Settings overview cards navigate at ' + width + 'px',
+    async ({ page }) => {
+      await page.setViewportSize({ width, height: 900 });
+      await backend(page);
+      await mount(page, 'basic', '/org/org/a/settings');
+      await expect(page.getByRole('heading', { level: 6 })).toHaveText([
+        'Tenant Settings',
+        'Location Settings',
+      ]);
+      await page.getByRole('button', { name: /^Location Settings/ }).click();
+      for (const section of settingsSections) {
+        const card = page.getByRole('button', {
+          name: new RegExp(section.label),
+        });
+        await card.scrollIntoViewIfNeeded();
+        const bounds = (await card.boundingBox())!;
+        expect(bounds.x).toBeGreaterThanOrEqual(0);
+        expect(bounds.x + bounds.width).toBeLessThanOrEqual(width);
+        const iconNames = {
+          actionDefinitions: 'FactCheckIcon',
+          customFamilyFields: 'PlaylistAddIcon',
+          casePolicy: 'TuneIcon',
+          v1ReferralPolicy: 'AccountTreeIcon',
+          volunteerPolicy: 'VolunteerActivismIcon',
+          organizationPolicy: 'VerifiedUserIcon',
+          accessLevels: 'AdminPanelSettingsIcon',
+        };
+        const icon = card.getByTestId(iconNames[section.id]);
+        await expect(icon).toBeVisible();
+        const iconBounds = (await icon.boundingBox())!;
+        expect(iconBounds.width).toBe(30);
+        expect(iconBounds.height).toBe(30);
+        expect(
+          Math.abs(
+            iconBounds.x + iconBounds.width / 2 - bounds.x - bounds.width / 2
+          )
+        ).toBeLessThan(2);
+        await card.click();
+        await expect(page).toHaveURL(
+          settingsSectionPath('org', 'a', section.id)
+        );
+        await expect(
+          page
+            .getByRole('navigation', { name: 'breadcrumb' })
+            .getByText(section.label, { exact: true })
+        ).toBeVisible();
+        await expect(
+          page.getByRole('heading', { name: section.label, exact: true })
+        ).toHaveCount(0);
+        await expect(page.getByText(/^Location:/)).toHaveCount(0);
+        const contentBounds = (await page
+          .getByRole('region', { name: section.label, exact: true })
+          .boundingBox())!;
+        expect(contentBounds.x).toBeGreaterThanOrEqual(0);
+        expect(contentBounds.x + contentBounds.width).toBeLessThanOrEqual(
+          width
+        );
+        await page
+          .getByRole('link', { name: 'Location Settings', exact: true })
+          .click();
+      }
+    }
+  );
+
+test('legacy tabs redirect to the explicitly targeted location', async ({
+  page,
+}) => {
+  const requests = await backend(page);
+  const reads: string[] = [];
+  page.on('request', (request) => {
+    if (
+      request.method() === 'GET' &&
+      request.url().endsWith('/Configuration/policy')
+    )
+      reads.push(request.url());
+  });
+  for (const section of settingsSections) {
+    await mount(
+      page,
+      section.id,
+      '/org/org/a/settings/locations/b?tab=' + section.id,
+      true
+    );
+    await expect(page).toHaveURL(settingsSectionPath('org', 'b', section.id));
+    await expect(
+      page
+        .getByRole('navigation', { name: 'breadcrumb' })
+        .getByRole('link', { name: 'Settings', exact: true })
+    ).toHaveAttribute('href', '/org/org/b/settings');
+  }
+  expect(
+    reads.every((url) => url.includes('/org/b/Configuration/policy'))
+  ).toBe(true);
+  expect(requests.puts()).toBe(0);
+});
+
+test.describe('Settings category navigation', () => {
+  test.beforeEach(async ({ page }) => {
+    await page.addInitScript(() =>
+      Object.assign(window, {
+        __QA_SETTINGS_NAVIGATION__: true,
+        __QA_ADMIN__: true,
+      })
+    );
+  });
+
+  test('sidebar exposes only direct category links with descendant highlighting and parent expansion', async ({
+    page,
+  }) => {
+    const requests = await backend(page);
+    await mount(page, 'basic', '/org/org/a/settings');
+    const sidebar = page.getByRole('complementary', {
+      name: 'Settings sidebar',
+    });
+    const tenant = sidebar.getByRole('link', {
+      name: 'Tenant Settings',
+      exact: true,
+    });
+    const location = sidebar.getByRole('link', {
+      name: 'Location Settings',
+      exact: true,
+    });
+    await expect(sidebar.getByRole('link')).toHaveText([
+      'Settings',
+      'Tenant Settings',
+      'Location Settings',
+    ]);
+    await expect(sidebar.getByRole('button', { name: /^Toggle/ })).toHaveCount(
+      1
+    );
+    await expect(
+      sidebar.getByRole('button', {
+        name: /^Toggle (Tenant|Location) Settings$/,
+      })
+    ).toHaveCount(0);
+    const toggle = sidebar.getByRole('button', {
+      name: 'Toggle Settings',
+      exact: true,
+    });
+    await toggle.focus();
+    await toggle.press('Enter');
+    await expect(toggle).toHaveAttribute('aria-expanded', 'false');
+    await expect(tenant).toBeHidden();
+    await toggle.press('Enter');
+    await expect(tenant).toBeVisible();
+    await tenant.click();
+    await expect(page).toHaveURL('/org/org/a/settings/tenant');
+    await expect(tenant).toHaveAttribute('aria-current', 'page');
+    await page.getByRole('button', { name: /^Roles/ }).click();
+    await expect(page).toHaveURL('/org/org/a/settings/roles');
+    await expect(tenant).toHaveClass(/Mui-selected/);
+    await expect(tenant).toHaveAttribute('aria-current', 'location');
+    await expect(location).not.toHaveClass(/Mui-selected/);
+    await location.click();
+    await expect(page).toHaveURL('/org/org/a/settings/location-settings');
+    await expect(location).toHaveAttribute('aria-current', 'page');
+    await page.getByRole('button', { name: /^Case Policies/ }).click();
+    await expect(page).toHaveURL('/org/org/a/settings/case-policies');
+    await expect(location).toHaveClass(/Mui-selected/);
+    await expect(location).toHaveAttribute('aria-current', 'location');
+    await page
+      .getByRole('button', {
+        name: 'Manage Arrangements & Functions',
+        exact: true,
+      })
+      .click();
+    await page
+      .getByRole('button', { name: 'Close administration', exact: true })
+      .click();
+    await expect(page).toHaveURL('/org/org/a/settings/case-policies');
+    await expect(location).toHaveClass(/Mui-selected/);
+    await expect(tenant).not.toHaveClass(/Mui-selected/);
+    await expect(sidebar.getByRole('link')).toHaveText([
+      'Settings',
+      'Tenant Settings',
+      'Location Settings',
+    ]);
+    expect(requests.puts()).toBe(0);
+  });
+
+  test('breadcrumbs, browser history and category location switching retain scope', async ({
+    page,
+  }) => {
+    const requests = await backend(page);
+    await mount(page, 'basic', '/org/org/a/settings');
+    await page.getByRole('button', { name: /^Tenant Settings/ }).click();
+    await expect(
+      page.getByRole('navigation', { name: 'breadcrumb' })
+    ).toHaveText('SettingsTenant Settings');
+    await page
+      .getByRole('button', { name: /^Organization Categories/ })
+      .click();
+    await expect(
+      page.getByRole('navigation', { name: 'breadcrumb' })
+    ).toHaveText('SettingsTenant SettingsOrganization Categories');
+    await page.goBack();
+    await expect(page).toHaveURL('/org/org/a/settings/tenant');
+    await page.goForward();
+    await expect(page).toHaveURL('/org/org/a/settings/organization-categories');
+    await page
+      .getByRole('navigation', { name: 'breadcrumb' })
+      .getByRole('link', { name: 'Tenant Settings', exact: true })
+      .click();
+    await page.getByRole('link', { name: 'Location B', exact: true }).click();
+    await expect(page).toHaveURL('/org/org/b/settings/tenant');
+    await expect(
+      page
+        .getByRole('navigation', { name: 'breadcrumb' })
+        .getByRole('link', { name: 'Settings', exact: true })
+    ).toHaveAttribute('href', '/org/org/b/settings');
+    await page
+      .getByRole('complementary', { name: 'Settings sidebar' })
+      .getByRole('link', { name: 'Location Settings', exact: true })
+      .click();
+    await expect(page).toHaveURL('/org/org/b/settings/location-settings');
+    await page.getByRole('button', { name: /^Case Policies/ }).click();
+    await expect(page).toHaveURL('/org/org/b/settings/case-policies');
+    await expect(
+      page.getByRole('navigation', { name: 'breadcrumb' })
+    ).toHaveText('SettingsLocation SettingsCase Policies');
+    expect(requests.puts()).toBe(0);
+  });
+
+  test('category sidebar links and breadcrumbs protect pending matrix edits', async ({
+    page,
+  }) => {
+    const requests = await backend(page, false, false, caseMatrixPolicy());
+    await mount(page, 'casePolicy', undefined, true);
+    const editor = await openMatrixCell(page);
+    await editor
+      .getByRole('switch', { name: 'Requirement 1 Required', exact: true })
+      .uncheck();
+    await editor
+      .getByRole('button', { name: 'Apply to draft', exact: true })
+      .click();
+    const sidebar = page.getByRole('complementary', {
+      name: 'Settings sidebar',
+    });
+    const decision5 = policyDecision(page, false);
+    await sidebar
+      .getByRole('link', { name: 'Tenant Settings', exact: true })
+      .click();
+    await decision5;
+    await expect(page).toHaveURL('/org/org/a/settings/case-policies');
+    const decision6 = policyDecision(page, false);
+    await page
+      .getByRole('navigation', { name: 'breadcrumb' })
+      .getByRole('link', { name: 'Location Settings', exact: true })
+      .click();
+    await decision6;
+    await expect(page.getByRole('status')).toContainText('unsaved change');
+    await cancelPolicyForm(page);
+    await sidebar
+      .getByRole('link', { name: 'Tenant Settings', exact: true })
+      .click();
+    await expect(page).toHaveURL('/org/org/a/settings/tenant');
+    expect(requests.puts()).toBe(0);
+  });
+
+  for (const width of [320, 390, 768, 1440])
+    test(
+      'category spacing and direct sidebar labels fit ' + width + 'px',
+      async ({ page }) => {
+        await page.setViewportSize({ width, height: 900 });
+        const requests = await backend(page);
+        await mount(page, 'basic', '/org/org/a/settings');
+        const cards = page
+          .getByRole('region', { name: 'Settings categories', exact: true })
+          .getByRole('button');
+        await expect(cards).toHaveCount(2);
+        for (const card of await cards.all()) {
+          const bounds = (await card.boundingBox())!;
+          expect(bounds.x).toBeGreaterThanOrEqual(0);
+          expect(bounds.x + bounds.width).toBeLessThanOrEqual(width);
+        }
+        const sidebar = page.getByRole('complementary', {
+          name: 'Settings sidebar',
+        });
+        await expect(sidebar.getByRole('link')).toHaveCount(3);
+        await expect(
+          sidebar.getByRole('button', { name: /^Toggle/ })
+        ).toHaveCount(1);
+        const leftEdges: number[] = [];
+        for (const label of ['Tenant Settings', 'Location Settings']) {
+          const link = sidebar.getByRole('link', { name: label, exact: true });
+          const bounds = (await link.boundingBox())!;
+          leftEdges.push(bounds.x);
+          expect(bounds.x).toBeGreaterThanOrEqual(0);
+          expect(bounds.x + bounds.width).toBeLessThanOrEqual(width);
+          await expect(link.locator('.MuiListItemText-primary')).toHaveCSS(
+            'white-space',
+            'normal'
+          );
+          await link.click();
+          const breadcrumb = page.getByRole('navigation', {
+            name: 'breadcrumb',
+          });
+          await expect(
+            breadcrumb.getByText(label, { exact: true })
+          ).toBeVisible();
+          await expect(breadcrumb.locator('..')).toHaveCSS(
+            'padding-top',
+            width < 600 ? '20px' : '24px'
+          );
+          const region = page.getByRole('region', { name: label, exact: true });
+          const crumbBounds = (await breadcrumb.boundingBox())!;
+          const gridBounds = (await region.boundingBox())!;
+          expect(Math.abs(gridBounds.x - crumbBounds.x)).toBeLessThan(1);
+          expect(gridBounds.y - crumbBounds.y - crumbBounds.height).toBeCloseTo(
+            width < 600 ? 16 : 24,
+            0
+          );
+          await expect(region.getByRole('button')).toHaveCount(
+            label === 'Tenant Settings' ? 2 : 8
+          );
+        }
+        expect(Math.abs(leftEdges[0] - leftEdges[1])).toBeLessThan(1);
+        expect(requests.puts()).toBe(0);
+      }
+    );
+});
+
+test.describe('Settings categories with unavailable sections', () => {
+  test.use({
+    featureFlags: {
+      [SELF_SERVICE_POLICY_FEATURE_FLAG]: false,
+      [ORGANIZATION_CATEGORIES_FEATURE_FLAG]: false,
+    },
+  });
+  test('hidden sections are absent from cards and sidebar and restricted category URLs are blocked', async ({
+    page,
+  }) => {
+    await page.addInitScript(() =>
+      Object.assign(window, { __QA_SETTINGS_NAVIGATION__: true })
+    );
+    const requests = await backend(page);
+    await mount(page, 'basic', '/org/org/a/settings/location-settings');
+    const sidebar = page.getByRole('complementary', {
+      name: 'Settings sidebar',
+    });
+    await expect(page.getByRole('heading', { level: 6 })).toHaveText([
+      'Location',
+      'Access Levels',
+    ]);
+    await expect(
+      sidebar.getByRole('link', { name: 'Case Policies', exact: true })
+    ).toHaveCount(0);
+    await sidebar
+      .getByRole('link', { name: 'Tenant Settings', exact: true })
+      .click();
+    await expect(page.getByRole('heading', { level: 6 })).toHaveText(['Roles']);
+    await expect(
+      sidebar.getByRole('link', {
+        name: 'Organization Categories',
+        exact: true,
+      })
+    ).toHaveCount(0);
+    await page.addInitScript('window.__QA_ALLOWED__ = false');
+    await mount(page, 'basic', '/org/org/a/settings/tenant');
+    await expect(page.getByRole('alert')).toHaveText(
+      'Settings are restricted or unavailable.'
+    );
+    await expect(sidebar.getByRole('link')).toHaveCount(0);
+    expect(requests.puts()).toBe(0);
+    expect(requests.validations()).toBe(0);
+  });
+});
+
+test('browser back and location switches guard a dirty draft without leaking it', async ({
+  page,
+}) => {
+  const requests = await backend(page, false, false, actionDefinitionPolicy());
+  await mount(page, 'basic', '/org/org/a/settings');
+  await page.getByRole('button', { name: /^Location Settings/ }).click();
+  await page.getByRole('button', { name: /Action Definitions/ }).click();
+  const cell = page.locator(
+    '[data-id="Dynamic activity"] [data-field="instructions"]'
+  );
+  await cell.click();
+  await cell.locator('input').fill('Only A');
+  await cell.locator('input').press('Enter');
+  await expect(
+    page.getByText('1 unsaved change', { exact: true })
+  ).toBeVisible();
+  const decision7 = policyDecision(page, false);
+  await page.goBack();
+  await decision7;
+  await expect(page).toHaveURL(/settings\/action-definitions/);
+  await expect(cell).toHaveText('Only A');
+  const decision8 = policyDecision(page, false);
+  await page.getByRole('link', { name: 'Location B', exact: true }).click();
+  await decision8;
+  await expect(page).toHaveURL('/org/org/a/settings/action-definitions');
+  await expect(cell).toHaveText('Only A');
+  const decision9 = policyDecision(page, true);
+  await page.getByRole('link', { name: 'Location B', exact: true }).click();
+  await decision9;
+  await expect(page).toHaveURL('/org/org/b/settings/action-definitions');
+  await expect(cell).not.toHaveText('Only A');
+  expect(requests.puts()).toBe(0);
+});
+
+test('Access Levels is read-only unless the current user is an organization administrator', async ({
+  page,
+}) => {
+  await backend(page);
+  await mount(page, 'accessLevels');
+  await expect(
+    page.getByRole('button', { name: 'Add new Access Level', exact: true })
+  ).toHaveCount(0);
+  await page.addInitScript('window.__QA_ADMIN__ = true');
+  await mount(page, 'accessLevels');
+  await page
+    .getByRole('button', { name: 'Add new Access Level', exact: true })
+    .click();
+  await expect(
+    page.getByRole('heading', { name: 'Add New Access Level', exact: true })
+  ).toBeVisible();
+  await cancelPolicyForm(page);
+});
+
+test('restricted Settings pages never load policy data', async ({ page }) => {
+  const requests = await backend(page);
+  await page.addInitScript('window.__QA_ALLOWED__ = false');
+  await mount(page, 'casePolicy');
+  await expect(page.getByRole('alert')).toHaveText(
+    'This location is restricted or unavailable.'
+  );
+  await expect(
+    page.getByRole('button', { name: 'Add Action', exact: true })
+  ).toHaveCount(0);
+  expect(requests.validations()).toBe(0);
+  expect(requests.puts()).toBe(0);
+});
+
+function caseMatrixPolicy() {
+  const value = EffectiveLocationPolicy.fromJS(
+    editableVariantPolicy()
+  ).toJSON();
+  value.referralPolicy.arrangementPolicies[0].arrangementFunctions[0].variants[0].requiredSetupActions =
+    [{ actionName: 'Form', isRequired: false }];
+  return value;
+}
+
+function matrixCell(
+  page: Page,
+  action: string,
+  fn: string | null = null,
+  variant: string | null = null
+) {
+  const field = JSON.stringify(['Hosting', fn, variant]);
+  return page
+    .getByRole('grid', {
+      name: 'Case Policies requirements matrix',
+      exact: true,
+    })
+    .locator('[data-id="' + action + '"] [data-field=\'' + field + "']");
+}
+
+async function openMatrixCell(
+  page: Page,
+  fn: string | null = null,
+  variant: string | null = null
+) {
+  const cell = matrixCell(page, 'Form', fn, variant);
+  await cell.click();
+  return page.getByRole('dialog', { name: /^Edit Form/ });
+}
+
+async function applyApplicability(
+  page: Page,
+  value: 'Optional' | 'Required',
+  fn: string | null = null,
+  variant: string | null = null
+) {
+  const editor = await openMatrixCell(page, fn, variant);
+  await editor
+    .getByRole('switch', { name: 'Requirement 1 Required', exact: true })
+    .setChecked(value === 'Required');
+  await editor
+    .getByRole('button', { name: 'Apply to draft', exact: true })
+    .click();
+}
+
+async function openArrangementVisibility(page: Page) {
+  await page
+    .getByRole('button', { name: 'Manage columns', exact: true })
+    .click();
+  const panel = page.getByRole('group', {
+    name: 'Arrangement visibility',
+    exact: true,
+  });
+  await expect(panel).toBeVisible();
+  return panel;
+}
+
+test.describe('matrix arrangement visibility', () => {
+  test('empty and excluded arrangements provide a usable empty panel without policy writes', async ({
+    page,
+  }) => {
+    const initial = policy();
+    initial.referralPolicy.arrangementPolicies = [
+      { ...initial.referralPolicy.arrangementPolicies[0], arrangementType: '' },
+    ];
+    const requests = await backend(page, false, false, initial);
+    await mount(page, 'casePolicy', undefined, true);
+    const panel = await openArrangementVisibility(page);
+    await expect(panel.getByRole('checkbox')).toHaveCount(0);
+    await expect(
+      panel.getByText('No valid arrangement types are available.')
+    ).toBeVisible();
+    await page.keyboard.press('Escape');
+    await expect(panel).toBeHidden();
+    expect(requests.puts()).toBe(0);
+  });
+  for (const width of [320, 390, 768, 1440]) {
+    test(`arrangement toggles control complete hierarchies and restore focus at ${width}px`, async ({
+      page,
+    }) => {
+      await page.setViewportSize({ width, height: 900 });
+      const initial = caseMatrixPolicy();
+      const name =
+        'A long superseded arrangement name for visibility management';
+      initial.referralPolicy.arrangementPolicies.push({
+        ...initial.referralPolicy.arrangementPolicies[0],
+        arrangementType: name,
+        supersededAtUtc: '2024-01-01T00:00:00Z',
+      });
+      const requests = await backend(page, false, false, initial);
+      await mount(page, 'casePolicy', undefined, true);
+      const grid = page.getByRole('grid', {
+        name: 'Case Policies requirements matrix',
+        exact: true,
+      });
+      const trigger = page.getByRole('button', {
+        name: 'Manage columns',
+        exact: true,
+      });
+      let panel = await openArrangementVisibility(page);
+      await expect(panel.getByRole('checkbox')).toHaveCount(2);
+      const hosting = panel.getByRole('checkbox', {
+        name: 'Hosting',
+        exact: true,
+      });
+      const other = panel.getByRole('checkbox', { name, exact: true });
+      await expect(hosting).toBeChecked();
+      await expect(other).toBeChecked();
+      await expect(
+        panel.getByRole('checkbox', {
+          name: /^(Actions|Base|Provider function|First profile)$/,
+        })
+      ).toHaveCount(0);
+      await hosting.focus();
+      await hosting.press('Space');
+      await expect(hosting).not.toBeChecked();
+      await expect(
+        grid.getByRole('columnheader', {
+          name: 'Hosting (arrangement type)',
+          exact: true,
+        })
+      ).toHaveCount(0);
+      await other.uncheck();
+      await expect(
+        grid.getByRole('columnheader', { name: /\(arrangement type\)/ })
+      ).toHaveCount(0);
+      await expect(
+        grid.getByRole('columnheader', { name: 'Actions', exact: true })
+      ).toBeVisible();
+      const bounds = (await panel.boundingBox())!;
+      expect(bounds.x).toBeGreaterThanOrEqual(0);
+      expect(bounds.x + bounds.width).toBeLessThanOrEqual(width);
+      await hosting.press('Escape');
+      await expect(panel).toBeHidden();
+      await expect(trigger).toBeFocused();
+      await expect(
+        page.getByRole('button', { name: 'Undo', exact: true })
+      ).toBeDisabled();
+      panel = await openArrangementVisibility(page);
+      await panel
+        .getByRole('checkbox', { name: 'Hosting', exact: true })
+        .check();
+      await panel
+        .getByRole('checkbox', { name: 'Hosting', exact: true })
+        .press('Escape');
+      await expect(
+        grid.getByRole('columnheader', {
+          name: 'Hosting (arrangement type)',
+          exact: true,
+        })
+      ).toBeVisible();
+      await expect(
+        grid.getByRole('columnheader', {
+          name: name + ' (read-only) (arrangement type)',
+          exact: true,
+        })
+      ).toHaveCount(0);
+      await expect(
+        grid.getByRole('columnheader', { name: 'Base', exact: true })
+      ).toHaveCount(1);
+      await expect(
+        grid.getByRole('columnheader', {
+          name: 'First profile (variant)',
+          exact: true,
+        })
+      ).toHaveCount(1);
+      expect(requests.puts()).toBe(0);
+    });
+  }
+
+  test('leaf menus cannot hide Actions, Base or variants and retain unrelated menu actions', async ({
+    page,
+  }) => {
+    const requests = await backend(page, false, false, caseMatrixPolicy());
+    await mount(page, 'casePolicy', undefined, true);
+    for (const [name, field] of [
+      ['Actions', 'actionName'],
+      ['Base', JSON.stringify(['Hosting', null, null])],
+      [
+        'First profile (variant)',
+        JSON.stringify(['Hosting', 'Provider function', 'First profile']),
+      ],
+    ]) {
+      const header = page
+        .getByRole('grid')
+        .locator('[role="columnheader"][data-field=\'' + field + "']");
+      await header.scrollIntoViewIfNeeded();
+      await header.hover();
+      await header
+        .getByRole('button', { name: name + ' column menu', exact: true })
+        .click();
+      const menu = page.getByRole('menu', {
+        name: name + ' column menu',
+        exact: true,
+      });
+      await expect(
+        menu.getByRole('menuitem', { name: 'Hide column', exact: true })
+      ).toHaveCount(0);
+      await expect(
+        menu.getByRole('menuitem', { name: 'Sort by ASC', exact: true })
+      ).toBeVisible();
+      await menu
+        .getByRole('menuitem', { name: 'Manage columns', exact: true })
+        .click();
+      const panel = page.getByRole('group', {
+        name: 'Arrangement visibility',
+        exact: true,
+      });
+      await expect(panel.getByRole('checkbox')).toHaveCount(1);
+      await panel.getByRole('checkbox').press('Escape');
+      await expect(panel).toBeHidden();
+      await page.keyboard.press('Escape');
+    }
+    const editor = await openMatrixCell(page);
+    await expect(
+      page.getByRole('button', { name: 'Manage columns', exact: true })
+    ).toHaveCount(0);
+    await editor.press('Escape');
+    expect(requests.puts()).toBe(0);
+  });
+
+  test('hidden arrangement drafts, sorting, quick filters and Save Cancel history remain independent', async ({
+    page,
+  }) => {
+    const initial = caseMatrixPolicy();
+    const requests = await backend(page, false, false, initial);
+    let saved: EffectiveLocationPolicy | undefined;
+    page.on('request', (request) => {
+      if (request.method() === 'PUT') saved = request.postDataJSON();
+    });
+    await mount(page, 'casePolicy', undefined, true);
+    await applyApplicability(page, 'Optional');
+    const actions = page
+      .getByRole('grid')
+      .locator('[role="columnheader"][data-field="actionName"]');
+    await actions.click();
+    await expect(actions).toHaveAttribute('aria-sort', 'ascending');
+    await page.getByRole('button', { name: 'Search', exact: true }).click();
+    await page.getByRole('searchbox').fill('Optional');
+    await expect(matrixCell(page, 'Form')).toBeVisible();
+    let panel = await openArrangementVisibility(page);
+    await panel
+      .getByRole('checkbox', { name: 'Hosting', exact: true })
+      .uncheck();
+    await panel.getByRole('checkbox').press('Escape');
+    await expect(page.getByRole('searchbox')).toHaveValue('Optional');
+    await expect(
+      page.getByRole('grid').locator('[data-id="Form"]')
+    ).toHaveCount(0);
+    await expect(
+      page.getByRole('status', { name: 'Policy draft status' })
+    ).toContainText('1 unsaved change');
+    await page.getByRole('button', { name: 'Undo', exact: true }).click();
+    await expect(
+      page.getByRole('button', { name: 'Save changes', exact: true })
+    ).toBeDisabled();
+    await page.getByRole('button', { name: 'Redo', exact: true }).click();
+    await expect(
+      page.getByRole('button', { name: 'Save changes', exact: true })
+    ).toBeEnabled();
+    expect(requests.puts()).toBe(0);
+    await page
+      .getByRole('button', { name: 'Save changes', exact: true })
+      .click();
+    await expect.poll(requests.puts).toBe(1);
+    await expect(
+      page.getByRole('button', { name: 'Undo', exact: true })
+    ).toBeDisabled();
+    expect(
+      saved!.referralPolicy.arrangementPolicies[0].requiredSetupActions[0]
+        .isRequired
+    ).toBe(false);
+    expect(
+      saved!.referralPolicy.arrangementPolicies[0].arrangementFunctions
+    ).toEqual(
+      initial.referralPolicy.arrangementPolicies[0].arrangementFunctions
+    );
+    await expect(actions).toHaveAttribute('aria-sort', 'ascending');
+    panel = await openArrangementVisibility(page);
+    await expect(panel.getByRole('checkbox')).not.toBeChecked();
+    await panel.getByRole('checkbox').check();
+    await panel.getByRole('checkbox').press('Escape');
+    await page.getByRole('searchbox').fill('');
+    await applyApplicability(page, 'Required');
+    panel = await openArrangementVisibility(page);
+    await panel.getByRole('checkbox').uncheck();
+    await panel.getByRole('checkbox').press('Escape');
+    await cancelPolicyForm(page);
+    panel = await openArrangementVisibility(page);
+    await expect(panel.getByRole('checkbox')).not.toBeChecked();
+    await panel.getByRole('checkbox').press('Escape');
+    await page.getByRole('link', { name: 'Location B', exact: true }).click();
+    await expect(page).toHaveURL('/org/org/b/settings/case-policies');
+    await expect(
+      page.getByRole('columnheader', {
+        name: 'Hosting (arrangement type)',
+        exact: true,
+      })
+    ).toBeVisible();
+    expect(requests.puts()).toBe(1);
+  });
+
+  test('Add Action can configure a hidden arrangement without changing visibility', async ({
+    page,
+  }) => {
+    const initial = policy();
+    initial.actionDefinitions = { New: { documentLink: 0, noteEntry: 0 } };
+    const requests = await backend(page, false, false, initial);
+    await mount(page, 'casePolicy', undefined, true);
+    let panel = await openArrangementVisibility(page);
+    await panel.getByRole('checkbox').uncheck();
+    await panel.getByRole('checkbox').press('Escape');
+    await page.getByRole('button', { name: 'Add Action', exact: true }).click();
+    const dialog = page.getByRole('dialog', {
+      name: 'Add Action',
+      exact: true,
+    });
+    await dialog
+      .getByRole('combobox', {
+        name: 'Existing Action Definition',
+        exact: true,
+      })
+      .fill('New');
+    await page.getByRole('option', { name: 'New', exact: true }).click();
+    await dialog
+      .getByRole('combobox', { name: 'Target scope', exact: true })
+      .click();
+    await page
+      .getByRole('option', { name: 'Hosting / Base', exact: true })
+      .click();
+    await dialog.getByRole('radio', { name: 'Setup', exact: true }).check();
+    await dialog
+      .getByRole('button', { name: 'Apply to draft', exact: true })
+      .click();
+    await expect(
+      page.getByRole('grid').locator('[data-id="New"]')
+    ).toBeVisible();
+    await expect(
+      page.getByRole('columnheader', { name: 'Base', exact: true })
+    ).toHaveCount(0);
+    panel = await openArrangementVisibility(page);
+    await expect(panel.getByRole('checkbox')).not.toBeChecked();
+    await panel.getByRole('checkbox').check();
+    await panel.getByRole('checkbox').press('Escape');
+    await expect(
+      page.getByText('Base · Setup · Required', { exact: true })
+    ).toBeVisible();
+    expect(requests.puts()).toBe(0);
+  });
+});
+
+test.describe('location-wide arrangement phases', () => {
+  function phasePolicy() {
+    const initial = caseMatrixPolicy();
+    initial.actionDefinitions.Consistent = { documentLink: 0, noteEntry: 0 };
+    initial.actionDefinitions.Fresh = { documentLink: 0, noteEntry: 0 };
+    initial.referralPolicy.arrangementPolicies[0].requiredSetupActions.push({
+      actionName: 'Consistent',
+      isRequired: true,
+    });
+    return initial;
+  }
+  async function chooseAction(page: Page, name: string) {
+    await page.getByRole('button', { name: 'Add Action', exact: true }).click();
+    const dialog = page.getByRole('dialog', {
+      name: 'Add Action',
+      exact: true,
+    });
+    await dialog
+      .getByRole('combobox', {
+        name: 'Existing Action Definition',
+        exact: true,
+      })
+      .fill(name);
+    await page.getByRole('option', { name, exact: true }).click();
+    return dialog;
+  }
+  async function chooseScope(page: Page, variant = false) {
+    await page
+      .getByRole('combobox', { name: 'Target scope', exact: true })
+      .click();
+    await page
+      .getByRole('option', {
+        name: variant
+          ? 'Hosting / Provider function / First profile (additional)'
+          : 'Hosting / Base',
+        exact: true,
+      })
+      .click();
+  }
+  test('hidden and filtered usages lock Add Action to their established phase and preserve complete Save payloads', async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 390, height: 900 });
+    const initial = phasePolicy();
+    const requests = await backend(page, false, false, initial);
+    let saved: EffectiveLocationPolicy | undefined;
+    page.on('request', (request) => {
+      if (request.method() === 'PUT') saved = request.postDataJSON();
+    });
+    await mount(page, 'casePolicy', undefined, true);
+    const panel = await openArrangementVisibility(page);
+    await panel
+      .getByRole('checkbox', { name: 'Hosting', exact: true })
+      .uncheck();
+    await panel.getByRole('checkbox').press('Escape');
+    if (!(await page.getByRole('searchbox').isVisible()))
+      await page.getByRole('button', { name: 'Search', exact: true }).click();
+    await page.getByRole('searchbox').fill('Form');
+    let dialog = await chooseAction(page, 'Consistent');
+    await expect(
+      dialog.getByText(/Setup is the established arrangement phase/)
+    ).toBeVisible();
+    await expect(
+      dialog.getByRole('radio', { name: 'Setup', exact: true })
+    ).toBeChecked();
+    for (const phase of ['Monitoring', 'Closeout'])
+      await expect(
+        dialog.getByRole('radio', { name: phase, exact: true })
+      ).toBeDisabled();
+    await chooseScope(page);
+    await expect(
+      dialog.getByText(/This scope already contains this action/)
+    ).toBeVisible();
+    await expect(
+      dialog.getByRole('button', { name: 'Apply to draft', exact: true })
+    ).toBeDisabled();
+    await chooseScope(page, true);
+    await dialog
+      .getByRole('switch', { name: 'Requirement 1 Required', exact: true })
+      .uncheck();
+    await dialog
+      .getByRole('button', { name: 'Apply to draft', exact: true })
+      .click();
+    expect(requests.puts()).toBe(0);
+    await expect(page.getByRole('searchbox')).toHaveValue('Form');
+    await expect(
+      page.getByRole('columnheader', { name: 'Base', exact: true })
+    ).toHaveCount(0);
+    await page
+      .getByRole('button', { name: 'Save changes', exact: true })
+      .click();
+    await expect.poll(requests.puts).toBe(1);
+    const arrangement = saved!.referralPolicy.arrangementPolicies[0];
+    expect(arrangement.requiredSetupActions).toEqual(
+      initial.referralPolicy.arrangementPolicies[0].requiredSetupActions
+    );
+    expect(arrangement.requiredMonitoringActionsNew).toEqual(
+      initial.referralPolicy.arrangementPolicies[0].requiredMonitoringActionsNew
+    );
+    expect(arrangement.policyVersions).toEqual(
+      initial.referralPolicy.arrangementPolicies[0].policyVersions
+    );
+    expect(saved!.volunteerPolicy).toEqual(initial.volunteerPolicy);
+    expect(
+      arrangement.arrangementFunctions[0].variants[0].requiredSetupActions
+    ).toContainEqual({ actionName: 'Consistent', isRequired: false });
+    dialog = await chooseAction(page, 'Consistent');
+    await dialog
+      .getByRole('button', { name: 'Find in matrix', exact: true })
+      .click();
+    await expect(
+      page.getByRole('button', {
+        name: 'Reveal action (clear filters)',
+        exact: true,
+      })
+    ).toBeVisible();
+  });
+  test('first-phase choice, Undo Redo, failed Save, Cancel and location changes derive restrictions from the current draft', async ({
+    page,
+  }) => {
+    const initial = phasePolicy();
+    const requests = await backend(page, false, false, initial);
+    await mount(page, 'casePolicy', undefined, true);
+    let dialog = await chooseAction(page, 'Fresh');
+    await expect(dialog.getByRole('radio', { checked: true })).toHaveCount(0);
+    await chooseScope(page);
+    await expect(
+      dialog.getByRole('button', { name: 'Apply to draft', exact: true })
+    ).toBeDisabled();
+    await dialog
+      .getByRole('radio', { name: 'Monitoring', exact: true })
+      .check();
+    await dialog
+      .getByRole('spinbutton', { name: 'Delay (days)', exact: true })
+      .fill('3');
+    await dialog
+      .getByRole('switch', { name: 'Requirement 1 Required', exact: true })
+      .uncheck();
+    await dialog
+      .getByRole('button', { name: 'Apply to draft', exact: true })
+      .click();
+    await page.getByRole('button', { name: 'Undo', exact: true }).click();
+    dialog = await chooseAction(page, 'Fresh');
+    await expect(dialog.getByRole('radio', { checked: true })).toHaveCount(0);
+    await dialog.getByRole('button', { name: 'Cancel', exact: true }).click();
+    await page.getByRole('button', { name: 'Redo', exact: true }).click();
+    dialog = await chooseAction(page, 'Fresh');
+    await expect(
+      dialog.getByRole('radio', { name: 'Monitoring', exact: true })
+    ).toBeChecked();
+    await expect(
+      dialog.getByRole('radio', { name: 'Setup', exact: true })
+    ).toBeDisabled();
+    await chooseScope(page, true);
+    await dialog
+      .getByRole('button', { name: 'Apply to draft', exact: true })
+      .click();
+    await page.route('**/Configuration/policy', async (route) => {
+      if (route.request().method() !== 'PUT') return route.fallback();
+      await route.fulfill({
+        status: 400,
+        json: { errors: ['Phase save failed'] },
+      });
+    });
+    await page
+      .getByRole('button', { name: 'Save changes', exact: true })
+      .click();
+    await expect(
+      page.getByText('Phase save failed', { exact: true })
+    ).toBeVisible();
+    await expect(
+      page.getByRole('button', { name: 'Undo', exact: true })
+    ).toBeEnabled();
+    dialog = await chooseAction(page, 'Fresh');
+    await expect(
+      dialog.getByRole('radio', { name: 'Monitoring', exact: true })
+    ).toBeChecked();
+    await dialog.getByRole('button', { name: 'Cancel', exact: true }).click();
+    await cancelPolicyForm(page);
+    dialog = await chooseAction(page, 'Fresh');
+    await expect(dialog.getByRole('radio', { checked: true })).toHaveCount(0);
+    await dialog.getByRole('button', { name: 'Cancel', exact: true }).click();
+    const otherLocation = phasePolicy();
+    otherLocation.actionDefinitions['Location B only'] = {
+      documentLink: 0,
+      noteEntry: 0,
+    };
+    otherLocation.referralPolicy.arrangementPolicies[0].requiredSetupActions.push(
+      { actionName: 'Location B only', isRequired: true }
+    );
+    await page.route('**/org/b/Configuration/policy', async (route) => {
+      if (route.request().method() !== 'GET') return route.fallback();
+      await route.fulfill({ json: otherLocation });
+    });
+    await page.getByRole('link', { name: 'Location B', exact: true }).click();
+    await expect(
+      page.getByRole('grid').locator('[data-id="Location B only"]')
+    ).toBeVisible();
+    dialog = await chooseAction(page, 'Fresh');
+    await expect(dialog.getByRole('radio', { checked: true })).toHaveCount(0);
+    expect(requests.puts()).toBe(0);
+  });
+  test('single-phase cell editing is locked until the last requirement is explicitly removed', async ({
+    page,
+  }) => {
+    const initial = phasePolicy();
+    const requests = await backend(page, false, false, initial);
+    await mount(page, 'casePolicy', undefined, true);
+    const cell = matrixCell(page, 'Consistent');
+    await cell.click();
+    let editor = page.getByRole('dialog', { name: /^Edit Consistent/ });
+    await expect(
+      editor.getByText(/Setup is the established arrangement phase/)
+    ).toBeVisible();
+    await expect(
+      editor.getByRole('radio', { name: 'Monitoring', exact: true })
+    ).toBeDisabled();
+    await expect(editor.getByRole('button', { name: /^Add / })).toHaveCount(0);
+    await editor.getByRole('button', { name: /Not used/ }).click();
+    await editor
+      .getByRole('button', { name: 'Apply to draft', exact: true })
+      .click();
+    await expect(
+      cell.getByRole('img', { name: 'Not used', exact: true })
+    ).toHaveText('—');
+    await expect(cell.getByText('—', { exact: true })).toBeVisible();
+    const status = await page
+      .getByRole('status', { name: 'Policy draft status' })
+      .textContent();
+    await cell.click();
+    editor = page.getByRole('dialog', { name: /^Edit Consistent/ });
+    await expect(cell.getByText('—', { exact: true })).toBeVisible();
+    await expect(
+      page.getByRole('status', { name: 'Policy draft status' })
+    ).toHaveText('Cell edit in progress \u00b7 ' + status);
+    await expect(
+      editor.getByRole('button', { name: 'Add Monitoring', exact: true })
+    ).toBeVisible();
+    await editor
+      .getByRole('button', { name: 'Add Monitoring', exact: true })
+      .click();
+    await expect(
+      editor.getByRole('radio', { name: 'Monitoring', exact: true })
+    ).toBeChecked();
+    await editor
+      .getByRole('button', { name: 'Apply to draft', exact: true })
+      .click();
+    await expect(
+      cell.getByText('Base \u00b7 Monitoring \u00b7 Required', { exact: true })
+    ).toBeVisible();
+    await page.getByRole('button', { name: 'Undo', exact: true }).click();
+    await expect(
+      cell.getByRole('img', { name: 'Not used', exact: true })
+    ).toHaveText('—');
+    await expect(cell.getByText('—', { exact: true })).toBeVisible();
+    await page.getByRole('button', { name: 'Undo', exact: true }).click();
+    await expect(
+      cell.getByText('Base \u00b7 Setup \u00b7 Required', { exact: true })
+    ).toBeVisible();
+    expect(requests.puts()).toBe(0);
+  });
+  test('conflicts remain visible and block additions while unrelated edits and Save remain available', async ({
+    page,
+  }) => {
+    const initial = phasePolicy();
+    const requests = await backend(page, false, false, initial);
+    let saved: EffectiveLocationPolicy | undefined;
+    page.on('request', (request) => {
+      if (request.method() === 'PUT') saved = request.postDataJSON();
+    });
+    await mount(page, 'casePolicy', undefined, true);
+    await expect(
+      page
+        .getByRole('grid')
+        .locator('[data-id="Form"] [data-field="actionName"]')
+        .getByText(/Phase conflict: Setup, Monitoring, Closeout/)
+    ).toBeVisible();
+    const dialog = await chooseAction(page, 'Form');
+    await expect(
+      dialog.getByText(/Conflicting arrangement phases:/)
+    ).toBeVisible();
+    await expect(dialog.getByRole('radio', { checked: true })).toHaveCount(0);
+    for (const phase of ['Setup', 'Monitoring', 'Closeout'])
+      await expect(
+        dialog.getByRole('radio', { name: phase, exact: true })
+      ).toBeDisabled();
+    await expect(
+      dialog.getByRole('button', { name: 'Apply to draft', exact: true })
+    ).toBeDisabled();
+    await dialog
+      .getByRole('button', { name: 'Find in matrix', exact: true })
+      .click();
+    const cell = matrixCell(page, 'Consistent');
+    await cell.click();
+    const editor = page.getByRole('dialog', { name: /^Edit Consistent/ });
+    await editor
+      .getByRole('switch', { name: 'Requirement 1 Required', exact: true })
+      .uncheck();
+    await editor
+      .getByRole('button', { name: 'Apply to draft', exact: true })
+      .click();
+    await page
+      .getByRole('button', { name: 'Save changes', exact: true })
+      .click();
+    await expect.poll(requests.puts).toBe(1);
+    const arrangement = saved!.referralPolicy.arrangementPolicies[0];
+    expect(arrangement.requiredMonitoringActionsNew).toEqual(
+      initial.referralPolicy.arrangementPolicies[0].requiredMonitoringActionsNew
+    );
+    expect(arrangement.requiredCloseoutActions).toEqual(
+      initial.referralPolicy.arrangementPolicies[0].requiredCloseoutActions
+    );
+    expect(arrangement.arrangementFunctions).toEqual(
+      initial.referralPolicy.arrangementPolicies[0].arrangementFunctions
+    );
+    expect(
+      arrangement.requiredSetupActions.find(
+        (item: { actionName: string }) => item.actionName === 'Form'
+      )
+    ).toEqual({ actionName: 'Form', isRequired: true });
+  });
+});
+
+test.describe('matrix pinned Add Action row', () => {
+  for (const width of [320, 390, 768, 1440]) {
+    test(`one bottom-left Add Action control opens a right drawer with keyboard focus at ${width}px`, async ({
+      page,
+    }) => {
+      await page.setViewportSize({ width, height: 900 });
+      const requests = await backend(page, false, false, caseMatrixPolicy());
+      await mount(page, 'casePolicy', undefined, true);
+      const grid = page.getByRole('grid', {
+        name: 'Case Policies requirements matrix',
+        exact: true,
+      });
+      const add = grid.getByRole('button', { name: 'Add Action', exact: true });
+      await expect(
+        page.getByRole('button', { name: 'Add Action', exact: true })
+      ).toHaveCount(1);
+      const cell = grid.getByRole('gridcell').filter({
+        has: page.getByRole('button', { name: 'Add Action', exact: true }),
+      });
+      const row = grid.getByRole('row').filter({
+        has: page.getByRole('button', { name: 'Add Action', exact: true }),
+      });
+      await expect(cell).toHaveAttribute('data-field', 'actionName');
+      await expect(cell).toHaveAttribute('aria-colindex', '1');
+      await expect(
+        grid.getByRole('columnheader', { name: 'Add Action', exact: true })
+      ).toHaveCount(0);
+      expect(
+        await row.evaluate(
+          (element) => !!element.closest('.MuiDataGrid-pinnedRows--bottom')
+        )
+      ).toBe(true);
+      await expect(grid.locator('[data-id]').last()).toHaveAttribute(
+        'data-id',
+        (await row.getAttribute('data-id'))!
+      );
+      for (const requirement of await row
+        .locator('[role="gridcell"]:not([data-field="actionName"])')
+        .all())
+        await expect(requirement).toBeEmpty();
+      await expect(add.getByTestId('AddIcon')).toHaveCount(1);
+      await add.focus();
+      const bounds = (await add.boundingBox())!;
+      const gridBounds = (await grid.boundingBox())!;
+      const rowBounds = (await row.boundingBox())!;
+      expect(bounds.x).toBeGreaterThanOrEqual(0);
+      expect(bounds.x + bounds.width).toBeLessThanOrEqual(width);
+      expect(rowBounds.width).toBeGreaterThanOrEqual(gridBounds.width - 18);
+      expect(bounds.x).toBeLessThan(gridBounds.x + gridBounds.width / 2);
+      expect(bounds.x - gridBounds.x).toBeLessThanOrEqual(26);
+      expect(rowBounds.y).toBeGreaterThan(gridBounds.y + gridBounds.height / 2);
+      await add.press('Enter');
+      let dialog = page.getByRole('dialog', {
+        name: 'Add Action',
+        exact: true,
+      });
+      await expect(dialog).toBeVisible();
+      await expect(dialog).toHaveClass(/MuiDrawer-paper/);
+      await expect(page.locator('.MuiDialog-root')).toHaveCount(0);
+      await expect(
+        page.locator('.MuiDrawer-root.MuiDrawer-anchorRight')
+      ).toHaveCount(1);
+      await expect(
+        dialog.getByRole('heading', { name: 'Add Action', exact: true })
+      ).toBeVisible();
+      await expect(
+        dialog.getByRole('combobox', {
+          name: 'Existing Action Definition',
+          exact: true,
+        })
+      ).toBeFocused();
+      await expect
+        .poll(async () => {
+          const box = (await dialog.boundingBox())!;
+          return Math.round(box.x + box.width);
+        })
+        .toBe(width);
+      const drawerBounds = (await dialog.boundingBox())!;
+      expect(drawerBounds.width).toBe(Math.min(width, 600));
+      expect(drawerBounds.y).toBe(0);
+      expect(drawerBounds.height).toBe(900);
+      expect(
+        await dialog.evaluate(
+          (element) => element.scrollWidth <= element.clientWidth
+        )
+      ).toBe(true);
+      await expect(dialog.getByRole('radio')).toHaveCount(3);
+      await expect(
+        dialog.getByRole('switch', {
+          name: 'Requirement 1 Required',
+          exact: true,
+        })
+      ).toBeChecked();
+      await dialog.getByRole('button', { name: 'Cancel', exact: true }).click();
+      await expect(add).toBeFocused();
+      await add.press('Space');
+      dialog = page.getByRole('dialog', { name: 'Add Action', exact: true });
+      await expect(dialog).toBeVisible();
+      await dialog.press('Escape');
+      await expect(dialog).toBeHidden();
+      await expect(add).toBeFocused();
+      await add.click();
+      dialog = page.getByRole('dialog', { name: 'Add Action', exact: true });
+      await dialog
+        .getByRole('button', { name: 'Close Add Action', exact: true })
+        .click();
+      await expect(dialog).toBeHidden();
+      await expect(add).toBeFocused();
+      await add.press('ArrowUp');
+      const lastAction = grid
+        .locator(
+          '.MuiDataGrid-virtualScrollerRenderZone [data-field="actionName"]'
+        )
+        .last();
+      await expect(lastAction).toBeFocused();
+      await lastAction.press('ArrowDown');
+      await expect(add).toBeFocused();
+      await add.hover();
+      await page.mouse.wheel(2000, 0);
+      await expect
+        .poll(() =>
+          grid
+            .locator('.MuiDataGrid-virtualScroller')
+            .evaluate((element) => element.scrollLeft)
+        )
+        .toBeGreaterThan(0);
+      await expect(add).toBeVisible();
+      const scrolled = (await add.boundingBox())!;
+      expect(scrolled.x).toBeCloseTo(bounds.x, 0);
+      await expect(
+        page.getByRole('button', { name: 'Add Action', exact: true })
+      ).toHaveCount(1);
+      await expect(page.locator('.MuiDataGrid-rowCount')).toBeVisible();
+      await expect(
+        page.getByRole('button', { name: 'Undo', exact: true })
+      ).toBeDisabled();
+      await expect(
+        page.getByRole('button', { name: 'Save changes', exact: true })
+      ).toBeDisabled();
+      expect(requests.puts()).toBe(0);
+    });
+  }
+
+  test('Add Action drawer guards dismissal and keeps long schedule controls and footer actions usable', async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 390, height: 640 });
+    const initial = caseMatrixPolicy();
+    initial.actionDefinitions['Drawer action'] = {
+      documentLink: 0,
+      noteEntry: 0,
+    };
+    const requests = await backend(page, false, false, initial);
+    await mount(page, 'casePolicy', undefined, true);
+    const add = page.getByRole('button', { name: 'Add Action', exact: true });
+    await add.click();
+    const drawer = page.getByRole('dialog', {
+      name: 'Add Action',
+      exact: true,
+    });
+    const action = drawer.getByRole('combobox', {
+      name: 'Existing Action Definition',
+      exact: true,
+    });
+    await action.fill('Drawer action');
+    await page
+      .getByRole('option', { name: 'Drawer action', exact: true })
+      .click();
+    await drawer
+      .getByRole('combobox', { name: 'Target scope', exact: true })
+      .click();
+    await page
+      .getByRole('option', { name: 'Hosting / Base', exact: true })
+      .click();
+    await drawer
+      .getByRole('radio', { name: 'Monitoring', exact: true })
+      .check();
+    const required = drawer.getByRole('switch', {
+      name: 'Requirement 1 Required',
+      exact: true,
+    });
+    await required.uncheck();
+    await drawer
+      .getByRole('combobox', { name: 'Schedule type', exact: true })
+      .click();
+    page.once('dialog', (dialog) => dialog.accept());
+    await page
+      .getByRole('option', { name: 'Arrangement-duration stages', exact: true })
+      .click();
+    for (let stage = 0; stage < 3; stage++)
+      await drawer
+        .getByRole('button', { name: 'Add stage', exact: true })
+        .click();
+    const interval = drawer.getByRole('spinbutton', {
+      name: 'Stage 4 interval (days)',
+      exact: true,
+    });
+    await interval.fill('0');
+    const apply = drawer.getByRole('button', {
+      name: 'Apply to draft',
+      exact: true,
+    });
+    await expect(apply).toBeDisabled();
+    await expect(drawer.getByRole('alert')).toContainText(
+      'Stage intervals must be positive whole days.'
+    );
+    await interval.fill('3');
+    await expect(apply).toBeEnabled();
+    const content = drawer.getByRole('region', {
+      name: 'Add Action configuration',
+      exact: true,
+    });
+    expect(
+      await content.evaluate(
+        (element) => element.scrollHeight > element.clientHeight
+      )
+    ).toBe(true);
+    expect(
+      await content.evaluate(
+        (element) => element.scrollWidth <= element.clientWidth
+      )
+    ).toBe(true);
+    await expect(apply).toBeInViewport();
+    await expect(
+      drawer.getByRole('button', { name: 'Cancel', exact: true })
+    ).toBeInViewport();
+    expect((await apply.boundingBox())!.y).toBeGreaterThan(560);
+    const close = drawer.getByRole('button', {
+      name: 'Close Add Action',
+      exact: true,
+    });
+    await close.click();
+    await policyDecision(page, false);
+    await expect(action).toHaveValue('Drawer action');
+    await expect(interval).toHaveValue('3');
+    await expect(required).not.toBeChecked();
+    await drawer.press('Escape');
+    await policyDecision(page, false);
+    await expect(interval).toHaveValue('3');
+    await page
+      .locator('.MuiDrawer-root .MuiBackdrop-root')
+      .dispatchEvent('click');
+    await policyDecision(page, false);
+    await expect(action).toHaveValue('Drawer action');
+    await expect(page.locator('.MuiDrawer-root:visible')).toHaveCount(1);
+    await drawer.getByRole('button', { name: 'Cancel', exact: true }).click();
+    await expect(drawer).toBeHidden();
+    await expect(add).toBeFocused();
+    await expect(
+      page.getByRole('button', { name: 'Undo', exact: true })
+    ).toBeDisabled();
+    await expect(
+      page.getByRole('button', { name: 'Save changes', exact: true })
+    ).toBeDisabled();
+    await add.click();
+    await expect(action).toHaveValue('');
+    await action.fill('Drawer action');
+    await page
+      .getByRole('option', { name: 'Drawer action', exact: true })
+      .click();
+    await close.click();
+    await policyDecision(page, true);
+    await expect(drawer).toBeHidden();
+    await expect(add).toBeFocused();
+    expect(requests.puts()).toBe(0);
+  });
+
+  test('sorting, zero-result search, column filtering and hidden arrangements cannot hide or reorder the control', async ({
+    page,
+  }) => {
+    const initial = policy();
+    initial.actionDefinitions = {
+      Alpha: { documentLink: 0, noteEntry: 0 },
+      Zulu: { documentLink: 0, noteEntry: 0 },
+    };
+    initial.referralPolicy.arrangementPolicies[0].requiredSetupActions = [
+      { actionName: 'Alpha', isRequired: true },
+    ];
+    initial.referralPolicy.arrangementPolicies[0].requiredCloseoutActions = [
+      { actionName: 'Zulu', isRequired: false },
+    ];
+    const requests = await backend(page, false, false, initial);
+    await mount(page, 'casePolicy', undefined, true);
+    const grid = page.getByRole('grid');
+    const add = grid.getByRole('button', { name: 'Add Action', exact: true });
+    const row = grid.getByRole('row').filter({
+      has: page.getByRole('button', { name: 'Add Action', exact: true }),
+    });
+    const id = (await row.getAttribute('data-id'))!;
+    await expect(page.locator('.MuiDataGrid-rowCount')).toContainText('2');
+    const header = grid.locator(
+      '[role="columnheader"][data-field="actionName"]'
+    );
+    await header.click();
+    await expect(header).toHaveAttribute('aria-sort', 'ascending');
+    await header.click();
+    await expect(header).toHaveAttribute('aria-sort', 'descending');
+    await expect(grid.locator('[data-id]').last()).toHaveAttribute(
+      'data-id',
+      id
+    );
+    await page.getByRole('button', { name: 'Search', exact: true }).click();
+    await page.getByRole('searchbox').fill('No matching action');
+    await expect(
+      grid.locator('[data-id="Alpha"], [data-id="Zulu"]')
+    ).toHaveCount(0);
+    await expect(add).toBeEnabled();
+    await add.click();
+    const dialog = page.getByRole('dialog', {
+      name: 'Add Action',
+      exact: true,
+    });
+    await expect(dialog).toBeVisible();
+    await dialog.getByRole('button', { name: 'Cancel', exact: true }).click();
+    await expect(page.getByRole('searchbox')).toHaveValue('No matching action');
+    await page.getByRole('searchbox').fill('');
+    await header.hover();
+    await header
+      .getByRole('button', { name: 'Actions column menu', exact: true })
+      .click();
+    await page.getByRole('menuitem', { name: 'Filter', exact: true }).click();
+    const value = page.getByRole('textbox', { name: 'Value', exact: true });
+    await value.fill('No column match');
+    await expect(
+      grid.locator('[data-id="Alpha"], [data-id="Zulu"]')
+    ).toHaveCount(0);
+    await value.press('Escape');
+    await expect(add).toBeEnabled();
+    const panel = await openArrangementVisibility(page);
+    await panel
+      .getByRole('checkbox', { name: 'Hosting', exact: true })
+      .uncheck();
+    await panel.getByRole('checkbox').press('Escape');
+    await expect(grid.getByRole('columnheader')).toHaveCount(1);
+    await expect(add).toBeEnabled();
+    await expect(grid.locator('[data-id]').last()).toHaveAttribute(
+      'data-id',
+      id
+    );
+    expect(requests.puts()).toBe(0);
+  });
+
+  test('colliding action names stay real actions while the UI row stays out of counts, history, payloads and exports', async ({
+    page,
+  }) => {
+    const name = '__case_policy_add_action__';
+    const initial = policy();
+    initial.actionDefinitions = {
+      [name]: { documentLink: 0, noteEntry: 0 },
+      Unused: { documentLink: 0, noteEntry: 0 },
+    };
+    initial.referralPolicy.arrangementPolicies[0].requiredSetupActions = [
+      { actionName: name, isRequired: true },
+    ];
+    const requests = await backend(page, false, false, initial);
+    let saved: EffectiveLocationPolicy | undefined;
+    page.on('request', (request) => {
+      if (request.method() === 'PUT') saved = request.postDataJSON();
+    });
+    await mount(page, 'casePolicy', undefined, true);
+    const grid = page.getByRole('grid');
+    const add = grid.getByRole('button', { name: 'Add Action', exact: true });
+    const row = grid.getByRole('row').filter({
+      has: page.getByRole('button', { name: 'Add Action', exact: true }),
+    });
+    const id = (await row.getAttribute('data-id'))!;
+    expect(id).not.toBe(name);
+    await expect(
+      grid.locator('[data-id="' + name + '"] [data-field="actionName"]')
+    ).toHaveText(name);
+    await expect(page.locator('.MuiDataGrid-rowCount')).toContainText('1');
+    await add.click();
+    const dialog = page.getByRole('dialog', {
+      name: 'Add Action',
+      exact: true,
+    });
+    await dialog
+      .getByRole('combobox', {
+        name: 'Existing Action Definition',
+        exact: true,
+      })
+      .click();
+    await expect(
+      page.getByRole('option', { name: id, exact: true })
+    ).toHaveCount(0);
+    await page.getByRole('option', { name: 'Unused', exact: true }).click();
+    await dialog
+      .getByRole('combobox', { name: 'Target scope', exact: true })
+      .click();
+    await page
+      .getByRole('option', { name: 'Hosting / Base', exact: true })
+      .click();
+    await dialog.getByRole('radio', { name: 'Closeout', exact: true }).check();
+    await dialog
+      .getByRole('switch', { name: 'Requirement 1 Required', exact: true })
+      .uncheck();
+    await dialog
+      .getByRole('button', { name: 'Apply to draft', exact: true })
+      .click();
+    await expect(row).toHaveAttribute('data-id', id);
+    await expect(
+      page.getByRole('status', { name: 'Policy draft status' })
+    ).toContainText('1 unsaved change');
+    await page.getByRole('button', { name: 'Undo', exact: true }).click();
+    await expect(grid.locator('[data-id="Unused"]')).toHaveCount(0);
+    await expect(row).toHaveAttribute('data-id', id);
+    await page.getByRole('button', { name: 'Redo', exact: true }).click();
+    await expect(grid.locator('[data-id="Unused"]')).toBeVisible();
+    await page
+      .getByRole('button', { name: 'Save changes', exact: true })
+      .click();
+    await expect.poll(requests.puts).toBe(1);
+    expect(saved!.actionDefinitions).toEqual(initial.actionDefinitions);
+    expect(JSON.stringify(saved)).not.toContain(id);
+    expect(
+      saved!.referralPolicy.arrangementPolicies[0].requiredSetupActions
+    ).toEqual(
+      initial.referralPolicy.arrangementPolicies[0].requiredSetupActions
+    );
+    expect(
+      saved!.referralPolicy.arrangementPolicies[0].requiredCloseoutActions
+    ).toEqual([{ actionName: 'Unused', isRequired: false }]);
+    await page.getByRole('button', { name: 'Export', exact: true }).click();
+    const download = page.waitForEvent('download');
+    await page
+      .getByRole('menuitem', { name: 'Download as CSV', exact: true })
+      .click();
+    const csv = readFileSync((await (await download).path())!, 'utf8');
+    expect(
+      csv
+        .trim()
+        .split(/\r?\n/)
+        .slice(-2)
+        .map((line) => line.split(',')[0])
+    ).toEqual([name, 'Unused']);
+  });
+});
+
+test.describe('Case Policies matrix', () => {
+  test('variant cells show only Additional requirements while Base inheritance, editing and Save remain intact', async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    const initial = caseMatrixPolicy();
+    initial.referralPolicy.arrangementPolicies[0].arrangementFunctions[0].variants[0].requiredMonitoringActionsNew.push(
+      {
+        action: { actionName: 'Form', isRequired: false },
+        recurrence: {
+          discriminator: 'OneTimeRecurrencePolicy',
+          delay: '5.00:00:00',
+        },
+      }
+    );
+    const requests = await backend(page, false, false, initial);
+    let saved: EffectiveLocationPolicy | undefined;
+    page.on('request', (request) => {
+      if (request.method() === 'PUT') saved = request.postDataJSON();
+    });
+    await mount(page, 'casePolicy', undefined, true);
+    const base = matrixCell(page, 'Form');
+    const own = matrixCell(page, 'Form', 'Provider function', 'First profile');
+    const inherited = matrixCell(
+      page,
+      'Form',
+      'Provider function',
+      'Second profile'
+    );
+    await expect(
+      base.getByText('Base \u00b7 Setup \u00b7 Required', { exact: true })
+    ).toBeVisible();
+    await expect(
+      base.getByText('Stage 1: 2 days; 3 occurrence(s)', { exact: true })
+    ).toBeVisible();
+    await expect(
+      own.getByText('Additional \u00b7 Setup \u00b7 Optional', { exact: true })
+    ).toBeVisible();
+    await expect(
+      own.getByText('Additional \u00b7 Monitoring \u00b7 Optional', {
+        exact: true,
+      })
+    ).toBeVisible();
+    await expect(own).toContainText('5 days');
+    for (const cell of [own, inherited]) {
+      await expect(
+        cell.locator('.MuiChip-root').filter({ hasText: /^Base/ })
+      ).toHaveCount(0);
+      await expect(
+        cell.getByText('Stage 1: 2 days; 3 occurrence(s)', { exact: true })
+      ).toHaveCount(0);
+    }
+    await expect(
+      inherited.getByRole('img', {
+        name: 'Not used for additional requirements; Base requirements apply. See the Base column.',
+        exact: true,
+      })
+    ).toHaveText('—');
+    await expect(inherited.getByText('—', { exact: true })).toBeVisible();
+    await page.mouse.move(0, 0);
+    for (const cell of [base, own, inherited])
+      await expect(cell).toHaveCSS('background-color', 'rgb(255, 255, 255)');
+    await expect(
+      page
+        .getByRole('grid')
+        .locator('[data-id="Form"] [data-field="actionName"]')
+        .getByText(/Phase conflict: Setup, Monitoring, Closeout/)
+    ).toBeVisible();
+    await expect(
+      page.getByRole('button', { name: 'Save changes', exact: true })
+    ).toBeDisabled();
+    let editor = await openMatrixCell(
+      page,
+      'Provider function',
+      'Second profile'
+    );
+    await expect(inherited.getByText('—', { exact: true })).toBeVisible();
+    await expect(
+      editor.getByText(
+        'Base \u00b7 Setup \u00b7 Required (edit in the Base column)',
+        { exact: true }
+      )
+    ).toBeVisible();
+    await expect(editor.getByRole('switch')).toHaveCount(0);
+    await editor
+      .getByRole('button', { name: 'Cancel cell', exact: true })
+      .click();
+    await expect(
+      page.getByRole('button', { name: 'Undo', exact: true })
+    ).toBeDisabled();
+    editor = await openMatrixCell(page, 'Provider function', 'First profile');
+    await expect(
+      own.locator('.MuiChip-root').filter({ hasText: /^Base/ })
+    ).toHaveCount(0);
+    await expect(
+      editor.getByText(
+        'Base \u00b7 Setup \u00b7 Required (edit in the Base column)',
+        { exact: true }
+      )
+    ).toBeVisible();
+    await editor
+      .getByRole('switch', { name: 'Requirement 1 Required', exact: true })
+      .check();
+    await editor
+      .getByRole('button', { name: 'Apply to draft', exact: true })
+      .click();
+    await expect(
+      own.getByText('Additional \u00b7 Setup \u00b7 Required', { exact: true })
+    ).toBeVisible();
+    await page.getByRole('button', { name: 'Undo', exact: true }).click();
+    await expect(
+      own.getByText('Additional \u00b7 Setup \u00b7 Optional', { exact: true })
+    ).toBeVisible();
+    await page.getByRole('button', { name: 'Redo', exact: true }).click();
+    await expect(
+      own.getByText('Additional \u00b7 Setup \u00b7 Required', { exact: true })
+    ).toBeVisible();
+    expect(requests.puts()).toBe(0);
+    await page
+      .getByRole('button', { name: 'Save changes', exact: true })
+      .click();
+    await expect.poll(requests.puts).toBe(1);
+    const arrangement = saved!.referralPolicy.arrangementPolicies[0];
+    const original = initial.referralPolicy.arrangementPolicies[0];
+    expect(arrangement.requiredSetupActions).toEqual(
+      original.requiredSetupActions
+    );
+    expect(arrangement.requiredMonitoringActionsNew).toEqual(
+      original.requiredMonitoringActionsNew
+    );
+    expect(arrangement.requiredCloseoutActions).toEqual(
+      original.requiredCloseoutActions
+    );
+    expect(
+      arrangement.arrangementFunctions[0].variants[0]
+        .requiredMonitoringActionsNew
+    ).toEqual(
+      original.arrangementFunctions[0].variants[0].requiredMonitoringActionsNew
+    );
+    expect(
+      arrangement.arrangementFunctions[0].variants[0].requiredSetupActions
+    ).toEqual([{ actionName: 'Form', isRequired: true }]);
+    expect(arrangement.arrangementFunctions[0].variants[1]).toEqual(
+      original.arrangementFunctions[0].variants[1]
+    );
+    expect(arrangement.policyVersions).toEqual(original.policyVersions);
+    expect(saved!.volunteerPolicy).toEqual(initial.volunteerPolicy);
+  });
+
+  test('requirement cells and badges share a white surface without changing hover, focus or editing', async ({
+    page,
+  }) => {
+    const requests = await backend(page, false, false, caseMatrixPolicy());
+    await mount(page, 'casePolicy', undefined, true);
+    const base = matrixCell(page, 'Form');
+    const additional = matrixCell(
+      page,
+      'Form',
+      'Provider function',
+      'First profile'
+    );
+    const white = 'rgb(255, 255, 255)';
+    const palette = createTheme().palette;
+    function badgePresentation(element: Element) {
+      const properties = [
+        'background-color',
+        'color',
+        'border-top-color',
+        'border-top-width',
+        'border-top-style',
+        'border-radius',
+        'font-size',
+        'font-weight',
+        'padding-top',
+        'padding-right',
+        'padding-bottom',
+        'padding-left',
+        'gap',
+      ];
+      const root = getComputedStyle(element);
+      const label = getComputedStyle(element.querySelector('.MuiChip-label')!);
+      return {
+        root: Object.fromEntries(
+          properties.map((property) => [
+            property,
+            root.getPropertyValue(property),
+          ])
+        ),
+        label: Object.fromEntries(
+          properties.map((property) => [
+            property,
+            label.getPropertyValue(property),
+          ])
+        ),
+      };
+    }
+    const firstBadge = base.locator('.MuiChip-root').first();
+    await expect(firstBadge).toHaveCSS('color', palette.text.primary);
+    await expect(firstBadge).toHaveCSS('border-top-color', palette.divider);
+    const neutralPresentation = await firstBadge.evaluate(badgePresentation);
+    await page.mouse.move(0, 0);
+    for (const cell of [base, additional]) {
+      await expect(cell).toHaveCSS('background-color', white);
+      for (const badge of await cell.locator('.MuiChip-root').all()) {
+        await expect(badge).toHaveCSS('background-color', white);
+        await expect(badge).toBeVisible();
+        await expect(badge).not.toHaveCSS('color', white);
+        await expect(badge).toHaveCSS('color', palette.text.primary);
+        await expect(badge).toHaveCSS('border-top-color', palette.divider);
+        expect(await badge.evaluate(badgePresentation)).toEqual(
+          neutralPresentation
+        );
+      }
+    }
+    await expect(
+      base.getByText('Base \u00b7 Setup \u00b7 Required', { exact: true })
+    ).toBeVisible();
+    await expect(
+      additional.getByText('Additional \u00b7 Setup \u00b7 Optional', {
+        exact: true,
+      })
+    ).toBeVisible();
+    await expect(
+      base.getByText('Stage 1: 2 days; 3 occurrence(s)', { exact: true })
+    ).toBeVisible();
+    await base.hover();
+    await expect(base).not.toHaveCSS('background-color', white);
+    await base.focus();
+    await base.press('ArrowRight');
+    await expect(additional).toBeFocused();
+    await expect(additional).toHaveCSS('outline-style', 'solid');
+    await page.mouse.move(0, 0);
+    const contents = await additional.innerText();
+    await additional.press('Enter');
+    let editor = page.getByRole('dialog', { name: /^Edit Form/ });
+    await expect(editor).toBeVisible();
+    await expect(additional).toHaveText(contents, { useInnerText: true });
+    for (const badge of await additional.locator('.MuiChip-root').all()) {
+      await expect(badge).toHaveCSS('background-color', white);
+      expect(await badge.evaluate(badgePresentation)).toEqual(
+        neutralPresentation
+      );
+    }
+    await editor
+      .getByRole('button', { name: 'Cancel cell', exact: true })
+      .click();
+    if (!(await page.getByRole('searchbox').isVisible()))
+      await page.getByRole('button', { name: 'Search', exact: true }).click();
+    await page.getByRole('searchbox').fill('Second setup');
+    const unused = matrixCell(page, 'Second setup');
+    await page.mouse.move(0, 0);
+    await expect(unused).toHaveCSS('background-color', white);
+    await expect(
+      unused.getByRole('img', { name: 'Not used', exact: true })
+    ).toHaveText('—');
+    await expect(unused.getByText('—', { exact: true })).toBeVisible();
+    await unused.click();
+    editor = page.getByRole('dialog', { name: /^Edit Second setup/ });
+    await expect(
+      editor.getByRole('button', { name: 'Add Setup', exact: true })
+    ).toBeVisible();
+    await expect(unused.getByText('—', { exact: true })).toBeVisible();
+    await editor
+      .getByRole('button', { name: 'Cancel cell', exact: true })
+      .click();
+    await expect(
+      page.getByRole('button', { name: 'Save changes', exact: true })
+    ).toBeDisabled();
+    await expect(
+      page.getByRole('button', { name: 'Undo', exact: true })
+    ).toBeDisabled();
+    await expect(page.locator('.policy-cell-unsaved')).toHaveCount(0);
+    expect(requests.puts()).toBe(0);
+  });
+
+  for (const variant of [false, true]) {
+    test(`Add Action stages an existing volunteer definition in ${variant ? 'variant Monitoring' : 'Base Setup'} without losing hidden policy data`, async ({
+      page,
+    }) => {
+      await page.setViewportSize({ width: variant ? 390 : 1440, height: 900 });
+      const initial = caseMatrixPolicy();
+      initial.actionDefinitions['Volunteer only'] = {
+        documentLink: 0,
+        noteEntry: 0,
+      };
+      initial.actionDefinitions.Unused = { documentLink: 0, noteEntry: 0 };
+      initial.volunteerPolicy.volunteerRoles['Volunteer fixture'] = {
+        policyVersions: [
+          {
+            version: 'Current',
+            requirements: [{ actionName: 'Volunteer only', isRequired: true }],
+          },
+        ],
+      };
+      const requests = await backend(page, false, false, initial);
+      let saved: EffectiveLocationPolicy | undefined;
+      page.on('request', (request) => {
+        if (request.method() === 'PUT') saved = request.postDataJSON();
+      });
+      await mount(page, 'casePolicy', undefined, true);
+      const grid = page.getByRole('grid', {
+        name: 'Case Policies requirements matrix',
+        exact: true,
+      });
+      const row = grid.locator('[data-id="Volunteer only"]');
+      await expect(row).toHaveCount(0);
+      await expect(grid.locator('[data-id="Unused"]')).toHaveCount(0);
+      await page
+        .getByRole('button', { name: 'Add Action', exact: true })
+        .click();
+      let dialog = page.getByRole('dialog', {
+        name: 'Add Action',
+        exact: true,
+      });
+      await expect(
+        dialog.getByRole('button', { name: 'Apply to draft', exact: true })
+      ).toBeDisabled();
+      await dialog
+        .getByRole('combobox', {
+          name: 'Existing Action Definition',
+          exact: true,
+        })
+        .fill('Volunteer');
+      await page
+        .getByRole('option', { name: 'Volunteer only', exact: true })
+        .click();
+      await dialog.getByRole('button', { name: 'Cancel', exact: true }).click();
+      await expect(row).toHaveCount(0);
+      await expect(
+        page.getByRole('button', { name: 'Undo', exact: true })
+      ).toBeDisabled();
+      await page.getByRole('searchbox').fill('Form');
+      await page
+        .getByRole('button', { name: 'Add Action', exact: true })
+        .click();
+      dialog = page.getByRole('dialog', { name: 'Add Action', exact: true });
+      await dialog
+        .getByRole('combobox', {
+          name: 'Existing Action Definition',
+          exact: true,
+        })
+        .fill('Volunteer');
+      await page
+        .getByRole('option', { name: 'Volunteer only', exact: true })
+        .click();
+      await dialog
+        .getByRole('combobox', { name: 'Target scope', exact: true })
+        .click();
+      await page
+        .getByRole('option', {
+          name: variant
+            ? 'Hosting / Provider function / First profile (additional)'
+            : 'Hosting / Base',
+          exact: true,
+        })
+        .click();
+      await dialog
+        .getByRole('radiogroup', { name: 'Requirement 1 phase', exact: true })
+        .getByRole('radio', {
+          name: variant ? 'Monitoring' : 'Setup',
+          exact: true,
+        })
+        .check();
+      await dialog
+        .getByRole('switch', { name: 'Requirement 1 Required', exact: true })
+        .uncheck();
+      if (variant)
+        await expect(
+          dialog.getByRole('combobox', { name: 'Schedule type', exact: true })
+        ).toHaveText('One-time');
+      await dialog
+        .getByRole('button', { name: 'Apply to draft', exact: true })
+        .click();
+      await expect(dialog).toHaveCount(0);
+      await expect(page.getByRole('searchbox')).toHaveValue('Form');
+      await expect(
+        page.getByRole('button', {
+          name: 'Reveal action (clear filters)',
+          exact: true,
+        })
+      ).toBeVisible();
+      await page
+        .getByRole('button', {
+          name: 'Reveal action (clear filters)',
+          exact: true,
+        })
+        .click();
+      await expect(page.getByRole('searchbox')).toHaveValue('');
+      await expect(row).toBeVisible();
+      expect(requests.puts()).toBe(0);
+      await page.getByRole('button', { name: 'Undo', exact: true }).click();
+      await expect(row).toHaveCount(0);
+      await expect(
+        page.getByRole('button', { name: 'Undo', exact: true })
+      ).toBeDisabled();
+      await page.getByRole('button', { name: 'Redo', exact: true }).click();
+      await expect(row).toBeVisible();
+      await page
+        .getByRole('button', { name: 'Save changes', exact: true })
+        .click();
+      await expect.poll(requests.puts).toBe(1);
+      await expect(
+        page.getByRole('button', { name: 'Undo', exact: true })
+      ).toBeDisabled();
+      expect(saved!.actionDefinitions).toEqual(initial.actionDefinitions);
+      expect(saved!.volunteerPolicy).toEqual(initial.volunteerPolicy);
+      expect(
+        saved!.referralPolicy.arrangementPolicies[0].policyVersions
+      ).toEqual(initial.referralPolicy.arrangementPolicies[0].policyVersions);
+      if (variant) {
+        expect(
+          saved!.referralPolicy.arrangementPolicies[0].requiredSetupActions
+        ).toEqual(
+          initial.referralPolicy.arrangementPolicies[0].requiredSetupActions
+        );
+        expect(
+          saved!.referralPolicy.arrangementPolicies[0].arrangementFunctions[0]
+            .variants[0].requiredMonitoringActionsNew
+        ).toContainEqual({
+          action: { actionName: 'Volunteer only', isRequired: false },
+          recurrence: {
+            discriminator: 'OneTimeRecurrencePolicy',
+            delay: '1.00:00:00',
+          },
+        });
+      } else
+        expect(
+          saved!.referralPolicy.arrangementPolicies[0].requiredSetupActions
+        ).toContainEqual({ actionName: 'Volunteer only', isRequired: false });
+      await page
+        .getByRole('button', { name: 'Add Action', exact: true })
+        .click();
+      dialog = page.getByRole('dialog', { name: 'Add Action', exact: true });
+      await dialog
+        .getByRole('combobox', {
+          name: 'Existing Action Definition',
+          exact: true,
+        })
+        .fill('Volunteer');
+      await page
+        .getByRole('option', { name: 'Volunteer only', exact: true })
+        .click();
+      await expect(
+        dialog.getByRole('button', { name: 'Apply to draft', exact: true })
+      ).toBeDisabled();
+      await dialog
+        .getByRole('button', { name: 'Find in matrix', exact: true })
+        .click();
+      await expect(row).toHaveCount(1);
+      expect(requests.puts()).toBe(1);
+    });
+  }
+
+  test('empty arrangement matrix can add existing actions and failed saves retain the addition and history', async ({
+    page,
+  }) => {
+    const initial = policy();
+    await page.setViewportSize({ width: 320, height: 900 });
+    initial.actionDefinitions = { Unused: { documentLink: 0, noteEntry: 0 } };
+    const requests = await backend(page, true, false, initial);
+    await mount(page, 'casePolicy', undefined, true);
+    await expect(
+      page.getByText(
+        'No actions are used in arrangements yet. Use Add Action to configure an existing Action Definition.'
+      )
+    ).toBeVisible();
+    await page.getByRole('button', { name: 'Add Action', exact: true }).click();
+    const dialog = page.getByRole('dialog', {
+      name: 'Add Action',
+      exact: true,
+    });
+    await dialog
+      .getByRole('combobox', {
+        name: 'Existing Action Definition',
+        exact: true,
+      })
+      .fill('Unused');
+    await page.getByRole('option', { name: 'Unused', exact: true }).click();
+    await dialog
+      .getByRole('combobox', { name: 'Target scope', exact: true })
+      .click();
+    await page
+      .getByRole('option', { name: 'Hosting / Base', exact: true })
+      .click();
+    await dialog.getByRole('radio', { name: 'Closeout', exact: true }).check();
+    await dialog
+      .getByRole('button', { name: 'Apply to draft', exact: true })
+      .click();
+    const row = page.getByRole('grid').locator('[data-id="Unused"]');
+    await expect(row).toBeVisible();
+    await page
+      .getByRole('button', { name: 'Save changes', exact: true })
+      .click();
+    await expect(page.getByTestId('policy-save-errors')).toContainText(
+      blockingError
+    );
+    await expect(row).toBeVisible();
+    await page.getByRole('button', { name: 'Undo', exact: true }).click();
+    await expect(row).toHaveCount(0);
+    await page.getByRole('button', { name: 'Redo', exact: true }).click();
+    await expect(row).toBeVisible();
+    await cancelPolicyForm(page);
+    await expect(row).toHaveCount(0);
+    expect(requests.puts()).toBe(1);
+  });
+
+  test('Add Action protects active edits and navigation without leaking temporary selections across locations', async ({
+    page,
+  }) => {
+    const initial = caseMatrixPolicy();
+    initial.actionDefinitions.Unused = { documentLink: 0, noteEntry: 0 };
+    const requests = await backend(page, false, false, initial);
+    await mount(page, 'casePolicy', undefined, true);
+    const cellEditor = await openMatrixCell(page);
+    await expect(
+      page.getByRole('button', { name: 'Add Action', exact: true })
+    ).toBeDisabled();
+    await cellEditor.press('Escape');
+    await page.getByRole('button', { name: 'Add Action', exact: true }).click();
+    const dialog = page.getByRole('dialog', {
+      name: 'Add Action',
+      exact: true,
+    });
+    await dialog
+      .getByRole('combobox', {
+        name: 'Existing Action Definition',
+        exact: true,
+      })
+      .fill('Unused');
+    await page.getByRole('option', { name: 'Unused', exact: true }).click();
+    await page
+      .getByRole('link', {
+        name: 'Location B',
+        exact: true,
+        includeHidden: true,
+      })
+      .dispatchEvent('click');
+    await policyDecision(page, false);
+    await expect(
+      dialog.getByRole('combobox', {
+        name: 'Existing Action Definition',
+        exact: true,
+      })
+    ).toHaveValue('Unused');
+    await dialog.press('Escape');
+    await policyDecision(page, false);
+    await expect(dialog).toBeVisible();
+    await page
+      .getByRole('link', {
+        name: 'Location B',
+        exact: true,
+        includeHidden: true,
+      })
+      .dispatchEvent('click');
+    await policyDecision(page, true);
+    await expect(page).toHaveURL('/org/org/b/settings/case-policies');
+    await expect(dialog).toHaveCount(0);
+    await expect(
+      page.getByRole('grid').locator('[data-id="Unused"]')
+    ).toHaveCount(0);
+    expect(requests.puts()).toBe(0);
+  });
+
+  test('Add Action excludes ambiguous definitions, reports empty choices and respects superseded scopes', async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 768, height: 900 });
+    const initial = caseMatrixPolicy();
+    initial.actionDefinitions = {
+      Duplicate: { documentLink: 0, noteEntry: 0 },
+      ' duplicate ': { documentLink: 0, noteEntry: 0 },
+    };
+    const requests = await backend(page, false, false, initial);
+    await mount(page, 'casePolicy', undefined, true);
+    await expect(
+      page.getByRole('grid').locator('[data-id="Form"]')
+    ).toContainText('Unresolved reference');
+    await page.getByRole('button', { name: 'Add Action', exact: true }).click();
+    const dialog = page.getByRole('dialog', {
+      name: 'Add Action',
+      exact: true,
+    });
+    await expect(
+      dialog.getByText(
+        'No unambiguous Action Definitions are available. Review Action Definitions.'
+      )
+    ).toBeVisible();
+    await dialog
+      .getByRole('combobox', {
+        name: 'Existing Action Definition',
+        exact: true,
+      })
+      .fill('Duplicate');
+    await expect(page.getByRole('option')).toHaveCount(0);
+    await expect(
+      dialog.getByRole('button', { name: 'Apply to draft', exact: true })
+    ).toBeDisabled();
+    await dialog.getByRole('button', { name: 'Cancel', exact: true }).click();
+    initial.referralPolicy.arrangementPolicies[0].supersededAtUtc =
+      '2024-01-01T00:00:00Z';
+    await mount(page, 'casePolicy', undefined, true);
+    await expect(
+      page.getByRole('button', { name: 'Add Action', exact: true })
+    ).toBeDisabled();
+    expect(requests.puts()).toBe(0);
+  });
+
+  test('last requirement removal stays visible until Save and cannot be resurrected by compatibility mirrors', async ({
+    page,
+  }) => {
+    const initial = policy();
+    initial.actionDefinitions = { Only: { documentLink: 0, noteEntry: 0 } };
+    Object.assign(initial.referralPolicy.arrangementPolicies[0], {
+      requiredSetupActions: [{ actionName: 'Only', isRequired: true }],
+      requiredSetupActions_PRE_MIGRATION: [
+        { actionName: 'Only', isRequired: true },
+      ],
+    });
+    await backend(page, false, false, initial);
+    let stored = initial;
+    let writes = 0;
+    await page.route('**/Configuration/policy', async (route) => {
+      if (route.request().method() === 'PUT') {
+        writes++;
+        stored = route.request().postDataJSON();
+        const arrangement = stored.referralPolicy.arrangementPolicies[0];
+        arrangement.requiredSetupActions_PRE_MIGRATION =
+          arrangement.requiredSetupActions;
+      }
+      await route.fulfill({ json: stored });
+    });
+    await mount(page, 'casePolicy', undefined, true);
+    const grid = page.getByRole('grid', {
+      name: 'Case Policies requirements matrix',
+      exact: true,
+    });
+    const row = grid.locator('[data-id="Only"]');
+    const cell = row.locator('[data-field=\'["Hosting",null,null]\']');
+    await cell.click();
+    const editor = page.getByRole('dialog', { name: /^Edit Only/ });
+    await editor
+      .getByRole('button', {
+        name: 'Not used — remove requirement 1',
+        exact: true,
+      })
+      .click();
+    await editor
+      .getByRole('button', { name: 'Apply to draft', exact: true })
+      .click();
+    await expect(row).toBeVisible();
+    await expect(cell).toHaveClass(/policy-cell-unsaved/);
+    await expect(
+      cell.getByRole('img', { name: 'Not used', exact: true })
+    ).toHaveText('—');
+    await expect(cell.getByText('—', { exact: true })).toBeVisible();
+    await page.getByRole('button', { name: 'Undo', exact: true }).click();
+    await expect(
+      cell.getByText('Base · Setup · Required', { exact: true })
+    ).toBeVisible();
+    await page.getByRole('button', { name: 'Redo', exact: true }).click();
+    await page
+      .getByRole('button', { name: 'Save changes', exact: true })
+      .click();
+    await expect.poll(() => writes).toBe(1);
+    await expect(row).toHaveCount(0);
+  });
+
+  test('Add Action rejects edited picker text until exact existing action and scope selections are made', async ({
+    page,
+  }) => {
+    const initial = policy();
+    initial.actionDefinitions = { Unused: { documentLink: 0, noteEntry: 0 } };
+    const requests = await backend(page, false, false, initial);
+    await mount(page, 'casePolicy', undefined, true);
+    await page.getByRole('button', { name: 'Add Action', exact: true }).click();
+    const dialog = page.getByRole('dialog', {
+      name: 'Add Action',
+      exact: true,
+    });
+    const action = dialog.getByRole('combobox', {
+      name: 'Existing Action Definition',
+      exact: true,
+    });
+    const scope = dialog.getByRole('combobox', {
+      name: 'Target scope',
+      exact: true,
+    });
+    const apply = dialog.getByRole('button', {
+      name: 'Apply to draft',
+      exact: true,
+    });
+    await action.fill('Unused');
+    await action.press('ArrowDown');
+    await action.press('Enter');
+    await scope.fill('Hosting');
+    await scope.press('ArrowDown');
+    await scope.press('Enter');
+    await dialog.getByRole('radio', { name: 'Setup', exact: true }).check();
+    await expect(apply).toBeEnabled();
+    await action.fill('Not an existing action');
+    await expect(action).toHaveValue('Not an existing action');
+    await expect(apply).toBeDisabled();
+    await action.fill('Unused');
+    await page.getByRole('option', { name: 'Unused', exact: true }).click();
+    await scope.fill('Not an existing scope');
+    await expect(apply).toBeDisabled();
+    await dialog.getByRole('button', { name: 'Cancel', exact: true }).click();
+    await expect(
+      page.getByRole('button', { name: 'Undo', exact: true })
+    ).toBeDisabled();
+    expect(requests.puts()).toBe(0);
+  });
+
+  test('Phase radios preserve multiple requirements, keyboard changes, Cancel and history', async ({
+    page,
+  }) => {
+    const initial = caseMatrixPolicy();
+    const requests = await backend(page, false, false, initial);
+    let saved: EffectiveLocationPolicy | undefined;
+    page.on('request', (request) => {
+      if (request.method() === 'PUT') saved = request.postDataJSON();
+    });
+    await mount(page, 'casePolicy', undefined, true);
+    let editor = await openMatrixCell(page);
+    await expect(editor.getByRole('radiogroup')).toHaveCount(3);
+    for (const [index, phase] of [
+      'Setup',
+      'Monitoring',
+      'Closeout',
+    ].entries()) {
+      const group = editor.getByRole('radiogroup', {
+        name: `Requirement ${index + 1} phase`,
+        exact: true,
+      });
+      await expect(group.getByRole('radio')).toHaveCount(3);
+      await expect(group.getByRole('radio', { checked: true })).toHaveCount(1);
+      await expect(
+        group.getByRole('radio', { name: phase, exact: true })
+      ).toBeChecked();
+      for (const other of ['Setup', 'Monitoring', 'Closeout'].filter(
+        (item) => item !== phase
+      ))
+        await expect(
+          group.getByRole('radio', { name: other, exact: true })
+        ).toBeDisabled();
+    }
+    await expect(
+      editor.getByRole('spinbutton', {
+        name: 'Stage 1 interval (days)',
+        exact: true,
+      })
+    ).toHaveValue('2');
+    await editor
+      .getByRole('button', { name: 'Cancel cell', exact: true })
+      .click();
+    editor = await openMatrixCell(page, 'Provider function', 'First profile');
+    await expect(
+      editor.getByText(/Conflicting arrangement phases:/)
+    ).toBeVisible();
+    const group = editor.getByRole('radiogroup', {
+      name: 'Requirement 1 phase',
+      exact: true,
+    });
+    const setup = group.getByRole('radio', { name: 'Setup', exact: true });
+    await expect(setup).toBeChecked();
+    await setup.focus();
+    await page.keyboard.press('ArrowRight');
+    await expect(setup).toBeChecked();
+    for (const phase of ['Monitoring', 'Closeout'])
+      await expect(
+        group.getByRole('radio', { name: phase, exact: true })
+      ).toBeDisabled();
+    await expect(
+      editor.getByRole('button', { name: /^Add (Setup|Monitoring|Closeout)$/ })
+    ).toHaveCount(0);
+    await expect(
+      editor.getByRole('button', { name: /Not used/ })
+    ).toBeDisabled();
+    const required = editor.getByRole('switch', {
+      name: 'Requirement 1 Required',
+      exact: true,
+    });
+    await required.check();
+    await required.uncheck();
+    await expect(
+      editor.getByRole('button', { name: 'Apply to draft', exact: true })
+    ).toBeDisabled();
+    await required.check();
+    await editor
+      .getByRole('button', { name: 'Cancel cell', exact: true })
+      .click();
+    const cell = matrixCell(page, 'Form', 'Provider function', 'First profile');
+    await expect(cell).not.toHaveClass(/policy-cell-unsaved/);
+    editor = await openMatrixCell(page, 'Provider function', 'First profile');
+    await editor
+      .getByRole('switch', { name: 'Requirement 1 Required', exact: true })
+      .check();
+    await editor
+      .getByRole('button', { name: 'Apply to draft', exact: true })
+      .click();
+    await expect(
+      cell.getByText('Additional \u00b7 Setup \u00b7 Required', { exact: true })
+    ).toBeVisible();
+    await page.getByRole('button', { name: 'Undo', exact: true }).click();
+    await expect(
+      cell.getByText('Additional \u00b7 Setup \u00b7 Optional', { exact: true })
+    ).toBeVisible();
+    await expect(cell).not.toHaveClass(/policy-cell-unsaved/);
+    await page.getByRole('button', { name: 'Redo', exact: true }).click();
+    await expect(
+      cell.getByText('Additional \u00b7 Setup \u00b7 Required', { exact: true })
+    ).toBeVisible();
+    expect(requests.puts()).toBe(0);
+    await page
+      .getByRole('button', { name: 'Save changes', exact: true })
+      .click();
+    await expect.poll(requests.puts).toBe(1);
+    const arrangement = saved!.referralPolicy.arrangementPolicies[0];
+    const original = initial.referralPolicy.arrangementPolicies[0];
+    expect(arrangement.requiredSetupActions).toEqual(
+      original.requiredSetupActions
+    );
+    expect(arrangement.requiredMonitoringActionsNew).toEqual(
+      original.requiredMonitoringActionsNew
+    );
+    expect(arrangement.requiredCloseoutActions).toEqual(
+      original.requiredCloseoutActions
+    );
+    expect(arrangement.arrangementFunctions[0].variants[1]).toEqual(
+      original.arrangementFunctions[0].variants[1]
+    );
+    expect(
+      arrangement.arrangementFunctions[0].variants[0].requiredSetupActions
+    ).toEqual([{ actionName: 'Form', isRequired: true }]);
+    expect(
+      arrangement.arrangementFunctions[0].variants[0].requiredCloseoutActions
+    ).toEqual(
+      original.arrangementFunctions[0].variants[0].requiredCloseoutActions
+    );
+  });
+
+  test('Required switches preserve Optional, no-op, Cancel and keyboard staging semantics', async ({
+    page,
+  }) => {
+    const requests = await backend(page, false, false, caseMatrixPolicy());
+    await mount(page, 'casePolicy', undefined, true);
+    let editor = await openMatrixCell(page);
+    let required = editor.getByRole('switch', {
+      name: 'Requirement 1 Required',
+      exact: true,
+    });
+    const apply = () =>
+      editor.getByRole('button', { name: 'Apply to draft', exact: true });
+    await expect(required).toBeChecked();
+    await expect(required).toHaveAccessibleDescription('Required');
+    await expect(apply()).toBeDisabled();
+    await required.focus();
+    await required.press('Space');
+    await expect(required).toBeFocused();
+    await expect(required).not.toBeChecked();
+    await expect(required).toHaveAccessibleDescription('Optional');
+    await expect(
+      editor
+        .getByRole('radiogroup', { name: 'Requirement 1 phase', exact: true })
+        .getByRole('radio', { name: 'Setup', exact: true })
+    ).toBeChecked();
+    await expect(
+      editor.getByRole('spinbutton', {
+        name: 'Stage 1 interval (days)',
+        exact: true,
+      })
+    ).toHaveValue('2');
+    await expect(apply()).toBeEnabled();
+    await required.press('Space');
+    await expect(required).toBeChecked();
+    await expect(apply()).toBeDisabled();
+    await required.uncheck();
+    await editor
+      .getByRole('button', { name: 'Cancel cell', exact: true })
+      .click();
+    await expect(matrixCell(page, 'Form')).not.toHaveClass(
+      /policy-cell-unsaved/
+    );
+    editor = await openMatrixCell(page);
+    required = editor.getByRole('switch', {
+      name: 'Requirement 1 Required',
+      exact: true,
+    });
+    await expect(required).toBeChecked();
+    await required.uncheck();
+    await apply().click();
+    await expect(
+      matrixCell(page, 'Form').getByText('Base · Setup · Optional', {
+        exact: true,
+      })
+    ).toBeVisible();
+    await expect(matrixCell(page, 'Form')).toHaveClass(/policy-cell-unsaved/);
+    editor = await openMatrixCell(page);
+    required = editor.getByRole('switch', {
+      name: 'Requirement 1 Required',
+      exact: true,
+    });
+    await expect(required).not.toBeChecked();
+    await required.press('Space');
+    await apply().click();
+    await expect(matrixCell(page, 'Form')).not.toHaveClass(
+      /policy-cell-unsaved/
+    );
+    editor = await openMatrixCell(page, 'Provider function', 'First profile');
+    await expect(
+      editor.getByRole('switch', {
+        name: 'Requirement 1 Required',
+        exact: true,
+      })
+    ).not.toBeChecked();
+    await editor
+      .getByRole('button', { name: 'Cancel cell', exact: true })
+      .click();
+    expect(requests.puts()).toBe(0);
+  });
+
+  test('draft history replays policy changes, branches and clears at Save and Cancel', async ({
+    page,
+  }) => {
+    const requests = await backend(page, false, false, caseMatrixPolicy());
+    await mount(page, 'casePolicy', undefined, true);
+    const undo = page.getByRole('button', { name: 'Undo', exact: true });
+    const redo = page.getByRole('button', { name: 'Redo', exact: true });
+    await expect(undo).toHaveCount(1);
+    await expect(redo).toHaveCount(1);
+    await expect(undo).toBeDisabled();
+    await expect(redo).toBeDisabled();
+    await applyApplicability(page, 'Optional');
+    await applyApplicability(
+      page,
+      'Required',
+      'Provider function',
+      'First profile'
+    );
+    const shared = matrixCell(page, 'Form');
+    const variant = matrixCell(
+      page,
+      'Form',
+      'Provider function',
+      'First profile'
+    );
+    await expect(shared).toHaveClass(/policy-cell-unsaved/);
+    await expect(variant).toHaveClass(/policy-cell-unsaved/);
+    await undo.click();
+    await expect(variant).not.toHaveClass(/policy-cell-unsaved/);
+    await expect(shared).toHaveClass(/policy-cell-unsaved/);
+    await undo.click();
+    await expect(shared).not.toHaveClass(/policy-cell-unsaved/);
+    await expect(undo).toBeDisabled();
+    await expect(
+      page.getByRole('button', { name: 'Save changes', exact: true })
+    ).toBeDisabled();
+    await shared.focus();
+    await shared.press('Control+Shift+Z');
+    await expect(
+      shared.getByText('Base · Setup · Optional', { exact: true })
+    ).toBeVisible();
+    const editor = await openMatrixCell(page);
+    await expect(undo).toBeDisabled();
+    await expect(redo).toBeDisabled();
+    await editor
+      .getByRole('button', { name: 'Cancel cell', exact: true })
+      .click();
+    await expect(undo).toBeEnabled();
+    await expect(redo).toBeEnabled();
+    await applyApplicability(
+      page,
+      'Required',
+      'Provider function',
+      'First profile'
+    );
+    await expect(redo).toBeDisabled();
+    expect(requests.puts()).toBe(0);
+    let payload: EffectiveLocationPolicy | undefined;
+    page.on('request', (request) => {
+      if (request.method() === 'PUT') payload = request.postDataJSON();
+    });
+    await page
+      .getByRole('button', { name: 'Save changes', exact: true })
+      .click();
+    await expect.poll(requests.puts).toBe(1);
+    await expect(undo).toBeDisabled();
+    await expect(redo).toBeDisabled();
+    expect(
+      payload?.referralPolicy.arrangementPolicies[0].requiredSetupActions[0]
+        .isRequired
+    ).toBe(false);
+    expect(
+      payload?.referralPolicy.arrangementPolicies[0].arrangementFunctions[0]
+        .variants[0].requiredSetupActions[0].isRequired
+    ).toBe(true);
+    await applyApplicability(page, 'Required');
+    await expect(undo).toBeEnabled();
+    await cancelPolicyForm(page);
+    await expect(undo).toBeDisabled();
+    await expect(redo).toBeDisabled();
+    await expect(
+      shared.getByText('Base · Setup · Optional', { exact: true })
+    ).toBeVisible();
+    expect(requests.puts()).toBe(1);
+  });
+
+  test('failed saves retain draft history and location replacement clears it', async ({
+    page,
+  }) => {
+    const requests = await backend(page, true, false, caseMatrixPolicy());
+    await mount(page, 'casePolicy', undefined, true);
+    const undo = page.getByRole('button', { name: 'Undo', exact: true });
+    const redo = page.getByRole('button', { name: 'Redo', exact: true });
+    await applyApplicability(page, 'Optional');
+    await page
+      .getByRole('button', { name: 'Save changes', exact: true })
+      .click();
+    await expect(page.getByTestId('policy-save-errors')).toContainText(
+      blockingError
+    );
+    await expect(undo).toBeEnabled();
+    await undo.click();
+    await expect(matrixCell(page, 'Form')).not.toHaveClass(
+      /policy-cell-unsaved/
+    );
+    await redo.click();
+    await expect(matrixCell(page, 'Form')).toHaveClass(/policy-cell-unsaved/);
+    expect(requests.puts()).toBe(1);
+    await cancelPolicyForm(page);
+    await page.getByRole('link', { name: 'Location B', exact: true }).click();
+    await expect(page).toHaveURL('/org/org/b/settings/case-policies');
+    await expect(undo).toBeDisabled();
+    await expect(redo).toBeDisabled();
+  });
+
+  test('pending saves block history until the new baseline is confirmed', async ({
+    page,
+  }) => {
+    await backend(page, false, false, caseMatrixPolicy());
+    let release!: () => void;
+    const pending = new Promise<void>((resolve) => {
+      release = resolve;
+    });
+    await page.route('**/Configuration/policy', async (route) => {
+      if (route.request().method() !== 'PUT') return route.fallback();
+      await pending;
+      await route.fulfill({ json: route.request().postDataJSON() });
+    });
+    await mount(page, 'casePolicy', undefined, true);
+    await applyApplicability(page, 'Optional');
+    const undo = page.getByRole('button', { name: 'Undo', exact: true });
+    const redo = page.getByRole('button', { name: 'Redo', exact: true });
+    await expect(undo).toBeEnabled();
+    await page
+      .getByRole('button', { name: 'Save changes', exact: true })
+      .click();
+    try {
+      await expect(
+        page.getByRole('button', { name: 'Saving…', exact: true })
+      ).toBeVisible();
+      await expect(undo).toBeDisabled();
+      await expect(redo).toBeDisabled();
+      await expect(
+        page.getByRole('button', { name: 'Manage columns', exact: true })
+      ).toHaveCount(0);
+      await expect(
+        page
+          .getByRole('grid')
+          .getByRole('button', { name: 'Add Action', exact: true })
+      ).toBeDisabled();
+      await expect(
+        page
+          .getByRole('grid')
+          .getByRole('button', { name: 'Add Action', exact: true })
+      ).toHaveAccessibleDescription(
+        'Wait for the policy save to finish before adding an action.'
+      );
+      await expect(matrixCell(page, 'Form')).toHaveClass(/policy-cell-unsaved/);
+    } finally {
+      release();
+    }
+    await expect(matrixCell(page, 'Form')).not.toHaveClass(
+      /policy-cell-unsaved/
+    );
+    await expect(undo).toBeDisabled();
+    await expect(redo).toBeDisabled();
+  });
+
+  for (const additional of [false, true]) {
+    test(`cell contents remain visible through editing, Cancel and Apply (${additional ? 'variant' : 'shared'})`, async ({
+      page,
+    }) => {
+      const requests = await backend(page, false, false, caseMatrixPolicy());
+      await mount(page, 'casePolicy', undefined, true);
+      const fn = additional ? 'Provider function' : null;
+      const variant = additional ? 'First profile' : null;
+      const cell = matrixCell(page, 'Form', fn, variant);
+      const before = await cell.innerText();
+      const open = () => openMatrixCell(page, fn, variant);
+      let editor = await open();
+      await expect(cell).toHaveText(before, { useInnerText: true });
+      await expect(cell).not.toHaveClass(/policy-cell-unsaved/);
+      await expect(cell.locator('[aria-hidden="true"]')).toHaveCount(1);
+      await expect(cell.getByRole('button')).toHaveCount(0);
+      await expect(
+        page.getByRole('dialog', { name: /^Edit Form/ })
+      ).toHaveCount(1);
+      await editor
+        .getByRole('switch', { name: 'Requirement 1 Required', exact: true })
+        .setChecked(additional);
+      await expect(cell).toHaveText(before, { useInnerText: true });
+      await editor
+        .getByRole('button', { name: 'Cancel cell', exact: true })
+        .click();
+      await expect(cell).toHaveText(before, { useInnerText: true });
+      await expect(cell).not.toHaveClass(/policy-cell-unsaved/);
+      editor = await open();
+      await editor
+        .getByRole('switch', { name: 'Requirement 1 Required', exact: true })
+        .setChecked(additional);
+      await editor
+        .getByRole('button', { name: 'Apply to draft', exact: true })
+        .click();
+      await expect(cell).toHaveClass(/policy-cell-unsaved/);
+      await expect(
+        cell.getByText(
+          additional
+            ? 'Additional · Setup · Required'
+            : 'Base · Setup · Optional',
+          { exact: true }
+        )
+      ).toBeVisible();
+      const staged = await cell.innerText();
+      editor = await open();
+      await expect(cell).toHaveText(staged, { useInnerText: true });
+      if (additional)
+        await expect(
+          cell.getByText('Base · Setup · Required', { exact: true })
+        ).toHaveCount(0);
+      await editor
+        .getByRole('button', { name: 'Cancel cell', exact: true })
+        .click();
+      await expect(cell).toHaveText(staged, { useInnerText: true });
+      expect(requests.puts()).toBe(0);
+    });
+  }
+
+  test('unsaved outlines mark authoritative cells, revert independently and clear only after a successful save', async ({
+    page,
+  }) => {
+    const requests = await backend(page, false, false, caseMatrixPolicy());
+    await mount(page, 'casePolicy', undefined, true);
+    const grid = page.getByRole('grid', {
+      name: 'Case Policies requirements matrix',
+      exact: true,
+    });
+    const shared = matrixCell(page, 'Form');
+    const variant = matrixCell(
+      page,
+      'Form',
+      'Provider function',
+      'First profile'
+    );
+    await expect(grid.locator('.policy-cell-unsaved')).toHaveCount(0);
+    const editor = await openMatrixCell(page);
+    await expect(shared).not.toHaveClass(/policy-cell-unsaved/);
+    await editor
+      .getByRole('button', { name: 'Cancel cell', exact: true })
+      .click();
+    await applyApplicability(page, 'Optional');
+    await expect(shared).toHaveClass(/policy-cell-unsaved/);
+    await expect(shared).toHaveAccessibleName(/Unsaved changes/);
+    await expect(
+      shared.getByText('Unsaved changes', { exact: true })
+    ).toHaveCount(1);
+    await expect(variant).not.toHaveClass(/policy-cell-unsaved/);
+    await expect(
+      matrixCell(page, 'Form', 'Provider function', 'Second profile')
+    ).not.toHaveClass(/policy-cell-unsaved/);
+    await applyApplicability(
+      page,
+      'Required',
+      'Provider function',
+      'First profile'
+    );
+    await expect(grid.locator('.policy-cell-unsaved')).toHaveCount(2);
+    await expect(variant).toHaveClass(/policy-cell-unsaved/);
+    await applyApplicability(page, 'Required');
+    await expect(shared).not.toHaveClass(/policy-cell-unsaved/);
+    await expect(variant).toHaveClass(/policy-cell-unsaved/);
+    expect(requests.puts()).toBe(0);
+    const dirtyColor = await variant.evaluate(
+      (element) => getComputedStyle(element).outlineColor
+    );
+    await page
+      .getByRole('button', { name: 'Save changes', exact: true })
+      .click();
+    await expect.poll(requests.puts).toBe(1);
+    await expect(grid.locator('.policy-cell-unsaved')).toHaveCount(0);
+    await expect(variant).not.toHaveAccessibleName(/Unsaved changes/);
+    await variant.focus();
+    await expect(variant).toHaveCSS('outline-style', 'solid');
+    await expect(variant).not.toHaveCSS('outline-color', dirtyColor);
+  });
+
+  test('failed saves retain unsaved outlines and Cancel clears them', async ({
+    page,
+  }) => {
+    const requests = await backend(page, true, false, caseMatrixPolicy());
+    await mount(page, 'casePolicy', undefined, true);
+    const shared = matrixCell(page, 'Form');
+    await applyApplicability(page, 'Optional');
+    await page
+      .getByRole('button', { name: 'Save changes', exact: true })
+      .click();
+    await expect(page.getByTestId('policy-save-errors')).toContainText(
+      blockingError
+    );
+    await expect(shared).toHaveClass(/policy-cell-unsaved/);
+    await expect(shared).toHaveAccessibleName(/Unsaved changes/);
+    await cancelPolicyForm(page);
+    await expect(shared).not.toHaveClass(/policy-cell-unsaved/);
+    await expect(shared).not.toHaveAccessibleName(/Unsaved changes/);
+    expect(requests.puts()).toBe(1);
+  });
+
+  test('unsaved outlines survive filtering and virtualization with a single red keyboard focus outline', async ({
+    page,
+  }) => {
+    const initial = caseMatrixPolicy();
+    for (let index = 0; index < 160; index++) {
+      const name = 'Extra ' + String(index).padStart(3, '0');
+      initial.actionDefinitions[name] = {
+        documentLink: 0,
+        noteEntry: 0,
+      };
+      initial.referralPolicy.arrangementPolicies[0].requiredSetupActions.push({
+        actionName: name,
+        isRequired: true,
+      });
+    }
+    const requests = await backend(page, false, false, initial);
+    await mount(page, 'casePolicy', undefined, true);
+    const shared = matrixCell(page, 'Form');
+    await shared.focus();
+    await page.keyboard.press('ArrowRight');
+    await page.keyboard.press('ArrowLeft');
+    const originalFocus = await shared.evaluate((element) => ({
+      width: getComputedStyle(element).outlineWidth,
+      color: getComputedStyle(element).outlineColor,
+    }));
+    await applyApplicability(page, 'Optional');
+    await page.getByRole('button', { name: 'Search', exact: true }).focus();
+    const dirtyOutline = await shared.evaluate((element) => ({
+      width: getComputedStyle(element).outlineWidth,
+      color: getComputedStyle(element).outlineColor,
+    }));
+    expect(dirtyOutline.width).toBe('1px');
+    expect(dirtyOutline.color).not.toBe(originalFocus.color);
+    const grid = page.getByRole('grid', {
+      name: 'Case Policies requirements matrix',
+      exact: true,
+    });
+    await page.getByRole('button', { name: 'Search', exact: true }).click();
+    await page.getByRole('searchbox').fill('Extra 159');
+    await expect(shared).toHaveCount(0);
+    await page.getByRole('searchbox').fill('Form');
+    await expect(shared).toHaveClass(/policy-cell-unsaved/);
+    await page.getByRole('searchbox').fill('');
+    const scroller = grid.locator('.MuiDataGrid-virtualScroller');
+    await expect
+      .poll(() => scroller.evaluate((element) => element.scrollHeight))
+      .toBeGreaterThan(5000);
+    await scroller.evaluate((element) => {
+      element.scrollTop = element.scrollHeight;
+    });
+    const lastRow = grid.locator(
+      '[data-id="Extra 159"] [data-field="actionName"]'
+    );
+    await expect(lastRow).toBeVisible();
+    await lastRow.click();
+    await expect(lastRow).not.toHaveClass(/policy-cell-unsaved/);
+    await expect(shared).toHaveCount(0);
+    await scroller.evaluate((element) => {
+      element.scrollTop = 0;
+    });
+    await expect(shared).toHaveClass(/policy-cell-unsaved/);
+    await shared.focus();
+    await page.keyboard.press('ArrowRight');
+    await page.keyboard.press('ArrowLeft');
+    await expect(shared).toBeFocused();
+    await expect(shared).toHaveAccessibleName(/Unsaved changes/);
+    const appearance = await shared.evaluate((element) => {
+      const focus = getComputedStyle(element);
+      const ring = getComputedStyle(element, '::after');
+      return {
+        focusWidth: focus.outlineWidth,
+        focusColor: focus.outlineColor,
+        focusStyle: focus.outlineStyle,
+        boxShadow: focus.boxShadow,
+        pseudoContent: ring.content,
+      };
+    });
+    expect(appearance.focusWidth).toBe(dirtyOutline.width);
+    expect(appearance.focusColor).toBe(dirtyOutline.color);
+    expect(appearance.focusStyle).toBe('solid');
+    expect(appearance.boxShadow).toBe('none');
+    expect(appearance.pseudoContent).toBe('none');
+    await applyApplicability(page, 'Required');
+    await shared.focus();
+    await expect(shared).not.toHaveClass(/policy-cell-unsaved/);
+    await expect(shared).toHaveCSS('outline-color', originalFocus.color);
+    await expect(shared).toHaveCSS('outline-width', originalFocus.width);
+    expect(requests.puts()).toBe(0);
+  });
+
+  test('unsaved outlines cannot leak across locations or a fresh policy load', async ({
+    page,
+  }) => {
+    const requests = await backend(page, false, false, caseMatrixPolicy());
+    await mount(page, 'casePolicy', undefined, true);
+    await applyApplicability(page, 'Optional');
+    await expect(matrixCell(page, 'Form')).toHaveClass(/policy-cell-unsaved/);
+    const decision10 = policyDecision(page, true);
+    await page.getByRole('link', { name: 'Location B', exact: true }).click();
+    await decision10;
+    await expect(page).toHaveURL('/org/org/b/settings/case-policies');
+    await expect(matrixCell(page, 'Form')).not.toHaveClass(
+      /policy-cell-unsaved/
+    );
+    await page.reload();
+    await page.addScriptTag({ content: bundle });
+    await expect(matrixCell(page, 'Form')).toBeVisible();
+    await expect(page.locator('.policy-cell-unsaved')).toHaveCount(0);
+    expect(requests.puts()).toBe(0);
+  });
+
+  test('search survives Cancel and unfinished cells guard view and location navigation', async ({
+    page,
+  }) => {
+    const requests = await backend(page, false, false, caseMatrixPolicy());
+    await mount(page, 'casePolicy', undefined, true);
+    await page.getByRole('button', { name: 'Search', exact: true }).click();
+    await page.getByRole('searchbox').fill('Form');
+    const editor = await openMatrixCell(page);
+    await page
+      .getByRole('button', {
+        name: 'Manage Arrangements & Functions',
+        exact: true,
+      })
+      .click();
+    await expect(editor).toBeVisible();
+    const decision11 = policyDecision(page, false);
+    await page.getByRole('link', { name: 'Location B', exact: true }).click();
+    await decision11;
+    await expect(editor).toBeVisible();
+    await editor
+      .getByRole('switch', { name: 'Requirement 1 Required', exact: true })
+      .uncheck();
+    await editor
+      .getByRole('button', { name: 'Apply to draft', exact: true })
+      .click();
+    await page
+      .getByRole('button', {
+        name: 'Manage Arrangements & Functions',
+        exact: true,
+      })
+      .click();
+    await expect(page).toHaveURL('/org/org/a/settings/case-policies');
+    await cancelPolicyForm(page);
+    await expect(page.getByRole('searchbox')).toHaveValue('Form');
+    await expect(
+      matrixCell(page, 'Form').getByText('Base \u00b7 Setup \u00b7 Required', {
+        exact: true,
+      })
+    ).toBeVisible();
+    expect(requests.puts()).toBe(0);
+  });
+
+  test('shared synchronization, additive variant edits and multiple phases save one policy', async ({
+    page,
+  }) => {
+    const initial = caseMatrixPolicy();
+    initial.referralPolicy.arrangementPolicies[0].arrangementFunctions[0].variants[0].requiredCloseoutActions.push(
+      { actionName: 'Form', isRequired: true }
+    );
+    const requests = await backend(page, false, false, initial);
+    let saved: EffectiveLocationPolicy | undefined;
+    page.on('request', (request) => {
+      if (request.method() === 'PUT') saved = request.postDataJSON();
+    });
+    await mount(page, 'casePolicy', undefined, true);
+    const grid = page.getByRole('grid', {
+      name: 'Case Policies requirements matrix',
+      exact: true,
+    });
+    await expect(
+      grid.getByRole('columnheader', { name: 'Actions', exact: true })
+    ).toHaveAttribute('data-field', 'actionName');
+    await expect(
+      grid.getByRole('columnheader', { name: 'Base', exact: true })
+    ).toHaveAttribute('data-field', JSON.stringify(['Hosting', null, null]));
+    await expect(
+      grid.getByRole('columnheader', { name: 'Shared', exact: true })
+    ).toHaveCount(0);
+    await expect(
+      grid.getByRole('columnheader', {
+        name: 'Hosting (arrangement type)',
+        exact: true,
+      })
+    ).toBeVisible();
+    await expect(
+      grid.getByRole('columnheader', {
+        name: 'Provider function (function)',
+        exact: true,
+      })
+    ).toBeVisible();
+    let editor = await openMatrixCell(page);
+    await expect(editor).toHaveAccessibleName('Edit Form — Hosting / Base');
+    await expect(
+      editor.getByText(
+        'Base requirements apply to every variant. Additional variant requirements never override Base. Use the Base column to change base requirements.',
+        { exact: true }
+      )
+    ).toBeVisible();
+    await editor
+      .getByRole('switch', { name: 'Requirement 1 Required', exact: true })
+      .setChecked(false);
+    await editor
+      .getByRole('button', { name: 'Apply to draft', exact: true })
+      .click();
+    await expect(
+      matrixCell(page, 'Form', 'Provider function', 'First profile').getByText(
+        'Base \u00b7 Setup \u00b7 Optional',
+        { exact: true }
+      )
+    ).toHaveCount(0);
+    await expect(
+      matrixCell(page, 'Form', 'Provider function', 'Second profile').getByText(
+        'Base \u00b7 Setup \u00b7 Optional',
+        { exact: true }
+      )
+    ).toHaveCount(0);
+    await expect(
+      matrixCell(page, 'Form').getByText('Base \u00b7 Setup \u00b7 Optional', {
+        exact: true,
+      })
+    ).toBeVisible();
+    editor = await openMatrixCell(page, 'Provider function', 'First profile');
+    await expect(
+      editor.getByText('Base · Setup · Optional (edit in the Base column)', {
+        exact: true,
+      })
+    ).toBeVisible();
+    await editor
+      .getByRole('switch', { name: 'Requirement 1 Required', exact: true })
+      .setChecked(true);
+    await expect(
+      editor.getByRole('button', { name: 'Add Closeout', exact: true })
+    ).toHaveCount(0);
+    await editor
+      .getByRole('switch', { name: 'Requirement 2 Required', exact: true })
+      .setChecked(false);
+    await editor
+      .getByRole('button', { name: 'Apply to draft', exact: true })
+      .click();
+    const first = matrixCell(
+      page,
+      'Form',
+      'Provider function',
+      'First profile'
+    );
+    await expect(
+      first.getByText('Base \u00b7 Setup \u00b7 Optional', { exact: true })
+    ).toHaveCount(0);
+    await expect(
+      first.getByText('Additional \u00b7 Setup \u00b7 Required', {
+        exact: true,
+      })
+    ).toBeVisible();
+    await expect(
+      first.getByText('Additional \u00b7 Closeout \u00b7 Optional', {
+        exact: true,
+      })
+    ).toBeVisible();
+    expect(requests.puts()).toBe(0);
+    await page
+      .getByRole('button', { name: 'Save changes', exact: true })
+      .click();
+    await expect.poll(requests.puts).toBe(1);
+    const arrangement = saved!.referralPolicy.arrangementPolicies[0];
+    expect(arrangement.requiredSetupActions[0].isRequired).toBe(false);
+    expect(
+      arrangement.arrangementFunctions[0].variants[0].requiredSetupActions[0]
+        .isRequired
+    ).toBe(true);
+    expect(
+      arrangement.arrangementFunctions[0].variants[0].requiredCloseoutActions
+    ).toEqual(
+      initial.referralPolicy.arrangementPolicies[0].arrangementFunctions[0].variants[0].requiredCloseoutActions.map(
+        (item: { actionName: string }) =>
+          item.actionName === 'Form'
+            ? { actionName: 'Form', isRequired: false }
+            : item
+      )
+    );
+    expect(arrangement.arrangementFunctions[0].variants[1]).toEqual(
+      initial.referralPolicy.arrangementPolicies[0].arrangementFunctions[0]
+        .variants[1]
+    );
+    expect(arrangement.policyVersions).toEqual(
+      initial.referralPolicy.arrangementPolicies[0].policyVersions
+    );
+  });
+
+  test('structured multi-stage editing stays inside the cell and round-trips as recurrence objects', async ({
+    page,
+  }) => {
+    const initial = caseMatrixPolicy();
+    const requests = await backend(page, false, false, initial);
+    let saved: EffectiveLocationPolicy | undefined;
+    page.on('request', (request) => {
+      if (request.method() === 'PUT') saved = request.postDataJSON();
+    });
+    await mount(page, 'casePolicy', undefined, true);
+    const editor = await openMatrixCell(page);
+    await editor
+      .getByRole('spinbutton', {
+        name: 'Stage 1 occurrence limit',
+        exact: true,
+      })
+      .fill('1');
+    await editor
+      .getByRole('button', { name: 'Add stage', exact: true })
+      .click();
+    await editor
+      .getByRole('spinbutton', { name: 'Stage 2 interval (days)', exact: true })
+      .fill('7');
+    await editor
+      .getByLabel('Unlimited occurrences', { exact: true })
+      .nth(1)
+      .check();
+    await editor
+      .getByRole('spinbutton', { name: 'Stage 2 interval (days)', exact: true })
+      .press('Enter');
+    await expect(editor).toBeVisible();
+    await expect(
+      page.getByRole('button', { name: 'Save changes', exact: true })
+    ).toBeDisabled();
+    await editor
+      .getByRole('button', { name: 'Apply to draft', exact: true })
+      .click();
+    await expect(matrixCell(page, 'Form')).toHaveClass(/policy-cell-unsaved/);
+    expect(requests.puts()).toBe(0);
+    const staged = await matrixCell(page, 'Form').innerText();
+    await page.getByRole('button', { name: 'Undo', exact: true }).click();
+    await expect(matrixCell(page, 'Form')).not.toHaveClass(
+      /policy-cell-unsaved/
+    );
+    await expect(
+      matrixCell(page, 'Form').getByText('Stage 1: 2 days; 3 occurrence(s)', {
+        exact: true,
+      })
+    ).toBeVisible();
+    await page.getByRole('button', { name: 'Redo', exact: true }).click();
+    await expect(matrixCell(page, 'Form')).toHaveText(staged, {
+      useInnerText: true,
+    });
+    expect(requests.puts()).toBe(0);
+    await page
+      .getByRole('button', { name: 'Save changes', exact: true })
+      .click();
+    await expect.poll(requests.puts).toBe(1);
+    await expect(matrixCell(page, 'Form')).not.toHaveClass(
+      /policy-cell-unsaved/
+    );
+    expect(
+      saved!.referralPolicy.arrangementPolicies[0]
+        .requiredMonitoringActionsNew[0].recurrence
+    ).toEqual({
+      discriminator: 'DurationStagesRecurrencePolicy',
+      stages: [
+        { delay: '2.00:00:00', maxOccurrences: 1 },
+        { delay: '7.00:00:00', maxOccurrences: null },
+      ],
+    });
+    expect(
+      saved!.referralPolicy.arrangementPolicies[0].arrangementFunctions
+    ).toEqual(
+      initial.referralPolicy.arrangementPolicies[0].arrangementFunctions
+    );
+  });
+
+  test('protected legacy and sub-day schedules remain visible without destructive controls', async ({
+    page,
+  }) => {
+    const initial = caseMatrixPolicy();
+    Object.assign(initial.referralPolicy.arrangementPolicies[0], {
+      requiredSetupActionNames: ['Form'],
+      requiredMonitoringActionsNew: [
+        {
+          action: { actionName: 'Form', isRequired: true },
+          recurrence: {
+            discriminator: 'OneTimeRecurrencePolicy',
+            delay: '00:12:00',
+          },
+        },
+      ],
+    });
+    const requests = await backend(page, false, false, initial);
+    await mount(page, 'casePolicy', undefined, true);
+    const cell = matrixCell(page, 'Form');
+    const contents = await cell.innerText();
+    const editor = await openMatrixCell(page);
+    await expect(cell).toHaveText(contents, { useInnerText: true });
+    await expect(cell.getByText(/Duplicate or mixed-source/)).toBeVisible();
+    await expect(cell.getByText(/Evaluation uses whole days/)).toBeVisible();
+    await expect(editor.getByText(/Duplicate or mixed-source/)).toBeVisible();
+    await expect(editor.getByText(/Evaluation uses whole days/)).toBeVisible();
+    await expect(editor.getByRole('switch')).toHaveCount(1);
+    const protectedGroup = editor.getByRole('radiogroup', {
+      name: 'Requirement 1 phase',
+      exact: true,
+    });
+    await expect(
+      protectedGroup.getByRole('radio', { name: 'Closeout', exact: true })
+    ).toBeChecked();
+    await expect(
+      protectedGroup.getByRole('radio', { name: 'Setup', exact: true })
+    ).toBeDisabled();
+    await expect(
+      protectedGroup.getByRole('radio', { name: 'Monitoring', exact: true })
+    ).toBeDisabled();
+    await expect(
+      editor.getByRole('switch', {
+        name: 'Requirement 1 Required',
+        exact: true,
+      })
+    ).toBeChecked();
+    await expect(
+      editor.getByRole('button', { name: 'Add Setup', exact: true })
+    ).toHaveCount(0);
+    await expect(
+      editor.getByRole('button', { name: 'Add Monitoring', exact: true })
+    ).toHaveCount(0);
+    await editor
+      .getByRole('button', { name: 'Cancel cell', exact: true })
+      .click();
+    expect(requests.puts()).toBe(0);
+  });
+
+  test('keyboard Escape, Cancel and failed saves retain the correct draft', async ({
+    page,
+  }) => {
+    const requests = await backend(page, true, false, caseMatrixPolicy());
+    await mount(page, 'casePolicy', undefined, true);
+    const cell = matrixCell(page, 'Form');
+    await cell.click();
+    let editor = page.getByRole('dialog', { name: /^Edit Form/ });
+    await editor
+      .getByRole('switch', { name: 'Requirement 1 Required', exact: true })
+      .setChecked(false);
+    await editor.press('Escape');
+    await expect(
+      page.getByRole('button', { name: 'Save changes', exact: true })
+    ).toBeDisabled();
+    await cell.focus();
+    await cell.press('Enter');
+    editor = page.getByRole('dialog', { name: /^Edit Form/ });
+    await editor
+      .getByRole('switch', { name: 'Requirement 1 Required', exact: true })
+      .uncheck();
+    await editor
+      .getByRole('button', { name: 'Apply to draft', exact: true })
+      .click();
+    await page
+      .getByRole('button', { name: 'Save changes', exact: true })
+      .click();
+    await expect.poll(requests.puts).toBe(1);
+    await expect(page.getByTestId('policy-save-errors')).toContainText(
+      blockingError
+    );
+    await expect(
+      cell.getByText('Base \u00b7 Setup \u00b7 Required', { exact: true })
+    ).toHaveCount(0);
+    await cancelPolicyForm(page);
+    await expect(
+      cell.getByText('Base \u00b7 Setup \u00b7 Required', { exact: true })
+    ).toBeVisible();
+  });
+
+  for (const width of [320, 390, 768, 1440])
+    test('expanded matrix cell works at ' + width + 'px', async ({ page }) => {
+      await page.setViewportSize({ width, height: 900 });
+      const requests = await backend(page, false, false, caseMatrixPolicy());
+      await mount(page, 'casePolicy', undefined, true);
+      const header = page.getByRole('columnheader', {
+        name: 'Hosting (arrangement type)',
+        exact: true,
+      });
+      await expect(header).toBeVisible();
+      await expect(
+        header.getByText('(arrangement type)', { exact: true })
+      ).toHaveCSS('font-weight', '400');
+      const cell = matrixCell(page, 'Form');
+      await expect(cell).toBeVisible();
+      const originalBounds = (await cell.boundingBox())!;
+      const editor = await openMatrixCell(page);
+      await expect(editor).toBeVisible();
+      const bounds = (await editor.boundingBox())!;
+      expect(bounds.x).toBeGreaterThanOrEqual(0);
+      expect(bounds.x + bounds.width).toBeLessThanOrEqual(width);
+      expect(bounds.y).toBeGreaterThanOrEqual(0);
+      expect(bounds.y + bounds.height).toBeLessThanOrEqual(900);
+      await editor
+        .getByRole('button', { name: 'Cancel cell', exact: true })
+        .click();
+      await expect(cell).not.toHaveClass(/policy-cell-unsaved/);
+      await applyApplicability(page, 'Optional');
+      await expect(cell).toHaveClass(/policy-cell-unsaved/);
+      await expect(cell).toHaveAccessibleName(/Unsaved changes/);
+      const changedBounds = (await cell.boundingBox())!;
+      expect(changedBounds.width).toBe(originalBounds.width);
+      expect(changedBounds.height).toBeCloseTo(originalBounds.height, 0);
+      expect(requests.puts()).toBe(0);
+    });
+
+  test('arrangement headers preserve identities, emphasis and read-only labels for long dynamic names', async ({
+    page,
+  }) => {
+    const initial = caseMatrixPolicy();
+    const name =
+      'A long dynamically configured arrangement name that requires truncation';
+    initial.referralPolicy.arrangementPolicies.push({
+      ...initial.referralPolicy.arrangementPolicies[0],
+      arrangementType: name,
+      arrangementFunctions: [],
+      supersededAtUtc: '2024-01-01T00:00:00Z',
+    });
+    const requests = await backend(page, false, false, initial);
+    await mount(page, 'casePolicy', undefined, true);
+    const grid = page.getByRole('grid', {
+      name: 'Case Policies requirements matrix',
+      exact: true,
+    });
+    for (const width of [320, 390, 768, 1440]) {
+      await page.setViewportSize({ width, height: 900 });
+      await grid.locator('.MuiDataGrid-virtualScroller').evaluate((element) => {
+        element.scrollLeft = element.scrollWidth;
+      });
+      const header = grid.getByRole('columnheader', {
+        name: name + ' (read-only) (arrangement type)',
+        exact: true,
+      });
+      await expect(header).toBeVisible();
+      await expect(header).toHaveAttribute(
+        'data-fields',
+        '|-' + JSON.stringify([name, null, null]) + '-|'
+      );
+      const suffix = header.getByText('(arrangement type)', { exact: true });
+      await expect(suffix).toHaveCSS('font-weight', '400');
+      await expect(
+        header.getByText('(read-only)', { exact: true })
+      ).toBeVisible();
+      const label = header.getByText(name, { exact: true });
+      await expect(label).toHaveAttribute('title', name);
+      expect(
+        await label.evaluate((element) => getComputedStyle(element).fontWeight)
+      ).toBe(
+        await grid
+          .getByRole('columnheader', { name: 'Actions', exact: true })
+          .locator('.MuiDataGrid-columnHeaderTitle')
+          .evaluate((element) => getComputedStyle(element).fontWeight)
+      );
+      const bounds = (await suffix.boundingBox())!;
+      const headerBounds = (await header.boundingBox())!;
+      expect(bounds.x).toBeGreaterThanOrEqual(headerBounds.x);
+      expect(bounds.x + bounds.width).toBeLessThanOrEqual(
+        headerBounds.x + headerBounds.width
+      );
+    }
+    expect(requests.puts()).toBe(0);
+  });
+
+  test('function headers preserve dynamic grouping and long names without creating empty groups', async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    const initial = caseMatrixPolicy();
+    const arrangement = initial.referralPolicy.arrangementPolicies[0];
+    const originalFunction = arrangement.arrangementFunctions[0];
+    const name =
+      'A long dynamically configured function name that requires truncation';
+    const fn = {
+      ...originalFunction,
+      functionName: name,
+      variants: [originalFunction.variants[0]],
+    };
+    arrangement.arrangementFunctions = [
+      fn,
+      { ...fn, functionName: 'Another function' },
+      { ...fn, functionName: 'Empty function', variants: [] },
+    ];
+    initial.referralPolicy.arrangementPolicies.push({
+      ...arrangement,
+      arrangementType: 'Another arrangement',
+      arrangementFunctions: [fn],
+    });
+    const requests = await backend(page, false, false, initial);
+    await mount(page, 'casePolicy', undefined, true);
+    const grid = page.getByRole('grid', {
+      name: 'Case Policies requirements matrix',
+      exact: true,
+    });
+    await expect(
+      grid.getByRole('columnheader', {
+        name: name + ' (function)',
+        exact: true,
+      })
+    ).toHaveCount(2);
+    await expect(
+      grid.getByRole('columnheader', {
+        name: 'Another function (function)',
+        exact: true,
+      })
+    ).toBeVisible();
+    await expect(
+      grid.getByRole('columnheader', {
+        name: 'Empty function (function)',
+        exact: true,
+      })
+    ).toHaveCount(0);
+    await expect(
+      grid.getByRole('columnheader', {
+        name: 'Hosting (arrangement type)',
+        exact: true,
+      })
+    ).toBeVisible();
+    await expect(
+      grid.getByRole('columnheader', { name: 'Base', exact: true })
+    ).toHaveCount(2);
+    await expect(
+      grid.getByRole('columnheader', {
+        name: 'First profile (variant)',
+        exact: true,
+      })
+    ).toHaveCount(3);
+    const fields = ['Hosting', 'Another arrangement'].map(
+      (arrangementName) =>
+        '|-' + JSON.stringify([arrangementName, name, 'First profile']) + '-|'
+    );
+    const headers = grid.getByRole('columnheader', {
+      name: name + ' (function)',
+      exact: true,
+    });
+    expect(
+      await headers.evaluateAll((elements) =>
+        elements.map((element) => element.getAttribute('data-fields'))
+      )
+    ).toEqual(fields);
+    for (const width of [320, 390, 768, 1440]) {
+      await page.setViewportSize({ width, height: 900 });
+      await grid.locator('.MuiDataGrid-virtualScroller').evaluate((element) => {
+        element.scrollLeft = element.scrollWidth;
+      });
+      const header = headers.last();
+      await expect(header).toBeVisible();
+      await expect(header).toHaveAttribute('data-fields', fields[1]);
+      const suffix = header.getByText('(function)', { exact: true });
+      await expect(suffix).toHaveCSS('font-weight', '400');
+      const label = header.getByText(name, { exact: true });
+      await expect(label).toHaveAttribute('title', name);
+      expect(
+        await label.evaluate((element) => getComputedStyle(element).fontWeight)
+      ).toBe(
+        await grid
+          .getByRole('columnheader', { name: 'Actions', exact: true })
+          .locator('.MuiDataGrid-columnHeaderTitle')
+          .evaluate((element) => getComputedStyle(element).fontWeight)
+      );
+      const bounds = (await suffix.boundingBox())!;
+      const headerBounds = (await header.boundingBox())!;
+      expect(bounds.x).toBeGreaterThanOrEqual(headerBounds.x);
+      expect(bounds.x + bounds.width).toBeLessThanOrEqual(
+        headerBounds.x + headerBounds.width
+      );
+    }
+    expect(requests.puts()).toBe(0);
+  });
+});
+
+test('variant headers preserve duplicate identities and long names without changing Base or group headers', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  const initial = caseMatrixPolicy();
+  const arrangement = initial.referralPolicy.arrangementPolicies[0];
+  const original = arrangement.arrangementFunctions[0];
+  const name =
+    'A long dynamically configured variant name that requires truncation';
+  const variant = { ...original.variants[0], variantName: name };
+  arrangement.arrangementFunctions = [
+    { ...original, variants: [variant] },
+    { ...original, functionName: 'Another function', variants: [variant] },
+  ];
+  const requests = await backend(page, false, false, initial);
+  await mount(page, 'casePolicy', undefined, true);
+  const grid = page.getByRole('grid', {
+    name: 'Case Policies requirements matrix',
+    exact: true,
+  });
+  const headers = grid.getByRole('columnheader', {
+    name: name + ' (variant)',
+    exact: true,
+  });
+  await expect(headers).toHaveCount(2);
+  expect(
+    await headers.evaluateAll((elements) =>
+      elements.map((element) => element.getAttribute('data-field'))
+    )
+  ).toEqual([
+    JSON.stringify(['Hosting', original.functionName, name]),
+    JSON.stringify(['Hosting', 'Another function', name]),
+  ]);
+  await expect(
+    grid.getByRole('columnheader', { name: 'Base', exact: true })
+  ).toBeVisible();
+  await expect(
+    grid.getByRole('columnheader', { name: 'Base (variant)', exact: true })
+  ).toHaveCount(0);
+  await expect(
+    grid.getByRole('columnheader', {
+      name: 'Hosting (arrangement type)',
+      exact: true,
+    })
+  ).toBeVisible();
+  await expect(
+    grid.getByRole('columnheader', {
+      name: original.functionName + ' (function)',
+      exact: true,
+    })
+  ).toBeVisible();
+  for (const width of [320, 390, 768, 1440]) {
+    await page.setViewportSize({ width, height: 900 });
+    await grid.locator('.MuiDataGrid-virtualScroller').evaluate((element) => {
+      element.scrollLeft = element.scrollWidth;
+    });
+    const header = headers.last();
+    await expect(header).toBeVisible();
+    await expect(header).toHaveAttribute(
+      'data-field',
+      JSON.stringify(['Hosting', 'Another function', name])
+    );
+    const suffix = header.getByText('(variant)', { exact: true });
+    await expect(suffix).toHaveCSS('font-weight', '400');
+    const label = header.getByText(name, { exact: true });
+    await expect(label).toHaveAttribute('title', name);
+    expect(
+      await label.evaluate((element) => getComputedStyle(element).fontWeight)
+    ).toBe(
+      await grid
+        .getByRole('columnheader', { name: 'Actions', exact: true })
+        .locator('.MuiDataGrid-columnHeaderTitle')
+        .evaluate((element) => getComputedStyle(element).fontWeight)
+    );
+    const bounds = (await suffix.boundingBox())!;
+    const headerBounds = (await header.boundingBox())!;
+    expect(bounds.x).toBeGreaterThanOrEqual(headerBounds.x);
+    expect(bounds.x + bounds.width).toBeLessThanOrEqual(
+      headerBounds.x + headerBounds.width
+    );
+  }
+  expect(requests.puts()).toBe(0);
+});
+
+test('initial Settings policy page shows warnings once and never saves', async ({
   page,
 }) => {
   const requests = await backend(page);
   await mount(page);
   await expect(
-    page.getByText('Basic configuration', { exact: true })
+    page.getByRole('region', { name: 'Action Definitions', exact: true })
   ).toBeVisible();
   await expect(page.getByRole('alert')).toContainText(warning);
   await expect(page.getByText(warning, { exact: true })).toHaveCount(1);
@@ -187,9 +5104,598 @@ test('initial Basic Settings shows warnings once and never saves', async ({
     await page
       .getByText(warning, { exact: true })
       .evaluate((element) => element.closest('.ph-unmask') !== null)
-  ).toBe(true);
+  ).toBe(false);
   expect(requests.puts()).toBe(0);
   expect(requests.validations()).toBe(1);
+});
+
+function actionDefinitionPolicy() {
+  return {
+    ...policy(),
+    actionDefinitions: {
+      'Dynamic activity': {
+        documentLink: DocumentLinkRequirement.None,
+        noteEntry: NoteEntryRequirement.None,
+        instructions: 'Original instructions',
+        infoLink: 'https://example.test/original',
+        validity: '30.00:00:00',
+        alternateNames: ['Original alias'],
+        canView: 'ViewPermission',
+        canEdit: 'EditPermission',
+      },
+    },
+  };
+}
+
+test('action cells stage multiple values, cancel and save once while preserving advanced fields', async ({
+  page,
+}) => {
+  const requests = await backend(page, false, false, actionDefinitionPolicy());
+  let saved: unknown;
+  page.on('request', (request) => {
+    if (request.method() === 'PUT') saved = request.postDataJSON();
+  });
+  await mount(page, 'actionDefinitions');
+  const row = page.locator('[data-id="Dynamic activity"]');
+  for (const [field, value] of [
+    ['instructions', 'Staged instructions'],
+    ['url', 'https://example.test/staged'],
+  ]) {
+    await row.locator('[data-field="' + field + '"]').click();
+    await row.locator('[data-field="' + field + '"] input').fill(value);
+    await row.locator('[data-field="' + field + '"] input').press('Tab');
+  }
+  expect(requests.puts()).toBe(0);
+  await expect(page.getByRole('status')).toContainText(/unsaved change/i);
+  await expect(
+    page.getByText('2 unsaved changes', { exact: true })
+  ).toBeVisible();
+  await cancelPolicyForm(page);
+  await expect(row.locator('[data-field="instructions"]')).toHaveText(
+    'Original instructions'
+  );
+  await row.locator('[data-field="instructions"]').click();
+  await row.locator('[data-field="instructions"] input').fill('Saved draft');
+  await row.locator('[data-field="instructions"] input').press('Enter');
+  await page.getByRole('button', { name: 'Save changes', exact: true }).click();
+  await expect.poll(requests.puts).toBe(1);
+  expect(saved).toMatchObject({
+    actionDefinitions: {
+      'Dynamic activity': {
+        instructions: 'Saved draft',
+        alternateNames: ['Original alias'],
+        canView: 'ViewPermission',
+        canEdit: 'EditPermission',
+        validity: '30.00:00:00',
+      },
+    },
+  });
+  await row.locator('[data-field="instructions"]').click();
+  await row.locator('[data-field="instructions"] input').press('Enter');
+  await expect(
+    page.getByRole('button', { name: 'Save changes', exact: true })
+  ).toBeDisabled();
+  expect(requests.puts()).toBe(1);
+  await page
+    .getByRole('button', { name: 'Edit details Dynamic activity', exact: true })
+    .click();
+  await expect(
+    page.getByRole('textbox', { name: 'Action Name', exact: true })
+  ).toHaveValue('Dynamic activity');
+  await page
+    .getByRole('textbox', { name: 'Instructions', exact: true })
+    .fill('Detailed draft');
+  await page
+    .getByRole('button', { name: 'Apply to draft', exact: true })
+    .click();
+  await expect(
+    page.getByRole('heading', { name: 'Edit Action Definition' })
+  ).toHaveCount(0);
+  expect(requests.puts()).toBe(1);
+  await cancelPolicyForm(page);
+});
+
+test('document notes and validity stage raw domain values without per-cell writes', async ({
+  page,
+}) => {
+  const requests = await backend(page, false, false, actionDefinitionPolicy());
+  let saved: unknown;
+  page.on('request', (r) => {
+    if (r.method() === 'PUT') saved = r.postDataJSON();
+  });
+  await mount(page, 'actionDefinitions');
+  const row = page.locator('[data-id="Dynamic activity"]');
+  for (const [field, label] of [
+    ['document', 'Required'],
+    ['note', 'Allowed'],
+  ]) {
+    await row.locator('[data-field="' + field + '"]').click();
+    await page.getByRole('option', { name: label, exact: true }).click();
+    await row
+      .locator('[data-field="' + field + '"]')
+      .getByRole('combobox')
+      .press('Enter');
+  }
+  await row.locator('[data-field="validity"]').click();
+  await page.getByRole('spinbutton', { name: 'Validity amount' }).fill('2');
+  await page
+    .getByRole('spinbutton', { name: 'Validity amount' })
+    .press('Enter');
+  expect(requests.puts()).toBe(0);
+  await page.getByRole('button', { name: 'Save changes', exact: true }).click();
+  await expect.poll(requests.puts).toBe(1);
+  expect(saved).toMatchObject({
+    actionDefinitions: {
+      'Dynamic activity': {
+        documentLink: DocumentLinkRequirement.Required,
+        noteEntry: NoteEntryRequirement.Allowed,
+        validity: '60.00:00:00',
+      },
+    },
+  });
+  await row.locator('[data-field="validity"]').click();
+  await page.getByRole('spinbutton', { name: 'Validity amount' }).fill('0');
+  await page
+    .getByRole('spinbutton', { name: 'Validity amount' })
+    .press('Enter');
+  await expect(
+    page.getByRole('button', { name: 'Save changes', exact: true })
+  ).toBeDisabled();
+  await page
+    .getByRole('spinbutton', { name: 'Validity amount' })
+    .press('Escape');
+  expect(requests.puts()).toBe(1);
+});
+
+test('failed action batch save retains staged values and existing error feedback', async ({
+  page,
+}) => {
+  const requests = await backend(page, true, false, actionDefinitionPolicy());
+  await mount(page, 'actionDefinitions');
+  const cell = page.locator(
+    '[data-id="Dynamic activity"] [data-field="instructions"]'
+  );
+  await cell.click();
+  await cell.locator('input').fill('Keep my draft');
+  await cell.locator('input').press('Enter');
+  expect(requests.puts()).toBe(0);
+  await page.getByRole('button', { name: 'Save changes', exact: true }).click();
+  await expect(page.getByTestId('policy-save-errors')).toContainText(
+    blockingError
+  );
+  await expect(cell).toHaveText('Keep my draft');
+  await expect(
+    page.getByRole('button', { name: 'Editing help', exact: true })
+  ).toHaveCount(0);
+  await expect(
+    page.getByRole('alert').filter({ hasText: 'Your draft is retained' })
+  ).toBeVisible();
+  expect(requests.puts()).toBe(1);
+});
+
+test('batch Save prevents duplicate submissions and stays dirty until persistence succeeds', async ({
+  page,
+}) => {
+  await backend(page, false, false, actionDefinitionPolicy());
+  let stored = actionDefinitionPolicy();
+  let writes = 0;
+  let release!: () => void;
+  const pending = new Promise<void>((resolve) => {
+    release = resolve;
+  });
+  await page.route('**/Configuration/policy', async (route) => {
+    if (route.request().method() === 'PUT') {
+      writes++;
+      await pending;
+      stored = route.request().postDataJSON();
+    }
+    await route.fulfill({ json: stored });
+  });
+  await mount(page, 'actionDefinitions');
+  const cell = page.locator(
+    '[data-id="Dynamic activity"] [data-field="instructions"]'
+  );
+  await cell.click();
+  await cell.locator('input').fill('Pending batch');
+  await cell.locator('input').press('Enter');
+  await page.getByRole('button', { name: 'Save changes', exact: true }).click();
+  const saving = page.getByRole('button', { name: 'Saving…', exact: true });
+  await expect(saving).toBeDisabled();
+  await expect(
+    page.getByRole('button', { name: 'Editing help', exact: true })
+  ).toHaveCount(0);
+  await expect(page.getByRole('status')).toContainText(/unsaved change/i);
+  await saving.dispatchEvent('click');
+  expect(writes).toBe(1);
+  release();
+  await expect(
+    page.getByText('Changes saved successfully', { exact: true })
+  ).toBeVisible();
+  expect(writes).toBe(1);
+});
+
+test('dirty grid navigation warns and Cancel allows navigation without writes', async ({
+  page,
+}) => {
+  const requests = await backend(page, false, false, actionDefinitionPolicy());
+  await mount(page, 'actionDefinitions');
+  const cell = page.locator(
+    '[data-id="Dynamic activity"] [data-field="instructions"]'
+  );
+  await cell.click();
+  await cell.locator('input').fill('Unsaved');
+  await cell.locator('input').press('Enter');
+  const decision = policyDecision(page, false);
+  await page.getByRole('link', { name: 'Settings', exact: true }).click();
+  await decision;
+  await expect(page).toHaveURL(/settings\/action-definitions/);
+  await cancelPolicyForm(page);
+  await page.getByRole('link', { name: 'Settings', exact: true }).click();
+  await page.getByRole('button', { name: /^Location Settings/ }).click();
+  await page.getByRole('button', { name: /Case Policies/ }).click();
+  await expect(
+    page.getByRole('region', { name: 'Case Policies', exact: true })
+  ).toBeVisible();
+  expect(requests.puts()).toBe(0);
+});
+
+test('Cancel keeps the action grid quick filter while restoring draft values', async ({
+  page,
+}) => {
+  const requests = await backend(page, false, false, actionDefinitionPolicy());
+  await mount(page, 'actionDefinitions');
+  const cell = page.locator(
+    '[data-id="Dynamic activity"] [data-field="instructions"]'
+  );
+  await cell.click();
+  await cell.locator('input').fill('Discard this');
+  await cell.locator('input').press('Enter');
+  await page.getByRole('button', { name: 'Search', exact: true }).click();
+  await page.getByRole('searchbox').fill('Dynamic');
+  await cancelPolicyForm(page);
+  await expect(page.getByRole('searchbox')).toHaveValue('Dynamic');
+  await expect(cell).toHaveText('Original instructions');
+  expect(requests.puts()).toBe(0);
+});
+
+test('mobile Action Definitions stage a single-click enum edit and save explicitly', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 375, height: 850 });
+  const requests = await backend(page, false, false, actionDefinitionPolicy());
+  await mount(page, 'actionDefinitions');
+  const cell = page.locator(
+    '[data-id="Dynamic activity"] [data-field="document"]'
+  );
+  await cell.click();
+  await page.getByRole('option', { name: 'Required', exact: true }).click();
+  await cell.getByRole('combobox').press('Enter');
+  expect(requests.puts()).toBe(0);
+  await page.getByRole('button', { name: 'Save changes', exact: true }).click();
+  await expect.poll(requests.puts).toBe(1);
+  await expect(
+    page.getByRole('button', { name: 'Save changes', exact: true })
+  ).toBeDisabled();
+});
+
+for (const width of [320, 390, 768, 1440]) {
+  test(`draft action bars remain readable and contained at ${width}px`, async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width, height: 900 });
+    const requests = await backend(
+      page,
+      false,
+      false,
+      actionDefinitionPolicy()
+    );
+    await mount(page, 'actionDefinitions');
+    await expect(
+      page.getByRole('status', { name: 'Policy draft status' })
+    ).toHaveText(/^\s*$/);
+    const save = page.getByRole('button', {
+      name: 'Save changes',
+      exact: true,
+    });
+    const cancel = page.getByRole('button', { name: 'Cancel', exact: true });
+    await expect(save).toBeDisabled();
+    await expect(cancel).toBeDisabled();
+    for (const button of [save, cancel]) {
+      const bounds = await button.boundingBox();
+      expect(bounds).not.toBeNull();
+      expect(bounds!.x).toBeGreaterThanOrEqual(0);
+      expect(bounds!.x + bounds!.width).toBeLessThanOrEqual(width);
+      expect(bounds!.height).toBeGreaterThanOrEqual(40);
+      expect(bounds!.height).toBeLessThanOrEqual(44);
+    }
+    const saveBounds = (await save.boundingBox())!;
+    const cancelBounds = (await cancel.boundingBox())!;
+    expect(Math.abs(saveBounds.y - cancelBounds.y)).toBeLessThan(2);
+    if (width >= 600) {
+      const statusBounds = (await page.getByRole('status').boundingBox())!;
+      expect(
+        Math.abs(
+          statusBounds.y +
+            statusBounds.height / 2 -
+            saveBounds.y -
+            saveBounds.height / 2
+        )
+      ).toBeLessThan(2);
+    }
+    await expect(
+      page.getByRole('button', { name: 'Editing help', exact: true })
+    ).toHaveCount(0);
+    await page.goto('/org/org/a/settings/case-policies');
+    await page.addScriptTag({ content: bundle });
+    await expect(
+      page.getByRole('grid', {
+        name: 'Case Policies requirements matrix',
+        exact: true,
+      })
+    ).toBeVisible();
+    const arrangementSave = page.getByRole('button', {
+      name: 'Save changes',
+      exact: true,
+    });
+    await expect(arrangementSave).toBeDisabled();
+    const arrangementBounds = (await arrangementSave.boundingBox())!;
+    expect(arrangementBounds.x).toBeGreaterThanOrEqual(0);
+    expect(arrangementBounds.x + arrangementBounds.width).toBeLessThanOrEqual(
+      width
+    );
+    expect(requests.puts()).toBe(0);
+  });
+}
+
+test('save status is confirmed, transient and scoped without moving controls or appearing on cancel and revert', async ({
+  page,
+}) => {
+  const requests = await backend(page, false, false, actionDefinitionPolicy());
+  await mount(page, 'actionDefinitions');
+  await page.clock.install();
+  const status = page.getByRole('status', { name: 'Policy draft status' });
+  const save = page.getByRole('button', { name: 'Save changes', exact: true });
+  const cell = page.locator(
+    '[data-id="Dynamic activity"] [data-field="instructions"]'
+  );
+  async function stage(value: string) {
+    await cell.click();
+    await cell.locator('input').fill(value);
+    await cell.locator('input').press('Enter');
+  }
+  await expect(status).toHaveText(/^\s*$/);
+  await expect(page.getByTestId('CheckCircleOutlinedIcon')).toHaveCount(0);
+  const clean = (await save.boundingBox())!;
+  const row = save.locator('..').locator('..');
+  const cleanRow = (await row.boundingBox())!;
+  await stage('First saved value');
+  await expect(status).toHaveText('1 unsaved change');
+  await save.click();
+  await expect(status).toHaveText('Changes saved successfully');
+  await expect(page.getByTestId('CheckCircleOutlinedIcon')).toBeVisible();
+  expect((await save.boundingBox())!.y - (await row.boundingBox())!.y).toBe(
+    clean.y - cleanRow.y
+  );
+  expect((await row.boundingBox())!.height).toBe(cleanRow.height);
+  await page.clock.runFor(3100);
+  await expect(status).toHaveText(/^\s*$/);
+  expect((await save.boundingBox())!.y - (await row.boundingBox())!.y).toBe(
+    clean.y - cleanRow.y
+  );
+  expect((await row.boundingBox())!.height).toBe(cleanRow.height);
+  await stage('Second saved value');
+  await save.click();
+  await expect(status).toHaveText('Changes saved successfully');
+  await cell.click();
+  await cell.locator('input').fill('Unapplied value');
+  await expect(status).toHaveText('Cell edit in progress');
+  await cell.locator('input').press('Escape');
+  await expect(status).toHaveText(/^\s*$/);
+  await stage('Cancel this value');
+  await cancelPolicyForm(page);
+  await expect(status).toHaveText(/^\s*$/);
+  await stage('Revert this value');
+  await stage('Second saved value');
+  await expect(status).toHaveText(/^\s*$/);
+  await expect(save).toBeDisabled();
+  expect(requests.puts()).toBe(2);
+  await stage('Third saved value');
+  await save.click();
+  await expect(status).toHaveText('Changes saved successfully');
+  await page.getByRole('link', { name: 'Location B', exact: true }).click();
+  await expect(page).toHaveURL('/org/org/b/settings/action-definitions');
+  await expect(status).toHaveText(/^\s*$/);
+  await page.clock.runFor(3100);
+  await expect(status).toHaveText(/^\s*$/);
+  await page.getByRole('link', { name: 'Settings', exact: true }).click();
+  await page.clock.runFor(3100);
+  await expect(
+    page.getByText('Changes saved successfully', { exact: true })
+  ).toHaveCount(0);
+});
+
+test('history confirmation restores the current entry and resumes Back and Forward only after discard', async ({
+  page,
+}) => {
+  const requests = await backend(page, false, false, caseMatrixPolicy());
+  await mount(page, 'casePolicy', undefined, true);
+  await page.getByRole('link', { name: 'Location B', exact: true }).click();
+  await page.getByRole('link', { name: 'Location A', exact: true }).click();
+  await applyApplicability(page, 'Optional');
+  const keepBack = policyDecision(page, false);
+  await page.goBack();
+  await keepBack;
+  await expect(page).toHaveURL('/org/org/a/settings/case-policies');
+  await expect(matrixCell(page, 'Form')).toHaveClass(/policy-cell-unsaved/);
+  const leaveBack = policyDecision(page, true);
+  await page.goBack();
+  await leaveBack;
+  await expect(page).toHaveURL('/org/org/b/settings/case-policies');
+  await applyApplicability(page, 'Optional');
+  const keepForward = policyDecision(page, false);
+  await page.goForward();
+  await keepForward;
+  await expect(page).toHaveURL('/org/org/b/settings/case-policies');
+  const leaveForward = policyDecision(page, true);
+  await page.goForward();
+  await leaveForward;
+  await expect(page).toHaveURL('/org/org/a/settings/case-policies');
+  await expect(matrixCell(page, 'Form')).not.toHaveClass(/policy-cell-unsaved/);
+  expect(requests.puts()).toBe(0);
+});
+
+test('native beforeunload is present only for unsaved data and refresh preserves the draft when canceled', async ({
+  page,
+}) => {
+  const requests = await backend(page, false, false, caseMatrixPolicy());
+  await mount(page, 'casePolicy', undefined, true);
+  const protectedUnload = () =>
+    page.evaluate(() => {
+      const event = new Event('beforeunload', { cancelable: true });
+      window.dispatchEvent(event);
+      return event.defaultPrevented;
+    });
+  expect(await protectedUnload()).toBe(false);
+  await applyApplicability(page, 'Optional');
+  expect(await protectedUnload()).toBe(true);
+  let native = false;
+  page.once('dialog', async (dialog) => {
+    expect(dialog.type()).toBe('beforeunload');
+    native = true;
+    await dialog.dismiss();
+  });
+  await page.evaluate(() => window.location.reload());
+  await expect.poll(() => native).toBe(true);
+  await expect(matrixCell(page, 'Form')).toHaveClass(/policy-cell-unsaved/);
+  await expect(
+    page.getByRole('dialog', { name: 'Unsaved changes', exact: true })
+  ).toHaveCount(0);
+  await cancelPolicyForm(page);
+  expect(await protectedUnload()).toBe(false);
+  expect(requests.puts()).toBe(0);
+});
+
+for (const width of [320, 390, 768, 1440]) {
+  test(`navigation dialog preserves active edits, the first destination and keyboard focus at ${width}px`, async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width, height: 900 });
+    const requests = await backend(page, false, false, caseMatrixPolicy());
+    await mount(page, 'casePolicy', undefined, true);
+    const editor = await openMatrixCell(page);
+    const applicability = editor.getByRole('switch', {
+      name: 'Requirement 1 Required',
+      exact: true,
+    });
+    await applicability.uncheck();
+    await page
+      .getByRole('link', {
+        name: 'Location B',
+        exact: true,
+        includeHidden: true,
+      })
+      .dispatchEvent('click');
+    const confirmation = page.getByRole('dialog', {
+      name: 'Unsaved changes',
+      exact: true,
+    });
+    await expect(confirmation).toBeVisible();
+    await expect(confirmation).toHaveAccessibleDescription(
+      'You have unsaved changes. If you leave this page, your changes will be lost.'
+    );
+    await expect(page.locator('.MuiDialog-root:visible')).toHaveCount(1);
+    const bounds = (await confirmation.boundingBox())!;
+    expect(bounds.x).toBeGreaterThanOrEqual(0);
+    expect(bounds.x + bounds.width).toBeLessThanOrEqual(width);
+    await expect(
+      confirmation.getByRole('button', { name: 'Keep Editing', exact: true })
+    ).toBeFocused();
+    await page.keyboard.press('Escape');
+    await expect(confirmation).toBeHidden();
+    await expect(page).toHaveURL('/org/org/a/settings/case-policies');
+    await expect(applicability).not.toBeChecked();
+    await expect(applicability).toHaveAccessibleDescription('Optional');
+    await page
+      .getByRole('link', {
+        name: 'Location B',
+        exact: true,
+        includeHidden: true,
+      })
+      .dispatchEvent('click');
+    await expect(confirmation).toBeVisible();
+    await page
+      .getByRole('link', { name: 'Settings', exact: true, includeHidden: true })
+      .dispatchEvent('click');
+    await expect(page.locator('.MuiDialog-root:visible')).toHaveCount(1);
+    await confirmation
+      .getByRole('button', { name: 'Discard & Leave', exact: true })
+      .click();
+    await expect(page).toHaveURL('/org/org/b/settings/case-policies');
+    await expect(page.locator('.policy-cell-unsaved')).toHaveCount(0);
+    expect(requests.puts()).toBe(0);
+  });
+}
+
+test('draft status preserves keyboard editing without information controls', async ({
+  page,
+}) => {
+  const requests = await backend(page, false, false, actionDefinitionPolicy());
+  await mount(page, 'actionDefinitions');
+  const help = page.getByRole('button', { name: 'Editing help', exact: true });
+  await expect(help).toHaveCount(0);
+  await expect(
+    page
+      .getByRole('status')
+      .locator('..')
+      .getByTestId('CheckCircleOutlinedIcon')
+  ).toHaveCount(0);
+  const cell = page.locator(
+    '[data-id="Dynamic activity"] [data-field="instructions"]'
+  );
+  await cell.click();
+  await cell.locator('input').fill('An unapplied edit');
+  await expect(page.getByRole('status')).toHaveText('Cell edit in progress');
+  await expect(help).toHaveCount(0);
+  await expect(
+    page.getByRole('status').locator('..').getByTestId('EditOutlinedIcon')
+  ).toBeVisible();
+  await expect(
+    page.getByText('Changes saved successfully', { exact: true })
+  ).toHaveCount(0);
+  await expect(
+    page.getByRole('button', { name: 'Save changes', exact: true })
+  ).toBeDisabled();
+  await cell.locator('input').press('Escape');
+  await expect(page.getByRole('status')).toHaveText(/^\s*$/);
+  await cell.click();
+  await cell.locator('input').fill('A staged edit');
+  await cell.locator('input').press('Enter');
+  await expect(page.getByRole('status')).toHaveText('1 unsaved change');
+  await expect(help).toHaveCount(0);
+  await expect(
+    page.getByRole('button', { name: 'Save changes', exact: true })
+  ).toBeEnabled();
+  await cancelPolicyForm(page);
+  await expect(page.getByRole('status')).toHaveText(/^\s*$/);
+  expect(requests.puts()).toBe(0);
+});
+
+test.describe('touch draft status', () => {
+  test.use({ hasTouch: true, viewport: { width: 390, height: 900 } });
+  test('matrix status has no information control or instructional popup', async ({
+    page,
+  }) => {
+    const requests = await backend(page);
+    await mount(page, 'casePolicy', undefined, true);
+    const status = page.getByRole('status', { name: 'Policy draft status' });
+    await expect(status).toHaveText(/^\s*$/);
+    await expect(
+      page.getByRole('button', { name: 'Editing help', exact: true })
+    ).toHaveCount(0);
+    await status.tap();
+    await expect(page.getByRole('tooltip')).toHaveCount(0);
+    expect(requests.puts()).toBe(0);
+  });
 });
 
 test('initial semantic errors and warnings are separate alerts', async ({
@@ -445,7 +5951,7 @@ test('save that finishes after a location switch refreshes the saved location', 
     page.evaluate((target) => {
       window.history.pushState({}, '', target);
       window.dispatchEvent(new PopStateEvent('popstate'));
-    }, `/org/org/a/settings/locations/${location}?tab=casePolicy`);
+    }, `/org/org/${location}/settings/case-policies`);
 
   await mount(page, 'casePolicy');
   await expect(page.getByText(warning, { exact: true })).toBeVisible();
@@ -456,8 +5962,10 @@ test('save that finishes after a location switch refreshes the saved location', 
   ).toBeDisabled();
   await switchTo('b');
   await expect(
-    page.getByText('Editing Location B configuration', { exact: true })
-  ).toBeVisible();
+    page
+      .getByRole('navigation', { name: 'breadcrumb' })
+      .getByRole('link', { name: 'Settings', exact: true })
+  ).toHaveAttribute('href', '/org/org/b/settings');
   const saved = page.waitForResponse(
     (response) =>
       response.url().includes('/a/Configuration/policy') &&
@@ -468,10 +5976,18 @@ test('save that finishes after a location switch refreshes the saved location', 
 
   await switchTo('a');
   await expect(
-    page.getByText('Editing Location A configuration', { exact: true })
-  ).toBeVisible();
-  // The accordions keep their expanded state across the location switch.
+    page
+      .getByRole('navigation', { name: 'breadcrumb' })
+      .getByRole('link', { name: 'Settings', exact: true })
+  ).toHaveAttribute('href', '/org/org/a/settings');
   for (const section of ['Arrangements', 'Hosting', 'Arrangement Functions']) {
+    if (section === 'Arrangements')
+      await page
+        .getByRole('button', {
+          name: 'Manage Arrangements & Functions',
+          exact: true,
+        })
+        .click();
     const header = page
       .locator('.MuiAccordionSummary-root')
       .filter({ has: page.getByText(section, { exact: true }) })
@@ -514,14 +6030,20 @@ test('successful update supersedes an unfinished initial validation', async ({
       json: { errors: [], warnings: initial ? [warning] : [] },
     });
   });
-  await mount(page, 'casePolicy');
-  await expect(page.getByRole('status')).toHaveText(
-    'Checking policy configuration...'
-  );
+  await mount(page, 'casePolicy', undefined, true);
+  await expect(
+    page
+      .getByRole('status')
+      .filter({ hasText: 'Checking policy configuration...' })
+  ).toHaveCount(1);
   await addFunction(page);
   await page.getByRole('button', { name: 'Save', exact: true }).click();
   await expect.poll(() => validations).toBe(2);
-  await expect(page.getByRole('status')).toHaveCount(0);
+  await expect(
+    page
+      .getByRole('status', { includeHidden: true })
+      .filter({ hasText: 'Checking policy configuration...' })
+  ).toHaveCount(0);
   const response = page.waitForResponse((result) =>
     result.url().endsWith('/policy/validation')
   );
@@ -532,13 +6054,26 @@ test('successful update supersedes an unfinished initial validation', async ({
 
 test.describe('policy self-service disabled', () => {
   test.use({ featureFlags: { [SELF_SERVICE_POLICY_FEATURE_FLAG]: false } });
+  test('administration direct URL redirects to Settings without policy requests', async ({
+    page,
+  }) => {
+    const requests = await backend(page);
+    await mount(
+      page,
+      'casePolicy',
+      '/org/org/a/settings/case-policies/administration'
+    );
+    await expect(page).toHaveURL(/\/org\/org\/a\/settings\/?$/);
+    expect(requests.validations()).toBe(0);
+    expect(requests.puts()).toBe(0);
+  });
   test('does not validate or save while the feature is disabled', async ({
     page,
   }) => {
     const requests = await backend(page);
     await mount(page);
     await expect(
-      page.getByText('Basic configuration', { exact: true })
+      page.getByRole('heading', { name: 'Settings', level: 1 })
     ).toBeVisible();
     await expect(page.getByRole('status')).toHaveCount(0);
     await expect(page.getByRole('alert')).toHaveCount(0);
@@ -606,11 +6141,10 @@ test('supplied-policy regression persists a new function through reload with all
     });
   });
 
-  await mount(page);
+  await mount(page, 'casePolicy');
   for (const message of expected)
     await expect(page.getByText(message, { exact: true })).toHaveCount(1);
   expect(puts).toBe(0);
-  await page.getByText('Case Policies', { exact: true }).click();
   await addFunction(page, 'Overnight Hosting', 'Community Friend');
   await page.getByRole('button', { name: 'Save', exact: true }).click();
   await expect(
@@ -630,12 +6164,347 @@ test('supplied-policy regression persists a new function through reload with all
 
   await page.reload();
   await page.addScriptTag({ content: bundle });
+  await openCaseAdministration(page);
   await expect.poll(() => validations).toBe(3);
   for (const message of expected)
     await expect(page.getByText(message, { exact: true })).toHaveCount(1);
   await page.getByText('Arrangements', { exact: true }).click();
-  await page.getByText('Overnight Hosting', { exact: true }).click();
+  await page
+    .getByRole('dialog', {
+      name: 'Manage Arrangements & Functions',
+      exact: true,
+    })
+    .getByText('Overnight Hosting', { exact: true })
+    .click();
   await page.getByText('Arrangement Functions', { exact: true }).click();
   await expect(page.getByText(/^New Function -/)).toBeVisible();
   expect(puts).toBe(1);
 });
+
+for (const section of [
+  'customFamilyFields',
+  'organizationPolicy',
+  'volunteerPolicy',
+  'volunteerCustomFields',
+  'volunteerFamilyRoles',
+]) {
+  test(
+    'policy drawer retains failed saves and awaits success: ' + section,
+    async ({ page }) => {
+      const initial = policy();
+      Object.assign(initial, {
+        organizationApprovalPolicy: { organizationRoles: {} },
+      });
+      const requests = await backend(page, false, false, initial);
+      let attempts = 0;
+      let release: (() => void) | undefined;
+      await page.route('**/Configuration/policy', async (route) => {
+        if (route.request().method() !== 'PUT') {
+          await route.fulfill({ json: initial });
+          return;
+        }
+        attempts++;
+        if (attempts === 1) {
+          await route.fulfill({
+            status: 400,
+            json: { errors: ['Rejected fixture'] },
+          });
+          return;
+        }
+        if (attempts === 2) {
+          await route.abort('failed');
+          return;
+        }
+        await new Promise<void>((resolve) => {
+          release = resolve;
+        });
+        await route.fulfill({ json: route.request().postDataJSON() });
+      });
+      const volunteer = section.startsWith('volunteer');
+      await mount(page, volunteer ? 'volunteerPolicy' : section);
+      let add = page.getByRole('button', { name: 'Add', exact: true });
+      if (volunteer) {
+        const label =
+          section === 'volunteerCustomFields'
+            ? 'Custom Fields'
+            : section === 'volunteerFamilyRoles'
+              ? 'Volunteer Family Roles'
+              : 'Volunteer Roles';
+        if (label !== 'Volunteer Roles')
+          await page.getByText(label, { exact: true }).click();
+        add = page
+          .locator('.MuiAccordion-root')
+          .filter({ has: page.getByText(label, { exact: true }) })
+          .last()
+          .getByRole('button', { name: 'Add', exact: true });
+      }
+      await add.click();
+      const custom =
+        section === 'customFamilyFields' || section === 'volunteerCustomFields';
+      const label = custom
+        ? 'Name'
+        : section === 'organizationPolicy'
+          ? 'Organization Role Type'
+          : section === 'volunteerFamilyRoles'
+            ? 'Volunteer Family Role Type'
+            : 'Volunteer Role Type';
+      const input = page.getByRole('textbox', { name: label, exact: true });
+      await input.fill('Retained fixture');
+      if (!custom)
+        await page
+          .getByRole('textbox', { name: 'Version', exact: true })
+          .fill('v1');
+      const save = page.getByRole('button', { name: 'Save', exact: true });
+      await save.click();
+      await expect(
+        page.getByText(
+          'The changes could not be saved. Review the policy errors and try again.'
+        )
+      ).toBeVisible();
+      await expect(input).toHaveValue('Retained fixture');
+      await save.click();
+      await expect.poll(() => attempts).toBe(2);
+      await expect(input).toHaveValue('Retained fixture');
+      await expect(save).toBeEnabled();
+      await save.click();
+      await expect.poll(() => attempts).toBe(3);
+      await expect(save).toBeDisabled();
+      await expect(
+        page.getByRole('button', { name: 'Cancel', exact: true })
+      ).toBeDisabled();
+      await input.press('Enter');
+      expect(attempts).toBe(3);
+      await input.press('Escape');
+      await expect(input).toHaveValue('Retained fixture');
+      release!();
+      await expect(input).toHaveCount(0);
+      expect(requests.puts()).toBe(0);
+    }
+  );
+}
+
+for (const width of [320, 390, 768, 1440]) {
+  test(
+    'Action Definitions protects active and drawer edits at ' + width + 'px',
+    async ({ page }) => {
+      await page.setViewportSize({ width, height: 900 });
+      const requests = await backend(
+        page,
+        false,
+        false,
+        actionDefinitionPolicy()
+      );
+      await mount(page, 'actionDefinitions');
+      const cell = page.locator(
+        '[data-id="Dynamic activity"] [data-field="instructions"]'
+      );
+      await cell.click();
+      const active = cell.locator('input');
+      await active.fill('Unapplied fixture');
+      expect(
+        await page.evaluate(() => {
+          const e = new Event('beforeunload', { cancelable: true });
+          window.dispatchEvent(e);
+          return e.defaultPrevented;
+        })
+      ).toBe(true);
+      const stay = policyDecision(page, false);
+      await page.getByRole('link', { name: 'Location B', exact: true }).click();
+      await stay;
+      await expect(active).toHaveValue('Unapplied fixture');
+      await active.press('Escape');
+      await page
+        .getByRole('button', {
+          name: 'Edit details Dynamic activity',
+          exact: true,
+        })
+        .click();
+      const name = page.getByRole('textbox', {
+        name: 'Action Name',
+        exact: true,
+      });
+      await expect(name).toHaveValue('Dynamic activity');
+      const bounds = await name.evaluate((element) =>
+        element.closest('.MuiDrawer-paper')!.getBoundingClientRect().toJSON()
+      );
+      expect(bounds.x).toBeGreaterThanOrEqual(0);
+      expect(bounds.width).toBeLessThanOrEqual(width);
+      expect(
+        await name.evaluate((el) => el.closest('.ph-unmask') !== null)
+      ).toBe(false);
+      await page
+        .getByRole('button', { name: 'Cancel', exact: true })
+        .last()
+        .click();
+      await expect(name).toHaveCount(0);
+      await expect(
+        page.getByRole('dialog', { name: 'Unsaved changes', exact: true })
+      ).toHaveCount(0);
+      await page
+        .getByRole('button', {
+          name: 'Edit details Dynamic activity',
+          exact: true,
+        })
+        .click();
+      await name.fill('Pending drawer fixture');
+      let decision = policyDecision(page, false);
+      await name.press('Escape');
+      await decision;
+      await expect(name).toHaveValue('Pending drawer fixture');
+      decision = policyDecision(page, false);
+      await page
+        .getByRole('button', { name: 'Cancel', exact: true })
+        .last()
+        .click();
+      await decision;
+      await expect(name).toHaveValue('Pending drawer fixture');
+      decision = policyDecision(page, false);
+      await page
+        .locator('.MuiDrawer-root .MuiBackdrop-root')
+        .dispatchEvent('click');
+      await decision;
+      await expect(name).toHaveValue('Pending drawer fixture');
+      expect(
+        await page.evaluate(() => {
+          const e = new Event('beforeunload', { cancelable: true });
+          window.dispatchEvent(e);
+          return e.defaultPrevented;
+        })
+      ).toBe(true);
+      decision = policyDecision(page, false);
+      await page
+        .locator('a[href="/org/org/b/settings/action-definitions"]')
+        .dispatchEvent('click');
+      await decision;
+      await expect(name).toHaveValue('Pending drawer fixture');
+      decision = policyDecision(page, true);
+      await page
+        .getByRole('button', { name: 'Cancel', exact: true })
+        .last()
+        .click();
+      await decision;
+      await expect(name).toHaveCount(0);
+      expect(requests.puts()).toBe(0);
+    }
+  );
+}
+
+test('Action Definitions pending saves block navigation and failures retain the staged draft', async ({
+  page,
+}) => {
+  const initial = actionDefinitionPolicy();
+  const requests = await backend(page, false, false, initial);
+  let release: (() => void) | undefined;
+  let writes = 0;
+  await page.route('**/Configuration/policy', async (route) => {
+    if (route.request().method() !== 'PUT') {
+      await route.fulfill({ json: initial });
+      return;
+    }
+    writes++;
+    await new Promise<void>((resolve) => {
+      release = resolve;
+    });
+    await route.fulfill({
+      status: 500,
+      json: { errors: ['Fixture request failed'] },
+    });
+  });
+  await mount(page, 'actionDefinitions');
+  const cell = page.locator(
+    '[data-id="Dynamic activity"] [data-field="instructions"]'
+  );
+  await cell.click();
+  await cell.locator('input').fill('Retained staged fixture');
+  await cell.locator('input').press('Enter');
+  await page.getByRole('button', { name: 'Save changes', exact: true }).click();
+  await expect.poll(() => writes).toBe(1);
+  const blocked = keepDuringSave(page);
+  await page.getByRole('link', { name: 'Location B', exact: true }).click();
+  await blocked;
+  await expect(page).toHaveURL('/org/org/a/settings/action-definitions');
+  release!();
+  await expect(
+    page.getByRole('alert').filter({ hasText: 'Your draft is retained' })
+  ).toBeVisible();
+  await expect(cell).toHaveText('Retained staged fixture');
+  await expect(
+    page.getByRole('button', { name: 'Save changes', exact: true })
+  ).toBeEnabled();
+  const stay = policyDecision(page, false);
+  await page.getByRole('link', { name: 'Settings', exact: true }).click();
+  await stay;
+  await expect(cell).toHaveText('Retained staged fixture');
+  expect(writes).toBe(1);
+  expect(requests.puts()).toBe(0);
+});
+
+for (const finish of ['Enter', 'Escape']) {
+  test(
+    'Action Definitions deletion waits for the active cell to resolve with ' +
+      finish,
+    async ({ page }) => {
+      const initial = actionDefinitionPolicy();
+      Object.assign(initial.actionDefinitions, {
+        'Other action': {
+          documentLink: 0,
+          noteEntry: 0,
+          instructions: 'Other original',
+        },
+      });
+      const requests = await backend(page, false, false, initial);
+      await mount(page, 'actionDefinitions');
+      const other = page.locator(
+        '[data-id="Other action"] [data-field="instructions"]'
+      );
+      await other.click();
+      await other.locator('input').fill('Keep staged change');
+      await other.locator('input').press('Enter');
+      const row = page.locator('[data-id="Dynamic activity"]');
+      const cell = row.locator('[data-field="instructions"]');
+      const remove = page.getByRole('button', {
+        name: 'Delete Dynamic activity',
+        exact: true,
+      });
+      const save = page.getByRole('button', {
+        name: 'Save changes',
+        exact: true,
+      });
+      const cancel = page.getByRole('button', { name: 'Cancel', exact: true });
+      const status = page.getByRole('status', { name: 'Policy draft status' });
+      await expect(remove).toBeEnabled();
+      await cell.click();
+      await cell.locator('input').fill('Unapplied value');
+      await expect(remove).toBeDisabled();
+      await expect(
+        page.getByRole('button', { name: 'Delete Other action', exact: true })
+      ).toBeDisabled();
+      await expect(page.getByRole('dialog')).toHaveCount(0);
+      await expect(cell.locator('input')).toHaveValue('Unapplied value');
+      await expect(status).toHaveText(
+        'Cell edit in progress · 1 unsaved change'
+      );
+      await cell.locator('input').press(finish);
+      await expect(page.locator('.MuiDataGrid-cell--editing')).toHaveCount(0);
+      await expect(remove).toBeEnabled();
+      await expect(cell).toHaveText(
+        finish === 'Enter' ? 'Unapplied value' : 'Original instructions'
+      );
+      await remove.click();
+      await page.getByRole('button', { name: 'Yes', exact: true }).click();
+      await expect(row).toHaveCount(0);
+      await expect(other).toHaveText('Keep staged change');
+      await expect(status).toHaveText('2 unsaved changes');
+      await expect(save).toBeEnabled();
+      await expect(cancel).toBeEnabled();
+      expect(requests.puts()).toBe(0);
+      await cancel.click();
+      await expect(cell).toHaveText('Original instructions');
+      await expect(other).toHaveText('Other original');
+      await expect(status).toHaveText(/^\s*$/);
+      await expect(save).toBeDisabled();
+      await expect(cancel).toBeDisabled();
+      expect(requests.puts()).toBe(0);
+    }
+  );
+}

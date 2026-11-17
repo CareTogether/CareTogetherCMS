@@ -66,17 +66,17 @@ export function V1ReferralPolicyTab({
     SidePanel: RequirementPanel,
     openSidePanel: openRequirementPanel,
     closeSidePanel: closeRequirementPanel,
-  } = useSidePanel({ className: 'ph-unmask' });
+  } = useSidePanel({});
   const {
     SidePanel: CustomFieldPanel,
     openSidePanel: openCustomFieldPanel,
     closeSidePanel: closeCustomFieldPanel,
-  } = useSidePanel({ className: 'ph-unmask' });
+  } = useSidePanel({});
   const {
     SidePanel: FunctionAssignmentPanel,
     openSidePanel: openFunctionAssignmentPanel,
     closeSidePanel: closeFunctionAssignmentPanel,
-  } = useSidePanel({ className: 'ph-unmask' });
+  } = useSidePanel({});
   const [workingRequirement, setWorkingRequirement] = useState<
     RequirementDefinition | undefined
   >();
@@ -305,15 +305,16 @@ export function V1ReferralPolicyTab({
             casePolicy?.customFields?.map((field) => field.name) ?? []
           }
           onClose={closeCustomFieldPanel}
-          onSave={(previousName, field) => {
-            updateCasePolicy({
+          onSave={async (previousName, field) => {
+            const saved = await updateCasePolicy({
               customFields: upsertCustomField(
                 casePolicy?.customFields,
                 previousName,
                 field
               ),
             });
-            closeCustomFieldPanel();
+            if (saved) closeCustomFieldPanel();
+            return saved;
           }}
         />
       </CustomFieldPanel>

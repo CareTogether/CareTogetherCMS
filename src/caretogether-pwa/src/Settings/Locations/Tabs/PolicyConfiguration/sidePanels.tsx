@@ -1,3 +1,4 @@
+import { functionEligibility } from './functionEligibility';
 import { Add as AddIcon, Delete as DeleteIcon } from '@mui/icons-material';
 import {
   Alert,
@@ -18,7 +19,8 @@ import {
   Tooltip,
   Typography,
 } from '@mui/material';
-import { useState } from 'react';
+import { useContext, useEffect, useRef, useState } from 'react';
+import { SidePanelSavingContext } from '../../../../Hooks/useSidePanel';
 import Grid from '../../../../Generic/GridLegacyCompat';
 import { ValidateDatePicker } from '../../../../Generic/Forms/ValidateDatePicker';
 import {
@@ -33,9 +35,7 @@ import {
   FunctionAssignmentEligibility,
   FunctionAssignmentPolicy,
   FunctionRequirement,
-  MonitoringRequirement,
   NoteEntryRequirement,
-  OneTimeRecurrencePolicy,
   OrganizationApprovalRequirement,
   OrganizationRolePolicyVersion,
   RequirementDefinition,
@@ -52,10 +52,8 @@ import type {
   ArrangementPolicyDraft,
   CustomFieldDraft,
   FunctionAssignmentPolicyDraft,
-  MonitoringRequirementDraft,
   PersonOption,
   RequirementDraft,
-  ValidityUnit,
   VolunteerRequirementDraft,
   VolunteerRolePolicyVersionDraft,
 } from './types';
@@ -66,7 +64,6 @@ import {
   customFieldToDraft,
   enumOptions,
   functionAssignmentPolicyToDraft,
-  monitoringRequirementToDraft,
   normalizeStringList,
   organizationRequirementDraftToRequirement,
   parseValidityAmount,
@@ -78,16 +75,22 @@ import {
   volunteerRolePolicyVersionToDraft,
 } from './policyUtils';
 import { supportsCustomFieldSuggestions } from '../../../../Generic/customFieldValue';
+import { useAdministrationFormState } from './usePolicyAdministrationPanels';
 
 // Tracks a side panel save so the panel stays open with the user's input when the
 // policy is not persisted, and so a save cannot be submitted twice.
-function usePanelSave() {
+function usePanelSave(draft?: unknown) {
   const [saving, setSaving] = useState(false);
+  const pending = useRef(false);
+  const setPanelSaving = useContext(SidePanelSavingContext);
+  useEffect(() => () => setPanelSaving?.(false), [setPanelSaving]);
+  useAdministrationFormState(draft, saving);
   const [saveFailed, setSaveFailed] = useState(false);
 
   async function runSave(save: () => Promise<boolean>) {
-    if (saving) return;
-
+    if (pending.current) return;
+    pending.current = true;
+    setPanelSaving?.(true);
     setSaving(true);
     setSaveFailed(false);
     try {
@@ -95,6 +98,8 @@ function usePanelSave() {
     } catch {
       setSaveFailed(true);
     } finally {
+      pending.current = false;
+      setPanelSaving?.(false);
       setSaving(false);
     }
   }
@@ -103,11 +108,13 @@ function usePanelSave() {
 }
 
 function SidePanelSaveActions({
+  saveLabel = 'Save',
   canSave,
   saving,
   saveFailed,
   onClose,
 }: {
+  saveLabel?: string;
   canSave: boolean;
   saving: boolean;
   saveFailed: boolean;
@@ -117,7 +124,7 @@ function SidePanelSaveActions({
     <>
       {saveFailed && (
         <Grid item xs={12}>
-          <Alert severity="error">
+          <Alert severity="error" className="ph-unmask">
             The changes could not be saved. Review the policy errors and try
             again.
           </Alert>
@@ -141,7 +148,7 @@ function SidePanelSaveActions({
           Cancel
         </Button>
         <Button type="submit" variant="contained" disabled={!canSave || saving}>
-          Save
+          {saveLabel}
         </Button>
       </Grid>
     </>
@@ -154,11 +161,15 @@ export function ActionDefinitionSidePanel({
   existingActionNames,
   onClose,
   onSave,
+  onDirtyChange,
+  saveLabel = 'Save',
 }: {
+  saveLabel?: string;
   actionName?: string;
   action?: ActionRequirement;
   existingActionNames: string[];
   onClose: () => void;
+  onDirtyChange?: (dirty: boolean) => void;
   onSave: (
     previousName: string | undefined,
     actionName: string,
@@ -169,6 +180,11 @@ export function ActionDefinitionSidePanel({
     actionToDraft(actionName, action)
   );
 
+  const original = useRef(JSON.stringify(draft));
+  const dirty = original.current !== JSON.stringify(draft);
+  useEffect(() => {
+    onDirtyChange?.(dirty);
+  }, [dirty, onDirtyChange]);
   const trimmedName = draft.actionName.trim();
   const duplicateName =
     trimmedName.length > 0 &&
@@ -415,7 +431,7 @@ export function ActionDefinitionSidePanel({
           Cancel
         </Button>
         <Button type="submit" variant="contained" disabled={!canSave}>
-          Save
+          {saveLabel}
         </Button>
       </Grid>
     </Grid>
@@ -433,11 +449,15 @@ export function CustomFieldSidePanel({
   field?: CustomField;
   existingNames: string[];
   onClose: () => void;
-  onSave: (previousName: string | undefined, field: CustomField) => void;
+  onSave: (
+    previousName: string | undefined,
+    field: CustomField
+  ) => Promise<boolean>;
 }) {
   const [draft, setDraft] = useState<CustomFieldDraft>(() =>
     customFieldToDraft(field)
   );
+  const { saving, saveFailed, runSave } = usePanelSave(draft);
   const trimmedName = draft.name.trim();
   const duplicateName =
     trimmedName.length > 0 &&
@@ -449,21 +469,24 @@ export function CustomFieldSidePanel({
   function save() {
     if (!canSave) return;
 
-    onSave(
-      field?.name,
-      new CustomField({
-        name: trimmedName,
-        type: draft.type,
-        validation:
-          supportsCustomFieldSuggestions(draft.type) && draft.validationEnabled
-            ? CustomFieldValidation.SuggestOnly
-            : undefined,
-        validValues:
-          !supportsCustomFieldSuggestions(draft.type) ||
-          validValues.length === 0
-            ? undefined
-            : validValues,
-      })
+    void runSave(() =>
+      onSave(
+        field?.name,
+        new CustomField({
+          name: trimmedName,
+          type: draft.type,
+          validation:
+            supportsCustomFieldSuggestions(draft.type) &&
+            draft.validationEnabled
+              ? CustomFieldValidation.SuggestOnly
+              : undefined,
+          validValues:
+            !supportsCustomFieldSuggestions(draft.type) ||
+            validValues.length === 0
+              ? undefined
+              : validValues,
+        })
+      )
     );
   }
 
@@ -572,26 +595,12 @@ export function CustomFieldSidePanel({
         </>
       )}
 
-      <Grid
-        item
-        xs={12}
-        sx={{
-          textAlign: 'right',
-          '& > .MuiButton-root': { width: { xs: '100%', sm: 'auto' } },
-        }}
-      >
-        <Button
-          variant="contained"
-          color="secondary"
-          sx={{ mr: { xs: 0, sm: 2 }, mb: { xs: 1, sm: 0 } }}
-          onClick={onClose}
-        >
-          Cancel
-        </Button>
-        <Button type="submit" variant="contained" disabled={!canSave}>
-          Save
-        </Button>
-      </Grid>
+      <SidePanelSaveActions
+        canSave={canSave}
+        saving={saving}
+        saveFailed={saveFailed}
+        onClose={onClose}
+      />
     </Grid>
   );
 }
@@ -711,198 +720,6 @@ export function RequirementSidePanel({
   );
 }
 
-export function MonitoringRequirementSidePanel({
-  title,
-  requirement,
-  actionNames,
-  existingActionNames,
-  onClose,
-  onSave,
-}: {
-  title: string;
-  requirement?: MonitoringRequirement;
-  actionNames: string[];
-  existingActionNames: string[];
-  onClose: () => void;
-  onSave: (
-    previousName: string | undefined,
-    requirement: MonitoringRequirement
-  ) => Promise<boolean>;
-}) {
-  const [draft, setDraft] = useState<MonitoringRequirementDraft>(() =>
-    monitoringRequirementToDraft(requirement)
-  );
-  const trimmedActionName = draft.actionName.trim();
-  const previousName = requirement?.action?.actionName;
-  const duplicateName =
-    trimmedActionName.length > 0 &&
-    trimmedActionName !== previousName &&
-    existingActionNames.includes(trimmedActionName);
-  const unknownActionName =
-    trimmedActionName.length > 0 && !actionNames.includes(trimmedActionName);
-  const delayAmountIsValid =
-    !draft.delayEnabled ||
-    typeof parseValidityAmount(draft.delayAmount) !== 'undefined';
-  const canSave =
-    trimmedActionName.length > 0 &&
-    !duplicateName &&
-    !unknownActionName &&
-    delayAmountIsValid;
-
-  const { saving, saveFailed, runSave } = usePanelSave();
-
-  function save() {
-    if (!canSave) return;
-
-    void runSave(() =>
-      onSave(
-        previousName,
-        new MonitoringRequirement({
-          action: new RequirementDefinition({
-            actionName: trimmedActionName,
-            isRequired: draft.isRequired,
-          }),
-          recurrence: new OneTimeRecurrencePolicy({
-            delay: toTimeSpanString(
-              draft.delayEnabled,
-              draft.delayAmount,
-              draft.delayUnit
-            ),
-          }),
-        })
-      )
-    );
-  }
-
-  return (
-    <Grid
-      container
-      spacing={2}
-      maxWidth={520}
-      component="form"
-      onSubmit={(event) => {
-        event.preventDefault();
-        save();
-      }}
-    >
-      <Grid item xs={12}>
-        <Typography variant="h6">{title}</Typography>
-      </Grid>
-
-      <Grid item xs={12}>
-        <Autocomplete
-          fullWidth
-          options={actionNames}
-          value={draft.actionName || null}
-          onChange={(_, value) =>
-            setDraft((current) => ({ ...current, actionName: value ?? '' }))
-          }
-          renderInput={(params) => (
-            <TextField
-              {...params}
-              required
-              label="Action Name"
-              error={duplicateName || unknownActionName}
-              helperText={
-                duplicateName
-                  ? 'Action name is already referenced in this list.'
-                  : unknownActionName
-                    ? 'Action name must exist in Action Definitions.'
-                    : undefined
-              }
-            />
-          )}
-        />
-      </Grid>
-
-      <Grid item xs={12}>
-        <FormControlLabel
-          control={
-            <Switch
-              checked={draft.isRequired}
-              onChange={(event) =>
-                setDraft((current) => ({
-                  ...current,
-                  isRequired: event.target.checked,
-                }))
-              }
-            />
-          }
-          label="Required"
-        />
-      </Grid>
-
-      <Grid item xs={12}>
-        <FormControlLabel
-          control={
-            <Switch
-              checked={draft.delayEnabled}
-              onChange={(event) =>
-                setDraft((current) => ({
-                  ...current,
-                  delayEnabled: event.target.checked,
-                }))
-              }
-            />
-          }
-          label="Recurrence Delay"
-        />
-      </Grid>
-
-      {draft.delayEnabled && (
-        <>
-          <Grid item xs={6}>
-            <TextField
-              fullWidth
-              label="Repeat After"
-              value={draft.delayAmount}
-              error={!delayAmountIsValid}
-              helperText={
-                delayAmountIsValid
-                  ? undefined
-                  : 'Enter a positive whole number.'
-              }
-              slotProps={{ htmlInput: { inputMode: 'numeric' } }}
-              onChange={(event) =>
-                setDraft((current) => ({
-                  ...current,
-                  delayAmount: event.target.value,
-                }))
-              }
-            />
-          </Grid>
-
-          <Grid item xs={6}>
-            <TextField
-              fullWidth
-              select
-              label="Time Period"
-              value={draft.delayUnit}
-              onChange={(event) =>
-                setDraft((current) => ({
-                  ...current,
-                  delayUnit: event.target.value as ValidityUnit,
-                }))
-              }
-            >
-              <MenuItem value="days">Days</MenuItem>
-              <MenuItem value="months">Months</MenuItem>
-              <MenuItem value="years">Years</MenuItem>
-            </TextField>
-          </Grid>
-        </>
-      )}
-
-      <SidePanelSaveActions
-        canSave={canSave}
-        saving={saving}
-        saveFailed={saveFailed}
-        onClose={onClose}
-      />
-    </Grid>
-  );
-}
-
 export function ArrangementFunctionSidePanel({
   arrangementFunction,
   existingFunctionNames,
@@ -926,7 +743,15 @@ export function ArrangementFunctionSidePanel({
   const [draft, setDraft] = useState<ArrangementFunctionDraft>(() =>
     arrangementFunctionToDraft(arrangementFunction)
   );
-  const { saving, saveFailed, runSave } = usePanelSave();
+  const [editedEligibility, setEditedEligibility] = useState({
+    individual: false,
+    family: false,
+    people: false,
+  });
+  const { saving, saveFailed, runSave } = usePanelSave({
+    draft,
+    editedEligibility,
+  });
   const trimmedName = draft.functionName.trim();
   const duplicateName =
     trimmedName.length > 0 &&
@@ -953,16 +778,21 @@ export function ArrangementFunctionSidePanel({
         new ArrangementFunction({
           functionName: trimmedName,
           requirement: draft.requirement,
-          eligibleIndividualVolunteerRoles:
-            eligibleIndividualVolunteerRoles.length > 0
-              ? eligibleIndividualVolunteerRoles
-              : undefined,
-          eligibleVolunteerFamilyRoles:
-            eligibleVolunteerFamilyRoles.length > 0
-              ? eligibleVolunteerFamilyRoles
-              : undefined,
-          eligiblePeople:
-            eligiblePeople.length > 0 ? eligiblePeople : undefined,
+          eligibleIndividualVolunteerRoles: functionEligibility(
+            arrangementFunction?.eligibleIndividualVolunteerRoles,
+            eligibleIndividualVolunteerRoles,
+            editedEligibility.individual
+          ),
+          eligibleVolunteerFamilyRoles: functionEligibility(
+            arrangementFunction?.eligibleVolunteerFamilyRoles,
+            eligibleVolunteerFamilyRoles,
+            editedEligibility.family
+          ),
+          eligiblePeople: functionEligibility(
+            arrangementFunction?.eligiblePeople,
+            eligiblePeople,
+            editedEligibility.people
+          ),
           variants: arrangementFunction?.variants ?? [],
         })
       )
@@ -1033,12 +863,16 @@ export function ArrangementFunctionSidePanel({
           multiple
           options={volunteerRoles}
           value={draft.eligibleIndividualVolunteerRoles}
-          onChange={(_, values) =>
+          onChange={(_, values) => {
+            setEditedEligibility((current) => ({
+              ...current,
+              individual: true,
+            }));
             setDraft((current) => ({
               ...current,
               eligibleIndividualVolunteerRoles: values,
-            }))
-          }
+            }));
+          }}
           renderInput={(params) => (
             <TextField
               {...params}
@@ -1054,12 +888,13 @@ export function ArrangementFunctionSidePanel({
           multiple
           options={volunteerFamilyRoles}
           value={draft.eligibleVolunteerFamilyRoles}
-          onChange={(_, values) =>
+          onChange={(_, values) => {
+            setEditedEligibility((current) => ({ ...current, family: true }));
             setDraft((current) => ({
               ...current,
               eligibleVolunteerFamilyRoles: values,
-            }))
-          }
+            }));
+          }}
           renderInput={(params) => (
             <TextField {...params} label="Eligible Volunteer Family Roles" />
           )}
@@ -1070,16 +905,19 @@ export function ArrangementFunctionSidePanel({
         <Autocomplete
           fullWidth
           multiple
+          className="ph-no-capture"
+          slotProps={{ listbox: { className: 'ph-no-capture' } }}
           options={personOptions}
           value={selectedPeople}
           getOptionLabel={(option) => option.label}
           isOptionEqualToValue={(option, value) => option.id === value.id}
-          onChange={(_, values) =>
+          onChange={(_, values) => {
+            setEditedEligibility((current) => ({ ...current, people: true }));
             setDraft((current) => ({
               ...current,
               eligiblePeople: values.map((value) => value.id),
-            }))
-          }
+            }));
+          }}
           renderInput={(params) => (
             <TextField {...params} label="Eligible People" />
           )}
@@ -1149,7 +987,7 @@ export function FunctionAssignmentPolicySidePanel({
     0;
   const canSave = trimmedRole.length > 0 && !duplicateRole && hasEligibility;
 
-  const { saving, saveFailed, runSave } = usePanelSave();
+  const { saving, saveFailed, runSave } = usePanelSave(draft);
 
   function save() {
     if (!canSave) return;
@@ -1263,6 +1101,8 @@ export function FunctionAssignmentPolicySidePanel({
         <Autocomplete
           fullWidth
           multiple
+          className="ph-no-capture"
+          slotProps={{ listbox: { className: 'ph-no-capture' } }}
           options={personOptions}
           value={selectedPeople}
           getOptionLabel={(option) => option.label}
@@ -1325,7 +1165,7 @@ export function ArrangementPolicySidePanel({
     !duplicateType &&
     (!draft.superseded || !dateError);
 
-  const { saving, saveFailed, runSave } = usePanelSave();
+  const { saving, saveFailed, runSave } = usePanelSave(draft);
 
   function save() {
     if (!canSave) return;
@@ -1340,8 +1180,6 @@ export function ArrangementPolicySidePanel({
             arrangement?.requiredMonitoringActions_PRE_MIGRATION ?? [],
           requiredCloseoutActionNames_PRE_MIGRATION:
             arrangement?.requiredCloseoutActionNames_PRE_MIGRATION ?? [],
-          arrangementType: trimmedType,
-          childInvolvement: draft.childInvolvement,
           arrangementFunctions: arrangement?.arrangementFunctions ?? [],
           requiredSetupActionNames: arrangement?.requiredSetupActionNames ?? [],
           requiredMonitoringActions:
@@ -1352,6 +1190,9 @@ export function ArrangementPolicySidePanel({
           requiredMonitoringActionsNew:
             arrangement?.requiredMonitoringActionsNew ?? [],
           requiredCloseoutActions: arrangement?.requiredCloseoutActions ?? [],
+          ...arrangement,
+          arrangementType: trimmedType,
+          childInvolvement: draft.childInvolvement,
           supersededAtUtc:
             draft.superseded && draft.supersededAtUtc
               ? supersededDateToApi(draft.supersededAtUtc)
@@ -1709,12 +1550,13 @@ export function VolunteerRolePolicyVersionSidePanel({
       | VolunteerRolePolicyVersion
       | VolunteerFamilyRolePolicyVersion
       | OrganizationRolePolicyVersion
-  ) => void;
+  ) => Promise<boolean>;
 }) {
   const [draft, setDraft] = useState<VolunteerRolePolicyVersionDraft>(() =>
     volunteerRolePolicyVersionToDraft(roleName, version, family, organization)
   );
   const [dateError, setDateError] = useState(false);
+  const { saving, saveFailed, runSave } = usePanelSave(draft);
   const trimmedRoleName = draft.roleName.trim();
   const trimmedVersion = draft.version.trim();
   const invalidRequirements = draft.requirements.filter((requirement) => {
@@ -1759,36 +1601,38 @@ export function VolunteerRolePolicyVersionSidePanel({
         Boolean(requirement)
       );
 
-    onSave(
-      roleName,
-      version?.version,
-      trimmedRoleName,
-      family
-        ? new VolunteerFamilyRolePolicyVersion({
-            version: trimmedVersion,
-            supersededAtUtc:
-              draft.superseded && draft.supersededAtUtc
-                ? supersededDateToApi(draft.supersededAtUtc)
-                : undefined,
-            requirements: familyRequirements,
-          })
-        : organization
-          ? new OrganizationRolePolicyVersion({
+    void runSave(() =>
+      onSave(
+        roleName,
+        version?.version,
+        trimmedRoleName,
+        family
+          ? new VolunteerFamilyRolePolicyVersion({
               version: trimmedVersion,
               supersededAtUtc:
                 draft.superseded && draft.supersededAtUtc
                   ? supersededDateToApi(draft.supersededAtUtc)
                   : undefined,
-              requirements: organizationRequirements,
+              requirements: familyRequirements,
             })
-          : new VolunteerRolePolicyVersion({
-              version: trimmedVersion,
-              supersededAtUtc:
-                draft.superseded && draft.supersededAtUtc
-                  ? supersededDateToApi(draft.supersededAtUtc)
-                  : undefined,
-              requirements: individualRequirements,
-            })
+          : organization
+            ? new OrganizationRolePolicyVersion({
+                version: trimmedVersion,
+                supersededAtUtc:
+                  draft.superseded && draft.supersededAtUtc
+                    ? supersededDateToApi(draft.supersededAtUtc)
+                    : undefined,
+                requirements: organizationRequirements,
+              })
+            : new VolunteerRolePolicyVersion({
+                version: trimmedVersion,
+                supersededAtUtc:
+                  draft.superseded && draft.supersededAtUtc
+                    ? supersededDateToApi(draft.supersededAtUtc)
+                    : undefined,
+                requirements: individualRequirements,
+              })
+      )
     );
   }
 
@@ -1907,26 +1751,12 @@ export function VolunteerRolePolicyVersionSidePanel({
         )}
       </Grid>
 
-      <Grid
-        item
-        xs={12}
-        sx={{
-          textAlign: 'right',
-          '& > .MuiButton-root': { width: { xs: '100%', sm: 'auto' } },
-        }}
-      >
-        <Button
-          variant="contained"
-          color="secondary"
-          sx={{ mr: { xs: 0, sm: 2 }, mb: { xs: 1, sm: 0 } }}
-          onClick={onClose}
-        >
-          Cancel
-        </Button>
-        <Button type="submit" variant="contained" disabled={!canSave}>
-          Save
-        </Button>
-      </Grid>
+      <SidePanelSaveActions
+        canSave={canSave}
+        saving={saving}
+        saveFailed={saveFailed}
+        onClose={onClose}
+      />
     </Grid>
   );
 }

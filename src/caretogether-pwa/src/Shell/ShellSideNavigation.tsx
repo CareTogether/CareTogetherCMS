@@ -5,7 +5,6 @@ import {
   Insights as InsightsIcon,
   People as PeopleIcon,
   PermPhoneMsg as PermPhoneMsgIcon,
-  Settings as SettingsIcon,
   Support as SupportIcon,
   Handshake as HandshakeIcon,
 } from '@mui/icons-material';
@@ -30,8 +29,8 @@ import Feedback from './Feedback';
 import { useAtomValue } from 'jotai';
 import { reportSubmenuItemsAtom } from '../Model/UI';
 import { ListItemLink } from './ListItemLink';
-import { useAppNavigate } from '../Hooks/useAppNavigate';
 import WhatsNew from './WhatsNew';
+import { SettingsSidebarNavigation } from '../Settings/SettingsSidebarNavigation';
 import { useCanAccessReferrals } from './useCanAccessReferrals';
 import { SHELL_DRAWER_TOP_OFFSET } from './shellLayoutConstants';
 
@@ -41,8 +40,6 @@ interface SideNavigationMenuProps {
 function SideNavigationMenu({ open }: SideNavigationMenuProps) {
   const flags = useFeatureFlagsLoadable();
   const permissions = useGlobalPermissionsLoadable();
-
-  const appNavigate = useAppNavigate();
 
   const context = useSelectedLocationContext();
   const locationPrefix = `/org/${context?.organizationId}/${context?.locationId}`;
@@ -162,29 +159,7 @@ function SideNavigationMenu({ open }: SideNavigationMenuProps) {
           {(permissions(Permission.AccessSettingsScreen) ||
             permissions(Permission.AccessSupportScreen)) && <Divider />}
 
-          {permissions(Permission.AccessSettingsScreen) && (
-            <ListItemLink
-              className="ph-unmask"
-              to={`${locationPrefix}/settings`}
-              primary="Settings"
-              icon={<SettingsIcon sx={{ color: '#fff8' }} />}
-              collapsed={collapsed}
-              {...(open && {
-                subitems: [
-                  {
-                    label: 'Roles',
-                    isActive: location.pathname.includes('/settings/roles'),
-                    onClick: () => appNavigate.settingsRoles(),
-                  },
-                  {
-                    label: 'Locations',
-                    isActive: location.pathname.includes('/settings/locations'),
-                    onClick: () => appNavigate.settingsLocations(),
-                  },
-                ],
-              })}
-            />
-          )}
+          <SettingsSidebarNavigation collapsed={collapsed} />
 
           {permissions(Permission.AccessSupportScreen) && (
             <ListItemLink

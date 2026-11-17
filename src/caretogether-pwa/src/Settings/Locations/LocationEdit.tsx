@@ -1,621 +1,85 @@
-import { v2Typography } from '../../Families/v2Typography';
+import { Alert, Stack, Typography } from '@mui/material';
 import {
-  Alert,
-  Stack,
-  Typography,
-  useTheme,
-  useMediaQuery,
-  IconButton,
-  Button,
-} from '@mui/material';
-import { useState, useEffect, useMemo, useRef } from 'react';
-import { useBackdrop } from '../../Hooks/useBackdrop';
+  Navigate,
+  useLocation,
+  useParams,
+  useSearchParams,
+} from 'react-router-dom';
 import { useOrganizationConfiguration } from '../../Model/ConfigurationModel';
-import {
-  usePolicyForLocation,
-  useRefreshPolicyForLocation,
-} from '../../Model/PolicyModel';
-import { ProgressBackdrop } from '../../Shell/ProgressBackdrop';
-import { useScreenTitle } from '../../Shell/ShellScreenTitle';
 import { useRequiredSelectedLocationContext } from '../../Model/Data';
-import { useParams } from 'react-router-dom';
-import { Box } from '@mui/system';
-import BasicConfiguration from './Tabs/BasicConfiguration';
-import SettingsTabMenu from './SettingsTabMenu';
-import {
-  ChevronLeft as ChevronLeftIcon,
-  ChevronRight as ChevronRightIcon,
-} from '@mui/icons-material';
 import { useGlobalPermissions } from '../../Model/SessionModel';
-import { useAppNavigate } from '../../Hooks/useAppNavigate';
-import AccessLevels from './Tabs/AccessLevels/AccessLevels';
+import { Permission } from '../../GeneratedClient';
+import { useScreenTitle } from '../../Shell/ShellScreenTitle';
 import { Breadcrumbs } from '../../Generic/Breadcrumbs';
-import { useSearchParams } from 'react-router-dom';
-import { PolicyConfiguration } from './Tabs/PolicyConfiguration';
+import BasicConfiguration from './Tabs/BasicConfiguration';
 import {
-  ApiException,
-  EffectiveLocationPolicy,
-  Permission,
-} from '../../GeneratedClient';
-import { api } from '../../Api/Api';
-import {
-  DESKTOP_BOTTOM_SAFE_AREA,
-  MOBILE_BOTTOM_SAFE_AREA,
-  SHELL_APP_BAR_HEIGHT,
-} from '../../Shell/shellLayoutConstants';
-import { useFeatureFlagEnabled, usePostHog } from 'posthog-js/react';
-import {
-  FAMILY_SCREEN_V2_EARLY_ACCESS_FEATURE_FLAG,
-  SELF_SERVICE_POLICY_FEATURE_FLAG,
-} from '../../featureFlags';
-import { clonePolicyWithActionDefinitionOrder } from './Tabs/PolicyConfiguration/policyUtils';
-import { usePolicyValidation } from './usePolicyValidation';
+  legacySettingsTarget,
+  settingsCategoryBreadcrumb,
+} from '../settingsSections';
 
 export function LocationEdit() {
-  const isV2 =
-    useFeatureFlagEnabled(FAMILY_SCREEN_V2_EARLY_ACCESS_FEATURE_FLAG) === true;
-  const { editingLocationId } = useParams<{
-    editingLocationId: string;
-  }>();
-
-  const configuration = useOrganizationConfiguration();
+  const { editingLocationId } = useParams<{ editingLocationId: string }>();
+  const [search] = useSearchParams();
+  const route = useLocation();
   const { organizationId, locationId } = useRequiredSelectedLocationContext();
-  const targetLocationId = editingLocationId ?? locationId;
-  const targetLocationContext = {
-    organizationId,
-    locationId: targetLocationId,
-  };
-
-  const location = configuration?.locations?.find(
-    (location) => location.id === targetLocationId
-  );
-
-  useScreenTitle(`Editing ${location?.name} configuration`);
-
-  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
-
-  const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
-
-  useEffect(() => {
-    if (isMobile) {
-      setIsSidebarCollapsed(true);
-    } else {
-      setIsSidebarCollapsed(false);
-    }
-  }, [isMobile]);
-  const policy = usePolicyForLocation(targetLocationContext);
-  const posthog = usePostHog();
-  const showPolicySelfService = useFeatureFlagEnabled(
-    SELF_SERVICE_POLICY_FEATURE_FLAG
-  );
-  const featureFlagsLoaded = posthog.featureFlags.hasLoadedFlags;
-  const [policyDraft, setPolicyDraft] = useState(policy);
-  const [policySaveErrors, setPolicySaveErrors] = useState<string[]>([]);
-  const policyDraftLocationIdRef = useRef(targetLocationId);
-  const actionDefinitionOrderRef = useRef(
-    Object.keys(policy.actionDefinitions ?? {})
-  );
-
-  useEffect(() => {
-    if (policyDraftLocationIdRef.current !== targetLocationId) {
-      policyDraftLocationIdRef.current = targetLocationId;
-      actionDefinitionOrderRef.current = Object.keys(
-        policy.actionDefinitions ?? {}
-      );
-    }
-
-    const orderedPolicy = clonePolicyWithActionDefinitionOrder(
-      policy,
-      actionDefinitionOrderRef.current
-    );
-    actionDefinitionOrderRef.current = Object.keys(
-      orderedPolicy.actionDefinitions ?? {}
-    );
-    setPolicyDraft(orderedPolicy);
-  }, [policy, targetLocationId]);
-
-  const tabs = useMemo(
-    () => [
-      {
-        id: 'basic' as const,
-        label: 'Basic Configuration',
-        component: BasicConfiguration,
-        shouldShow: true,
-      },
-      {
-        id: 'actionDefinitions' as const,
-        label: 'Action Definitions',
-        component: PolicyConfiguration,
-        shouldShow: showPolicySelfService === true,
-      },
-      {
-        id: 'customFamilyFields' as const,
-        label: 'Custom Family Fields',
-        component: PolicyConfiguration,
-        shouldShow: showPolicySelfService === true,
-      },
-      {
-        id: 'casePolicy' as const,
-        label: 'Case Policies',
-        component: PolicyConfiguration,
-        shouldShow: showPolicySelfService === true,
-      },
-      {
-        id: 'v1ReferralPolicy' as const,
-        label: 'Referral Policies',
-        component: PolicyConfiguration,
-        shouldShow: showPolicySelfService === true,
-      },
-      {
-        id: 'volunteerPolicy' as const,
-        label: 'Volunteer Policies',
-        component: PolicyConfiguration,
-        shouldShow: showPolicySelfService === true,
-      },
-      {
-        id: 'organizationPolicy' as const,
-        label: 'Organization Approval Policies',
-        component: PolicyConfiguration,
-        shouldShow: showPolicySelfService === true,
-      },
-      {
-        id: 'accessLevels' as const,
-        label: 'Access Levels',
-        component: AccessLevels,
-        shouldShow: true,
-      },
-    ],
-    [showPolicySelfService]
-  );
-
-  // This result in a type like: 'basic' | 'actions' | 'policies'
-  // Depends on `as const` on the tabs const above
-  type LocationTabId = (typeof tabs)[number]['id'];
-
-  // Use the type derived from LOCATION_TABS
-  const [activeTab, setActiveTab] = useState<LocationTabId>('basic');
-
-  const [searchParams, setSearchParams] = useSearchParams();
-
-  const urlTab = searchParams.get('tab');
-  const availableTabs = useMemo(
-    () => tabs.filter((tab) => tab.shouldShow),
-    [tabs]
-  );
-
-  useEffect(() => {
-    if (!featureFlagsLoaded) return;
-
-    const match = availableTabs.find((tab) => tab.id === urlTab);
-    if (!match) {
-      setSearchParams({ tab: 'basic' });
-      return;
-    }
-
-    setActiveTab(urlTab as LocationTabId);
-  }, [urlTab, availableTabs, featureFlagsLoaded, setSearchParams]);
-
+  const configuration = useOrganizationConfiguration();
   const permissions = useGlobalPermissions();
-  const canAccessSettings = permissions(Permission.AccessSettingsScreen);
-  const validation = usePolicyValidation(
-    organizationId,
-    targetLocationId,
-    policy,
-    featureFlagsLoaded &&
-      showPolicySelfService === true &&
-      canAccessSettings &&
-      !!location
+  const targetLocationId = editingLocationId ?? locationId;
+  const location = configuration?.locations?.find(
+    (item) => item.id === targetLocationId
   );
-  const saveScopeRef = useRef<string | null>(null);
-  const savingRef = useRef(false);
-  const saveScope = `${organizationId}/${targetLocationId}`;
-  useEffect(() => {
-    saveScopeRef.current = saveScope;
-    setPolicySaveErrors([]);
-    return () => {
-      saveScopeRef.current = null;
-    };
-  }, [saveScope]);
-
-  const appNavigate = useAppNavigate();
-  const withBackdrop = useBackdrop();
-  const refreshPolicy = useRefreshPolicyForLocation(targetLocationContext);
-
-  const policyTabIds = [
-    'actionDefinitions',
-    'customFamilyFields',
-    'casePolicy',
-    'v1ReferralPolicy',
-    'volunteerPolicy',
-    'organizationPolicy',
-  ] as const;
-  const isPolicyTabActive = policyTabIds.some((tabId) => tabId === activeTab);
-  async function savePolicy(
-    nextPolicy: EffectiveLocationPolicy
-  ): Promise<boolean> {
-    if (!organizationId || !targetLocationId) return false;
-    // Each change is built from the current draft, so a change made while another save
-    // is in flight would not include it. Reject it visibly instead of saving over it.
-    if (savingRef.current) {
-      setPolicySaveErrors([
-        'Another policy change is still being saved. Try again when it finishes.',
-      ]);
-      return false;
-    }
-    savingRef.current = true;
-    let persisted = false;
-
-    const previousActionDefinitionOrder = actionDefinitionOrderRef.current;
-    const nextActionDefinitionOrder = Object.keys(
-      nextPolicy.actionDefinitions ?? {}
-    );
-    actionDefinitionOrderRef.current = nextActionDefinitionOrder;
-
-    try {
-      await withBackdrop(async () => {
-        try {
-          setPolicySaveErrors([]);
-          const saved = await api.configuration.putEffectiveLocationPolicy(
-            organizationId,
-            targetLocationId,
-            nextPolicy
-          );
-          // The policy is stored even if the user has switched locations meanwhile;
-          // refreshPolicy is bound to the saved location, so its cache stays current.
-          persisted = true;
-          refreshPolicy();
-          if (saveScopeRef.current !== saveScope) return;
-          setPolicyDraft(
-            clonePolicyWithActionDefinitionOrder(
-              saved,
-              nextActionDefinitionOrder
-            )
-          );
-        } catch (error) {
-          // After a location switch, the order ref and the errors belong to the new
-          // location, so this failure must not touch them.
-          if (saveScopeRef.current !== saveScope) return;
-          actionDefinitionOrderRef.current = previousActionDefinitionOrder;
-          setPolicySaveErrors(getPolicySaveErrors(error));
-        }
-      });
-      return persisted;
-    } finally {
-      savingRef.current = false;
-    }
-  }
-
-  if (!featureFlagsLoaded) {
+  useScreenTitle('Location configuration');
+  const legacyTarget = legacySettingsTarget(
+    organizationId,
+    locationId,
+    editingLocationId,
+    search.get('tab')
+  );
+  if (legacyTarget) {
+    const remaining = new URLSearchParams(search);
+    remaining.delete('tab');
+    const query = remaining.toString();
     return (
-      <ProgressBackdrop>
-        <p className="ph-unmask">Loading location configuration...</p>
-      </ProgressBackdrop>
+      <Navigate
+        to={legacyTarget + (query ? '?' + query : '') + route.hash}
+        replace
+      />
     );
   }
-
-  if (!canAccessSettings || !location) {
+  if (!permissions(Permission.AccessSettingsScreen) || !location)
     return (
-      <Box className="ph-unmask" sx={{ mt: 10, textAlign: 'center' }}>
-        <Typography>
-          Oops! You can't edit this Location. It may be restricted or
-          unavailable.
-        </Typography>
-        <Button
-          variant="contained"
-          sx={{ mt: 2 }}
-          onClick={() => appNavigate.dashboard()}
-        >
-          Home
-        </Button>
-      </Box>
+      <Alert severity="error">
+        This location is restricted or unavailable.
+      </Alert>
     );
-  }
-
-  const basicData = {
-    name: location?.name || '',
-    ethnicities: location.ethnicities || [],
-    adultFamilyRelationships: location.adultFamilyRelationships || [],
-    arrangementReasons: location.arrangementReasons || [],
-    caseCloseReasons: configuration?.caseCloseReasons || [],
-    referralCloseReasons: configuration?.referralCloseReasons || [],
+  const data = {
+    name: location.name,
+    ethnicities: location.ethnicities ?? [],
+    adultFamilyRelationships: location.adultFamilyRelationships ?? [],
+    arrangementReasons: location.arrangementReasons ?? [],
+    caseCloseReasons: configuration?.caseCloseReasons ?? [],
+    referralCloseReasons: configuration?.referralCloseReasons ?? [],
   };
-  const locationRoles =
-    configuration?.roles?.map((role) => role.roleName) ?? [];
-
   return (
-    <Stack
-      className="ph-unmask"
-      spacing={0}
-      sx={{
-        height: isV2
-          ? {
-              xs: `calc(100dvh - ${SHELL_APP_BAR_HEIGHT.xs} - ${MOBILE_BOTTOM_SAFE_AREA}px)`,
-              sm: `calc(100dvh - ${SHELL_APP_BAR_HEIGHT.sm} - ${MOBILE_BOTTOM_SAFE_AREA}px)`,
-              md: `calc(100dvh - ${SHELL_APP_BAR_HEIGHT.md} - ${DESKTOP_BOTTOM_SAFE_AREA}px)`,
-            }
-          : {
-              xs: `calc(100vh - 48px - ${MOBILE_BOTTOM_SAFE_AREA}px)`,
-              md: `calc(100vh - 48px - ${DESKTOP_BOTTOM_SAFE_AREA}px)`,
-            },
-        minHeight: 0,
-        minWidth: 0,
-        ...(isV2 && { boxSizing: 'border-box' }),
-        pt: 2,
-      }}
-    >
-      <Box
-        sx={{
-          alignItems: 'flex-start',
-          display: 'flex',
-          flexShrink: isV2 ? 0 : undefined,
-          gap: 2,
-          justifyContent: 'space-between',
-        }}
-      >
-        <Box>
-          <Breadcrumbs
-            items={[
-              {
-                label: 'Settings',
-                to: `/org/${organizationId}/${locationId}/settings`,
-              },
-            ]}
-            currentPageLabel={location.name || ''}
-          />
-          {isV2 && (
-            <Typography
-              {...v2Typography.pageTitle}
-              component="h1"
-              sx={{ my: 2 }}
-            >
-              Editing {location.name} configuration
-            </Typography>
-          )}
-        </Box>
-      </Box>
-
-      <Box
-        sx={{
-          display: 'flex',
-          flex: 1,
-          minHeight: 0,
-          minWidth: 0,
-          overflow: 'auto',
-        }}
-      >
-        <Box
-          sx={{
-            width: isMobile && isSidebarCollapsed ? 40 : 240,
-            maxWidth: '100%',
-            flexShrink: 0,
-            minHeight: '100%',
-            borderRight: '1px solid #e0e0e0',
-            p: 1,
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'stretch',
-          }}
-        >
-          {isMobile && (
-            <IconButton
-              size="small"
-              aria-label={
-                isSidebarCollapsed
-                  ? 'Expand settings navigation'
-                  : 'Collapse settings navigation'
-              }
-              aria-expanded={!isSidebarCollapsed}
-              onClick={() => setIsSidebarCollapsed((prev) => !prev)}
-              sx={{ alignSelf: 'flex-end', mb: 1 }}
-              color="primary"
-            >
-              {isSidebarCollapsed ? <ChevronRightIcon /> : <ChevronLeftIcon />}
-            </IconButton>
-          )}
-
-          {(!isMobile || !isSidebarCollapsed) && (
-            <Box sx={{ flex: 1, px: 1 }}>
-              <SettingsTabMenu
-                tabs={availableTabs}
-                activeTab={activeTab}
-                onTabChange={(tabId) => {
-                  setActiveTab(tabId);
-                  setSearchParams({ tab: tabId });
-                }}
-              />
-            </Box>
-          )}
-        </Box>
-
-        <Box
-          sx={{
-            flex: 1,
-            minWidth: 0,
-            overflow: 'auto',
-            paddingLeft: { xs: 1, sm: 2, md: 4 },
-            paddingTop: { xs: 1, sm: 2 },
-          }}
-        >
-          {validation?.status === 'loading' && (
-            <Typography role="status" sx={{ mb: 2 }}>
-              Checking policy configuration...
-            </Typography>
-          )}
-          {validation?.status === 'failure' && (
-            <Alert
-              severity="error"
-              sx={{ mb: 2 }}
-              action={
-                <Button color="inherit" size="small" onClick={validation.retry}>
-                  Try again
-                </Button>
-              }
-            >
-              Policy validation could not be loaded.
-            </Alert>
-          )}
-          {validation?.status === 'success' && (
-            <>
-              {validation.result.errors.length > 0 && (
-                <Alert severity="error" sx={{ mb: 2 }}>
-                  {validation.result.errors.map((message, index) => (
-                    <Typography key={index} variant="body2">
-                      {message}
-                    </Typography>
-                  ))}
-                </Alert>
-              )}
-              {validation.result.warnings.length > 0 && (
-                <Alert severity="warning" sx={{ mb: 2 }}>
-                  {validation.result.warnings.map((message, index) => (
-                    <Typography key={index} variant="body2">
-                      {message}
-                    </Typography>
-                  ))}
-                </Alert>
-              )}
-            </>
-          )}
-          {isPolicyTabActive && policySaveErrors.length > 0 && (
-            <Alert
-              severity="error"
-              sx={{ mb: 2 }}
-              data-testid="policy-save-errors"
-            >
-              <Stack spacing={0.5}>
-                {policySaveErrors.map((error) => (
-                  <Typography key={error} variant="body2">
-                    {error}
-                  </Typography>
-                ))}
-              </Stack>
-            </Alert>
-          )}
-
-          {/* Render the active tab component */}
-          {activeTab === 'basic' && (
-            <Box key="basic">
-              <BasicConfiguration
-                data={basicData}
-                currentLocationDefinition={location}
-              />
-            </Box>
-          )}
-
-          {activeTab === 'accessLevels' && (
-            <Box key="accessLevels">
-              <AccessLevels locationConfiguration={location} />
-            </Box>
-          )}
-
-          {showPolicySelfService === true &&
-            activeTab === 'actionDefinitions' && (
-              <Box key="actionDefinitions">
-                <PolicyConfiguration
-                  policy={policyDraft}
-                  locationRoles={locationRoles}
-                  onPolicyChange={savePolicy}
-                  section="actionDefinitions"
-                />
-              </Box>
-            )}
-
-          {showPolicySelfService === true &&
-            activeTab === 'customFamilyFields' && (
-              <Box key="customFamilyFields">
-                <PolicyConfiguration
-                  policy={policyDraft}
-                  locationRoles={locationRoles}
-                  onPolicyChange={savePolicy}
-                  section="customFamilyFields"
-                />
-              </Box>
-            )}
-
-          {showPolicySelfService === true && activeTab === 'casePolicy' && (
-            <Box key="casePolicy">
-              <PolicyConfiguration
-                policy={policyDraft}
-                locationRoles={locationRoles}
-                onPolicyChange={savePolicy}
-                section="casePolicy"
-              />
-            </Box>
-          )}
-
-          {showPolicySelfService === true &&
-            activeTab === 'v1ReferralPolicy' && (
-              <Box key="v1ReferralPolicy">
-                <PolicyConfiguration
-                  policy={policyDraft}
-                  locationRoles={locationRoles}
-                  onPolicyChange={savePolicy}
-                  section="v1ReferralPolicy"
-                />
-              </Box>
-            )}
-
-          {showPolicySelfService === true &&
-            activeTab === 'volunteerPolicy' && (
-              <Box key="volunteerPolicy">
-                <PolicyConfiguration
-                  policy={policyDraft}
-                  locationRoles={locationRoles}
-                  onPolicyChange={savePolicy}
-                  section="volunteerPolicy"
-                />
-              </Box>
-            )}
-
-          {showPolicySelfService === true &&
-            policyDraft &&
-            activeTab === 'organizationPolicy' && (
-              <Box key="organizationPolicy">
-                <PolicyConfiguration
-                  policy={policyDraft}
-                  locationRoles={locationRoles}
-                  onPolicyChange={savePolicy}
-                  section="organizationPolicy"
-                />
-              </Box>
-            )}
-        </Box>
-      </Box>
+    <Stack spacing={2} sx={{ minWidth: 0, py: 2 }}>
+      <Breadcrumbs
+        items={[
+          {
+            label: 'Settings',
+            to: '/org/' + organizationId + '/' + locationId + '/settings',
+          },
+          settingsCategoryBreadcrumb(organizationId, locationId, 'locations'),
+        ]}
+        currentPageLabel="Location"
+      />
+      <Typography variant="h5" component="h1">
+        Editing {location.name} configuration
+      </Typography>
+      <BasicConfiguration
+        key={organizationId + '/' + targetLocationId}
+        data={data}
+        currentLocationDefinition={location}
+      />
     </Stack>
   );
-}
-
-function getPolicySaveErrors(error: unknown) {
-  if (!(error instanceof ApiException)) {
-    return [
-      error instanceof Error
-        ? error.message
-        : 'Policy changes could not be saved.',
-    ];
-  }
-
-  if (error.status === 403) {
-    return ['You do not have permission to save policy changes.'];
-  }
-
-  const parsedErrors = parseValidationErrors(error.response);
-  if (parsedErrors.length > 0) return parsedErrors;
-
-  return [
-    error.response || error.message || 'Policy changes could not be saved.',
-  ];
-}
-
-function parseValidationErrors(response: string) {
-  try {
-    const parsed = JSON.parse(response) as { errors?: unknown };
-    return Array.isArray(parsed.errors)
-      ? parsed.errors.filter(
-          (error): error is string => typeof error === 'string'
-        )
-      : [];
-  } catch {
-    return [];
-  }
 }

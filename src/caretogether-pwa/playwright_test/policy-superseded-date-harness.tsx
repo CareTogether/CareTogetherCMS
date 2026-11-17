@@ -80,7 +80,10 @@ export function Harness() {
           organization={kind === 'organization'}
           actionNames={[]}
           onClose={() => {}}
-          onSave={(_role, _previous, _name, value) => save(value)}
+          onSave={async (_role, _previous, _name, value) => {
+            save(value);
+            return true;
+          }}
         />
       )}
     </>

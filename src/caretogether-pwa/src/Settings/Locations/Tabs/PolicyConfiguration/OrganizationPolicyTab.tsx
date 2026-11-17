@@ -43,7 +43,7 @@ export function OrganizationPolicyTab({
   onPolicyChange,
 }: {
   policy: EffectiveLocationPolicy;
-  onPolicyChange: (policy: EffectiveLocationPolicy) => void;
+  onPolicyChange: (policy: EffectiveLocationPolicy) => Promise<boolean>;
 }) {
   const organizationPolicy = policy.organizationApprovalPolicy;
   const rows = Object.entries(organizationPolicy?.organizationRoles ?? {})
@@ -54,17 +54,15 @@ export function OrganizationPolicyTab({
   const [workingRow, setWorkingRow] = useState<
     OrganizationRoleVersionRow | undefined
   >();
-  const { SidePanel, openSidePanel, closeSidePanel } = useSidePanel({
-    className: 'ph-unmask',
-  });
+  const { SidePanel, openSidePanel, closeSidePanel } = useSidePanel({});
 
-  function saveVersion(
+  async function saveVersion(
     previousRoleName: string | undefined,
     previousVersion: string | undefined,
     roleName: string,
     version: OrganizationRolePolicyVersion
   ) {
-    onPolicyChange(
+    const saved = await onPolicyChange(
       clonePolicyWithOrganizationApprovalPolicy(
         policy,
         upsertOrganizationRolePolicyVersion(
@@ -76,7 +74,8 @@ export function OrganizationPolicyTab({
         )
       )
     );
-    closeSidePanel();
+    if (saved) closeSidePanel();
+    return saved;
   }
 
   function duplicate(row: OrganizationRoleVersionRow) {
