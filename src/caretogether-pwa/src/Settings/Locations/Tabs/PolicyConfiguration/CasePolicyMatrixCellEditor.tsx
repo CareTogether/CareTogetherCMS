@@ -23,6 +23,100 @@ import { defaultMatrixSchedule, scheduleValidation } from './matrixSchedule';
 import { MatrixScheduleFields } from './MatrixScheduleFields';
 import { variantScheduleSummary } from './arrangementVariantRequirements';
 
+export function MatrixRequirementFields({
+  value,
+  index = 0,
+  occupied,
+  onChange,
+}: {
+  value: Omit<MatrixEdit, 'phase'> & { phase: MatrixEdit['phase'] | '' };
+  index?: number;
+  occupied: ReadonlySet<MatrixEdit['phase']>;
+  onChange: (changes: Partial<MatrixEdit>) => void;
+}) {
+  const editorId = useId();
+  return (
+    <>
+      <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
+        <FormControl component="fieldset" sx={{ flex: 1, minWidth: 0 }}>
+          <FormLabel component="legend" id={`${editorId}-${index}-phase`}>
+            {`Requirement ${index + 1} phase`}
+          </FormLabel>
+          <RadioGroup
+            row
+            aria-labelledby={`${editorId}-${index}-phase`}
+            name={`${editorId}-${index}-phase`}
+            value={value.phase}
+            onChange={(event) => {
+              const phase = event.target.value as MatrixEdit['phase'];
+              if (
+                value.phase === 'Monitoring' &&
+                phase !== 'Monitoring' &&
+                !window.confirm(
+                  'Changing phase removes this monitoring schedule. Continue?'
+                )
+              )
+                return;
+              onChange({
+                phase,
+                recurrence:
+                  phase === 'Monitoring' ? value.recurrence : undefined,
+                schedule:
+                  phase === 'Monitoring'
+                    ? (value.schedule ?? defaultMatrixSchedule())
+                    : undefined,
+              });
+            }}
+          >
+            {matrixPhases.map((phase) => (
+              <FormControlLabel
+                key={phase}
+                value={phase}
+                control={<Radio size="small" />}
+                label={phase}
+                disabled={phase !== value.phase && occupied.has(phase)}
+              />
+            ))}
+          </RadioGroup>
+        </FormControl>
+        <Stack sx={{ minWidth: 140 }}>
+          <FormControlLabel
+            label="Required"
+            control={
+              <Switch
+                checked={value.isRequired}
+                onChange={(_event, checked) =>
+                  onChange({ isRequired: checked })
+                }
+                slotProps={{
+                  input: {
+                    role: 'switch',
+                    'aria-label': `Requirement ${index + 1} Required`,
+                    'aria-describedby': `${editorId}-${index}-applicability`,
+                  },
+                }}
+              />
+            }
+          />
+          <Typography
+            id={`${editorId}-${index}-applicability`}
+            variant="caption"
+            color="text.secondary"
+          >
+            {value.isRequired ? 'Required' : 'Optional'}
+          </Typography>
+        </Stack>
+      </Stack>
+      {value.phase === 'Monitoring' && (
+        <MatrixScheduleFields
+          value={value.schedule ?? value.recurrence!.toJSON()}
+          onChange={(schedule) => onChange({ schedule })}
+        />
+      )}
+    </>
+  );
+}
+
 export function CasePolicyMatrixCellEditor({
   params,
   requirements,
@@ -46,7 +140,6 @@ export function CasePolicyMatrixCellEditor({
     }));
   const [values, setValues] = useState<MatrixEdit[]>(initial);
   const [error, setError] = useState<string>();
-  const editorId = useId();
   const nextId = useRef(0);
   const protectedRows = requirements.filter((item) => item.readOnlyReason);
   const occupied = new Set(
@@ -178,85 +271,12 @@ export function CasePolicyMatrixCellEditor({
               spacing={1}
               sx={{ p: 1, border: 1, borderColor: 'divider', borderRadius: 1 }}
             >
-              <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
-                <FormControl component="fieldset" sx={{ flex: 1, minWidth: 0 }}>
-                  <FormLabel
-                    component="legend"
-                    id={`${editorId}-${index}-phase`}
-                  >
-                    {`Requirement ${index + 1} phase`}
-                  </FormLabel>
-                  <RadioGroup
-                    row
-                    aria-labelledby={`${editorId}-${index}-phase`}
-                    name={`${editorId}-${index}-phase`}
-                    value={item.phase}
-                    onChange={(event) => {
-                      const phase = event.target.value as MatrixEdit['phase'];
-                      if (
-                        item.phase === 'Monitoring' &&
-                        phase !== 'Monitoring' &&
-                        !window.confirm(
-                          'Changing phase removes this monitoring schedule. Continue?'
-                        )
-                      )
-                        return;
-                      update(index, {
-                        phase,
-                        recurrence:
-                          phase === 'Monitoring' ? item.recurrence : undefined,
-                        schedule:
-                          phase === 'Monitoring'
-                            ? (item.schedule ?? defaultMatrixSchedule())
-                            : undefined,
-                      });
-                    }}
-                  >
-                    {matrixPhases.map((phase) => (
-                      <FormControlLabel
-                        key={phase}
-                        value={phase}
-                        control={<Radio size="small" />}
-                        label={phase}
-                        disabled={phase !== item.phase && occupied.has(phase)}
-                      />
-                    ))}
-                  </RadioGroup>
-                </FormControl>
-                <Stack sx={{ minWidth: 140 }}>
-                  <FormControlLabel
-                    label="Required"
-                    control={
-                      <Switch
-                        checked={item.isRequired}
-                        onChange={(_event, checked) =>
-                          update(index, { isRequired: checked })
-                        }
-                        slotProps={{
-                          input: {
-                            role: 'switch',
-                            'aria-label': `Requirement ${index + 1} Required`,
-                            'aria-describedby': `${editorId}-${index}-applicability`,
-                          },
-                        }}
-                      />
-                    }
-                  />
-                  <Typography
-                    id={`${editorId}-${index}-applicability`}
-                    variant="caption"
-                    color="text.secondary"
-                  >
-                    {item.isRequired ? 'Required' : 'Optional'}
-                  </Typography>
-                </Stack>
-              </Stack>
-              {item.phase === 'Monitoring' && (
-                <MatrixScheduleFields
-                  value={item.schedule ?? item.recurrence!.toJSON()}
-                  onChange={(schedule) => update(index, { schedule })}
-                />
-              )}
+              <MatrixRequirementFields
+                value={item}
+                index={index}
+                occupied={occupied}
+                onChange={(changes) => update(index, changes)}
+              />
               <Button
                 color="error"
                 onClick={() =>

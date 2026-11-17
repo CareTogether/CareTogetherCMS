@@ -1,6 +1,7 @@
 import {
   Alert,
   Box,
+  Button,
   Chip,
   Stack,
   Typography,
@@ -27,7 +28,9 @@ import { useUnsavedPolicyNavigation } from '../../../../Hooks/useUnsavedPolicyNa
 import { usePolicyGridDraft } from './usePolicyGridDraft';
 import { discardPolicyGridCellEdits } from './policyGridDraft';
 import {
-  matrixActions,
+  arrangementUsedActions,
+  matrixActionIsResolved,
+  type MatrixScope,
   matrixOwner,
   matrixCellHasChanges,
   matrixRequirements,
@@ -38,6 +41,7 @@ import {
   type MatrixRequirement,
 } from './casePolicyMatrix';
 import { CasePolicyMatrixCellEditor } from './CasePolicyMatrixCellEditor';
+import { MatrixAddActionDialog } from './MatrixAddActionDialog';
 import { variantScheduleSummary } from './arrangementVariantRequirements';
 import {
   CasePolicyMatrixToolbar,
@@ -129,6 +133,36 @@ function MatrixCellContents({
   );
 }
 
+function updateMatrixPolicy(
+  value: EffectiveLocationPolicy,
+  baseline: EffectiveLocationPolicy,
+  scope: MatrixScope,
+  actionName: string,
+  edits: MatrixEdit[]
+) {
+  return applyMatrixEdits(
+    value,
+    baseline,
+    scope,
+    actionName,
+    edits,
+    (edit, previous) => {
+      const action = new RequirementDefinition({
+        actionName: actionName,
+        isRequired: edit.isRequired,
+      });
+      if (edit.phase !== 'Monitoring') return action;
+      const data = edit.schedule ?? edit.recurrence?.toJSON();
+      const recurrence =
+        previous?.recurrence &&
+        JSON.stringify(data) === JSON.stringify(previous.recurrence.toJSON())
+          ? previous.recurrence
+          : RecurrencePolicy.fromJS(data);
+      return new MonitoringRequirement({ action, recurrence });
+    }
+  );
+}
+
 function MatrixGroupHeader({
   name,
   kind,
@@ -211,7 +245,10 @@ export function CasePoliciesMatrix({
   const theme = useTheme();
   const compact = useMediaQuery(theme.breakpoints.down('sm'));
   const draft = usePolicyGridDraft(policy, onPolicyChange, '', true);
-  const [editing, setEditing] = useState(false);
+  const [cellEditing, setEditing] = useState(false);
+  const [adding, setAdding] = useState(false);
+  const [finding, setFinding] = useState<string>();
+  const editing = cellEditing || adding;
   useEffect(() => {
     onEditingStateChange?.({
       dirty: draft.dirty,
@@ -257,21 +294,11 @@ export function CasePoliciesMatrix({
         .filter((scope) => !scope.functionName)
         .map((scope) => [scope.arrangement, scope.field])
     );
-    const definitions = Object.keys(draft.value.actionDefinitions);
-    const actionNames = matrixActions(draft.value);
+    const actionNames = arrangementUsedActions(draft.value, draft.base, policy);
     return actionNames.map((actionName) => ({
       id: actionName,
       actionName,
-      unresolved:
-        !actionName.trim() ||
-        !Object.hasOwn(draft.value.actionDefinitions, actionName) ||
-        actionNames.filter(
-          (name) =>
-            name.trim().toLowerCase() === actionName.trim().toLowerCase()
-        ).length !== 1 ||
-        definitions.filter(
-          (name) => name.toLowerCase() === actionName.toLowerCase()
-        ).length !== 1,
+      unresolved: !matrixActionIsResolved(draft.value, actionName),
       cells: Object.fromEntries(
         scopes.map((scope) => [
           scope.field,
@@ -296,6 +323,27 @@ export function CasePoliciesMatrix({
       ),
     }));
   }, [draft.base, draft.value, policy, scopes]);
+  useEffect(() => {
+    const api = apiRef.current;
+    if (!api || !finding || editing) return;
+    const actionName = finding;
+    let focused = false;
+    function focus() {
+      if (!api || focused || !api.getRow(actionName)) return;
+      const rowIndex = api.getRowIndexRelativeToVisibleRows(actionName);
+      if (rowIndex < 0 || rowIndex === undefined) return;
+      focused = true;
+      api.scrollToIndexes({ rowIndex, colIndex: 0 });
+      api.setCellFocus(actionName, 'actionName');
+    }
+    const unsubscribeRows = api.subscribeEvent('rowsSet', focus);
+    const unsubscribeFilters = api.subscribeEvent('filteredRowsSet', focus);
+    focus();
+    return () => {
+      unsubscribeRows();
+      unsubscribeFilters();
+    };
+  }, [apiRef, editing, finding, rows]);
   const grouping: GridColumnGroupingModel = [];
   for (const scope of scopes) {
     const groupId = JSON.stringify(['arrangement', scope.arrangement]);
@@ -437,6 +485,70 @@ export function CasePoliciesMatrix({
             setEditing(false);
           }}
         />
+        <Stack direction="row" sx={{ justifyContent: 'flex-end' }}>
+          <Button
+            variant="contained"
+            disabled={
+              editing ||
+              draft.saving ||
+              !scopes.some((scope) => !scope.readOnlyReason)
+            }
+            onClick={() => setAdding(true)}
+          >
+            Add Action
+          </Button>
+        </Stack>
+        {!scopes.some((scope) => !scope.readOnlyReason) && (
+          <Typography variant="body2">
+            Add Action requires an editable arrangement scope.
+          </Typography>
+        )}
+        {finding && rows.some((row) => row.actionName === finding) && (
+          <Alert
+            severity="info"
+            action={
+              <Button
+                color="inherit"
+                disabled={editing || draft.saving}
+                onClick={() => {
+                  apiRef.current?.setFilterModel({
+                    items: [],
+                    quickFilterValues: [],
+                  });
+                  const rowIndex =
+                    apiRef.current?.getRowIndexRelativeToVisibleRows(finding);
+                  if (rowIndex !== undefined && rowIndex >= 0) {
+                    apiRef.current?.scrollToIndexes({ rowIndex, colIndex: 0 });
+                    apiRef.current?.setCellFocus(finding, 'actionName');
+                  }
+                }}
+              >
+                Reveal action (clear filters)
+              </Button>
+            }
+          >
+            {finding} is in the matrix. If filters hide it, reveal the action to
+            configure its available scopes.
+          </Alert>
+        )}
+        {adding && (
+          <MatrixAddActionDialog
+            policy={draft.value}
+            visibleActions={rows.map((row) => row.actionName)}
+            onClose={() => setAdding(false)}
+            onFind={(name) => {
+              setAdding(false);
+              setFinding(name);
+            }}
+            onApply={(name, scope, edit) => {
+              draft.stage((current) =>
+                updateMatrixPolicy(current, policy, scope, name, [edit])
+              );
+              setAdding(false);
+              setFinding(name);
+            }}
+          />
+        )}
         {issues.length > 0 && (
           <Alert severity="warning">
             Ambiguous scopes are excluded from the matrix and remain available
@@ -451,7 +563,8 @@ export function CasePoliciesMatrix({
         )}
         {rows.length === 0 && (
           <Alert severity="info">
-            No Action Definitions or requirement references are configured.
+            No actions are used in arrangements yet. Use Add Action to configure
+            an existing Action Definition.
           </Alert>
         )}
         <Box
@@ -494,6 +607,7 @@ export function CasePoliciesMatrix({
             historyStackSize={0}
             slots={{ toolbar: CasePolicyMatrixToolbar }}
             slotProps={{
+              toolbar: { sx: { flexWrap: 'wrap', flex: '0 0 auto' } },
               baseButton: { disabled: editing },
               baseIconButton: { disabled: editing },
               baseTextField: { disabled: editing },
@@ -556,27 +670,12 @@ export function CasePoliciesMatrix({
               }
               let candidate = draft.value;
               draft.stage((current) => {
-                candidate = applyMatrixEdits(
+                candidate = updateMatrixPolicy(
                   current,
                   policy,
                   scope,
                   updated.actionName,
-                  updated.cells[scope.field].edits!,
-                  (edit, previous) => {
-                    const action = new RequirementDefinition({
-                      actionName: updated.actionName,
-                      isRequired: edit.isRequired,
-                    });
-                    if (edit.phase !== 'Monitoring') return action;
-                    const data = edit.schedule ?? edit.recurrence?.toJSON();
-                    const recurrence =
-                      previous?.recurrence &&
-                      JSON.stringify(data) ===
-                        JSON.stringify(previous.recurrence.toJSON())
-                        ? previous.recurrence
-                        : RecurrencePolicy.fromJS(data);
-                    return new MonitoringRequirement({ action, recurrence });
-                  }
+                  updated.cells[scope.field].edits!
                 );
                 return candidate;
               });

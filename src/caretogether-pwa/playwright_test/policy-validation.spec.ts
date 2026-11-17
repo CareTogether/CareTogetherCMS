@@ -1963,6 +1963,9 @@ test('restricted Settings pages never load policy data', async ({ page }) => {
   await expect(page.getByRole('alert')).toHaveText(
     'This location is restricted or unavailable.'
   );
+  await expect(
+    page.getByRole('button', { name: 'Add Action', exact: true })
+  ).toHaveCount(0);
   expect(requests.validations()).toBe(0);
   expect(requests.puts()).toBe(0);
 });
@@ -2018,6 +2021,441 @@ async function applyApplicability(
 }
 
 test.describe('Case Policies matrix', () => {
+  for (const variant of [false, true]) {
+    test(`Add Action stages an existing volunteer definition in ${variant ? 'variant Monitoring' : 'Base Setup'} without losing hidden policy data`, async ({
+      page,
+    }) => {
+      await page.setViewportSize({ width: variant ? 390 : 1440, height: 900 });
+      const initial = caseMatrixPolicy();
+      initial.actionDefinitions['Volunteer only'] = {
+        documentLink: 0,
+        noteEntry: 0,
+      };
+      initial.actionDefinitions.Unused = { documentLink: 0, noteEntry: 0 };
+      initial.volunteerPolicy.volunteerRoles['Volunteer fixture'] = {
+        policyVersions: [
+          {
+            version: 'Current',
+            requirements: [{ actionName: 'Volunteer only', isRequired: true }],
+          },
+        ],
+      };
+      const requests = await backend(page, false, false, initial);
+      let saved: EffectiveLocationPolicy | undefined;
+      page.on('request', (request) => {
+        if (request.method() === 'PUT') saved = request.postDataJSON();
+      });
+      await mount(page, 'casePolicy', undefined, true);
+      const grid = page.getByRole('grid', {
+        name: 'Case Policies requirements matrix',
+        exact: true,
+      });
+      const row = grid.locator('[data-id="Volunteer only"]');
+      await expect(row).toHaveCount(0);
+      await expect(grid.locator('[data-id="Unused"]')).toHaveCount(0);
+      await page
+        .getByRole('button', { name: 'Add Action', exact: true })
+        .click();
+      let dialog = page.getByRole('dialog', {
+        name: 'Add Action',
+        exact: true,
+      });
+      await expect(
+        dialog.getByRole('button', { name: 'Apply to draft', exact: true })
+      ).toBeDisabled();
+      await dialog
+        .getByRole('combobox', {
+          name: 'Existing Action Definition',
+          exact: true,
+        })
+        .fill('Volunteer');
+      await page
+        .getByRole('option', { name: 'Volunteer only', exact: true })
+        .click();
+      await dialog.getByRole('button', { name: 'Cancel', exact: true }).click();
+      await expect(row).toHaveCount(0);
+      await expect(
+        page.getByRole('button', { name: 'Undo', exact: true })
+      ).toBeDisabled();
+      await page.getByRole('searchbox').fill('Form');
+      await page
+        .getByRole('button', { name: 'Add Action', exact: true })
+        .click();
+      dialog = page.getByRole('dialog', { name: 'Add Action', exact: true });
+      await dialog
+        .getByRole('combobox', {
+          name: 'Existing Action Definition',
+          exact: true,
+        })
+        .fill('Volunteer');
+      await page
+        .getByRole('option', { name: 'Volunteer only', exact: true })
+        .click();
+      await dialog
+        .getByRole('combobox', { name: 'Target scope', exact: true })
+        .click();
+      await page
+        .getByRole('option', {
+          name: variant
+            ? 'Hosting / Provider function / First profile (additional)'
+            : 'Hosting / Base',
+          exact: true,
+        })
+        .click();
+      await dialog
+        .getByRole('radiogroup', { name: 'Requirement 1 phase', exact: true })
+        .getByRole('radio', {
+          name: variant ? 'Monitoring' : 'Setup',
+          exact: true,
+        })
+        .check();
+      await dialog
+        .getByRole('switch', { name: 'Requirement 1 Required', exact: true })
+        .uncheck();
+      if (variant)
+        await expect(
+          dialog.getByRole('combobox', { name: 'Schedule type', exact: true })
+        ).toHaveText('One-time');
+      await dialog
+        .getByRole('button', { name: 'Apply to draft', exact: true })
+        .click();
+      await expect(dialog).toHaveCount(0);
+      await expect(page.getByRole('searchbox')).toHaveValue('Form');
+      await expect(
+        page.getByRole('button', {
+          name: 'Reveal action (clear filters)',
+          exact: true,
+        })
+      ).toBeVisible();
+      await page
+        .getByRole('button', {
+          name: 'Reveal action (clear filters)',
+          exact: true,
+        })
+        .click();
+      await expect(page.getByRole('searchbox')).toHaveValue('');
+      await expect(row).toBeVisible();
+      expect(requests.puts()).toBe(0);
+      await page.getByRole('button', { name: 'Undo', exact: true }).click();
+      await expect(row).toHaveCount(0);
+      await expect(
+        page.getByRole('button', { name: 'Undo', exact: true })
+      ).toBeDisabled();
+      await page.getByRole('button', { name: 'Redo', exact: true }).click();
+      await expect(row).toBeVisible();
+      await page
+        .getByRole('button', { name: 'Save changes', exact: true })
+        .click();
+      await expect.poll(requests.puts).toBe(1);
+      await expect(
+        page.getByRole('button', { name: 'Undo', exact: true })
+      ).toBeDisabled();
+      expect(saved!.actionDefinitions).toEqual(initial.actionDefinitions);
+      expect(saved!.volunteerPolicy).toEqual(initial.volunteerPolicy);
+      expect(
+        saved!.referralPolicy.arrangementPolicies[0].policyVersions
+      ).toEqual(initial.referralPolicy.arrangementPolicies[0].policyVersions);
+      if (variant) {
+        expect(
+          saved!.referralPolicy.arrangementPolicies[0].requiredSetupActions
+        ).toEqual(
+          initial.referralPolicy.arrangementPolicies[0].requiredSetupActions
+        );
+        expect(
+          saved!.referralPolicy.arrangementPolicies[0].arrangementFunctions[0]
+            .variants[0].requiredMonitoringActionsNew
+        ).toContainEqual({
+          action: { actionName: 'Volunteer only', isRequired: false },
+          recurrence: {
+            discriminator: 'OneTimeRecurrencePolicy',
+            delay: '1.00:00:00',
+          },
+        });
+      } else
+        expect(
+          saved!.referralPolicy.arrangementPolicies[0].requiredSetupActions
+        ).toContainEqual({ actionName: 'Volunteer only', isRequired: false });
+      await page
+        .getByRole('button', { name: 'Add Action', exact: true })
+        .click();
+      dialog = page.getByRole('dialog', { name: 'Add Action', exact: true });
+      await dialog
+        .getByRole('combobox', {
+          name: 'Existing Action Definition',
+          exact: true,
+        })
+        .fill('Volunteer');
+      await page
+        .getByRole('option', { name: 'Volunteer only', exact: true })
+        .click();
+      await expect(
+        dialog.getByRole('button', { name: 'Apply to draft', exact: true })
+      ).toHaveCount(0);
+      await dialog
+        .getByRole('button', { name: 'Find in matrix', exact: true })
+        .click();
+      await expect(row).toHaveCount(1);
+      expect(requests.puts()).toBe(1);
+    });
+  }
+
+  test('empty arrangement matrix can add existing actions and failed saves retain the addition and history', async ({
+    page,
+  }) => {
+    const initial = policy();
+    await page.setViewportSize({ width: 320, height: 900 });
+    initial.actionDefinitions = { Unused: { documentLink: 0, noteEntry: 0 } };
+    const requests = await backend(page, true, false, initial);
+    await mount(page, 'casePolicy', undefined, true);
+    await expect(
+      page.getByText(
+        'No actions are used in arrangements yet. Use Add Action to configure an existing Action Definition.'
+      )
+    ).toBeVisible();
+    await page.getByRole('button', { name: 'Add Action', exact: true }).click();
+    const dialog = page.getByRole('dialog', {
+      name: 'Add Action',
+      exact: true,
+    });
+    await dialog
+      .getByRole('combobox', {
+        name: 'Existing Action Definition',
+        exact: true,
+      })
+      .fill('Unused');
+    await page.getByRole('option', { name: 'Unused', exact: true }).click();
+    await dialog
+      .getByRole('combobox', { name: 'Target scope', exact: true })
+      .click();
+    await page
+      .getByRole('option', { name: 'Hosting / Base', exact: true })
+      .click();
+    await dialog.getByRole('radio', { name: 'Closeout', exact: true }).check();
+    await dialog
+      .getByRole('button', { name: 'Apply to draft', exact: true })
+      .click();
+    const row = page.getByRole('grid').locator('[data-id="Unused"]');
+    await expect(row).toBeVisible();
+    await page
+      .getByRole('button', { name: 'Save changes', exact: true })
+      .click();
+    await expect(page.getByTestId('policy-save-errors')).toContainText(
+      blockingError
+    );
+    await expect(row).toBeVisible();
+    await page.getByRole('button', { name: 'Undo', exact: true }).click();
+    await expect(row).toHaveCount(0);
+    await page.getByRole('button', { name: 'Redo', exact: true }).click();
+    await expect(row).toBeVisible();
+    await cancelPolicyForm(page);
+    await expect(row).toHaveCount(0);
+    expect(requests.puts()).toBe(1);
+  });
+
+  test('Add Action protects active edits and navigation without leaking temporary selections across locations', async ({
+    page,
+  }) => {
+    const initial = caseMatrixPolicy();
+    initial.actionDefinitions.Unused = { documentLink: 0, noteEntry: 0 };
+    const requests = await backend(page, false, false, initial);
+    await mount(page, 'casePolicy', undefined, true);
+    const cellEditor = await openMatrixCell(page);
+    await expect(
+      page.getByRole('button', { name: 'Add Action', exact: true })
+    ).toBeDisabled();
+    await cellEditor.press('Escape');
+    await page.getByRole('button', { name: 'Add Action', exact: true }).click();
+    const dialog = page.getByRole('dialog', {
+      name: 'Add Action',
+      exact: true,
+    });
+    await dialog
+      .getByRole('combobox', {
+        name: 'Existing Action Definition',
+        exact: true,
+      })
+      .fill('Unused');
+    await page.getByRole('option', { name: 'Unused', exact: true }).click();
+    await page
+      .getByRole('link', {
+        name: 'Location B',
+        exact: true,
+        includeHidden: true,
+      })
+      .dispatchEvent('click');
+    await policyDecision(page, false);
+    await expect(
+      dialog.getByRole('combobox', {
+        name: 'Existing Action Definition',
+        exact: true,
+      })
+    ).toHaveValue('Unused');
+    await dialog.press('Escape');
+    await policyDecision(page, false);
+    await expect(dialog).toBeVisible();
+    await page
+      .getByRole('link', {
+        name: 'Location B',
+        exact: true,
+        includeHidden: true,
+      })
+      .dispatchEvent('click');
+    await policyDecision(page, true);
+    await expect(page).toHaveURL('/org/org/b/settings/case-policies');
+    await expect(dialog).toHaveCount(0);
+    await expect(
+      page.getByRole('grid').locator('[data-id="Unused"]')
+    ).toHaveCount(0);
+    expect(requests.puts()).toBe(0);
+  });
+
+  test('Add Action excludes ambiguous definitions, reports empty choices and respects superseded scopes', async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 768, height: 900 });
+    const initial = caseMatrixPolicy();
+    initial.actionDefinitions = {
+      Duplicate: { documentLink: 0, noteEntry: 0 },
+      ' duplicate ': { documentLink: 0, noteEntry: 0 },
+    };
+    const requests = await backend(page, false, false, initial);
+    await mount(page, 'casePolicy', undefined, true);
+    await expect(
+      page.getByRole('grid').locator('[data-id="Form"]')
+    ).toContainText('Unresolved reference');
+    await page.getByRole('button', { name: 'Add Action', exact: true }).click();
+    const dialog = page.getByRole('dialog', {
+      name: 'Add Action',
+      exact: true,
+    });
+    await expect(
+      dialog.getByText(
+        'No unambiguous Action Definitions are available. Review Action Definitions.'
+      )
+    ).toBeVisible();
+    await dialog
+      .getByRole('combobox', {
+        name: 'Existing Action Definition',
+        exact: true,
+      })
+      .fill('Duplicate');
+    await expect(page.getByRole('option')).toHaveCount(0);
+    await expect(
+      dialog.getByRole('button', { name: 'Apply to draft', exact: true })
+    ).toBeDisabled();
+    await dialog.getByRole('button', { name: 'Cancel', exact: true }).click();
+    initial.referralPolicy.arrangementPolicies[0].supersededAtUtc =
+      '2024-01-01T00:00:00Z';
+    await mount(page, 'casePolicy', undefined, true);
+    await expect(
+      page.getByRole('button', { name: 'Add Action', exact: true })
+    ).toBeDisabled();
+    expect(requests.puts()).toBe(0);
+  });
+
+  test('last requirement removal stays visible until Save and cannot be resurrected by compatibility mirrors', async ({
+    page,
+  }) => {
+    const initial = policy();
+    initial.actionDefinitions = { Only: { documentLink: 0, noteEntry: 0 } };
+    Object.assign(initial.referralPolicy.arrangementPolicies[0], {
+      requiredSetupActions: [{ actionName: 'Only', isRequired: true }],
+      requiredSetupActions_PRE_MIGRATION: [
+        { actionName: 'Only', isRequired: true },
+      ],
+    });
+    await backend(page, false, false, initial);
+    let stored = initial;
+    let writes = 0;
+    await page.route('**/Configuration/policy', async (route) => {
+      if (route.request().method() === 'PUT') {
+        writes++;
+        stored = route.request().postDataJSON();
+        const arrangement = stored.referralPolicy.arrangementPolicies[0];
+        arrangement.requiredSetupActions_PRE_MIGRATION =
+          arrangement.requiredSetupActions;
+      }
+      await route.fulfill({ json: stored });
+    });
+    await mount(page, 'casePolicy', undefined, true);
+    const grid = page.getByRole('grid', {
+      name: 'Case Policies requirements matrix',
+      exact: true,
+    });
+    const row = grid.locator('[data-id="Only"]');
+    const cell = row.locator('[data-field=\'["Hosting",null,null]\']');
+    await cell.click();
+    const editor = page.getByRole('dialog', { name: /^Edit Only/ });
+    await editor
+      .getByRole('button', {
+        name: 'Not used — remove requirement 1',
+        exact: true,
+      })
+      .click();
+    await editor
+      .getByRole('button', { name: 'Apply to draft', exact: true })
+      .click();
+    await expect(row).toBeVisible();
+    await expect(cell).toHaveClass(/policy-cell-unsaved/);
+    await expect(cell.getByText('Not used', { exact: true })).toBeVisible();
+    await page.getByRole('button', { name: 'Undo', exact: true }).click();
+    await expect(
+      cell.getByText('Base · Setup · Required', { exact: true })
+    ).toBeVisible();
+    await page.getByRole('button', { name: 'Redo', exact: true }).click();
+    await page
+      .getByRole('button', { name: 'Save changes', exact: true })
+      .click();
+    await expect.poll(() => writes).toBe(1);
+    await expect(row).toHaveCount(0);
+  });
+
+  test('Add Action rejects edited picker text until exact existing action and scope selections are made', async ({
+    page,
+  }) => {
+    const initial = policy();
+    initial.actionDefinitions = { Unused: { documentLink: 0, noteEntry: 0 } };
+    const requests = await backend(page, false, false, initial);
+    await mount(page, 'casePolicy', undefined, true);
+    await page.getByRole('button', { name: 'Add Action', exact: true }).click();
+    const dialog = page.getByRole('dialog', {
+      name: 'Add Action',
+      exact: true,
+    });
+    const action = dialog.getByRole('combobox', {
+      name: 'Existing Action Definition',
+      exact: true,
+    });
+    const scope = dialog.getByRole('combobox', {
+      name: 'Target scope',
+      exact: true,
+    });
+    const apply = dialog.getByRole('button', {
+      name: 'Apply to draft',
+      exact: true,
+    });
+    await action.fill('Unused');
+    await action.press('ArrowDown');
+    await action.press('Enter');
+    await scope.fill('Hosting');
+    await scope.press('ArrowDown');
+    await scope.press('Enter');
+    await dialog.getByRole('radio', { name: 'Setup', exact: true }).check();
+    await expect(apply).toBeEnabled();
+    await action.fill('Not an existing action');
+    await expect(action).toHaveValue('Not an existing action');
+    await expect(apply).toBeDisabled();
+    await action.fill('Unused');
+    await page.getByRole('option', { name: 'Unused', exact: true }).click();
+    await scope.fill('Not an existing scope');
+    await expect(apply).toBeDisabled();
+    await dialog.getByRole('button', { name: 'Cancel', exact: true }).click();
+    await expect(
+      page.getByRole('button', { name: 'Undo', exact: true })
+    ).toBeDisabled();
+    expect(requests.puts()).toBe(0);
+  });
+
   test('Phase radios preserve multiple requirements, keyboard changes, Cancel and history', async ({
     page,
   }) => {
@@ -2548,11 +2986,17 @@ test.describe('Case Policies matrix', () => {
     page,
   }) => {
     const initial = caseMatrixPolicy();
-    for (let index = 0; index < 160; index++)
-      initial.actionDefinitions['Extra ' + String(index).padStart(3, '0')] = {
+    for (let index = 0; index < 160; index++) {
+      const name = 'Extra ' + String(index).padStart(3, '0');
+      initial.actionDefinitions[name] = {
         documentLink: 0,
         noteEntry: 0,
       };
+      initial.referralPolicy.arrangementPolicies[0].requiredSetupActions.push({
+        actionName: name,
+        isRequired: true,
+      });
+    }
     const requests = await backend(page, false, false, initial);
     await mount(page, 'casePolicy', undefined, true);
     const shared = matrixCell(page, 'Form');

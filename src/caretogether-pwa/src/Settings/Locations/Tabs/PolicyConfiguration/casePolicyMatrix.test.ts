@@ -6,6 +6,8 @@ import type {
 } from '../../../../GeneratedClient.ts';
 import {
   matrixActions,
+  arrangementUsedActions,
+  matrixActionChoices,
   matrixOwner,
   matrixCellHasChanges,
   matrixRequirements,
@@ -22,7 +24,155 @@ import {
   createPolicyGridDraft,
   resolvePolicyGridDraft,
   savePolicyGridDraft,
+  stagePolicyGridDraft,
+  movePolicyGridHistory,
 } from './policyGridDraft.ts';
+
+test('arrangement rows exclude volunteer-only, unused and historical-only definitions without changing their policy data', () => {
+  const value = policy();
+  Object.assign(value.actionDefinitions, {
+    VolunteerOnly: {},
+    Unused: {},
+    HistoricalOnly: {},
+  });
+  Object.assign(value, {
+    volunteerPolicy: {
+      volunteerRoles: {
+        Volunteer: {
+          policyVersions: [
+            {
+              requirements: [
+                { actionName: 'VolunteerOnly' },
+                { actionName: 'Form' },
+              ],
+            },
+          ],
+        },
+      },
+    },
+  });
+  const historical =
+    value.referralPolicy.arrangementPolicies[0].policyVersions![0];
+  Object.assign(historical, {
+    requiredSetupActions: [
+      ...historical.requiredSetupActions!,
+      { actionName: 'HistoricalOnly', isRequired: true },
+    ],
+  });
+  const before = JSON.stringify(value);
+  assert.deepEqual(arrangementUsedActions(value), ['Form', 'Other']);
+  assert.ok(matrixActions(value).includes('VolunteerOnly'));
+  assert.ok(matrixActionChoices(value).includes('VolunteerOnly'));
+  assert.equal(JSON.stringify(value), before);
+});
+
+test('arrangement rows include every phase, variant-only, legacy and missing references in catalog order', () => {
+  const value = policy();
+  const owner = value.referralPolicy.arrangementPolicies[0];
+  owner.requiredSetupActionNames = ['Legacy'];
+  Object.assign(owner, {
+    requiredCloseoutActions: [{ actionName: 'Missing', isRequired: false }],
+    requiredMonitoringActions: [
+      { actionName: 'Legacy monitoring', recurrence: recurrence() },
+    ],
+  });
+  assert.deepEqual(arrangementUsedActions(value), [
+    'Form',
+    'Other',
+    'Legacy',
+    'Legacy monitoring',
+    'Missing',
+  ]);
+  assert.ok(!matrixActionChoices(value).includes('Missing'));
+});
+
+test('genuine compatibility-only references remain visible while stale mirrors do not resurrect removed usage', () => {
+  const baseline = policy();
+  const original = baseline.referralPolicy.arrangementPolicies[0];
+  Object.assign(original, {
+    requiredMonitoringActionsNew: [],
+    arrangementFunctions: [],
+    requiredSetupActions_PRE_MIGRATION: [
+      { actionName: 'Form', isRequired: true },
+      { actionName: 'Compatibility only', isRequired: true },
+    ],
+  });
+  const value = {
+    ...baseline,
+    referralPolicy: {
+      ...baseline.referralPolicy,
+      arrangementPolicies: [{ ...original, requiredSetupActions: [] }],
+    },
+  } as unknown as EffectiveLocationPolicy;
+  assert.deepEqual(arrangementUsedActions(value, baseline, baseline), [
+    'Form',
+    'Compatibility only',
+  ]);
+  assert.deepEqual(arrangementUsedActions(value, value, baseline), [
+    'Compatibility only',
+  ]);
+});
+
+test('superseded and excluded ambiguous scopes retain configured references', () => {
+  const value = policy();
+  const original = value.referralPolicy.arrangementPolicies[0];
+  original.supersededAtUtc = new Date('2024-01-01');
+  Object.assign(value.referralPolicy, {
+    arrangementPolicies: [
+      original,
+      {
+        ...original,
+        requiredSetupActions: [
+          { actionName: 'Ambiguous scope action', isRequired: true },
+        ],
+      },
+    ],
+  });
+  assert.ok(matrixScopes(value).issues.length > 0);
+  assert.ok(arrangementUsedActions(value).includes('Ambiguous scope action'));
+  assert.ok(arrangementUsedActions(value).includes('Other'));
+});
+
+test('picker choices preserve exact names and reject blank, case and whitespace collisions', () => {
+  const value = policy();
+  Object.assign(value.actionDefinitions, {
+    ' form ': {},
+    Blank: {},
+    '': {},
+    '   ': {},
+    OTHER: {},
+  });
+  assert.deepEqual(matrixActionChoices(value), ['Blank']);
+  assert.ok(matrixActions(value).includes(' form '));
+});
+
+test('new arrangement usage appears through immutable draft history and disappears on Undo without losing hidden fields', () => {
+  const original = policy();
+  const initial = createPolicyGridDraft(original, 'location');
+  Object.assign(original.actionDefinitions, { New: {} });
+  const scope = matrixScopes(original).scopes[0];
+  const value = applyMatrixEdits(
+    original,
+    original,
+    scope,
+    'New',
+    [{ id: 'new', phase: 'Closeout', isRequired: false }],
+    materialize('New')
+  );
+  const draft = stagePolicyGridDraft(initial, value, true);
+  assert.ok(arrangementUsedActions(draft.value, draft.base).includes('New'));
+  assert.equal(draft.value.actionDefinitions, original.actionDefinitions);
+  assert.equal(draft.value.customFamilyFields, original.customFamilyFields);
+  assert.equal(
+    draft.value.referralPolicy.arrangementPolicies[0].policyVersions,
+    original.referralPolicy.arrangementPolicies[0].policyVersions
+  );
+  assert.equal(draft.past.length, 1);
+  assert.equal(stagePolicyGridDraft(draft, value, true), draft);
+  const undone = movePolicyGridHistory(draft, 'undo');
+  assert.ok(!arrangementUsedActions(undone.value, undone.base).includes('New'));
+  assert.equal(movePolicyGridHistory(undone, 'redo').value, value);
+});
 
 const recurrence = (value = defaultMatrixSchedule()) =>
   ({ toJSON: () => value }) as RecurrencePolicy;

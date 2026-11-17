@@ -278,6 +278,67 @@ export function matrixActions(policy: EffectiveLocationPolicy) {
   return [...names];
 }
 
+function matrixOwners(policy: EffectiveLocationPolicy) {
+  const owners = new Map<string, MatrixOwner[]>();
+  function add(path: (string | null)[], owner: MatrixOwner) {
+    const key = JSON.stringify(path);
+    owners.set(key, [...(owners.get(key) ?? []), owner]);
+  }
+  for (const arrangement of policy.referralPolicy.arrangementPolicies ?? []) {
+    add([arrangement.arrangementType, null, null], arrangement);
+    for (const fn of arrangement.arrangementFunctions ?? [])
+      for (const variant of fn.variants ?? [])
+        add(
+          [arrangement.arrangementType, fn.functionName, variant.variantName],
+          variant
+        );
+  }
+  return owners;
+}
+
+export function arrangementUsedActions(
+  value: EffectiveLocationPolicy,
+  base: EffectiveLocationPolicy = value,
+  compatibilityBaseline: EffectiveLocationPolicy = base
+) {
+  const baselineOwners = matrixOwners(compatibilityBaseline);
+  const used = new Set<string>();
+  for (const snapshot of [base, value])
+    for (const [key, owners] of matrixOwners(snapshot))
+      owners.forEach((owner, index) => {
+        for (const requirement of matrixRequirements(
+          owner,
+          baselineOwners.get(key)?.[index] ?? owner
+        ))
+          used.add(requirement.actionName);
+      });
+  return [...new Set([...matrixActions(value), ...matrixActions(base)])].filter(
+    (name) => used.has(name)
+  );
+}
+
+export function matrixActionIsResolved(
+  policy: EffectiveLocationPolicy,
+  actionName: string
+) {
+  return (
+    !!actionName.trim() &&
+    Object.hasOwn(policy.actionDefinitions, actionName) &&
+    matrixActions(policy).filter(
+      (name) => name.trim().toLowerCase() === actionName.trim().toLowerCase()
+    ).length === 1 &&
+    Object.keys(policy.actionDefinitions).filter(
+      (name) => name.toLowerCase() === actionName.toLowerCase()
+    ).length === 1
+  );
+}
+
+export function matrixActionChoices(policy: EffectiveLocationPolicy) {
+  return Object.keys(policy.actionDefinitions ?? {}).filter((name) =>
+    matrixActionIsResolved(policy, name)
+  );
+}
+
 export function applyMatrixEdits(
   policy: EffectiveLocationPolicy,
   baseline: EffectiveLocationPolicy,
@@ -294,16 +355,7 @@ export function applyMatrixEdits(
   );
   if (!validated || validated.readOnlyReason)
     throw new Error(validated?.readOnlyReason ?? 'The policy scope changed.');
-  if (
-    !actionName.trim() ||
-    !Object.hasOwn(policy.actionDefinitions, actionName) ||
-    matrixActions(policy).filter(
-      (name) => name.trim().toLowerCase() === actionName.trim().toLowerCase()
-    ).length !== 1 ||
-    Object.keys(policy.actionDefinitions).filter(
-      (name) => name.toLowerCase() === actionName.toLowerCase()
-    ).length !== 1
-  )
+  if (!matrixActionIsResolved(policy, actionName))
     throw new Error('Unknown or ambiguous Action Definition; read-only.');
   if (
     !matrixScopes(baseline).scopes.some(
