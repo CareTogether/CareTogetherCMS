@@ -61,7 +61,23 @@ test.describe('organization category persistence @pr', () => {
     });
     await expect(row.locator('.MuiChip-label')).toHaveText([categoryName]);
 
+    await expect
+      .poll(() =>
+        page.evaluate(
+          (expectedSearchText) =>
+            Object.entries(localStorage).some(
+              ([key, value]) =>
+                key.includes(':organizations:') &&
+                value.includes(expectedSearchText)
+            ),
+          // Quick filter values are stored word by word.
+          suffix
+        )
+      )
+      .toBe(true);
     await page.reload();
+    // The saved quick filter is restored and stays visible after the reload.
+    await expect(search).toHaveValue(organizationName);
     await expect(row.locator('.MuiChip-label')).toHaveText([categoryName]);
     await row
       .getByRole('gridcell', { name: organizationName, exact: true })
@@ -71,5 +87,12 @@ test.describe('organization category persistence @pr', () => {
     await expect(
       page.getByRole('checkbox', { name: categoryName, exact: true })
     ).toBeChecked();
+
+    await page.goto(organizationsRoute);
+    await row
+      .getByRole('gridcell', { name: organizationName, exact: true })
+      .focus();
+    await page.keyboard.press('Enter');
+    await expect(page).toHaveURL(organizationUrl);
   });
 });

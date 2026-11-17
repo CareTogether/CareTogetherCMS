@@ -1,53 +1,127 @@
-import { expect, test } from '@playwright/test';
-import { build } from 'rolldown';
-import { ignoreModuleLevelDirectives } from './support/harnessBuild';
-import { fileURLToPath } from 'node:url';
-import type {} from './policy-superseded-date-harness';
+import type { Page } from '@playwright/test';
+import { expect, test } from './support/fixtures';
+import { SELF_SERVICE_POLICY_FEATURE_FLAG } from '../src/featureFlags';
+import {
+  type PolicyJson,
+  locationSettingsPath,
+  stubLocationPolicy,
+  stubPolicyValidation,
+} from './support/policyApi';
 
-test.use({ storageState: { cookies: [], origins: [] } });
-let bundle: string;
-test.beforeAll(async () => {
-  const result = await build({
-    input: fileURLToPath(
-      new URL('./policy-superseded-date-harness.tsx', import.meta.url)
-    ),
-    platform: 'browser',
-    tsconfig: false,
-    onLog: ignoreModuleLevelDirectives,
-    write: false,
-    transform: {
-      jsx: { runtime: 'automatic' },
-      define: { 'process.env.NODE_ENV': JSON.stringify('production') },
-    },
-    output: { format: 'iife', name: 'PolicyDateHarness' },
-  });
-  const chunk = result.output.find((item) => item.type === 'chunk');
-  if (!chunk || chunk.type !== 'chunk')
-    throw new Error('Missing policy bundle');
-  bundle = chunk.code;
-});
-test.beforeEach(async ({ page }) => {
-  await page.route('**/policy-date-harness*', (route) =>
-    route.fulfill({
-      contentType: 'text/html',
-      body: '<html><body><div id="root"></div></body></html>',
-    })
-  );
-});
+type PolicyKind = 'arrangement' | 'individual' | 'family' | 'organization';
+
+const name = 'Playwright Superseded';
+const historicalSupersededAtUtc = '2026-01-02T23:45:00Z';
+
+function roleVersions(supersededAtUtc: string) {
+  return [{ version: 'v1', supersededAtUtc, requirements: [] }];
+}
+
+// Adds one historical policy of the given kind to the location's real policy.
+function withHistoricalPolicy(kind: PolicyKind) {
+  return (policy: PolicyJson): PolicyJson => {
+    if (kind === 'arrangement') {
+      const [template] = policy.referralPolicy.arrangementPolicies;
+      policy.referralPolicy.arrangementPolicies = [
+        {
+          ...template,
+          arrangementType: name,
+          supersededAtUtc: historicalSupersededAtUtc,
+        },
+      ];
+    }
+    if (kind === 'individual')
+      policy.volunteerPolicy.volunteerRoles[name] = {
+        volunteerRoleType: name,
+        policyVersions: roleVersions(historicalSupersededAtUtc),
+      };
+    if (kind === 'family')
+      policy.volunteerPolicy.volunteerFamilyRoles[name] = {
+        volunteerFamilyRoleType: name,
+        policyVersions: roleVersions(historicalSupersededAtUtc),
+      };
+    if (kind === 'organization')
+      policy.organizationApprovalPolicy.organizationRoles[name] = {
+        organizationRoleType: name,
+        policyVersions: roleVersions(historicalSupersededAtUtc),
+      };
+    return policy;
+  };
+}
+
+function storedSupersededAtUtc(kind: PolicyKind, policy: PolicyJson) {
+  const version =
+    kind === 'arrangement'
+      ? policy.referralPolicy.arrangementPolicies.find(
+          (arrangement: PolicyJson) => arrangement.arrangementType === name
+        )
+      : kind === 'individual'
+        ? policy.volunteerPolicy.volunteerRoles[name].policyVersions[0]
+        : kind === 'family'
+          ? policy.volunteerPolicy.volunteerFamilyRoles[name].policyVersions[0]
+          : policy.organizationApprovalPolicy.organizationRoles[name]
+              .policyVersions[0];
+  return version.supersededAtUtc ?? null;
+}
+
+const tabs: Record<PolicyKind, string> = {
+  arrangement: 'casePolicy',
+  individual: 'volunteerPolicy',
+  family: 'volunteerPolicy',
+  organization: 'organizationPolicy',
+};
+
+// The policy list entry, which also shows whether the policy is superseded.
+function policyListEntry(page: Page, kind: PolicyKind) {
+  return kind === 'arrangement'
+    ? page.locator('.MuiAccordionSummary-root').filter({ hasText: name })
+    : page
+        .getByRole('row')
+        .filter({ has: page.getByRole('cell', { name, exact: true }) });
+}
+
+// Loads the page and shows the test policy in its list.
+async function openPolicyList(page: Page, kind: PolicyKind) {
+  await page.goto(locationSettingsPath(undefined, tabs[kind]));
+  if (kind === 'arrangement')
+    await page.getByRole('button', { name: 'Arrangements' }).click();
+  if (kind === 'family')
+    await page.getByRole('button', { name: 'Volunteer Family Roles' }).click();
+  return policyListEntry(page, kind);
+}
+
+async function openPolicyPanel(page: Page, kind: PolicyKind) {
+  const entry = policyListEntry(page, kind);
+  if (kind === 'arrangement')
+    await entry.getByRole('button', { name: 'Edit', exact: true }).click();
+  else await entry.getByRole('cell', { name, exact: true }).click();
+}
 
 for (const [kind, timezoneId] of [
   ['arrangement', 'America/Sao_Paulo'],
   ['individual', 'America/New_York'],
   ['family', 'Asia/Tokyo'],
   ['organization', 'UTC'],
-]) {
+] as const) {
   test.describe(`${kind} in ${timezoneId} @pr`, () => {
-    test.use({ timezoneId });
+    test.use({
+      timezoneId,
+      featureFlags: { [SELF_SERVICE_POLICY_FEATURE_FLAG]: true },
+    });
+
     test('MUI calendar selection, UTC save/reload, invalid input and clearing', async ({
       page,
     }) => {
-      await page.goto(`/policy-date-harness?kind=${kind}&historical`);
-      await page.addScriptTag({ content: bundle });
+      const policy = await stubLocationPolicy(page, {
+        policy: withHistoricalPolicy(kind),
+      });
+      await stubPolicyValidation(page, () => ({ errors: [], warnings: [] }));
+
+      const entry = await openPolicyList(page, kind);
+      await expect(entry).toContainText(
+        kind === 'arrangement' ? 'Superseded' : '01/02/26'
+      );
+      await openPolicyPanel(page, kind);
       const picker = page.getByRole('group', {
         name: 'Superseded Date',
         exact: true,
@@ -64,23 +138,22 @@ for (const [kind, timezoneId] of [
       const save = page.getByRole('button', { name: 'Save', exact: true });
       await expect(month).toHaveText('01');
       await expect(day).toHaveText('02');
-      await expect(page.getByLabel('Superseded display')).toHaveText(
-        '01/02/26'
-      );
+
       await month.fill('10');
       await day.fill('15');
       await year.fill('2026');
       await page.getByRole('button', { name: /choose date/i }).click();
       await page.getByRole('gridcell', { name: '16', exact: true }).click();
       await save.click();
-      expect(
-        await page.evaluate(
-          () =>
-            JSON.parse(localStorage.getItem('saved-policy')!).supersededAtUtc
-        )
-      ).toBe('2026-10-16T00:00:00.000Z');
-      await page.reload();
-      await page.addScriptTag({ content: bundle });
+      await expect(picker).toHaveCount(0);
+      expect(policy.puts()).toBe(1);
+      expect(storedSupersededAtUtc(kind, policy.stored()!)).toBe(
+        '2026-10-16T00:00:00.000Z'
+      );
+
+      // Reloads the page, so the picker shows the saved value as read back.
+      await openPolicyList(page, kind);
+      await openPolicyPanel(page, kind);
       await expect(month).toHaveText('10');
       await expect(day).toHaveText('16');
       await expect(year).toHaveText('2026');
@@ -95,14 +168,9 @@ for (const [kind, timezoneId] of [
       await expect(save).toBeEnabled();
       await save.click();
       await expect(picker).toHaveCount(0);
-      await expect(page.getByLabel('Superseded display')).toHaveText('Current');
-      expect(
-        await page.evaluate(
-          () =>
-            JSON.parse(localStorage.getItem('saved-policy')!).supersededAtUtc ??
-            null
-        )
-      ).toBeNull();
+      expect(policy.puts()).toBe(2);
+      expect(storedSupersededAtUtc(kind, policy.stored()!)).toBeNull();
+      await expect(entry).toContainText('Current');
     });
   });
 }
