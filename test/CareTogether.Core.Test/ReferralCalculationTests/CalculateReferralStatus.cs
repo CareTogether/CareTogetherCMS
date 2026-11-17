@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Linq;
 using CareTogether.Engines;
 using CareTogether.Resources;
 using CareTogether.Resources.Directory;
@@ -388,6 +389,146 @@ namespace CareTogether.Core.Test.V1CaseCalculationTests
                     null
                 )
             );
+        }
+
+        private static EffectiveLocationPolicy HostingOnlyLocationPolicy() =>
+            new(
+                ImmutableDictionary<string, ActionRequirement>.Empty,
+                ImmutableList<CustomField>.Empty,
+                new V1CasePolicy(
+                    RequiredIntakeActionNames: [],
+                    CustomFields: ImmutableList<CustomField>.Empty,
+                    ArrangementPolicies:
+                    [
+                        new ArrangementPolicy(
+                            ArrangementType: "Hosting",
+                            ChildInvolvement: ChildInvolvement.ChildHousing,
+                            ArrangementFunctions: [],
+                            RequiredSetupActionNames: ["Hosting Setup"],
+                            RequiredMonitoringActions: [],
+                            RequiredCloseoutActionNames: []
+                        ),
+                    ],
+                    FunctionPolicies: []
+                ),
+                new VolunteerPolicy(
+                    ImmutableDictionary<string, VolunteerRolePolicy>.Empty,
+                    ImmutableDictionary<string, VolunteerFamilyRolePolicy>.Empty
+                )
+            );
+
+        private static CareTogether.Engines.PolicyEvaluation.V1CaseEntry CaseWithArrangement(
+            Guid arrangementId,
+            string arrangementType,
+            string? arrangementPolicyVersion = null,
+            DateOnly? startedAt = null
+        ) =>
+            new(
+                CompletedRequirements: [],
+                ExemptedRequirements: [],
+                CompletedCustomFields: ImmutableDictionary<string, CompletedCustomFieldInfo>.Empty,
+                Arrangements: ImmutableDictionary<
+                    Guid,
+                    CareTogether.Engines.PolicyEvaluation.ArrangementEntry
+                >.Empty.Add(
+                    arrangementId,
+                    new CareTogether.Engines.PolicyEvaluation.ArrangementEntry(
+                        ArrangementType: arrangementType,
+                        StartedAt: startedAt,
+                        EndedAt: null,
+                        CancelledAt: null,
+                        PartneringFamilyPersonId: Guid.NewGuid(),
+                        CompletedRequirements: [],
+                        ExemptedRequirements: [],
+                        IndividualVolunteerAssignments: [],
+                        FamilyVolunteerAssignments: [],
+                        ChildLocationHistory: [],
+                        ArrangementPolicyVersion: arrangementPolicyVersion
+                    )
+                )
+            );
+
+        [TestMethod]
+        public void ArrangementWithTypeMissingFromPolicyIsEvaluatedWithoutRequirements()
+        {
+            var locationPolicy = HostingOnlyLocationPolicy();
+            var arrangementId = Guid.NewGuid();
+            var mismatches = new List<string>();
+
+            var result = CareTogether.Engines.PolicyEvaluation.V1CaseCalculations.CalculateV1CaseStatus(
+                locationPolicy,
+                locationPolicy.ReferralPolicy,
+                CaseWithArrangement(
+                    arrangementId,
+                    "Recurring Hosting",
+                    startedAt: new DateOnly(2023, 12, 1)
+                ),
+                today: new DateOnly(2024, 1, 1),
+                reportPolicyMismatch: mismatches.Add
+            );
+
+            var status = result.IndividualArrangements[arrangementId];
+            Assert.AreEqual(
+                CareTogether.Engines.PolicyEvaluation.ArrangementPhase.Started,
+                status.Phase
+            );
+            Assert.IsEmpty(status.MissingRequirements);
+            Assert.IsEmpty(status.MissingOptionalRequirements);
+            Assert.HasCount(1, mismatches);
+            StringAssert.Contains(mismatches[0], "Recurring Hosting");
+        }
+
+        [TestMethod]
+        public void ArrangementWithTypeMissingFromPolicyDoesNotAffectOtherArrangements()
+        {
+            var locationPolicy = HostingOnlyLocationPolicy();
+            var orphanedId = Guid.NewGuid();
+            var hostingId = Guid.NewGuid();
+            var v1Case = CaseWithArrangement(orphanedId, "Recurring Hosting");
+            v1Case = v1Case with
+            {
+                Arrangements = v1Case.Arrangements.Add(
+                    hostingId,
+                    CaseWithArrangement(hostingId, "Hosting").Arrangements[hostingId]
+                ),
+            };
+
+            var result = CareTogether.Engines.PolicyEvaluation.V1CaseCalculations.CalculateV1CaseStatus(
+                locationPolicy,
+                locationPolicy.ReferralPolicy,
+                v1Case,
+                today: new DateOnly(2024, 1, 1)
+            );
+
+            Assert.HasCount(2, result.IndividualArrangements);
+            Assert.IsEmpty(result.IndividualArrangements[orphanedId].MissingRequirements);
+            Assert.AreEqual(
+                "Hosting Setup",
+                result.IndividualArrangements[hostingId].MissingRequirements.Single().Action.ActionName
+            );
+        }
+
+        [TestMethod]
+        public void ArrangementWithMissingPolicyVersionUsesCurrentPolicy()
+        {
+            var locationPolicy = HostingOnlyLocationPolicy();
+            var arrangementId = Guid.NewGuid();
+            var mismatches = new List<string>();
+
+            var result = CareTogether.Engines.PolicyEvaluation.V1CaseCalculations.CalculateV1CaseStatus(
+                locationPolicy,
+                locationPolicy.ReferralPolicy,
+                CaseWithArrangement(arrangementId, "Hosting", arrangementPolicyVersion: "v9"),
+                today: new DateOnly(2024, 1, 1),
+                reportPolicyMismatch: mismatches.Add
+            );
+
+            Assert.AreEqual(
+                "Hosting Setup",
+                result.IndividualArrangements[arrangementId].MissingRequirements.Single().Action.ActionName
+            );
+            Assert.HasCount(1, mismatches);
+            StringAssert.Contains(mismatches[0], "v9");
         }
 
         [TestMethod]

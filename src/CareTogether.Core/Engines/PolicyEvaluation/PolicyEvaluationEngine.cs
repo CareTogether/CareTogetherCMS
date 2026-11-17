@@ -11,12 +11,20 @@ using CareTogether.Resources.Policies;
 using CareTogether.Resources.V1Cases;
 using CareTogether.Resources.V1Referrals;
 using CareTogether.Utilities.Dates;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 
 namespace CareTogether.Engines.PolicyEvaluation
 {
     public sealed class PolicyEvaluationEngine : IPolicyEvaluationEngine
     {
         private readonly IPoliciesResource policiesResource;
+
+        /// <summary>
+        /// Set once the host's logging is available (the engine is created before the
+        /// service provider is built).
+        /// </summary>
+        public ILogger Logger { get; set; } = NullLogger.Instance;
 
         public PolicyEvaluationEngine(IPoliciesResource policiesResource)
         {
@@ -467,7 +475,15 @@ namespace CareTogether.Engines.PolicyEvaluation
                 policy,
                 policy.ReferralPolicy,
                 v1CaseEntryForCalculation,
-                Dates.ToDateOnlyInLocationTimeZone(DateTime.UtcNow, locationTimeZone)
+                Dates.ToDateOnlyInLocationTimeZone(DateTime.UtcNow, locationTimeZone),
+                reportPolicyMismatch: message =>
+                    Logger.LogWarning(
+                        "Policy mismatch in organization {OrganizationId}, location {LocationId}, case {CaseId}: {Message}",
+                        organizationId,
+                        locationId,
+                        v1CaseEntry.Id,
+                        message
+                    )
             );
 
             return v1CaseStatus;
