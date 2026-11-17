@@ -23,10 +23,7 @@ import {
 } from '../GeneratedClient';
 import { ApprovalLedgerSection } from '../Approvals/ApprovalLedgerSection';
 import type { ApprovalLedgerRow } from '../Approvals/approvalLedgerViewModel';
-import {
-  approvalLedgerStatusColor,
-  approvalLedgerStatusLabels,
-} from '../Approvals/approvalLedgerDataGridViewModel';
+import { ApprovalLedgerStatusChip } from '../Approvals/ApprovalLedgerStatusChip';
 import { v2Typography } from '../Families/v2Typography';
 import { useBackdrop } from '../Hooks/useBackdrop';
 import { useOrganizationApprovalsModel } from '../Model/OrganizationApprovalsModel';
@@ -275,12 +272,7 @@ function OrganizationRoleDetailsDrawer({
                     >
                       {requirement.requirementName}
                     </Typography>
-                    <Chip
-                      className="ph-unmask"
-                      color={approvalLedgerStatusColor(requirement.status)}
-                      label={approvalLedgerStatusLabels[requirement.status]}
-                      size="small"
-                    />
+                    <ApprovalLedgerStatusChip row={requirement} />
                   </Box>
                 ))
               )}

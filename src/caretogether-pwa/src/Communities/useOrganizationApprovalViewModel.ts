@@ -15,6 +15,7 @@ import {
   normalizeApprovalStrings,
   sortApprovalLedgerRows,
 } from '../Approvals/approvalLedgerViewModel';
+import { approvalAttentionCounts as countApprovalAttention } from '../Approvals/approvalLedgerStatusPresentation';
 import { isRoleApprovalStatusVisibleInSummary } from '../Volunteers/roleApprovalStatusPresentation';
 
 export type OrganizationRoleSummaryCard = {
@@ -384,19 +385,7 @@ export function useOrganizationApprovalViewModel(
     [communityInfo]
   );
   const approvalAttentionCounts = useMemo(
-    () =>
-      approvalLedgerRows.reduce(
-        (counts, row) => {
-          if (row.status === 'missing') {
-            return { ...counts, missing: counts.missing + 1 };
-          }
-          if (row.status === 'expired') {
-            return { ...counts, expired: counts.expired + 1 };
-          }
-          return counts;
-        },
-        { missing: 0, expired: 0 }
-      ),
+    () => countApprovalAttention(approvalLedgerRows),
     [approvalLedgerRows]
   );
 

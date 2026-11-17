@@ -86,9 +86,9 @@ export function CompletedRequirementRow({
                   {requirement.expiresAtUtc > new Date() ? (
                     `⏰ Expires ${formatUtcDateOnly(requirement.expiresAtUtc)}`
                   ) : (
-                    <span style={{ fontWeight: 'bold' }}>
-                      ⚠ Expired {formatUtcDateOnly(requirement.expiresAtUtc)}
-                    </span>
+                    <strong>
+                      Expired {formatUtcDateOnly(requirement.expiresAtUtc)}
+                    </strong>
                   )}
                 </span>
               </>
