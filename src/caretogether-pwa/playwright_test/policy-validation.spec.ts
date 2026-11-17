@@ -2674,6 +2674,444 @@ test.describe('location-wide arrangement phases', () => {
   });
 });
 
+test.describe('matrix pinned Add Action row', () => {
+  for (const width of [320, 390, 768, 1440]) {
+    test(`one bottom-left Add Action control opens a right drawer with keyboard focus at ${width}px`, async ({
+      page,
+    }) => {
+      await page.setViewportSize({ width, height: 900 });
+      const requests = await backend(page, false, false, caseMatrixPolicy());
+      await mount(page, 'casePolicy', undefined, true);
+      const grid = page.getByRole('grid', {
+        name: 'Case Policies requirements matrix',
+        exact: true,
+      });
+      const add = grid.getByRole('button', { name: 'Add Action', exact: true });
+      await expect(
+        page.getByRole('button', { name: 'Add Action', exact: true })
+      ).toHaveCount(1);
+      const cell = grid.getByRole('gridcell').filter({
+        has: page.getByRole('button', { name: 'Add Action', exact: true }),
+      });
+      const row = grid.getByRole('row').filter({
+        has: page.getByRole('button', { name: 'Add Action', exact: true }),
+      });
+      await expect(cell).toHaveAttribute('data-field', 'actionName');
+      await expect(cell).toHaveAttribute('aria-colindex', '1');
+      await expect(
+        grid.getByRole('columnheader', { name: 'Add Action', exact: true })
+      ).toHaveCount(0);
+      expect(
+        await row.evaluate(
+          (element) => !!element.closest('.MuiDataGrid-pinnedRows--bottom')
+        )
+      ).toBe(true);
+      await expect(grid.locator('[data-id]').last()).toHaveAttribute(
+        'data-id',
+        (await row.getAttribute('data-id'))!
+      );
+      for (const requirement of await row
+        .locator('[role="gridcell"]:not([data-field="actionName"])')
+        .all())
+        await expect(requirement).toBeEmpty();
+      await expect(add.getByTestId('AddIcon')).toHaveCount(1);
+      await add.focus();
+      const bounds = (await add.boundingBox())!;
+      const gridBounds = (await grid.boundingBox())!;
+      const rowBounds = (await row.boundingBox())!;
+      expect(bounds.x).toBeGreaterThanOrEqual(0);
+      expect(bounds.x + bounds.width).toBeLessThanOrEqual(width);
+      expect(rowBounds.width).toBeGreaterThanOrEqual(gridBounds.width - 18);
+      expect(bounds.x).toBeLessThan(gridBounds.x + gridBounds.width / 2);
+      expect(bounds.x - gridBounds.x).toBeLessThanOrEqual(26);
+      expect(rowBounds.y).toBeGreaterThan(gridBounds.y + gridBounds.height / 2);
+      await add.press('Enter');
+      let dialog = page.getByRole('dialog', {
+        name: 'Add Action',
+        exact: true,
+      });
+      await expect(dialog).toBeVisible();
+      await expect(dialog).toHaveClass(/MuiDrawer-paper/);
+      await expect(page.locator('.MuiDialog-root')).toHaveCount(0);
+      await expect(
+        page.locator('.MuiDrawer-root.MuiDrawer-anchorRight')
+      ).toHaveCount(1);
+      await expect(
+        dialog.getByRole('heading', { name: 'Add Action', exact: true })
+      ).toBeVisible();
+      await expect(
+        dialog.getByRole('combobox', {
+          name: 'Existing Action Definition',
+          exact: true,
+        })
+      ).toBeFocused();
+      await expect
+        .poll(async () => {
+          const box = (await dialog.boundingBox())!;
+          return Math.round(box.x + box.width);
+        })
+        .toBe(width);
+      const drawerBounds = (await dialog.boundingBox())!;
+      expect(drawerBounds.width).toBe(Math.min(width, 600));
+      expect(drawerBounds.y).toBe(0);
+      expect(drawerBounds.height).toBe(900);
+      expect(
+        await dialog.evaluate(
+          (element) => element.scrollWidth <= element.clientWidth
+        )
+      ).toBe(true);
+      await expect(dialog.getByRole('radio')).toHaveCount(3);
+      await expect(
+        dialog.getByRole('switch', {
+          name: 'Requirement 1 Required',
+          exact: true,
+        })
+      ).toBeChecked();
+      await dialog.getByRole('button', { name: 'Cancel', exact: true }).click();
+      await expect(add).toBeFocused();
+      await add.press('Space');
+      dialog = page.getByRole('dialog', { name: 'Add Action', exact: true });
+      await expect(dialog).toBeVisible();
+      await dialog.press('Escape');
+      await expect(dialog).toBeHidden();
+      await expect(add).toBeFocused();
+      await add.click();
+      dialog = page.getByRole('dialog', { name: 'Add Action', exact: true });
+      await dialog
+        .getByRole('button', { name: 'Close Add Action', exact: true })
+        .click();
+      await expect(dialog).toBeHidden();
+      await expect(add).toBeFocused();
+      await add.press('ArrowUp');
+      const lastAction = grid
+        .locator(
+          '.MuiDataGrid-virtualScrollerRenderZone [data-field="actionName"]'
+        )
+        .last();
+      await expect(lastAction).toBeFocused();
+      await lastAction.press('ArrowDown');
+      await expect(add).toBeFocused();
+      await add.hover();
+      await page.mouse.wheel(2000, 0);
+      await expect
+        .poll(() =>
+          grid
+            .locator('.MuiDataGrid-virtualScroller')
+            .evaluate((element) => element.scrollLeft)
+        )
+        .toBeGreaterThan(0);
+      await expect(add).toBeVisible();
+      const scrolled = (await add.boundingBox())!;
+      expect(scrolled.x).toBeCloseTo(bounds.x, 0);
+      await expect(
+        page.getByRole('button', { name: 'Add Action', exact: true })
+      ).toHaveCount(1);
+      await expect(page.locator('.MuiDataGrid-rowCount')).toBeVisible();
+      await expect(
+        page.getByRole('button', { name: 'Undo', exact: true })
+      ).toBeDisabled();
+      await expect(
+        page.getByRole('button', { name: 'Save changes', exact: true })
+      ).toBeDisabled();
+      expect(requests.puts()).toBe(0);
+    });
+  }
+
+  test('Add Action drawer guards dismissal and keeps long schedule controls and footer actions usable', async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 390, height: 640 });
+    const initial = caseMatrixPolicy();
+    initial.actionDefinitions['Drawer action'] = {
+      documentLink: 0,
+      noteEntry: 0,
+    };
+    const requests = await backend(page, false, false, initial);
+    await mount(page, 'casePolicy', undefined, true);
+    const add = page.getByRole('button', { name: 'Add Action', exact: true });
+    await add.click();
+    const drawer = page.getByRole('dialog', {
+      name: 'Add Action',
+      exact: true,
+    });
+    const action = drawer.getByRole('combobox', {
+      name: 'Existing Action Definition',
+      exact: true,
+    });
+    await action.fill('Drawer action');
+    await page
+      .getByRole('option', { name: 'Drawer action', exact: true })
+      .click();
+    await drawer
+      .getByRole('combobox', { name: 'Target scope', exact: true })
+      .click();
+    await page
+      .getByRole('option', { name: 'Hosting / Base', exact: true })
+      .click();
+    await drawer
+      .getByRole('radio', { name: 'Monitoring', exact: true })
+      .check();
+    const required = drawer.getByRole('switch', {
+      name: 'Requirement 1 Required',
+      exact: true,
+    });
+    await required.uncheck();
+    await drawer
+      .getByRole('combobox', { name: 'Schedule type', exact: true })
+      .click();
+    page.once('dialog', (dialog) => dialog.accept());
+    await page
+      .getByRole('option', { name: 'Arrangement-duration stages', exact: true })
+      .click();
+    for (let stage = 0; stage < 3; stage++)
+      await drawer
+        .getByRole('button', { name: 'Add stage', exact: true })
+        .click();
+    const interval = drawer.getByRole('spinbutton', {
+      name: 'Stage 4 interval (days)',
+      exact: true,
+    });
+    await interval.fill('0');
+    const apply = drawer.getByRole('button', {
+      name: 'Apply to draft',
+      exact: true,
+    });
+    await expect(apply).toBeDisabled();
+    await expect(drawer.getByRole('alert')).toContainText(
+      'Stage intervals must be positive whole days.'
+    );
+    await interval.fill('3');
+    await expect(apply).toBeEnabled();
+    const content = drawer.getByRole('region', {
+      name: 'Add Action configuration',
+      exact: true,
+    });
+    expect(
+      await content.evaluate(
+        (element) => element.scrollHeight > element.clientHeight
+      )
+    ).toBe(true);
+    expect(
+      await content.evaluate(
+        (element) => element.scrollWidth <= element.clientWidth
+      )
+    ).toBe(true);
+    await expect(apply).toBeInViewport();
+    await expect(
+      drawer.getByRole('button', { name: 'Cancel', exact: true })
+    ).toBeInViewport();
+    expect((await apply.boundingBox())!.y).toBeGreaterThan(560);
+    const close = drawer.getByRole('button', {
+      name: 'Close Add Action',
+      exact: true,
+    });
+    await close.click();
+    await policyDecision(page, false);
+    await expect(action).toHaveValue('Drawer action');
+    await expect(interval).toHaveValue('3');
+    await expect(required).not.toBeChecked();
+    await drawer.press('Escape');
+    await policyDecision(page, false);
+    await expect(interval).toHaveValue('3');
+    await page
+      .locator('.MuiDrawer-root .MuiBackdrop-root')
+      .dispatchEvent('click');
+    await policyDecision(page, false);
+    await expect(action).toHaveValue('Drawer action');
+    await expect(page.locator('.MuiDrawer-root:visible')).toHaveCount(1);
+    await drawer.getByRole('button', { name: 'Cancel', exact: true }).click();
+    await expect(drawer).toBeHidden();
+    await expect(add).toBeFocused();
+    await expect(
+      page.getByRole('button', { name: 'Undo', exact: true })
+    ).toBeDisabled();
+    await expect(
+      page.getByRole('button', { name: 'Save changes', exact: true })
+    ).toBeDisabled();
+    await add.click();
+    await expect(action).toHaveValue('');
+    await action.fill('Drawer action');
+    await page
+      .getByRole('option', { name: 'Drawer action', exact: true })
+      .click();
+    await close.click();
+    await policyDecision(page, true);
+    await expect(drawer).toBeHidden();
+    await expect(add).toBeFocused();
+    expect(requests.puts()).toBe(0);
+  });
+
+  test('sorting, zero-result search, column filtering and hidden arrangements cannot hide or reorder the control', async ({
+    page,
+  }) => {
+    const initial = policy();
+    initial.actionDefinitions = {
+      Alpha: { documentLink: 0, noteEntry: 0 },
+      Zulu: { documentLink: 0, noteEntry: 0 },
+    };
+    initial.referralPolicy.arrangementPolicies[0].requiredSetupActions = [
+      { actionName: 'Alpha', isRequired: true },
+    ];
+    initial.referralPolicy.arrangementPolicies[0].requiredCloseoutActions = [
+      { actionName: 'Zulu', isRequired: false },
+    ];
+    const requests = await backend(page, false, false, initial);
+    await mount(page, 'casePolicy', undefined, true);
+    const grid = page.getByRole('grid');
+    const add = grid.getByRole('button', { name: 'Add Action', exact: true });
+    const row = grid.getByRole('row').filter({
+      has: page.getByRole('button', { name: 'Add Action', exact: true }),
+    });
+    const id = (await row.getAttribute('data-id'))!;
+    await expect(page.locator('.MuiDataGrid-rowCount')).toContainText('2');
+    const header = grid.locator(
+      '[role="columnheader"][data-field="actionName"]'
+    );
+    await header.click();
+    await expect(header).toHaveAttribute('aria-sort', 'ascending');
+    await header.click();
+    await expect(header).toHaveAttribute('aria-sort', 'descending');
+    await expect(grid.locator('[data-id]').last()).toHaveAttribute(
+      'data-id',
+      id
+    );
+    await page.getByRole('button', { name: 'Search', exact: true }).click();
+    await page.getByRole('searchbox').fill('No matching action');
+    await expect(
+      grid.locator('[data-id="Alpha"], [data-id="Zulu"]')
+    ).toHaveCount(0);
+    await expect(add).toBeEnabled();
+    await add.click();
+    const dialog = page.getByRole('dialog', {
+      name: 'Add Action',
+      exact: true,
+    });
+    await expect(dialog).toBeVisible();
+    await dialog.getByRole('button', { name: 'Cancel', exact: true }).click();
+    await expect(page.getByRole('searchbox')).toHaveValue('No matching action');
+    await page.getByRole('searchbox').fill('');
+    await header.hover();
+    await header
+      .getByRole('button', { name: 'Actions column menu', exact: true })
+      .click();
+    await page.getByRole('menuitem', { name: 'Filter', exact: true }).click();
+    const value = page.getByRole('textbox', { name: 'Value', exact: true });
+    await value.fill('No column match');
+    await expect(
+      grid.locator('[data-id="Alpha"], [data-id="Zulu"]')
+    ).toHaveCount(0);
+    await value.press('Escape');
+    await expect(add).toBeEnabled();
+    const panel = await openArrangementVisibility(page);
+    await panel
+      .getByRole('checkbox', { name: 'Hosting', exact: true })
+      .uncheck();
+    await panel.getByRole('checkbox').press('Escape');
+    await expect(grid.getByRole('columnheader')).toHaveCount(1);
+    await expect(add).toBeEnabled();
+    await expect(grid.locator('[data-id]').last()).toHaveAttribute(
+      'data-id',
+      id
+    );
+    expect(requests.puts()).toBe(0);
+  });
+
+  test('colliding action names stay real actions while the UI row stays out of counts, history, payloads and exports', async ({
+    page,
+  }) => {
+    const name = '__case_policy_add_action__';
+    const initial = policy();
+    initial.actionDefinitions = {
+      [name]: { documentLink: 0, noteEntry: 0 },
+      Unused: { documentLink: 0, noteEntry: 0 },
+    };
+    initial.referralPolicy.arrangementPolicies[0].requiredSetupActions = [
+      { actionName: name, isRequired: true },
+    ];
+    const requests = await backend(page, false, false, initial);
+    let saved: EffectiveLocationPolicy | undefined;
+    page.on('request', (request) => {
+      if (request.method() === 'PUT') saved = request.postDataJSON();
+    });
+    await mount(page, 'casePolicy', undefined, true);
+    const grid = page.getByRole('grid');
+    const add = grid.getByRole('button', { name: 'Add Action', exact: true });
+    const row = grid.getByRole('row').filter({
+      has: page.getByRole('button', { name: 'Add Action', exact: true }),
+    });
+    const id = (await row.getAttribute('data-id'))!;
+    expect(id).not.toBe(name);
+    await expect(
+      grid.locator('[data-id="' + name + '"] [data-field="actionName"]')
+    ).toHaveText(name);
+    await expect(page.locator('.MuiDataGrid-rowCount')).toContainText('1');
+    await add.click();
+    const dialog = page.getByRole('dialog', {
+      name: 'Add Action',
+      exact: true,
+    });
+    await dialog
+      .getByRole('combobox', {
+        name: 'Existing Action Definition',
+        exact: true,
+      })
+      .click();
+    await expect(
+      page.getByRole('option', { name: id, exact: true })
+    ).toHaveCount(0);
+    await page.getByRole('option', { name: 'Unused', exact: true }).click();
+    await dialog
+      .getByRole('combobox', { name: 'Target scope', exact: true })
+      .click();
+    await page
+      .getByRole('option', { name: 'Hosting / Base', exact: true })
+      .click();
+    await dialog.getByRole('radio', { name: 'Closeout', exact: true }).check();
+    await dialog
+      .getByRole('switch', { name: 'Requirement 1 Required', exact: true })
+      .uncheck();
+    await dialog
+      .getByRole('button', { name: 'Apply to draft', exact: true })
+      .click();
+    await expect(row).toHaveAttribute('data-id', id);
+    await expect(
+      page.getByRole('status', { name: 'Policy draft status' })
+    ).toContainText('1 unsaved change');
+    await page.getByRole('button', { name: 'Undo', exact: true }).click();
+    await expect(grid.locator('[data-id="Unused"]')).toHaveCount(0);
+    await expect(row).toHaveAttribute('data-id', id);
+    await page.getByRole('button', { name: 'Redo', exact: true }).click();
+    await expect(grid.locator('[data-id="Unused"]')).toBeVisible();
+    await page
+      .getByRole('button', { name: 'Save changes', exact: true })
+      .click();
+    await expect.poll(requests.puts).toBe(1);
+    expect(saved!.actionDefinitions).toEqual(initial.actionDefinitions);
+    expect(JSON.stringify(saved)).not.toContain(id);
+    expect(
+      saved!.referralPolicy.arrangementPolicies[0].requiredSetupActions
+    ).toEqual(
+      initial.referralPolicy.arrangementPolicies[0].requiredSetupActions
+    );
+    expect(
+      saved!.referralPolicy.arrangementPolicies[0].requiredCloseoutActions
+    ).toEqual([{ actionName: 'Unused', isRequired: false }]);
+    await page.getByRole('button', { name: 'Export', exact: true }).click();
+    const download = page.waitForEvent('download');
+    await page
+      .getByRole('menuitem', { name: 'Download as CSV', exact: true })
+      .click();
+    const csv = readFileSync((await (await download).path())!, 'utf8');
+    expect(
+      csv
+        .trim()
+        .split(/\r?\n/)
+        .slice(-2)
+        .map((line) => line.split(',')[0])
+    ).toEqual([name, 'Unused']);
+  });
+});
+
 test.describe('Case Policies matrix', () => {
   test('variant cells show only Additional requirements while Base inheritance, editing and Save remain intact', async ({
     page,
@@ -3740,6 +4178,18 @@ test.describe('Case Policies matrix', () => {
       await expect(
         page.getByRole('button', { name: 'Manage columns', exact: true })
       ).toHaveCount(0);
+      await expect(
+        page
+          .getByRole('grid')
+          .getByRole('button', { name: 'Add Action', exact: true })
+      ).toBeDisabled();
+      await expect(
+        page
+          .getByRole('grid')
+          .getByRole('button', { name: 'Add Action', exact: true })
+      ).toHaveAccessibleDescription(
+        'Wait for the policy save to finish before adding an action.'
+      );
       await expect(matrixCell(page, 'Form')).toHaveClass(/policy-cell-unsaved/);
     } finally {
       release();

@@ -1,15 +1,15 @@
 import {
   Alert,
   Autocomplete,
+  Box,
   Button,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
+  Drawer,
+  IconButton,
   Stack,
   TextField,
   Typography,
 } from '@mui/material';
+import CloseIcon from '@mui/icons-material/Close';
 import { useRef, useState } from 'react';
 import type { EffectiveLocationPolicy } from '../../../../GeneratedClient';
 import { usePolicyTransitionGuard } from '../../../../Hooks/useUnsavedPolicyNavigation';
@@ -28,6 +28,7 @@ import {
 } from './casePolicyMatrix';
 
 export function MatrixAddActionDialog({
+  open,
   policy,
   baseline,
   visibleActions,
@@ -35,6 +36,7 @@ export function MatrixAddActionDialog({
   onFind,
   onApply,
 }: {
+  open: boolean;
   policy: EffectiveLocationPolicy;
   baseline: EffectiveLocationPolicy;
   visibleActions: string[];
@@ -109,15 +111,55 @@ export function MatrixAddActionDialog({
     }
   }
   return (
-    <Dialog
-      open
-      fullWidth
-      maxWidth="sm"
-      aria-labelledby="matrix-add-action-title"
+    <Drawer
+      anchor="right"
+      open={open}
       onClose={() => void close()}
+      slotProps={{
+        paper: {
+          role: 'dialog',
+          'aria-modal': true,
+          'aria-labelledby': 'matrix-add-action-title',
+          sx: {
+            width: { xs: '100vw', sm: 600 },
+            maxWidth: '100vw',
+            boxSizing: 'border-box',
+            display: 'flex',
+            flexDirection: 'column',
+            overflowX: 'hidden',
+          },
+        },
+      }}
     >
-      <DialogTitle id="matrix-add-action-title">Add Action</DialogTitle>
-      <DialogContent dividers>
+      <Stack
+        direction="row"
+        sx={{
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          gap: 1,
+          p: 2,
+          flexShrink: 0,
+          borderBottom: 1,
+          borderColor: 'divider',
+        }}
+      >
+        <Typography
+          id="matrix-add-action-title"
+          variant="h6"
+          component="h2"
+          className="ph-unmask"
+        >
+          Add Action
+        </Typography>
+        <IconButton aria-label="Close Add Action" onClick={() => void close()}>
+          <CloseIcon />
+        </IconButton>
+      </Stack>
+      <Box
+        component="section"
+        aria-label="Add Action configuration"
+        sx={{ flex: 1, minHeight: 0, overflowY: 'auto', p: 2 }}
+      >
         <Stack spacing={2}>
           {stale && (
             <Alert severity="warning">
@@ -230,8 +272,19 @@ export function MatrixAddActionDialog({
             <Alert severity="error">{invalid || error}</Alert>
           )}
         </Stack>
-      </DialogContent>
-      <DialogActions sx={{ flexWrap: 'wrap' }}>
+      </Box>
+      <Box
+        sx={{
+          display: 'flex',
+          justifyContent: 'flex-end',
+          flexWrap: 'wrap',
+          gap: 1,
+          p: 2,
+          flexShrink: 0,
+          borderTop: 1,
+          borderColor: 'divider',
+        }}
+      >
         <Button onClick={onClose}>Cancel</Button>
         {existing && (
           <Button
@@ -260,7 +313,7 @@ export function MatrixAddActionDialog({
         >
           Apply to draft
         </Button>
-      </DialogActions>
-    </Dialog>
+      </Box>
+    </Drawer>
   );
 }

@@ -10,12 +10,15 @@ import {
 } from '@mui/material';
 import {
   DataGridPremium,
+  gridFilteredSortedRowIdsSelector,
   useGridApiRef,
   type GridColDef,
   type GridRenderEditCellParams,
   type GridColumnGroupingModel,
+  type GridGetRowsToExportParams,
 } from '@mui/x-data-grid-premium';
-import { useEffect, useMemo, useState } from 'react';
+import AddIcon from '@mui/icons-material/Add';
+import { useEffect, useId, useMemo, useRef, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import {
   EffectiveLocationPolicy,
@@ -31,6 +34,7 @@ import { discardPolicyGridCellEdits } from './policyGridDraft';
 import {
   arrangementUsedActions,
   matrixActionIsResolved,
+  matrixActions,
   matrixActionPhase,
   type MatrixScope,
   matrixOwner,
@@ -46,6 +50,7 @@ import {
 import { CasePolicyMatrixCellEditor } from './CasePolicyMatrixCellEditor';
 import { MatrixAddActionDialog } from './MatrixAddActionDialog';
 import { MatrixColumnsManagement } from './MatrixColumnsManagement';
+import { matrixAddActionRowId } from './matrixAddActionRow';
 import {
   arrangementColumns,
   arrangementVisibilityModel,
@@ -66,10 +71,17 @@ type MatrixCell = {
 };
 type MatrixRow = {
   id: string;
+  addAction?: true;
   actionName: string;
   unresolved: boolean;
   cells: Record<string, MatrixCell>;
 };
+
+function matrixExportRows({ apiRef }: GridGetRowsToExportParams) {
+  const rows = gridFilteredSortedRowIdsSelector(apiRef);
+  const selected = apiRef.current.getSelectedRows();
+  return selected.size ? rows.filter((id) => selected.has(id)) : rows;
+}
 
 function MatrixCellContents({
   cell,
@@ -263,8 +275,12 @@ export function CasePoliciesMatrix({
   const draft = usePolicyGridDraft(policy, onPolicyChange, '', true);
   const [cellEditing, setEditing] = useState(false);
   const [adding, setAdding] = useState(false);
+  const addActionButton = useRef<HTMLButtonElement>(null);
+  const restoreAddActionFocus = useRef(false);
+  const revealActionFrame = useRef<number | undefined>(undefined);
   const [finding, setFinding] = useState<string>();
   const editing = cellEditing || adding;
+  const addActionHelpId = useId();
   useEffect(() => {
     onEditingStateChange?.({
       dirty: draft.dirty,
@@ -279,6 +295,13 @@ export function CasePoliciesMatrix({
     [draft.value]
   );
   const { pathname } = useLocation();
+  useEffect(
+    () => () => {
+      if (revealActionFrame.current !== undefined)
+        cancelAnimationFrame(revealActionFrame.current);
+    },
+    [pathname]
+  );
   const groups = useMemo(() => arrangementColumns(scopes), [scopes]);
   const [visibility, setVisibility] = useState<{
     scope: string;
@@ -380,6 +403,39 @@ export function CasePoliciesMatrix({
       ),
     }));
   }, [draft.base, draft.value, policy, scopes]);
+  const addActionId = matrixAddActionRowId([
+    ...matrixActions(draft.value),
+    ...matrixActions(policy),
+    ...rows.map((row) => row.id),
+  ]);
+  const pinnedRows = useMemo(
+    () => ({
+      bottom: [
+        {
+          id: addActionId,
+          addAction: true as const,
+          actionName: '',
+          unresolved: false,
+          cells: {},
+        } satisfies MatrixRow,
+      ],
+    }),
+    [addActionId]
+  );
+  useEffect(() => {
+    if (adding || !restoreAddActionFocus.current) return;
+    restoreAddActionFocus.current = false;
+    apiRef.current?.setCellFocus(addActionId, 'actionName');
+    const frame = requestAnimationFrame(() => addActionButton.current?.focus());
+    return () => cancelAnimationFrame(frame);
+  }, [adding, addActionId, apiRef]);
+  const addActionDisabledReason = editing
+    ? 'Finish or cancel the current edit before adding an action.'
+    : draft.saving
+      ? 'Wait for the policy save to finish before adding an action.'
+      : !scopes.some((scope) => !scope.readOnlyReason)
+        ? 'Add Action requires an editable arrangement scope.'
+        : undefined;
   const actionPhases = useMemo(
     () =>
       new Map(
@@ -465,35 +521,86 @@ export function CasePoliciesMatrix({
       headerName: 'Actions',
       minWidth: 140,
       width: compact ? 140 : 240,
-      renderCell: ({ row }) => (
-        <Stack sx={{ py: 1, whiteSpace: 'normal', overflowWrap: 'anywhere' }}>
-          <Typography variant="body2">
-            {row.actionName || '(blank reference)'}
-          </Typography>
-          {row.unresolved && (
-            <Typography variant="caption" color="error">
-              Unresolved reference · read-only
+      renderCell: ({ row, hasFocus }) =>
+        row.addAction ? (
+          <>
+            <Button
+              ref={addActionButton}
+              tabIndex={hasFocus ? 0 : -1}
+              size="small"
+              startIcon={<AddIcon fontSize="small" />}
+              disabled={!!addActionDisabledReason}
+              aria-describedby={
+                addActionDisabledReason ? addActionHelpId : undefined
+              }
+              onKeyDown={(event) => {
+                if (event.key === 'Enter' || event.key === ' ')
+                  event.stopPropagation();
+              }}
+              onClick={(event) => {
+                event.stopPropagation();
+                setAdding(true);
+              }}
+              sx={{
+                minWidth: 0,
+                px: 0.5,
+                justifyContent: 'flex-start',
+                whiteSpace: 'nowrap',
+                '&.Mui-focusVisible': {
+                  outline: '2px solid',
+                  outlineColor: 'primary.main',
+                  outlineOffset: '-2px',
+                },
+              }}
+            >
+              Add Action
+            </Button>
+            {addActionDisabledReason && (
+              <Box
+                component="span"
+                id={addActionHelpId}
+                sx={{
+                  position: 'absolute',
+                  width: 1,
+                  height: 1,
+                  overflow: 'hidden',
+                  clipPath: 'inset(50%)',
+                  whiteSpace: 'nowrap',
+                }}
+              >
+                {addActionDisabledReason}
+              </Box>
+            )}
+          </>
+        ) : (
+          <Stack sx={{ py: 1, whiteSpace: 'normal', overflowWrap: 'anywhere' }}>
+            <Typography variant="body2">
+              {row.actionName || '(blank reference)'}
             </Typography>
-          )}
-          {['conflict', 'ambiguous'].includes(
-            actionPhases.get(row.actionName)!.status
-          ) &&
-            !row.unresolved && (
-              <Typography variant="caption" color="warning.main">
-                {actionPhases.get(row.actionName)!.status === 'conflict'
-                  ? 'Phase conflict: ' +
-                    [
-                      ...new Set(
-                        actionPhases
-                          .get(row.actionName)!
-                          .contributions.map((item) => item.phase)
-                      ),
-                    ].join(', ')
-                  : 'Ambiguous arrangement phase'}
+            {row.unresolved && (
+              <Typography variant="caption" color="error">
+                Unresolved reference · read-only
               </Typography>
             )}
-        </Stack>
-      ),
+            {['conflict', 'ambiguous'].includes(
+              actionPhases.get(row.actionName)!.status
+            ) &&
+              !row.unresolved && (
+                <Typography variant="caption" color="warning.main">
+                  {actionPhases.get(row.actionName)!.status === 'conflict'
+                    ? 'Phase conflict: ' +
+                      [
+                        ...new Set(
+                          actionPhases
+                            .get(row.actionName)!
+                            .contributions.map((item) => item.phase)
+                        ),
+                      ].join(', ')
+                    : 'Ambiguous arrangement phase'}
+                </Typography>
+              )}
+          </Stack>
+        ),
     },
     ...scopes.map((scope) => ({
       field: scope.field,
@@ -507,7 +614,9 @@ export function CasePoliciesMatrix({
       minWidth: 230,
       editable: true,
       valueGetter: (_value: unknown, row: MatrixRow) =>
-        summary(row.cells[scope.field], !!scope.functionName),
+        row.addAction
+          ? ''
+          : summary(row.cells[scope.field], !!scope.functionName),
       valueSetter: (edits: MatrixEdit[], row: MatrixRow) => ({
         ...row,
         cells: {
@@ -515,12 +624,13 @@ export function CasePoliciesMatrix({
           [scope.field]: { ...row.cells[scope.field], edits },
         },
       }),
-      renderCell: ({ row }: { row: MatrixRow }) => (
-        <MatrixCellContents
-          cell={row.cells[scope.field]}
-          additional={!!scope.functionName}
-        />
-      ),
+      renderCell: ({ row }: { row: MatrixRow }) =>
+        row.addAction ? null : (
+          <MatrixCellContents
+            cell={row.cells[scope.field]}
+            additional={!!scope.functionName}
+          />
+        ),
       renderEditCell: (params: GridRenderEditCellParams<MatrixRow>) => (
         <>
           <Box aria-hidden="true" sx={{ width: '100%' }}>
@@ -573,19 +683,6 @@ export function CasePoliciesMatrix({
             setEditing(false);
           }}
         />
-        <Stack direction="row" sx={{ justifyContent: 'flex-end' }}>
-          <Button
-            variant="contained"
-            disabled={
-              editing ||
-              draft.saving ||
-              !scopes.some((scope) => !scope.readOnlyReason)
-            }
-            onClick={() => setAdding(true)}
-          >
-            Add Action
-          </Button>
-        </Stack>
         {!scopes.some((scope) => !scope.readOnlyReason) && (
           <Typography variant="body2">
             Add Action requires an editable arrangement scope.
@@ -603,12 +700,19 @@ export function CasePoliciesMatrix({
                     items: [],
                     quickFilterValues: [],
                   });
-                  const rowIndex =
-                    apiRef.current?.getRowIndexRelativeToVisibleRows(finding);
-                  if (rowIndex !== undefined && rowIndex >= 0) {
-                    apiRef.current?.scrollToIndexes({ rowIndex, colIndex: 0 });
-                    apiRef.current?.setCellFocus(finding, 'actionName');
-                  }
+                  if (revealActionFrame.current !== undefined)
+                    cancelAnimationFrame(revealActionFrame.current);
+                  revealActionFrame.current = requestAnimationFrame(() => {
+                    const rowIndex =
+                      apiRef.current?.getRowIndexRelativeToVisibleRows(finding);
+                    if (rowIndex !== undefined && rowIndex >= 0) {
+                      apiRef.current?.scrollToIndexes({
+                        rowIndex,
+                        colIndex: 0,
+                      });
+                      apiRef.current?.setCellFocus(finding, 'actionName');
+                    }
+                  });
                 }}
               >
                 Reveal action (clear filters)
@@ -621,10 +725,14 @@ export function CasePoliciesMatrix({
         )}
         {adding && (
           <MatrixAddActionDialog
+            open={adding}
             policy={draft.value}
             baseline={policy}
             visibleActions={rows.map((row) => row.actionName)}
-            onClose={() => setAdding(false)}
+            onClose={() => {
+              restoreAddActionFocus.current = true;
+              setAdding(false);
+            }}
             onFind={(name) => {
               setAdding(false);
               setFinding(name);
@@ -684,6 +792,7 @@ export function CasePoliciesMatrix({
             apiRef={apiRef}
             aria-label="Case Policies requirements matrix"
             rows={rows}
+            pinnedRows={pinnedRows}
             getCellClassName={({ row, field }) =>
               row.cells[field]?.dirty ? 'policy-cell-unsaved' : ''
             }
@@ -691,7 +800,7 @@ export function CasePoliciesMatrix({
             columnGroupingModel={grouping}
             columnVisibilityModel={columnVisibilityModel}
             columnGroupHeaderHeight={42}
-            getRowHeight={() => 'auto'}
+            getRowHeight={({ model }) => (model.addAction ? 56 : 'auto')}
             getEstimatedRowHeight={() => 120}
             showToolbar
             historyStackSize={0}
@@ -708,7 +817,12 @@ export function CasePoliciesMatrix({
                   onToggle: toggleVisibility,
                 },
               },
-              toolbar: { sx: { flexWrap: 'wrap', flex: '0 0 auto' } },
+              toolbar: {
+                sx: { flexWrap: 'wrap', flex: '0 0 auto' },
+                csvOptions: { getRowsToExport: matrixExportRows },
+                printOptions: { getRowsToExport: matrixExportRows },
+                excelOptions: { getRowsToExport: matrixExportRows },
+              },
               baseButton: { disabled: editing },
               baseIconButton: { disabled: editing },
               baseTextField: { disabled: editing },
@@ -718,6 +832,7 @@ export function CasePoliciesMatrix({
               density: 'compact',
             }}
             disableRowSelectionOnClick
+            isRowSelectable={({ row }) => !row.addAction}
             disableClipboardPaste
             disableAggregation
             disablePivoting
@@ -728,6 +843,7 @@ export function CasePoliciesMatrix({
             disableColumnReorder={editing}
             disableColumnSorting={editing}
             isCellEditable={({ row, field }) => {
+              if (row.addAction) return false;
               const scope = scopes.find((item) => item.field === field);
               const own: MatrixRequirement[] = row.cells[field]?.own ?? [];
               return (
