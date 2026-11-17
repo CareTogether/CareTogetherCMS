@@ -2675,6 +2675,154 @@ test.describe('location-wide arrangement phases', () => {
 });
 
 test.describe('Case Policies matrix', () => {
+  test('variant cells show only Additional requirements while Base inheritance, editing and Save remain intact', async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    const initial = caseMatrixPolicy();
+    initial.referralPolicy.arrangementPolicies[0].arrangementFunctions[0].variants[0].requiredMonitoringActionsNew.push(
+      {
+        action: { actionName: 'Form', isRequired: false },
+        recurrence: {
+          discriminator: 'OneTimeRecurrencePolicy',
+          delay: '5.00:00:00',
+        },
+      }
+    );
+    const requests = await backend(page, false, false, initial);
+    let saved: EffectiveLocationPolicy | undefined;
+    page.on('request', (request) => {
+      if (request.method() === 'PUT') saved = request.postDataJSON();
+    });
+    await mount(page, 'casePolicy', undefined, true);
+    const base = matrixCell(page, 'Form');
+    const own = matrixCell(page, 'Form', 'Provider function', 'First profile');
+    const inherited = matrixCell(
+      page,
+      'Form',
+      'Provider function',
+      'Second profile'
+    );
+    await expect(
+      base.getByText('Base \u00b7 Setup \u00b7 Required', { exact: true })
+    ).toBeVisible();
+    await expect(
+      base.getByText('Stage 1: 2 days; 3 occurrence(s)', { exact: true })
+    ).toBeVisible();
+    await expect(
+      own.getByText('Additional \u00b7 Setup \u00b7 Optional', { exact: true })
+    ).toBeVisible();
+    await expect(
+      own.getByText('Additional \u00b7 Monitoring \u00b7 Optional', {
+        exact: true,
+      })
+    ).toBeVisible();
+    await expect(own).toContainText('5 days');
+    for (const cell of [own, inherited]) {
+      await expect(
+        cell.locator('.MuiChip-root').filter({ hasText: /^Base/ })
+      ).toHaveCount(0);
+      await expect(
+        cell.getByText('Stage 1: 2 days; 3 occurrence(s)', { exact: true })
+      ).toHaveCount(0);
+    }
+    await expect(
+      inherited.getByRole('img', {
+        name: 'Not used for additional requirements; Base requirements apply. See the Base column.',
+        exact: true,
+      })
+    ).toHaveText('—');
+    await expect(inherited.getByText('—', { exact: true })).toBeVisible();
+    await page.mouse.move(0, 0);
+    for (const cell of [base, own, inherited])
+      await expect(cell).toHaveCSS('background-color', 'rgb(255, 255, 255)');
+    await expect(
+      page
+        .getByRole('grid')
+        .locator('[data-id="Form"] [data-field="actionName"]')
+        .getByText(/Phase conflict: Setup, Monitoring, Closeout/)
+    ).toBeVisible();
+    await expect(
+      page.getByRole('button', { name: 'Save changes', exact: true })
+    ).toBeDisabled();
+    let editor = await openMatrixCell(
+      page,
+      'Provider function',
+      'Second profile'
+    );
+    await expect(inherited.getByText('—', { exact: true })).toBeVisible();
+    await expect(
+      editor.getByText(
+        'Base \u00b7 Setup \u00b7 Required (edit in the Base column)',
+        { exact: true }
+      )
+    ).toBeVisible();
+    await expect(editor.getByRole('switch')).toHaveCount(0);
+    await editor
+      .getByRole('button', { name: 'Cancel cell', exact: true })
+      .click();
+    await expect(
+      page.getByRole('button', { name: 'Undo', exact: true })
+    ).toBeDisabled();
+    editor = await openMatrixCell(page, 'Provider function', 'First profile');
+    await expect(
+      own.locator('.MuiChip-root').filter({ hasText: /^Base/ })
+    ).toHaveCount(0);
+    await expect(
+      editor.getByText(
+        'Base \u00b7 Setup \u00b7 Required (edit in the Base column)',
+        { exact: true }
+      )
+    ).toBeVisible();
+    await editor
+      .getByRole('switch', { name: 'Requirement 1 Required', exact: true })
+      .check();
+    await editor
+      .getByRole('button', { name: 'Apply to draft', exact: true })
+      .click();
+    await expect(
+      own.getByText('Additional \u00b7 Setup \u00b7 Required', { exact: true })
+    ).toBeVisible();
+    await page.getByRole('button', { name: 'Undo', exact: true }).click();
+    await expect(
+      own.getByText('Additional \u00b7 Setup \u00b7 Optional', { exact: true })
+    ).toBeVisible();
+    await page.getByRole('button', { name: 'Redo', exact: true }).click();
+    await expect(
+      own.getByText('Additional \u00b7 Setup \u00b7 Required', { exact: true })
+    ).toBeVisible();
+    expect(requests.puts()).toBe(0);
+    await page
+      .getByRole('button', { name: 'Save changes', exact: true })
+      .click();
+    await expect.poll(requests.puts).toBe(1);
+    const arrangement = saved!.referralPolicy.arrangementPolicies[0];
+    const original = initial.referralPolicy.arrangementPolicies[0];
+    expect(arrangement.requiredSetupActions).toEqual(
+      original.requiredSetupActions
+    );
+    expect(arrangement.requiredMonitoringActionsNew).toEqual(
+      original.requiredMonitoringActionsNew
+    );
+    expect(arrangement.requiredCloseoutActions).toEqual(
+      original.requiredCloseoutActions
+    );
+    expect(
+      arrangement.arrangementFunctions[0].variants[0]
+        .requiredMonitoringActionsNew
+    ).toEqual(
+      original.arrangementFunctions[0].variants[0].requiredMonitoringActionsNew
+    );
+    expect(
+      arrangement.arrangementFunctions[0].variants[0].requiredSetupActions
+    ).toEqual([{ actionName: 'Form', isRequired: true }]);
+    expect(arrangement.arrangementFunctions[0].variants[1]).toEqual(
+      original.arrangementFunctions[0].variants[1]
+    );
+    expect(arrangement.policyVersions).toEqual(original.policyVersions);
+    expect(saved!.volunteerPolicy).toEqual(initial.volunteerPolicy);
+  });
+
   test('requirement cells and badges share a white surface without changing hover, focus or editing', async ({
     page,
   }) => {
@@ -3653,7 +3801,7 @@ test.describe('Case Policies matrix', () => {
       if (additional)
         await expect(
           cell.getByText('Base · Setup · Required', { exact: true })
-        ).toBeVisible();
+        ).toHaveCount(0);
       await editor
         .getByRole('button', { name: 'Cancel cell', exact: true })
         .click();
@@ -3951,12 +4099,17 @@ test.describe('Case Policies matrix', () => {
         'Base \u00b7 Setup \u00b7 Optional',
         { exact: true }
       )
-    ).toBeVisible();
+    ).toHaveCount(0);
     await expect(
       matrixCell(page, 'Form', 'Provider function', 'Second profile').getByText(
         'Base \u00b7 Setup \u00b7 Optional',
         { exact: true }
       )
+    ).toHaveCount(0);
+    await expect(
+      matrixCell(page, 'Form').getByText('Base \u00b7 Setup \u00b7 Optional', {
+        exact: true,
+      })
     ).toBeVisible();
     editor = await openMatrixCell(page, 'Provider function', 'First profile');
     await expect(
@@ -3984,7 +4137,7 @@ test.describe('Case Policies matrix', () => {
     );
     await expect(
       first.getByText('Base \u00b7 Setup \u00b7 Optional', { exact: true })
-    ).toBeVisible();
+    ).toHaveCount(0);
     await expect(
       first.getByText('Additional \u00b7 Setup \u00b7 Required', {
         exact: true,

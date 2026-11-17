@@ -10,6 +10,7 @@ import {
   matrixActionChoices,
   matrixOwner,
   matrixCellHasChanges,
+  matrixCellPresentation,
   matrixRequirements,
   matrixScopes,
   applyMatrixEdits,
@@ -27,6 +28,54 @@ import {
   stagePolicyGridDraft,
   movePolicyGridHistory,
 } from './policyGridDraft.ts';
+
+test('cell presentation separates Base from Additional without changing effective contributions or schedules', () => {
+  const value = policy();
+  const scopes = matrixScopes(value).scopes;
+  const shared = matrixRequirements(matrixOwner(value, scopes[0]));
+  const own = matrixRequirements(matrixOwner(value, scopes[1]));
+  const cell = { shared, own };
+  const before = JSON.stringify(value);
+  const base = matrixCellPresentation({ own: shared, shared: [] }, false);
+  const additional = matrixCellPresentation(cell, true);
+  assert.equal(base.requirements, shared);
+  assert.equal(base.provenance, 'Base');
+  assert.equal(additional.requirements, own);
+  assert.equal(additional.provenance, 'Additional');
+  assert.deepEqual(
+    [...cell.shared, ...additional.requirements],
+    [...shared, ...own]
+  );
+  assert.ok(base.requirements.some((item) => item.phase === 'Monitoring'));
+  assert.equal(
+    base.requirements.find((item) => item.phase === 'Monitoring')!.recurrence,
+    shared.find((item) => item.phase === 'Monitoring')!.recurrence
+  );
+  assert.equal(JSON.stringify(value), before);
+});
+
+test('empty variant presentation describes absence of Additional requirements without denying Base applicability', () => {
+  const shared = matrixRequirements(
+    matrixOwner(policy(), matrixScopes(policy()).scopes[0])
+  );
+  const cell = { own: [], shared };
+  const display = matrixCellPresentation(cell, true);
+  assert.equal(display.requirements, cell.own);
+  assert.equal(display.requirements.length, 0);
+  assert.match(
+    display.emptyLabel,
+    /^Not used for additional requirements; Base requirements apply/
+  );
+  assert.ok(cell.shared.length > 0);
+  assert.equal(
+    matrixCellPresentation({ own: [], shared: [] }, true).emptyLabel,
+    'Not used for additional requirements'
+  );
+  assert.equal(
+    matrixCellPresentation({ own: [], shared: [] }, false).emptyLabel,
+    'Not used'
+  );
+});
 
 test('arrangement rows exclude volunteer-only, unused and historical-only definitions without changing their policy data', () => {
   const value = policy();

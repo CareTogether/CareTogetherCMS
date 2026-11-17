@@ -35,6 +35,7 @@ import {
   type MatrixScope,
   matrixOwner,
   matrixCellHasChanges,
+  matrixCellPresentation,
   matrixRequirements,
   matrixScopes,
   applyMatrixEdits,
@@ -77,9 +78,11 @@ function MatrixCellContents({
   cell: MatrixCell;
   additional: boolean;
 }) {
+  const presentation = matrixCellPresentation(cell, additional);
   return (
     <Stack
       spacing={0.5}
+      useFlexGap
       sx={{
         py: 1,
         whiteSpace: 'normal',
@@ -105,28 +108,22 @@ function MatrixCellContents({
           Unsaved changes
         </Box>
       )}
-      {cell.own.length + cell.shared.length === 0 && (
+      {presentation.requirements.length === 0 && (
         <Typography
           variant="body2"
           color="text.secondary"
           role="img"
-          aria-label="Not used"
+          aria-label={presentation.emptyLabel}
         >
           —
         </Typography>
       )}
-      {[
-        ...cell.shared.map((item) => ({ item, shared: true })),
-        ...cell.own.map((item) => ({
-          item,
-          shared: !additional,
-        })),
-      ].map(({ item, shared }, index) => (
+      {presentation.requirements.map((item, index) => (
         <Stack key={index} spacing={0.25}>
           <Chip
             size="small"
             variant="outlined"
-            label={`${shared ? 'Base' : 'Additional'} · ${item.phase} · ${item.isRequired ? 'Required' : 'Optional'}`}
+            label={`${presentation.provenance} · ${item.phase} · ${item.isRequired ? 'Required' : 'Optional'}`}
             sx={{
               maxWidth: '100%',
               alignSelf: 'flex-start',

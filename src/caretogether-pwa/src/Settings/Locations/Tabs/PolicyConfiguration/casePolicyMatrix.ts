@@ -34,6 +34,25 @@ export type MatrixRequirement = {
   recurrence?: RecurrencePolicy;
   readOnlyReason?: string;
 };
+
+export function matrixCellPresentation(
+  cell: {
+    own: readonly MatrixRequirement[];
+    shared: readonly MatrixRequirement[];
+  },
+  additional: boolean
+) {
+  return {
+    requirements: cell.own,
+    provenance: additional ? 'Additional' : 'Base',
+    emptyLabel: additional
+      ? cell.shared.length
+        ? 'Not used for additional requirements; Base requirements apply. See the Base column.'
+        : 'Not used for additional requirements'
+      : 'Not used',
+  };
+}
+
 export type MatrixEdit = {
   id: string;
   phase: MatrixPhase;
