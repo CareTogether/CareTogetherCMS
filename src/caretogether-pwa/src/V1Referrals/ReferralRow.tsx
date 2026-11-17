@@ -44,7 +44,7 @@ export function ReferralRow({
         sx={{ backgroundColor: '#eef', cursor: 'pointer' }}
         onClick={() => appNavigate.referral(referral.id)}
       >
-        <TableCell>{referral.title}</TableCell>
+        <TableCell sx={{ fontWeight: 'bold' }}>{referral.title}</TableCell>
         <TableCell>
           <Box sx={{ fontWeight: 400, fontSize: '0.875rem' }}>
             {statusLabel}

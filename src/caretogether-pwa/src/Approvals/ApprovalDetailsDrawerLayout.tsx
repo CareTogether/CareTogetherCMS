@@ -299,7 +299,11 @@ export function ApprovalDetailsDrawerLayout({
               <DetailField
                 label={isExemption ? 'Exempted Until' : 'Valid Until'}
               >
-                {validUntil}
+                {row?.status === 'expired' ? (
+                  <strong>{validUntil}</strong>
+                ) : (
+                  validUntil
+                )}
               </DetailField>
             )}
           </Stack>

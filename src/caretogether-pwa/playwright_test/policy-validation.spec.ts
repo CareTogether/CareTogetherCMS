@@ -2,6 +2,7 @@ import { type Page } from '@playwright/test';
 import { expect, test } from './support/fixtures';
 import { SELF_SERVICE_POLICY_FEATURE_FLAG } from '../src/featureFlags';
 import { build } from 'rolldown';
+import { ignoreModuleLevelDirectives } from './support/harnessBuild';
 import { fileURLToPath } from 'node:url';
 import { readFileSync } from 'node:fs';
 import { EffectiveLocationPolicy } from '../src/GeneratedClient';
@@ -48,6 +49,7 @@ test.beforeAll(async () => {
     ),
     platform: 'browser',
     tsconfig: false,
+    onLog: ignoreModuleLevelDirectives,
     transform: {
       jsx: { runtime: 'automatic' },
       define: {

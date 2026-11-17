@@ -433,10 +433,9 @@ function RequirementSummaryRow({
 }) {
   const completedOrExemptedOn = formatDate(requirement.completedOrExemptedOn);
   const validUntil = formatDate(requirement.validUntil);
+  const isExpired = requirement.status === 'expired';
   const validUntilLabel = validUntil
-    ? requirement.status === 'expired'
-      ? `Expired ${validUntil}`
-      : `Valid until ${validUntil}`
+    ? `${isExpired ? 'Expired' : 'Valid until'} ${validUntil}`
     : null;
 
   return (
@@ -501,7 +500,11 @@ function RequirementSummaryRow({
               </Typography>
               {validUntil && (
                 <Typography color="text.secondary" variant="caption">
-                  {validUntilLabel}
+                  {isExpired ? (
+                    <strong>{validUntilLabel}</strong>
+                  ) : (
+                    validUntilLabel
+                  )}
                 </Typography>
               )}
             </Stack>

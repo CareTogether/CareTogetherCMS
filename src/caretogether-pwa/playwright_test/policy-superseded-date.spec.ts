@@ -1,5 +1,6 @@
 import { expect, test } from '@playwright/test';
 import { build } from 'rolldown';
+import { ignoreModuleLevelDirectives } from './support/harnessBuild';
 import { fileURLToPath } from 'node:url';
 import type {} from './policy-superseded-date-harness';
 
@@ -12,6 +13,7 @@ test.beforeAll(async () => {
     ),
     platform: 'browser',
     tsconfig: false,
+    onLog: ignoreModuleLevelDirectives,
     write: false,
     transform: {
       jsx: { runtime: 'automatic' },
