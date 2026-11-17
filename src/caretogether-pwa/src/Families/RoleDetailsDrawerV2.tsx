@@ -1,4 +1,5 @@
 import CloseIcon from '@mui/icons-material/Close';
+import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown';
 import {
   Box,
   Button,
@@ -7,6 +8,8 @@ import {
   Drawer,
   IconButton,
   LinearProgress,
+  Menu,
+  MenuItem,
   Stack,
   Typography,
 } from '@mui/material';
@@ -26,9 +29,13 @@ import {
   roleApprovalStatusChipColor,
   roleApprovalStatusLabel,
 } from '../Volunteers/roleApprovalStatusPresentation';
-import type { ApprovalLedgerRow } from '../Approvals/approvalLedgerViewModel';
+import type {
+  ApprovalLedgerRow,
+  ApprovalLedgerStatus,
+} from '../Approvals/approvalLedgerViewModel';
 import { ApprovalLedgerStatusChip } from '../Approvals/ApprovalLedgerStatusChip';
 import { ApprovalDetailsDrawerV2 } from './ApprovalDetailsDrawerV2';
+import { roleRequirementProgress } from './roleRequirementProgress';
 import {
   RoleManagementDrawerV2,
   type RoleManagementMode,
@@ -65,6 +72,24 @@ const participantStateLabels: Record<ParticipantState, string> = {
   optedOut: 'Opted Out',
   denied: 'Denied',
 };
+
+/** Lower sorts first: what still needs doing comes before what is done. */
+const requirementStatusOrder: Record<ApprovalLedgerStatus, number> = {
+  missing: 0,
+  expired: 1,
+  expiring: 2,
+  availableApplication: 3,
+  optional: 4,
+  completed: 5,
+  exempted: 6,
+};
+
+function byRequirementStatus(
+  a: RoleSummaryRequirement,
+  b: RoleSummaryRequirement
+) {
+  return requirementStatusOrder[a.status] - requirementStatusOrder[b.status];
+}
 
 function formattedEffectiveDate(card: RoleSummaryCard) {
   return card.effectiveDate ? formatUtcDateOnly(card.effectiveDate) : undefined;
@@ -186,6 +211,7 @@ function ParticipantsSection({
   participants,
   requirements,
   showParticipantActions,
+  onParticipantCompleteOther,
   onParticipantRemove,
   onParticipantReset,
   onRequirementClick,
@@ -194,6 +220,7 @@ function ParticipantsSection({
   participants: RoleParticipant[];
   requirements?: RoleSummaryRequirement[];
   showParticipantActions: boolean;
+  onParticipantCompleteOther: (participant: RoleParticipant) => void;
   onParticipantRemove: (participant: RoleParticipant) => void;
   onParticipantReset: (participant: RoleParticipant) => void;
   onRequirementClick: (row: ApprovalLedgerRow) => void;
@@ -207,88 +234,175 @@ function ParticipantsSection({
   }
 
   return (
-    <Stack spacing={1}>
-      <Typography variant="subtitle2">Family Members</Typography>
-      {participants.map((participant) => (
-        <Stack key={participant.id} spacing={1}>
-          <Box
-            sx={{
-              alignItems: 'center',
-              display: 'flex',
-              gap: 1,
-              justifyContent: 'space-between',
-            }}
-          >
-            <Typography variant="body2">{participant.label}</Typography>
-            <Stack
-              direction="row"
-              spacing={1}
-              sx={{ alignItems: 'center', flexWrap: 'wrap' }}
+    <Stack spacing={2}>
+      {participants.map((participant) => {
+        const participantRequirements = (requirements ?? [])
+          .filter((requirement) => requirement.subject.id === participant.id)
+          .sort(byRequirementStatus);
+
+        return (
+          <Stack key={participant.id} spacing={1}>
+            <Box
+              sx={{
+                alignItems: 'center',
+                display: 'flex',
+                gap: 1,
+                justifyContent: 'space-between',
+              }}
             >
-              <Chip
-                color={participantStatusColor(participant.state)}
-                label={participantStateLabels[participant.state]}
-                size="small"
-              />
-              {showParticipantActions && participant.state === 'active' && (
-                <Button
-                  color="error"
-                  disabled={!canEditRoleParticipation}
-                  onClick={() => onParticipantRemove(participant)}
+              <Stack
+                direction="row"
+                spacing={1}
+                sx={{ alignItems: 'center', flexWrap: 'wrap', minWidth: 0 }}
+              >
+                <Typography variant="subtitle2">{participant.label}</Typography>
+                <Chip
+                  color={participantStatusColor(participant.state)}
+                  label={participantStateLabels[participant.state]}
                   size="small"
-                  variant="outlined"
-                >
-                  Remove from role
-                </Button>
-              )}
-              {showParticipantActions &&
-                participant.state !== 'active' &&
-                participant.roleRemoval && (
-                  <>
-                    {participant.roleRemoval.effectiveSince && (
-                      <Chip
-                        label={`Removed ${formatUtcDateOnly(
-                          participant.roleRemoval.effectiveSince
-                        )}`}
-                        size="small"
-                        variant="outlined"
-                      />
-                    )}
-                    <Button
-                      disabled={!canEditRoleParticipation}
-                      onClick={() => onParticipantReset(participant)}
+                />
+                {participant.state !== 'active' &&
+                  participant.roleRemoval?.effectiveSince && (
+                    <Chip
+                      label={`Removed ${formatUtcDateOnly(
+                        participant.roleRemoval.effectiveSince
+                      )}`}
                       size="small"
                       variant="outlined"
-                    >
-                      Reset
-                    </Button>
-                  </>
-                )}
-            </Stack>
-          </Box>
-          {requirements &&
-            (requirements.some(
-              (requirement) => requirement.subject.id === participant.id
-            ) ? (
-              requirements
-                .filter(
-                  (requirement) => requirement.subject.id === participant.id
-                )
-                .map((requirement) => (
+                    />
+                  )}
+              </Stack>
+              {showParticipantActions && (
+                <ActionsMenu
+                  label={`More actions for ${participant.label}`}
+                  items={participantActions({
+                    canEditRoleParticipation,
+                    participant,
+                    onCompleteOther: () =>
+                      onParticipantCompleteOther(participant),
+                    onRemove: () => onParticipantRemove(participant),
+                    onReset: () => onParticipantReset(participant),
+                  })}
+                />
+              )}
+            </Box>
+            {requirements &&
+              (participantRequirements.length > 0 ? (
+                participantRequirements.map((requirement) => (
                   <RequirementSummaryRow
                     key={requirement.id}
                     requirement={requirement}
                     onClick={() => onRequirementClick(requirement.ledgerRow)}
                   />
                 ))
-            ) : (
-              <Typography color="text.secondary" variant="body2">
-                No requirements for this role.
-              </Typography>
-            ))}
-        </Stack>
-      ))}
+              ) : (
+                <Typography color="text.secondary" variant="body2">
+                  No requirements for this role.
+                </Typography>
+              ))}
+          </Stack>
+        );
+      })}
     </Stack>
+  );
+}
+
+type ActionsMenuItem = {
+  label: string;
+  onClick: () => void;
+  disabled?: boolean;
+};
+
+function participantActions({
+  canEditRoleParticipation,
+  participant,
+  onCompleteOther,
+  onRemove,
+  onReset,
+}: {
+  canEditRoleParticipation: boolean;
+  participant: RoleParticipant;
+  onCompleteOther: () => void;
+  onRemove: () => void;
+  onReset: () => void;
+}): ActionsMenuItem[] {
+  const completeOther: ActionsMenuItem[] = participant.person.active
+    ? [{ label: 'Complete Other', onClick: onCompleteOther }]
+    : [];
+  const remove: ActionsMenuItem[] =
+    participant.state === 'active'
+      ? [
+          {
+            label: 'Remove person from role',
+            onClick: onRemove,
+            disabled: !canEditRoleParticipation,
+          },
+        ]
+      : [];
+  const reset: ActionsMenuItem[] =
+    participant.state !== 'active' && participant.roleRemoval
+      ? [
+          {
+            label: 'Reset participation',
+            onClick: onReset,
+            disabled: !canEditRoleParticipation,
+          },
+        ]
+      : [];
+
+  return [...completeOther, ...remove, ...reset];
+}
+
+function ActionsMenu({
+  items,
+  label,
+}: {
+  items: ActionsMenuItem[];
+  label: string;
+}) {
+  const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
+
+  if (items.length === 0) return null;
+
+  const close = () => setAnchorEl(null);
+
+  return (
+    <>
+      <Button
+        aria-label={label}
+        aria-haspopup="menu"
+        aria-expanded={Boolean(anchorEl)}
+        className="ph-unmask"
+        endIcon={<ArrowDropDownIcon />}
+        onClick={(event) => setAnchorEl(event.currentTarget)}
+        size="small"
+        sx={{ flexShrink: 0 }}
+        variant="outlined"
+      >
+        Actions
+      </Button>
+      <Menu
+        anchorEl={anchorEl}
+        anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
+        open={Boolean(anchorEl)}
+        onClose={close}
+        transformOrigin={{ horizontal: 'right', vertical: 'top' }}
+      >
+        {items.map((item) => (
+          <MenuItem
+            key={item.label}
+            className="ph-unmask"
+            disabled={item.disabled}
+            onClick={() => {
+              close();
+              item.onClick();
+            }}
+          >
+            {item.label}
+          </MenuItem>
+        ))}
+      </Menu>
+    </>
   );
 }
 
@@ -296,13 +410,15 @@ function RoleActionButton({
   disabled,
   label,
   onClick,
+  variant = 'contained',
 }: {
   disabled?: boolean;
   label: string;
   onClick: () => void;
+  variant?: 'contained' | 'outlined';
 }) {
   return (
-    <Button disabled={disabled} onClick={onClick} variant="contained">
+    <Button disabled={disabled} onClick={onClick} variant={variant}>
       {label}
     </Button>
   );
@@ -382,10 +498,8 @@ function RequirementSummaryRow({
                     </Fragment>
                   ))}
               </Typography>
-              {(completedOrExemptedOn || validUntil) && (
+              {validUntil && (
                 <Typography color="text.secondary" variant="caption">
-                  {requirement.subject.label}
-                  {requirement.subject.label && validUntilLabel && ' · '}
                   {isExpired ? (
                     <strong>{validUntilLabel}</strong>
                   ) : (
@@ -440,6 +554,26 @@ function personForSubject(
     : undefined;
 }
 
+function participantRoleCard(
+  card: RoleSummaryCard,
+  participant: RoleParticipant,
+  volunteerFamilyId: string
+): RoleSummaryCard {
+  return {
+    ...card,
+    subject: {
+      scope: 'person',
+      id: participant.id,
+      label: participant.label,
+    },
+    context: {
+      kind: 'Individual Volunteer',
+      volunteerFamilyId,
+      personId: participant.id,
+    },
+  };
+}
+
 type SelectedRoleManagement = {
   mode: RoleManagementMode;
   person?: Person;
@@ -488,18 +622,14 @@ export function RoleDetailsDrawerV2({
         <Stack direction="row" spacing={1} sx={{ flexWrap: 'wrap', gap: 1 }}>
           <RoleActionButton
             disabled={!canRemoveRole}
-            label="Remove Role"
+            label={
+              card.subject.scope === 'family'
+                ? 'Remove family from role'
+                : 'Remove person from role'
+            }
+            variant="outlined"
             onClick={() =>
               setSelectedRoleManagement({ mode: 'remove', role: card })
-            }
-          />
-          <RoleActionButton
-            label="Complete Other"
-            onClick={() =>
-              setSelectedRoleManagement({
-                mode: 'completeOther',
-                role: card,
-              })
             }
           />
         </Stack>
@@ -529,9 +659,21 @@ export function RoleDetailsDrawerV2({
     setSelectedRoleManagement(null);
   }, [card?.id, familyId, open, removedRole?.id]);
 
-  const requirements = [...(card?.requirements ?? [])].sort((a, b) =>
-    b.status.localeCompare(a.status)
+  const requirements = [...(card?.requirements ?? [])].sort(
+    byRequirementStatus
   );
+  const participantRequirements =
+    role?.subject.scope === 'family'
+      ? (card?.memberRequirements ?? []).filter((requirement) =>
+          participants.some(
+            (participant) => participant.id === requirement.subject.id
+          )
+        )
+      : [];
+  const progress = roleRequirementProgress([
+    ...requirements,
+    ...participantRequirements,
+  ]);
   function removedRoleForParticipant(
     participant: RoleParticipant
   ): RemovedRoleSummary | null {
@@ -604,58 +746,79 @@ export function RoleDetailsDrawerV2({
                 >
                   {role.roleName}
                 </Typography>
-                <Typography color="text.secondary" variant="body2">
-                  {role.subject.label}
-                </Typography>
-                <Box
-                  sx={{
-                    alignItems: 'center',
-                    display: 'flex',
-                    flexWrap: 'wrap',
-                    gap: 1,
-                    justifyContent: 'space-between',
-                    mt: 1,
-                  }}
-                >
-                  {card ? (
-                    <Stack direction="row" spacing={1}>
-                      <Chip
-                        color={roleApprovalStatusChipColor(card.status)}
-                        label={roleApprovalStatusLabel(card.status)}
-                        size="small"
-                      />
-                      {effectiveDate && (
-                        <Chip
-                          label={effectiveDate}
-                          size="small"
-                          variant="outlined"
-                        />
-                      )}
-                    </Stack>
-                  ) : (
-                    <Stack direction="row" spacing={1}>
-                      <Chip
-                        className="ph-unmask"
-                        color="default"
-                        label={removedStatusLabel}
-                        size="small"
-                      />
-                      {removedDate && (
-                        <Chip
-                          label={removedDate}
-                          size="small"
-                          variant="outlined"
-                        />
-                      )}
-                    </Stack>
-                  )}
-                  {headerActions}
-                </Box>
+                {role.subject.scope === 'person' && (
+                  <Typography color="text.secondary" variant="body2">
+                    {role.subject.label}
+                  </Typography>
+                )}
               </Box>
               <IconButton aria-label="close role details" onClick={onClose}>
                 <CloseIcon />
               </IconButton>
             </Box>
+
+            <Stack spacing={1.5}>
+              <Box
+                sx={{
+                  alignItems: 'center',
+                  display: 'flex',
+                  flexWrap: 'wrap',
+                  gap: 1,
+                  justifyContent: 'space-between',
+                }}
+              >
+                {card ? (
+                  <Stack direction="row" spacing={1}>
+                    <Chip
+                      color={roleApprovalStatusChipColor(card.status)}
+                      label={roleApprovalStatusLabel(card.status)}
+                      size="small"
+                    />
+                    {effectiveDate && (
+                      <Chip
+                        label={effectiveDate}
+                        size="small"
+                        variant="outlined"
+                      />
+                    )}
+                  </Stack>
+                ) : (
+                  <Stack direction="row" spacing={1}>
+                    <Chip
+                      className="ph-unmask"
+                      color="default"
+                      label={removedStatusLabel}
+                      size="small"
+                    />
+                    {removedDate && (
+                      <Chip
+                        label={removedDate}
+                        size="small"
+                        variant="outlined"
+                      />
+                    )}
+                  </Stack>
+                )}
+                {headerActions}
+              </Box>
+              {card && progress.total > 0 && (
+                <Stack spacing={0.5}>
+                  <LinearProgress
+                    aria-label={`${progress.percentage}% complete`}
+                    variant="determinate"
+                    value={progress.percentage}
+                    sx={{ height: 6, borderRadius: 999 }}
+                  />
+                  <Typography
+                    className="ph-unmask"
+                    color="text.secondary"
+                    variant="caption"
+                  >
+                    {progress.done} of {progress.total} requirements complete
+                  </Typography>
+                </Stack>
+              )}
+            </Stack>
 
             {removedRole && (
               <Box
@@ -683,16 +846,37 @@ export function RoleDetailsDrawerV2({
 
             {card && (
               <>
-                <Typography variant="subtitle2">Requirements</Typography>
-
-                <Stack spacing={1}>
-                  <LinearProgress
-                    aria-label={`${card.completionPercentage}% complete`}
-                    variant="determinate"
-                    value={card.completionPercentage}
-                    sx={{ height: 6, borderRadius: 999 }}
+                <Box
+                  sx={{
+                    alignItems: 'center',
+                    display: 'flex',
+                    gap: 1,
+                    justifyContent: 'space-between',
+                  }}
+                >
+                  <Typography className="ph-unmask" variant="subtitle2">
+                    {card.subject.scope === 'family'
+                      ? 'Family-Level Requirements'
+                      : 'Requirements'}
+                  </Typography>
+                  <ActionsMenu
+                    label={
+                      card.subject.scope === 'family'
+                        ? 'More actions for family-level requirements'
+                        : 'More actions for requirements'
+                    }
+                    items={[
+                      {
+                        label: 'Complete Other',
+                        onClick: () =>
+                          setSelectedRoleManagement({
+                            mode: 'completeOther',
+                            role: card,
+                          }),
+                      },
+                    ]}
                   />
-                </Stack>
+                </Box>
 
                 <Stack spacing={1}>
                   {requirements.length === 0 ? (
@@ -723,6 +907,15 @@ export function RoleDetailsDrawerV2({
                   card ? (card.memberRequirements ?? []) : undefined
                 }
                 showParticipantActions={card !== null}
+                onParticipantCompleteOther={(participant) => {
+                  if (!card) return;
+
+                  setSelectedRoleManagement({
+                    mode: 'completeOther',
+                    person: participant.person,
+                    role: participantRoleCard(card, participant, familyId),
+                  });
+                }}
                 onParticipantRemove={(participant) => {
                   if (!card) return;
 

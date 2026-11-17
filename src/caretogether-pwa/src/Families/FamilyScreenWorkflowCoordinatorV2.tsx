@@ -12,7 +12,7 @@ import { DiscardV1ReferralNoteDialog } from '../V1Referrals/DiscardV1ReferralNot
 import { CloseV1CaseDrawer } from '../V1Cases/CloseV1CaseDrawer';
 import { OpenNewV1CaseDialog } from '../V1Cases/OpenNewV1CaseDialog';
 import { ArrangementDetailsDrawerV2 } from '../V1Cases/Arrangements/ArrangementDetailsDrawerV2';
-import { FamilyCompleteOtherController } from '../Requirements/FamilyCompleteOtherController';
+import { FamilyCompleteOtherDrawerV2 } from './FamilyCompleteOtherDrawerV2';
 import { RemoveFamilyRoleDialog } from '../Volunteers/RemoveFamilyRoleDialog';
 import { ResetFamilyRoleDialog } from '../Volunteers/ResetFamilyRoleDialog';
 import { AddEditNoteDrawer } from '../Notes/AddEditNoteDrawer';
@@ -133,7 +133,7 @@ export function FamilyScreenWorkflowCoordinatorV2({
 }: FamilyScreenWorkflowCoordinatorV2Props) {
   return (
     <>
-      <FamilyCompleteOtherController
+      <FamilyCompleteOtherDrawerV2
         familyId={familyId}
         open={familyCompleteOtherOpen}
         onClose={onFamilyCompleteOtherClose}

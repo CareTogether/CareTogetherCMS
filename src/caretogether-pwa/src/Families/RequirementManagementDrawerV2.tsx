@@ -7,6 +7,7 @@ import { ApprovalManagementDrawer } from '../Approvals/ApprovalManagementDrawer'
 import { ApprovalWorkflowConfirmationSectionV2 } from '../Approvals/ApprovalWorkflowConfirmationSectionV2';
 import { ApprovalWorkflowMissingSectionV2 } from './ApprovalWorkflowMissingSectionV2';
 import { useApprovalWorkflowActionsV2 } from './hooks/useApprovalWorkflowActionsV2';
+import type { CompleteOtherTargets } from './completeOtherTargets';
 
 export type RequirementManagementMode = ApprovalRequirementManagementMode;
 
@@ -14,6 +15,7 @@ type RequirementManagementDrawerV2Props = {
   mode: RequirementManagementMode | null;
   occurrence: ApprovalLedgerOccurrence | undefined;
   relatedOccurrences?: ApprovalLedgerOccurrence[];
+  targets?: CompleteOtherTargets;
   open: boolean;
   onClose: () => void;
   onSuccess?: () => void;
@@ -36,6 +38,7 @@ export function RequirementManagementDrawerV2({
   mode,
   occurrence,
   relatedOccurrences,
+  targets,
   open,
   onClose,
   onSuccess,
@@ -75,6 +78,7 @@ export function RequirementManagementDrawerV2({
               }
               mode={mode}
               relatedOccurrences={relatedOccurrences}
+              targets={targets}
               onSuccess={onWorkflowSuccess}
             />
           )}

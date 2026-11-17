@@ -2,6 +2,7 @@ import CloseIcon from '@mui/icons-material/Close';
 import { Box, Drawer, IconButton, Stack, Typography } from '@mui/material';
 import type { Person } from '../GeneratedClient';
 import { ApprovalWorkflowLauncherV2 } from './ApprovalWorkflowLauncherV2';
+import { completeOtherTargetKeysForSubject } from './completeOtherTargets';
 import { RoleRemovalSectionV2 } from './RoleRemovalSectionV2';
 import { RoleResetSectionV2 } from './RoleResetSectionV2';
 import type {
@@ -23,12 +24,9 @@ type RoleManagementDrawerV2Props = {
   onClose: () => void;
 };
 
-const roleManagementContent: Record<
-  RoleManagementMode,
-  { title: string }
-> = {
+const roleManagementContent: Record<RoleManagementMode, { title: string }> = {
   remove: {
-    title: 'Remove Role',
+    title: 'Remove from role',
   },
   resetParticipation: {
     title: 'Reset Participation',
@@ -83,8 +81,10 @@ function RoleManagementBody({
   if (mode === 'completeOther') {
     return (
       <ApprovalWorkflowLauncherV2
+        key={`${role.subject.scope}|${role.subject.id}`}
         subject={role.subject}
         context={role.context}
+        initialTargetKeys={completeOtherTargetKeysForSubject(role.subject)}
         onSuccess={onClose}
       />
     );
@@ -95,8 +95,7 @@ function RoleManagementBody({
 
 function personLabel(person: Person | undefined) {
   return (
-    [person?.firstName, person?.lastName].filter(Boolean).join(' ') ||
-    undefined
+    [person?.firstName, person?.lastName].filter(Boolean).join(' ') || undefined
   );
 }
 

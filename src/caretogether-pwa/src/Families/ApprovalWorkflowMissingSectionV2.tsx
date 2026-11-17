@@ -39,6 +39,11 @@ import type { ApprovalLedgerOccurrence } from '../Approvals/approvalLedgerViewMo
 import { approvalRequirementName } from '../Approvals/approvalDetails';
 import { personNameString } from './PersonName';
 import { volunteerRequirementCompletionPersonIds } from './volunteerRequirementCompletionTargets';
+import {
+  FAMILY_TARGET_KEY,
+  unsavedCompleteOtherTargets,
+  type CompleteOtherTargets,
+} from './completeOtherTargets';
 
 type ApprovalWorkflowMissingSectionV2Props = {
   occurrence: ApprovalLedgerOccurrence;
@@ -46,11 +51,16 @@ type ApprovalWorkflowMissingSectionV2Props = {
   canComplete: boolean;
   canExempt: boolean;
   relatedOccurrences?: ApprovalLedgerOccurrence[];
+  /** Explicit family/person targets chosen in Complete Other. */
+  targets?: CompleteOtherTargets;
   mode?: 'both' | 'complete' | 'grantExemption';
   onSuccess?: () => void;
 };
 
 const UPLOAD_NEW = '__uploadnew__';
+// Stable default: a new [] on every render would re-run the completion
+// targets memo and its effect forever ("Maximum update depth exceeded").
+const NO_RELATED_OCCURRENCES: ApprovalLedgerOccurrence[] = [];
 
 function findRequirementPolicy(
   actionDefinitions: Record<string, ActionRequirement>,
@@ -86,7 +96,8 @@ export function ApprovalWorkflowMissingSectionV2({
   context,
   canComplete,
   canExempt,
-  relatedOccurrences = [],
+  relatedOccurrences = NO_RELATED_OCCURRENCES,
+  targets,
   mode = 'both',
   onSuccess,
 }: ApprovalWorkflowMissingSectionV2Props) {
@@ -115,6 +126,9 @@ export function ApprovalWorkflowMissingSectionV2({
   const [exemptionExpiresAtLocal, setExemptionExpiresAtLocal] =
     useState<Date | null>(null);
   const [exemptionExpiresAtError, setExemptionExpiresAtError] = useState(false);
+  // Targets already saved by an earlier attempt that failed part way, so a
+  // retry does not record them twice.
+  const [savedTargetKeys, setSavedTargetKeys] = useState<string[]>([]);
   const [savingAction, setSavingAction] = useState<
     'complete' | 'exempt' | null
   >(null);
@@ -124,6 +138,10 @@ export function ApprovalWorkflowMissingSectionV2({
   const familyId = supportedApprovalContext?.volunteerFamilyId ?? '';
   const family = familyLookup(familyId);
   const volunteerCompletionTargets = useMemo(() => {
+    if (targets) {
+      return [];
+    }
+
     const personIds = volunteerRequirementCompletionPersonIds({
       individualVolunteers:
         family?.volunteerFamilyInfo?.individualVolunteers ?? {},
@@ -147,6 +165,7 @@ export function ApprovalWorkflowMissingSectionV2({
     occurrence,
     relatedOccurrences,
     requirementName,
+    targets,
   ]);
   const [selectedVolunteerPersonIds, setSelectedVolunteerPersonIds] = useState<
     string[]
@@ -203,6 +222,8 @@ export function ApprovalWorkflowMissingSectionV2({
   const notesAllowed =
     requirementPolicy.noteEntry === NoteEntryRequirement.Allowed ||
     notesRequired;
+  const hasExplicitTargets =
+    !targets || targets.family || targets.personIds.length > 0;
   const isCompleting = savingAction === 'complete';
   const isExempting = savingAction === 'exempt';
   const isSaving = savingAction !== null;
@@ -216,9 +237,11 @@ export function ApprovalWorkflowMissingSectionV2({
       !documentRequired) &&
     (notes.trim() !== '' || !notesRequired) &&
     (volunteerCompletionTargets.length === 0 ||
-      selectedVolunteerPersonIds.length > 0);
+      selectedVolunteerPersonIds.length > 0) &&
+    hasExplicitTargets;
   const canSaveExemption =
     !isSaving &&
+    hasExplicitTargets &&
     canExempt &&
     additionalComments.trim() !== '' &&
     !exemptionExpiresAtError;
@@ -265,6 +288,10 @@ export function ApprovalWorkflowMissingSectionV2({
     return noteId;
   }
 
+  function markTargetsSaved(keys: string[]) {
+    setSavedTargetKeys((current) => [...new Set([...current, ...keys])]);
+  }
+
   async function completeRequirement() {
     if (!canSaveCompletion || !completedAtLocal) {
       return;
@@ -276,7 +303,32 @@ export function ApprovalWorkflowMissingSectionV2({
         const uploadedDocumentId = await resolveDocumentId();
         const noteId = await createCompletionNote();
 
-        if (
+        if (targets) {
+          const unsaved = unsavedCompleteOtherTargets(targets, savedTargetKeys);
+          if (unsaved.family) {
+            await volunteers.completeFamilyRequirement(
+              familyId,
+              requirementName,
+              requirementPolicy,
+              completedAtLocal,
+              uploadedDocumentId,
+              noteId
+            );
+            markTargetsSaved([FAMILY_TARGET_KEY]);
+          }
+          if (unsaved.personIds.length > 0) {
+            await volunteers.completeIndividualRequirements(
+              familyId,
+              unsaved.personIds,
+              requirementName,
+              requirementPolicy,
+              completedAtLocal,
+              uploadedDocumentId,
+              noteId
+            );
+            markTargetsSaved(unsaved.personIds);
+          }
+        } else if (
           volunteerCompletionTargets.length > 0 &&
           selectedVolunteerPersonIds.length > 0
         ) {
@@ -325,7 +377,28 @@ export function ApprovalWorkflowMissingSectionV2({
     setSavingAction('exempt');
     try {
       await withBackdrop(async () => {
-        if (approvalContext.kind === 'Volunteer Family') {
+        if (targets) {
+          const unsaved = unsavedCompleteOtherTargets(targets, savedTargetKeys);
+          if (unsaved.family) {
+            await volunteers.exemptVolunteerFamilyRequirement(
+              familyId,
+              requirementName,
+              additionalComments,
+              exemptionExpiresAtLocal
+            );
+            markTargetsSaved([FAMILY_TARGET_KEY]);
+          }
+          for (const personId of unsaved.personIds) {
+            await volunteers.exemptVolunteerRequirement(
+              familyId,
+              personId,
+              requirementName,
+              additionalComments,
+              exemptionExpiresAtLocal
+            );
+            markTargetsSaved([personId]);
+          }
+        } else if (approvalContext.kind === 'Volunteer Family') {
           await volunteers.exemptVolunteerFamilyRequirement(
             familyId,
             requirementName,
@@ -351,6 +424,11 @@ export function ApprovalWorkflowMissingSectionV2({
 
   return (
     <Stack spacing={2}>
+      {targets && (
+        <Typography color="text.secondary" variant="body2">
+          For {occurrence.subject.label}
+        </Typography>
+      )}
       {showCompletion && (
         <Stack spacing={1.5}>
           {mode === 'both' && (
