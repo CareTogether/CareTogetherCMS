@@ -125,10 +125,15 @@ function MatrixCellContents({
         <Stack key={index} spacing={0.25}>
           <Chip
             size="small"
-            variant={shared ? 'filled' : 'outlined'}
-            color={shared ? 'primary' : 'default'}
+            variant="outlined"
             label={`${shared ? 'Base' : 'Additional'} · ${item.phase} · ${item.isRequired ? 'Required' : 'Optional'}`}
-            sx={{ maxWidth: '100%', alignSelf: 'flex-start' }}
+            sx={{
+              maxWidth: '100%',
+              alignSelf: 'flex-start',
+              bgcolor: 'common.white',
+              color: 'text.primary',
+              borderColor: 'divider',
+            }}
           />
           {item.phase === 'Monitoring' &&
             variantScheduleSummary(item.recurrence).map((line, i) => (
@@ -495,6 +500,7 @@ export function CasePoliciesMatrix({
     },
     ...scopes.map((scope) => ({
       field: scope.field,
+      cellClassName: 'policy-requirement-cell',
       hideable: false,
       headerName: scope.functionName ? scope.label + ' (variant)' : scope.label,
       renderHeader: scope.functionName
@@ -837,6 +843,7 @@ export function CasePoliciesMatrix({
               )
             }
             sx={{
+              '& .policy-requirement-cell': { bgcolor: 'common.white' },
               '& .MuiDataGrid-cell.policy-cell-unsaved, & .MuiDataGrid-cell.policy-cell-unsaved:focus, & .MuiDataGrid-cell.policy-cell-unsaved:focus-within':
                 {
                   outline: '1px solid',

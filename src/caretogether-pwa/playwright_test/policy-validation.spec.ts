@@ -3,6 +3,7 @@ import {
   settingsSectionPath,
 } from '../src/Settings/settingsSections';
 import { type Page } from '@playwright/test';
+import { createTheme } from '@mui/material/styles';
 import { expect, test } from './support/fixtures';
 import {
   SELF_SERVICE_POLICY_FEATURE_FLAG,
@@ -2674,6 +2675,132 @@ test.describe('location-wide arrangement phases', () => {
 });
 
 test.describe('Case Policies matrix', () => {
+  test('requirement cells and badges share a white surface without changing hover, focus or editing', async ({
+    page,
+  }) => {
+    const requests = await backend(page, false, false, caseMatrixPolicy());
+    await mount(page, 'casePolicy', undefined, true);
+    const base = matrixCell(page, 'Form');
+    const additional = matrixCell(
+      page,
+      'Form',
+      'Provider function',
+      'First profile'
+    );
+    const white = 'rgb(255, 255, 255)';
+    const palette = createTheme().palette;
+    function badgePresentation(element: Element) {
+      const properties = [
+        'background-color',
+        'color',
+        'border-top-color',
+        'border-top-width',
+        'border-top-style',
+        'border-radius',
+        'font-size',
+        'font-weight',
+        'padding-top',
+        'padding-right',
+        'padding-bottom',
+        'padding-left',
+        'gap',
+      ];
+      const root = getComputedStyle(element);
+      const label = getComputedStyle(element.querySelector('.MuiChip-label')!);
+      return {
+        root: Object.fromEntries(
+          properties.map((property) => [
+            property,
+            root.getPropertyValue(property),
+          ])
+        ),
+        label: Object.fromEntries(
+          properties.map((property) => [
+            property,
+            label.getPropertyValue(property),
+          ])
+        ),
+      };
+    }
+    const firstBadge = base.locator('.MuiChip-root').first();
+    await expect(firstBadge).toHaveCSS('color', palette.text.primary);
+    await expect(firstBadge).toHaveCSS('border-top-color', palette.divider);
+    const neutralPresentation = await firstBadge.evaluate(badgePresentation);
+    await page.mouse.move(0, 0);
+    for (const cell of [base, additional]) {
+      await expect(cell).toHaveCSS('background-color', white);
+      for (const badge of await cell.locator('.MuiChip-root').all()) {
+        await expect(badge).toHaveCSS('background-color', white);
+        await expect(badge).toBeVisible();
+        await expect(badge).not.toHaveCSS('color', white);
+        await expect(badge).toHaveCSS('color', palette.text.primary);
+        await expect(badge).toHaveCSS('border-top-color', palette.divider);
+        expect(await badge.evaluate(badgePresentation)).toEqual(
+          neutralPresentation
+        );
+      }
+    }
+    await expect(
+      base.getByText('Base \u00b7 Setup \u00b7 Required', { exact: true })
+    ).toBeVisible();
+    await expect(
+      additional.getByText('Additional \u00b7 Setup \u00b7 Optional', {
+        exact: true,
+      })
+    ).toBeVisible();
+    await expect(
+      base.getByText('Stage 1: 2 days; 3 occurrence(s)', { exact: true })
+    ).toBeVisible();
+    await base.hover();
+    await expect(base).not.toHaveCSS('background-color', white);
+    await base.focus();
+    await base.press('ArrowRight');
+    await expect(additional).toBeFocused();
+    await expect(additional).toHaveCSS('outline-style', 'solid');
+    await page.mouse.move(0, 0);
+    const contents = await additional.innerText();
+    await additional.press('Enter');
+    let editor = page.getByRole('dialog', { name: /^Edit Form/ });
+    await expect(editor).toBeVisible();
+    await expect(additional).toHaveText(contents, { useInnerText: true });
+    for (const badge of await additional.locator('.MuiChip-root').all()) {
+      await expect(badge).toHaveCSS('background-color', white);
+      expect(await badge.evaluate(badgePresentation)).toEqual(
+        neutralPresentation
+      );
+    }
+    await editor
+      .getByRole('button', { name: 'Cancel cell', exact: true })
+      .click();
+    if (!(await page.getByRole('searchbox').isVisible()))
+      await page.getByRole('button', { name: 'Search', exact: true }).click();
+    await page.getByRole('searchbox').fill('Second setup');
+    const unused = matrixCell(page, 'Second setup');
+    await page.mouse.move(0, 0);
+    await expect(unused).toHaveCSS('background-color', white);
+    await expect(
+      unused.getByRole('img', { name: 'Not used', exact: true })
+    ).toHaveText('—');
+    await expect(unused.getByText('—', { exact: true })).toBeVisible();
+    await unused.click();
+    editor = page.getByRole('dialog', { name: /^Edit Second setup/ });
+    await expect(
+      editor.getByRole('button', { name: 'Add Setup', exact: true })
+    ).toBeVisible();
+    await expect(unused.getByText('—', { exact: true })).toBeVisible();
+    await editor
+      .getByRole('button', { name: 'Cancel cell', exact: true })
+      .click();
+    await expect(
+      page.getByRole('button', { name: 'Save changes', exact: true })
+    ).toBeDisabled();
+    await expect(
+      page.getByRole('button', { name: 'Undo', exact: true })
+    ).toBeDisabled();
+    await expect(page.locator('.policy-cell-unsaved')).toHaveCount(0);
+    expect(requests.puts()).toBe(0);
+  });
+
   for (const variant of [false, true]) {
     test(`Add Action stages an existing volunteer definition in ${variant ? 'variant Monitoring' : 'Base Setup'} without losing hidden policy data`, async ({
       page,
