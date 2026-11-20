@@ -11,6 +11,10 @@ import { ShellSideNavigation } from './ShellSideNavigation';
 import { useLocalStorage } from '../Hooks/useLocalStorage';
 import { useFeaturebase } from '../Hooks/useFeaturebase';
 import React from 'react';
+import { ThemeProvider } from '@mui/material/styles';
+import { useFeatureFlagEnabled } from 'posthog-js/react';
+import { FAMILY_SCREEN_V2_EARLY_ACCESS_FEATURE_FLAG } from '../featureFlags';
+import { v2TypographyTheme } from '../v2TypographyTheme';
 import { ProgressBackdrop } from './ProgressBackdrop';
 import { useGlobalSnackBar } from '../Hooks/useGlobalSnackBar';
 import {
@@ -22,6 +26,18 @@ import {
 } from './shellLayoutConstants';
 
 function ShellRootLayout({ children }: React.PropsWithChildren) {
+  const theme = useTheme();
+  const isV2 =
+    useFeatureFlagEnabled(FAMILY_SCREEN_V2_EARLY_ACCESS_FEATURE_FLAG) === true;
+
+  return (
+    <ThemeProvider theme={isV2 ? v2TypographyTheme : theme}>
+      <ShellLayoutContent>{children}</ShellLayoutContent>
+    </ThemeProvider>
+  );
+}
+
+function ShellLayoutContent({ children }: React.PropsWithChildren) {
   const theme = useTheme();
   const isDesktop = useMediaQuery(theme.breakpoints.up('md'));
 
@@ -41,7 +57,7 @@ function ShellRootLayout({ children }: React.PropsWithChildren) {
   useFeaturebase();
 
   return (
-    <Box sx={{ flexGrow: 1 }}>
+    <Box sx={{ flexGrow: 1, fontFamily: theme.typography.fontFamily }}>
       <ShellAppBar
         menuDrawerOpen={menuDrawerOpen}
         setMenuDrawerOpen={setMenuDrawerOpen}
