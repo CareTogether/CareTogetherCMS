@@ -1,5 +1,5 @@
 import Grid from '../Generic/GridLegacyCompat';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import {
   Box,
@@ -53,8 +53,12 @@ import { useReferralDetailsViewModel } from './useReferralDetailsViewModel';
 export function ReferralDetailsPage() {
   useScreenTitle('Referrals');
   const theme = useTheme();
-  const isDesktop = useMediaQuery(theme.breakpoints.up('sm'));
+  const isDesktop = useMediaQuery(theme.breakpoints.up('md'));
   const [menuAnchor, setMenuAnchor] = useState<HTMLElement | null>(null);
+
+  useEffect(() => {
+    if (isDesktop) setMenuAnchor(null);
+  }, [isDesktop]);
 
   const { referralId } = useParams<{ referralId: string }>();
   const appNavigate = useAppNavigate();
@@ -312,11 +316,20 @@ export function ReferralDetailsPage() {
           onClose={() => setMenuAnchor(null)}
           onClick={() => setMenuAnchor(null)}
           slotProps={{
+            backdrop: {
+              invisible: false,
+              sx: {
+                backgroundColor: {
+                  xs: 'rgba(0, 0, 0, 0.5)',
+                  md: 'transparent',
+                },
+              },
+            },
             list: { 'aria-label': 'Referral actions' },
             paper: {
               sx: {
                 '& .MuiMenuItem-root': {
-                  minHeight: 44,
+                  minHeight: 48,
                   whiteSpace: 'normal',
                   overflowWrap: 'anywhere',
                 },

@@ -18,7 +18,10 @@ import {
 } from '@mui/icons-material';
 import type { MouseEvent, ReactNode } from 'react';
 import { useRef } from 'react';
-import { personFullName, type PrintableFamilyMember } from './FamilyMemberPrintData';
+import {
+  personFullName,
+  type PrintableFamilyMember,
+} from './FamilyMemberPrintData';
 
 type RoleActionV2 = {
   key: string;
@@ -120,6 +123,9 @@ export function FamilyScreenActionsMenuV2({
           {!isDesktop && hasFamilyActions && (
             <IconButton
               aria-label="family actions"
+              aria-controls={menuAnchor ? 'family-more-menu' : undefined}
+              aria-haspopup="menu"
+              aria-expanded={Boolean(menuAnchor)}
               onClick={onOpenMenu}
               size="small"
               sx={{
@@ -192,7 +198,14 @@ export function FamilyScreenActionsMenuV2({
           </Button>
         )}
         {isDesktop && hasMoreMenuActions && (
-          <IconButton onClick={onOpenMenu} size="small">
+          <IconButton
+            aria-label="family actions"
+            aria-controls={menuAnchor ? 'family-more-menu' : undefined}
+            aria-haspopup="menu"
+            aria-expanded={Boolean(menuAnchor)}
+            onClick={onOpenMenu}
+            size="small"
+          >
             <MoreVertIcon />
           </IconButton>
         )}
@@ -204,6 +217,22 @@ export function FamilyScreenActionsMenuV2({
         open={Boolean(menuAnchor)}
         onClose={onCloseMenu}
         slotProps={{
+          backdrop: {
+            invisible: false,
+            sx: {
+              backgroundColor: {
+                xs: 'rgba(0, 0, 0, 0.5)',
+                md: 'transparent',
+              },
+            },
+          },
+          paper: {
+            sx: (theme) => ({
+              [theme.breakpoints.down('md')]: {
+                '& .MuiMenuItem-root': { minHeight: 48 },
+              },
+            }),
+          },
           transition: {
             onExited: () => {
               const action = pendingDrawerAction.current;
@@ -293,7 +322,10 @@ export function FamilyScreenActionsMenuV2({
 
           {showToggleTestFamilyAction && (
             <MenuItem onClick={onToggleTestFamily}>
-              <ListItemText className="ph-unmask" primary={toggleTestFamilyLabel} />
+              <ListItemText
+                className="ph-unmask"
+                primary={toggleTestFamilyLabel}
+              />
             </MenuItem>
           )}
 

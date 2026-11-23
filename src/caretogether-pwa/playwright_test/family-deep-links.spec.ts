@@ -12,6 +12,76 @@ function familyRoute(familyId: string, searchParams?: URLSearchParams) {
   return `${ATLANTIS_ROUTE}families/${familyId}${search}`;
 }
 
+test.describe('responsive family actions @pr', () => {
+  for (const width of [390, 768, 899, 900, 1440]) {
+    test(`menu backdrop and keyboard dismissal at ${width}px`, async ({
+      page,
+    }) => {
+      await page.setViewportSize({ width, height: 900 });
+      await page.goto(familyRoute(SKYWALKER_FAMILY_ID));
+      const trigger = page.getByRole('button', {
+        name: 'family actions',
+        exact: true,
+      });
+      await trigger.focus();
+      await trigger.press('Enter');
+      const menu = page.locator('#family-more-menu');
+      await expect(menu).toBeVisible();
+      const backdrop = menu.locator('.MuiBackdrop-root');
+      await expect(backdrop).toHaveCSS(
+        'background-color',
+        width < 900 ? 'rgba(0, 0, 0, 0.5)' : 'rgba(0, 0, 0, 0)'
+      );
+      const items = menu.getByRole('menuitem');
+      await page.keyboard.press('ArrowDown');
+      const focusedItem = menu.locator('[role="menuitem"]:focus');
+      await expect(focusedItem).toHaveCount(1);
+      const firstFocusedText = await focusedItem.textContent();
+      await page.keyboard.press('ArrowDown');
+      await expect(focusedItem).toHaveCount(1);
+      await expect(focusedItem).not.toHaveText(firstFocusedText!);
+      if (width < 900) {
+        for (const item of await items.all()) {
+          expect((await item.boundingBox())!.height).toBeGreaterThanOrEqual(48);
+        }
+      }
+      await page.keyboard.press('Escape');
+      await expect(menu).toBeHidden();
+      await expect(trigger).toBeFocused();
+      await trigger.click();
+      await page.setViewportSize({
+        width: width < 900 ? 900 : 390,
+        height: 900,
+      });
+      await expect(backdrop).toHaveCSS(
+        'background-color',
+        width < 900 ? 'rgba(0, 0, 0, 0)' : 'rgba(0, 0, 0, 0.5)'
+      );
+      await page.setViewportSize({ width, height: 900 });
+      await backdrop.click({ position: { x: 1, y: 1 } });
+      await expect(menu).toBeHidden();
+      await expect(trigger).toBeFocused();
+    });
+  }
+
+  test('mobile family action closes the menu before opening its drawer', async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 390, height: 900 });
+    await page.goto(familyRoute(SKYWALKER_FAMILY_ID));
+    await page
+      .getByRole('button', { name: 'family actions', exact: true })
+      .click();
+    const menu = page.locator('#family-more-menu');
+    await menu.getByRole('menuitem', { name: 'Adult', exact: true }).click();
+    await expect(
+      page.getByRole('heading', { name: /Add Adult to/ })
+    ).toBeVisible();
+    await expect(menu).toBeHidden();
+    await expect(menu.locator('.MuiBackdrop-root')).toBeHidden();
+  });
+});
+
 test.describe('family deep links @pr', () => {
   test('opens and closes the family member drawer from familyMemberId', async ({
     page,
@@ -23,9 +93,7 @@ test.describe('family deep links @pr', () => {
 
     await page.goto(familyRoute(SKYWALKER_FAMILY_ID, searchParams));
 
-    await expect(
-      page.getByRole('heading', { name: 'Ben Solo' })
-    ).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Ben Solo' })).toBeVisible();
     await expect(
       page.getByRole('button', { name: 'Close family member drawer' })
     ).toBeVisible();
@@ -34,9 +102,9 @@ test.describe('family deep links @pr', () => {
       .getByRole('button', { name: 'Close family member drawer' })
       .click();
 
-    await expect(
-      page.getByRole('heading', { name: 'Ben Solo' })
-    ).toHaveCount(0);
+    await expect(page.getByRole('heading', { name: 'Ben Solo' })).toHaveCount(
+      0
+    );
     await expect(page).toHaveURL(/source=playwright/);
     await expect(page).not.toHaveURL(/familyMemberId=/);
   });
@@ -67,7 +135,9 @@ test.describe('family deep links @pr', () => {
       page.getByRole('button', { name: 'close arrangement details' })
     ).toBeVisible();
 
-    await page.getByRole('button', { name: 'close arrangement details' }).click();
+    await page
+      .getByRole('button', { name: 'close arrangement details' })
+      .click();
 
     await expect(
       page.getByRole('button', { name: 'close arrangement details' })

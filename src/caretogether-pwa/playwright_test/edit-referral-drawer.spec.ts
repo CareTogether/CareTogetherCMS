@@ -105,6 +105,63 @@ async function prepareReferral(page: Page) {
 }
 
 test.describe('edit referral drawer @pr', () => {
+  for (const width of [390, 768, 899, 900, 1440]) {
+    test(`responsive referral actions at ${width}px`, async ({ page }) => {
+      await page.setViewportSize({ width, height: 900 });
+      const { referral } = await prepareReferral(page);
+      await page.goto(`${ATLANTIS_ROUTE}referrals/${referral.referralId}`);
+      const trigger = page.getByRole('button', {
+        name: 'referral actions',
+        exact: true,
+      });
+      if (width >= 900) {
+        await expect(trigger).toHaveCount(0);
+        await expect(
+          page.getByRole('button', { name: 'Edit Referral', exact: true })
+        ).toBeVisible();
+        return;
+      }
+      await trigger.focus();
+      await trigger.press('Enter');
+      const menu = page.locator('#referral-actions-menu');
+      const backdrop = menu.locator('.MuiBackdrop-root');
+      await expect(backdrop).toHaveCSS(
+        'background-color',
+        'rgba(0, 0, 0, 0.5)'
+      );
+      const items = menu.getByRole('menuitem');
+      await expect(items.first()).toBeFocused();
+      await items.first().press('ArrowDown');
+      await expect(items.nth(1)).toBeFocused();
+      for (const item of await items.all()) {
+        expect((await item.boundingBox())!.height).toBeGreaterThanOrEqual(48);
+      }
+      await page.keyboard.press('Escape');
+      await expect(menu).toBeHidden();
+      await expect(trigger).toBeFocused();
+      await trigger.click();
+      await backdrop.click({ position: { x: 1, y: 1 } });
+      await expect(menu).toBeHidden();
+      await expect(trigger).toBeFocused();
+      await trigger.click();
+      await page.setViewportSize({ width: 900, height: 900 });
+      await expect(menu).toBeHidden();
+      await page.setViewportSize({ width, height: 900 });
+      await expect(menu).toBeHidden();
+      await trigger.click();
+      await menu
+        .getByRole('menuitem', { name: 'Edit Referral', exact: true })
+        .click();
+      await expect(
+        page.getByRole('heading', { name: 'Edit Referral', exact: true })
+      ).toBeVisible();
+      await expect(menu).toBeHidden();
+      await expect(
+        page.getByRole('textbox', { name: 'Referral Title' })
+      ).toBeEditable();
+    });
+  }
+
   test('loads saved custom fields and submits only changed data', async ({
     page,
   }) => {
