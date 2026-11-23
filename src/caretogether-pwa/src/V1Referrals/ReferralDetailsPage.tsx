@@ -53,7 +53,7 @@ import { useReferralDetailsViewModel } from './useReferralDetailsViewModel';
 export function ReferralDetailsPage() {
   useScreenTitle('Referrals');
   const theme = useTheme();
-  const isDesktop = useMediaQuery(theme.breakpoints.up('md'));
+  const isDesktop = useMediaQuery(theme.breakpoints.up('lg'));
   const [menuAnchor, setMenuAnchor] = useState<HTMLElement | null>(null);
 
   useEffect(() => {
@@ -186,9 +186,10 @@ export function ReferralDetailsPage() {
         sx={{
           display: 'flex',
           justifyContent: 'space-between',
-          alignItems: { xs: 'stretch', md: 'center' },
-          flexDirection: { xs: 'column', md: 'row' },
-          gap: { xs: 2, md: 0 },
+          alignItems: { xs: 'stretch', lg: 'center' },
+          flexDirection: { xs: 'column', lg: 'row' },
+          flexWrap: 'wrap',
+          gap: 2,
           mb: { xs: 2, sm: 3 },
         }}
       >
@@ -199,6 +200,7 @@ export function ReferralDetailsPage() {
             justifyContent: 'space-between',
             gap: 1,
             minWidth: 0,
+            flex: { lg: '1 1 auto' },
           }}
         >
           <Typography variant="h5" sx={{ fontWeight: 600, minWidth: 0 }}>
@@ -236,17 +238,20 @@ export function ReferralDetailsPage() {
                   ? 'grid'
                   : 'none',
               sm: 'grid',
-              md: 'flex',
+              lg: 'flex',
             },
             gridTemplateColumns: {
               xs: 'minmax(0, 1fr)',
               sm: 'repeat(2, minmax(0, 1fr))',
             },
             alignItems: 'center',
-            gap: { xs: 1, md: 3 },
+            gap: { xs: 1, lg: 3 },
+            flexShrink: 0,
+            maxWidth: '100%',
             '& > .MuiButton-root': {
-              minHeight: { xs: 44, md: 'auto' },
-              height: { xs: '100%', md: 'auto' },
+              minHeight: { xs: 44, lg: 'auto' },
+              height: { xs: '100%', lg: 'auto' },
+              whiteSpace: 'nowrap',
             },
           }}
         >
@@ -321,7 +326,7 @@ export function ReferralDetailsPage() {
               sx: {
                 backgroundColor: {
                   xs: 'rgba(0, 0, 0, 0.5)',
-                  md: 'transparent',
+                  lg: 'transparent',
                 },
               },
             },
@@ -329,7 +334,7 @@ export function ReferralDetailsPage() {
             paper: {
               sx: {
                 '& .MuiMenuItem-root': {
-                  minHeight: 48,
+                  minHeight: { xs: 48, lg: 'auto' },
                   whiteSpace: 'normal',
                   overflowWrap: 'anywhere',
                 },

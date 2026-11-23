@@ -105,20 +105,49 @@ async function prepareReferral(page: Page) {
 }
 
 test.describe('edit referral drawer @pr', () => {
-  for (const width of [390, 768, 899, 900, 1440]) {
+  for (const width of [
+    390, 768, 899, 900, 1024, 1100, 1199, 1200, 1280, 1366, 1440,
+  ]) {
     test(`responsive referral actions at ${width}px`, async ({ page }) => {
       await page.setViewportSize({ width, height: 900 });
       const { referral } = await prepareReferral(page);
       await page.goto(`${ATLANTIS_ROUTE}referrals/${referral.referralId}`);
+      await expect(
+        page.getByText(referral.title, { exact: true })
+      ).toBeVisible();
+      expect(
+        await page.evaluate(() => document.documentElement.scrollWidth)
+      ).toBeLessThanOrEqual(width);
       const trigger = page.getByRole('button', {
         name: 'referral actions',
         exact: true,
       });
-      if (width >= 900) {
+      if (width >= 1200) {
         await expect(trigger).toHaveCount(0);
         await expect(
           page.getByRole('button', { name: 'Edit Referral', exact: true })
         ).toBeVisible();
+        const actions = page
+          .getByRole('button', { name: 'Edit Referral', exact: true })
+          .locator('..');
+        const dimensions = await actions.evaluate((element) => ({
+          client: element.clientWidth,
+          scroll: element.scrollWidth,
+          buttons: Array.from(element.querySelectorAll('button')).map(
+            (button) => ({
+              whiteSpace: getComputedStyle(button).whiteSpace,
+              height: button.getBoundingClientRect().height,
+              lineHeight: Number.parseFloat(
+                getComputedStyle(button).lineHeight
+              ),
+            })
+          ),
+        }));
+        expect(dimensions.scroll).toBeLessThanOrEqual(dimensions.client);
+        for (const button of dimensions.buttons) {
+          expect(button.whiteSpace).toBe('nowrap');
+          expect(button.height).toBeLessThan(button.lineHeight * 2);
+        }
         return;
       }
       await trigger.focus();
@@ -127,14 +156,16 @@ test.describe('edit referral drawer @pr', () => {
       const backdrop = menu.locator('.MuiBackdrop-root');
       await expect(backdrop).toHaveCSS(
         'background-color',
-        'rgba(0, 0, 0, 0.5)'
+        width < 1200 ? 'rgba(0, 0, 0, 0.5)' : 'rgba(0, 0, 0, 0)'
       );
       const items = menu.getByRole('menuitem');
       await expect(items.first()).toBeFocused();
       await items.first().press('ArrowDown');
       await expect(items.nth(1)).toBeFocused();
-      for (const item of await items.all()) {
-        expect((await item.boundingBox())!.height).toBeGreaterThanOrEqual(48);
+      if (width < 1200) {
+        for (const item of await items.all()) {
+          expect((await item.boundingBox())!.height).toBeGreaterThanOrEqual(48);
+        }
       }
       await page.keyboard.press('Escape');
       await expect(menu).toBeHidden();
@@ -144,7 +175,7 @@ test.describe('edit referral drawer @pr', () => {
       await expect(menu).toBeHidden();
       await expect(trigger).toBeFocused();
       await trigger.click();
-      await page.setViewportSize({ width: 900, height: 900 });
+      await page.setViewportSize({ width: 1200, height: 900 });
       await expect(menu).toBeHidden();
       await page.setViewportSize({ width, height: 900 });
       await expect(menu).toBeHidden();

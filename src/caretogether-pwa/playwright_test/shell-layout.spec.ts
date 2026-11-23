@@ -147,9 +147,11 @@ fullscreenTest.describe('responsive fullscreen toggle', () => {
     );
   }
 
-  for (const width of [320, 390, 599, 600, 768, 899, 900, 1440]) {
+  for (const width of [
+    320, 390, 599, 600, 768, 899, 900, 1024, 1100, 1199, 1200, 1280, 1440,
+  ]) {
     fullscreenTest(
-      `fullscreen entry follows the shell md breakpoint at ${width}px`,
+      `fullscreen entry follows the lg breakpoint at ${width}px`,
       async ({ page }) => {
         await mountFullscreen(page);
         const enter = page.getByRole('button', {
@@ -158,7 +160,7 @@ fullscreenTest.describe('responsive fullscreen toggle', () => {
         });
         await expect(enter).toBeVisible();
         await page.setViewportSize({ width, height: 844 });
-        if (width < 900) {
+        if (width < 1200) {
           await expect(enter).toHaveCount(0);
           await expect(page.locator('#fullscreen-root')).toBeEmpty();
         } else {
@@ -252,7 +254,7 @@ fullscreenTest.describe('responsive fullscreen toggle', () => {
           () => (window as FullscreenTestWindow).fullscreenTest.exits
         )
       ).toBe(1);
-      await page.setViewportSize({ width: 900, height: 844 });
+      await page.setViewportSize({ width: 1200, height: 844 });
       await expect(
         page.getByRole('button', { name: 'Enter fullscreen', exact: true })
       ).toBeVisible();
@@ -267,8 +269,17 @@ fullscreenTest.describe('responsive fullscreen toggle', () => {
         name: 'Exit fullscreen',
         exact: true,
       });
-      await expect(exit).toBeVisible();
-      await exit.click();
+      for (const width of [
+        390, 768, 899, 900, 1024, 1100, 1199, 1200, 1280, 1440,
+      ]) {
+        await page.setViewportSize({ width, height: 844 });
+        await expect(exit).toBeVisible();
+        await expect(page.getByRole('button')).toHaveCount(1);
+        await exit.focus();
+        await expect(exit).toBeFocused();
+      }
+      await page.setViewportSize({ width: 390, height: 844 });
+      await exit.press('Enter');
       await expect(page.locator('#fullscreen-root')).toBeEmpty();
     }
   );

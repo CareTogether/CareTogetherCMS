@@ -11,7 +11,7 @@ import {
 
 export function ShellFullscreenToggle() {
   const theme = useTheme();
-  const isDesktop = useMediaQuery(theme.breakpoints.up('md'));
+  const isDesktop = useMediaQuery(theme.breakpoints.up('lg'));
   const [fullscreen, setFullscreen] = useState(
     Boolean(document.fullscreenElement)
   );

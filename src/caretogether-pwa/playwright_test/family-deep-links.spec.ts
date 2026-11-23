@@ -13,7 +13,9 @@ function familyRoute(familyId: string, searchParams?: URLSearchParams) {
 }
 
 test.describe('responsive family actions @pr', () => {
-  for (const width of [390, 768, 899, 900, 1440]) {
+  for (const width of [
+    390, 768, 899, 900, 1024, 1100, 1199, 1200, 1280, 1440,
+  ]) {
     test(`menu backdrop and keyboard dismissal at ${width}px`, async ({
       page,
     }) => {
@@ -30,7 +32,7 @@ test.describe('responsive family actions @pr', () => {
       const backdrop = menu.locator('.MuiBackdrop-root');
       await expect(backdrop).toHaveCSS(
         'background-color',
-        width < 900 ? 'rgba(0, 0, 0, 0.5)' : 'rgba(0, 0, 0, 0)'
+        width < 1200 ? 'rgba(0, 0, 0, 0.5)' : 'rgba(0, 0, 0, 0)'
       );
       const items = menu.getByRole('menuitem');
       await page.keyboard.press('ArrowDown');
@@ -40,7 +42,7 @@ test.describe('responsive family actions @pr', () => {
       await page.keyboard.press('ArrowDown');
       await expect(focusedItem).toHaveCount(1);
       await expect(focusedItem).not.toHaveText(firstFocusedText!);
-      if (width < 900) {
+      if (width < 1200) {
         for (const item of await items.all()) {
           expect((await item.boundingBox())!.height).toBeGreaterThanOrEqual(48);
         }
@@ -50,12 +52,12 @@ test.describe('responsive family actions @pr', () => {
       await expect(trigger).toBeFocused();
       await trigger.click();
       await page.setViewportSize({
-        width: width < 900 ? 900 : 390,
+        width: width < 1200 ? 1200 : 390,
         height: 900,
       });
       await expect(backdrop).toHaveCSS(
         'background-color',
-        width < 900 ? 'rgba(0, 0, 0, 0)' : 'rgba(0, 0, 0, 0.5)'
+        width < 1200 ? 'rgba(0, 0, 0, 0)' : 'rgba(0, 0, 0, 0.5)'
       );
       await page.setViewportSize({ width, height: 900 });
       await backdrop.click({ position: { x: 1, y: 1 } });

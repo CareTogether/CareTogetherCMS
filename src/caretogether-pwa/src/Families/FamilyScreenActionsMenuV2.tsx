@@ -222,13 +222,13 @@ export function FamilyScreenActionsMenuV2({
             sx: {
               backgroundColor: {
                 xs: 'rgba(0, 0, 0, 0.5)',
-                md: 'transparent',
+                lg: 'transparent',
               },
             },
           },
           paper: {
             sx: (theme) => ({
-              [theme.breakpoints.down('md')]: {
+              [theme.breakpoints.down('lg')]: {
                 '& .MuiMenuItem-root': { minHeight: 48 },
               },
             }),

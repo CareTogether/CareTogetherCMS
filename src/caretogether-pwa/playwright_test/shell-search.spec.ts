@@ -212,7 +212,7 @@ headerSearchTest.describe(
           const fullscreen = page
             .getByRole('banner')
             .getByRole('button', { name: 'Enter fullscreen', exact: true });
-          if (width < 900) await expect(fullscreen).toHaveCount(0);
+          if (width < 1200) await expect(fullscreen).toHaveCount(0);
           else await expect(fullscreen).toBeVisible();
         }
       );
