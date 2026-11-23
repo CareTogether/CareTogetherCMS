@@ -1,8 +1,17 @@
 import { useEffect, useState } from 'react';
 import { Fullscreen, FullscreenExit } from '@mui/icons-material';
-import { Alert, IconButton, Snackbar, Tooltip } from '@mui/material';
+import {
+  Alert,
+  IconButton,
+  Snackbar,
+  Tooltip,
+  useMediaQuery,
+  useTheme,
+} from '@mui/material';
 
 export function ShellFullscreenToggle() {
+  const theme = useTheme();
+  const isDesktop = useMediaQuery(theme.breakpoints.up('md'));
   const [fullscreen, setFullscreen] = useState(
     Boolean(document.fullscreenElement)
   );
@@ -18,6 +27,7 @@ export function ShellFullscreenToggle() {
   }, []);
 
   if (
+    (!isDesktop && !fullscreen) ||
     !document.fullscreenEnabled ||
     typeof document.documentElement.requestFullscreen !== 'function' ||
     typeof document.exitFullscreen !== 'function'
