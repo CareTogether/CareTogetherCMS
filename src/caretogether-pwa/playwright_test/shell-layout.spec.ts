@@ -445,9 +445,7 @@ test.describe('V2 shell', () => {
     await expect(
       header.getByRole('combobox', { name: 'Location', exact: true })
     ).toHaveCount(0);
-    await expect(
-      header.getByPlaceholder('Search families and people')
-    ).toBeVisible();
+    await expect(header.getByPlaceholder('Search families')).toBeVisible();
     await page
       .locator('.MuiBottomNavigation-root')
       .getByRole('button')
