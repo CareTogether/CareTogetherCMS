@@ -71,6 +71,16 @@ namespace CareTogether.Api.OData
         Gender? Gender
     );
 
+    public sealed record FamilyRelationship(
+        [property: Key] Guid OrganizationId,
+        [property: Key] Guid LocationId,
+        [property: Key] Guid FamilyId,
+        [property: Key] Guid PersonId,
+        string? RelationshipToFamily,
+        bool IsInHousehold,
+        bool IsPrimaryContact
+    );
+
     public enum PersonType
     {
         Adult,
@@ -350,6 +360,7 @@ namespace CareTogether.Api.OData
         IEnumerable<LocationUserAccess> LocationUserAccess,
         IEnumerable<Family> Families,
         IEnumerable<Person> People,
+        IEnumerable<FamilyRelationship> FamilyRelationships,
         IEnumerable<Community> Communities,
         IEnumerable<Role> Roles,
         IEnumerable<FamilyRoleApproval> FamilyRoleApprovals,
@@ -426,6 +437,13 @@ namespace CareTogether.Api.OData
         {
             var liveModel = await RenderLiveModelAsync();
             return liveModel.People;
+        }
+
+        [HttpGet("FamilyRelationships")]
+        public async Task<IEnumerable<FamilyRelationship>> GetFamilyRelationshipsAsync()
+        {
+            var liveModel = await RenderLiveModelAsync();
+            return liveModel.FamilyRelationships;
         }
 
         [HttpGet("Role")]
@@ -626,6 +644,7 @@ namespace CareTogether.Api.OData
                     Enumerable.Empty<LocationUserAccess>(),
                     Enumerable.Empty<Family>(),
                     Enumerable.Empty<Person>(),
+                    Enumerable.Empty<FamilyRelationship>(),
                     Enumerable.Empty<Community>(),
                     Enumerable.Empty<Role>(),
                     Enumerable.Empty<FamilyRoleApproval>(),
@@ -652,6 +671,7 @@ namespace CareTogether.Api.OData
                         acc.LocationUserAccess.Concat(model.LocationUserAccess),
                         acc.Families.Concat(model.Families),
                         acc.People.Concat(model.People),
+                        acc.FamilyRelationships.Concat(model.FamilyRelationships),
                         acc.Communities.Concat(model.Communities),
                         acc.Roles.Concat(model.Roles),
                         acc.FamilyRoleApprovals.Concat(model.FamilyRoleApprovals),
@@ -815,6 +835,10 @@ namespace CareTogether.Api.OData
                 .SelectMany(x => RenderPeople(organization, x.Item1, x.Item2))
                 .ToArray();
             LogDuplicatePeopleDataQualityIssues(logger, people);
+
+            var familyRelationships = familiesWithInfo
+                .SelectMany(x => RenderFamilyRelationships(x.Item1.Family, x.Item2))
+                .ToArray();
 
             var userRolesWithAccess = await people
                 .Select(person =>
@@ -1222,6 +1246,7 @@ namespace CareTogether.Api.OData
                 locationUserAccess,
                 families,
                 people,
+                familyRelationships,
                 communities,
                 roles,
                 familyRoleApprovals,
@@ -1832,6 +1857,20 @@ namespace CareTogether.Api.OData
                 )
             );
         }
+
+        private static IEnumerable<FamilyRelationship> RenderFamilyRelationships(
+            Resources.Directory.Family familyInfo,
+            Family family
+        ) =>
+            familyInfo.Adults.Select(adult => new FamilyRelationship(
+                family.OrganizationId,
+                family.LocationId,
+                family.Id,
+                adult.Item1.Id,
+                adult.Item2.RelationshipToFamily,
+                adult.Item2.IsInHousehold,
+                adult.Item1.Id == familyInfo.PrimaryFamilyContactPersonId
+            ));
 
         private static IEnumerable<Person> RenderPeople(
             Organization organization,
