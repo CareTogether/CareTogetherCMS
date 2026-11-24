@@ -1,5 +1,10 @@
 import { expect, test } from './support/fixtures';
 import { ATLANTIS_ROUTE } from './support/constants';
+import {
+  FamilyRecordsAggregate,
+  Permission,
+  RecordsAggregate,
+} from '../src/GeneratedClient';
 
 const SKYWALKER_FAMILY_ID = '22222222-2222-2222-2222-222222222222';
 const BEN_SOLO_PERSON_ID = '77777777-7777-7777-7777-777777777777';
@@ -11,6 +16,261 @@ function familyRoute(familyId: string, searchParams?: URLSearchParams) {
   const search = searchParams?.size ? `?${searchParams.toString()}` : '';
   return `${ATLANTIS_ROUTE}families/${familyId}${search}`;
 }
+
+test.describe('family quick actions @pr', () => {
+  for (const width of [320, 390, 600, 768, 899, 900, 1024, 1199, 1200, 1440]) {
+    test(`persistent quick actions at ${width}px`, async ({ page }) => {
+      await page.setViewportSize({ width, height: 900 });
+      await page.goto(familyRoute(SKYWALKER_FAMILY_ID));
+      await expect(
+        page.getByRole('button', { name: 'family actions', exact: true })
+      ).toBeVisible();
+      const toolbar = page.getByRole('toolbar', {
+        name: 'Family quick actions',
+        exact: true,
+      });
+      if (width >= 1200) {
+        await expect(toolbar).toHaveCount(0);
+        await expect(
+          page.getByRole('button', { name: 'Note', exact: true })
+        ).toHaveCount(1);
+        await expect(
+          page.getByRole('button', { name: 'Upload', exact: true })
+        ).toHaveCount(1);
+        return;
+      }
+      await expect(
+        toolbar.getByRole('button', { name: 'Add Note', exact: true })
+      ).toBeVisible();
+      await expect(
+        toolbar.getByRole('button', { name: 'Upload Document', exact: true })
+      ).toBeVisible();
+      await expect(toolbar.getByRole('button')).toHaveCount(2);
+      for (const button of await toolbar.getByRole('button').all()) {
+        expect((await button.boundingBox())!.height).toBeGreaterThanOrEqual(48);
+      }
+      const layout = await toolbar.evaluate((element) => {
+        const style = getComputedStyle(element);
+        const buttons = Array.from(element.querySelectorAll('button'));
+        return {
+          width: element.getBoundingClientRect().width,
+          right:
+            element.getBoundingClientRect().right -
+            Number.parseFloat(style.paddingRight),
+          left:
+            element.getBoundingClientRect().left +
+            Number.parseFloat(style.paddingLeft),
+          buttonWidth: buttons.reduce(
+            (sum, button) => sum + button.getBoundingClientRect().width,
+            0
+          ),
+          lastRight: buttons.at(-1)!.getBoundingClientRect().right,
+          firstLeft: buttons[0].getBoundingClientRect().left,
+          shadow: style.boxShadow,
+          borders: [
+            style.borderTopWidth,
+            style.borderRightWidth,
+            style.borderBottomWidth,
+            style.borderLeftWidth,
+          ],
+        };
+      });
+      expect(layout.buttonWidth).toBeLessThan(layout.width);
+      expect(
+        Math.abs(
+          (layout.firstLeft + layout.lastRight) / 2 -
+            (layout.left + layout.right) / 2
+        )
+      ).toBeLessThanOrEqual(1);
+      expect(layout.shadow).toBe('none');
+      expect(layout.borders).toEqual(['1px', '0px', '0px', '0px']);
+      const navigationHeight =
+        width < 900
+          ? (await page
+              .getByRole('button', {
+                name: 'Open navigation menu',
+                exact: true,
+              })
+              .locator('..')
+              .boundingBox())!.height
+          : 0;
+      for (const position of ['start', 'middle', 'bottom']) {
+        await page.evaluate((position) => {
+          const maximum = document.documentElement.scrollHeight - innerHeight;
+          window.scrollTo(
+            0,
+            position === 'start'
+              ? 0
+              : position === 'middle'
+                ? maximum / 2
+                : maximum
+          );
+        }, position);
+        await expect(toolbar).toBeInViewport();
+        const dock = (await toolbar.boundingBox())!;
+        expect(dock.height).toBe(57);
+        expect(
+          Math.abs(dock.y + dock.height - (900 - navigationHeight))
+        ).toBeLessThanOrEqual(1);
+      }
+      await page.evaluate(() =>
+        window.scrollTo(0, document.documentElement.scrollHeight)
+      );
+      await expect(toolbar).toBeInViewport();
+      const bounds = (await toolbar.boundingBox())!;
+      const header = (await page.getByRole('banner').boundingBox())!;
+      expect(bounds.y).toBeGreaterThanOrEqual(header.y + header.height);
+      expect(bounds.x).toBeGreaterThanOrEqual(0);
+      expect(bounds.x + bounds.width).toBeLessThanOrEqual(width);
+      expect(
+        await page.evaluate(() => document.documentElement.scrollWidth)
+      ).toBeLessThanOrEqual(width);
+      if (width < 900) {
+        const navigation = (await page
+          .getByRole('button', { name: 'Open navigation menu', exact: true })
+          .boundingBox())!;
+        expect(
+          Math.abs(bounds.y + bounds.height - navigation.y)
+        ).toBeLessThanOrEqual(1);
+      } else {
+        const header = page.getByRole('banner');
+        const expand = header.getByRole('button', {
+          name: 'Expand sidebar',
+          exact: true,
+        });
+        if (await expand.isVisible()) await expand.click();
+        expect((await toolbar.boundingBox())!.x).toBe(190);
+        await header
+          .getByRole('button', { name: 'Collapse sidebar', exact: true })
+          .click();
+        expect((await toolbar.boundingBox())!.x).toBe(48);
+        await expand.click();
+        expect((await toolbar.boundingBox())!.x).toBe(190);
+      }
+      expect(
+        (await toolbar.locator('..').boundingBox())!.y
+      ).toBeLessThanOrEqual(bounds.y);
+      await page.setViewportSize({ width: 1200, height: 900 });
+      await expect(toolbar).toHaveCount(0);
+      await page.setViewportSize({ width, height: 900 });
+      await expect(toolbar).toBeVisible();
+      const note = toolbar.getByRole('button', {
+        name: 'Add Note',
+        exact: true,
+      });
+      await note.focus();
+      await note.press('Enter');
+      await expect(
+        page.getByRole('heading', { name: 'Add New Note', exact: true })
+      ).toBeVisible();
+      expect(
+        await page.evaluate(() => {
+          const dock = document.querySelector(
+            '[role="toolbar"][aria-label="Family quick actions"]'
+          )!;
+          const bounds = dock.querySelector('button')!.getBoundingClientRect();
+          return dock.contains(
+            document.elementFromPoint(
+              bounds.x + bounds.width / 2,
+              bounds.y + bounds.height / 2
+            )
+          );
+        })
+      ).toBe(false);
+      await page.getByRole('button', { name: 'Cancel', exact: true }).click();
+      await expect(note).toBeFocused();
+      const upload = toolbar.getByRole('button', {
+        name: 'Upload Document',
+        exact: true,
+      });
+      await upload.focus();
+      await upload.press('Space');
+      await expect(
+        page.getByRole('heading', {
+          name: 'Upload Family Documents',
+          exact: true,
+        })
+      ).toBeVisible();
+      await page.getByRole('button', { name: 'Cancel', exact: true }).click();
+      await expect(upload).toBeFocused();
+    });
+  }
+
+  for (const [notes, upload] of [
+    [true, true],
+    [true, false],
+    [false, true],
+    [false, false],
+  ]) {
+    test(`quick action permissions notes=${notes}, upload=${upload}`, async ({
+      page,
+    }) => {
+      await page.setViewportSize({ width: 390, height: 900 });
+      await page.route('**/Records', async (route) => {
+        const response = await route.fetch();
+        const records = (await response.json()).map(
+          RecordsAggregate.fromJS
+        ) as RecordsAggregate[];
+        const target = records.find(
+          (record) =>
+            record instanceof FamilyRecordsAggregate &&
+            record.family?.family?.id === SKYWALKER_FAMILY_ID
+        ) as FamilyRecordsAggregate;
+        expect(target).toBeTruthy();
+        target.family!.userPermissions = (
+          target.family!.userPermissions ?? []
+        ).filter(
+          (permission) =>
+            ![
+              Permission.AddEditDraftNotes,
+              Permission.AddEditOwnDraftNotes,
+              Permission.UploadFamilyDocuments,
+            ].includes(permission)
+        );
+        if (notes)
+          target.family!.userPermissions.push(Permission.AddEditOwnDraftNotes);
+        if (upload)
+          target.family!.userPermissions.push(Permission.UploadFamilyDocuments);
+        await route.fulfill({ response, json: records });
+      });
+      await page.goto(familyRoute(SKYWALKER_FAMILY_ID));
+      await expect(
+        page.getByRole('button', { name: 'family actions', exact: true })
+      ).toBeVisible();
+      const toolbar = page.getByRole('toolbar', {
+        name: 'Family quick actions',
+        exact: true,
+      });
+      await expect(toolbar).toHaveCount(notes || upload ? 1 : 0);
+      await expect(
+        toolbar.getByRole('button', { name: 'Add Note', exact: true })
+      ).toHaveCount(notes ? 1 : 0);
+      await expect(
+        toolbar.getByRole('button', { name: 'Upload Document', exact: true })
+      ).toHaveCount(upload ? 1 : 0);
+      if (notes || upload) {
+        const centered = await toolbar.evaluate((element) => {
+          const style = getComputedStyle(element);
+          const lastButton = element.querySelector('button:last-child')!;
+          const firstButton = element.querySelector('button')!;
+          return (
+            Math.abs(
+              (element.getBoundingClientRect().left +
+                Number.parseFloat(style.paddingLeft) +
+                element.getBoundingClientRect().right -
+                Number.parseFloat(style.paddingRight)) /
+                2 -
+                (firstButton.getBoundingClientRect().left +
+                  lastButton.getBoundingClientRect().right) /
+                  2
+            ) <= 1
+          );
+        });
+        expect(centered).toBe(true);
+      }
+    });
+  }
+});
 
 test.describe('responsive family actions @pr', () => {
   for (const width of [

@@ -422,9 +422,30 @@ test.describe('V2 shell', () => {
       exact: true,
     });
     await expect(collapse).toHaveAttribute('aria-expanded', 'true');
+    expect(
+      await header.evaluate((element) =>
+        getComputedStyle(element)
+          .getPropertyValue('--shell-content-inline-offset')
+          .trim()
+      )
+    ).toBe('190px');
+    expect(
+      await header.evaluate((element) =>
+        getComputedStyle(element)
+          .getPropertyValue('--shell-bottom-navigation-height')
+          .trim()
+      )
+    ).toBe('0px');
     const expandedBounds = await collapse.boundingBox();
     await collapse.click();
     await expect(expand).toHaveAttribute('aria-expanded', 'false');
+    expect(
+      await header.evaluate((element) =>
+        getComputedStyle(element)
+          .getPropertyValue('--shell-content-inline-offset')
+          .trim()
+      )
+    ).toBe('48px');
     const collapsedBounds = await expand.boundingBox();
     expect(collapsedBounds?.x).toBe(expandedBounds?.x);
     await expect(

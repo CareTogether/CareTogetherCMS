@@ -160,6 +160,7 @@ export function FamilyScreenActionsMenuV2({
             variant="contained"
             size="small"
             startIcon={<CloudUploadIcon />}
+            sx={{ display: { xs: 'none', lg: 'inline-flex' } }}
           >
             Upload
           </Button>
@@ -193,6 +194,7 @@ export function FamilyScreenActionsMenuV2({
             variant="contained"
             size="small"
             startIcon={<AddCircleIcon />}
+            sx={{ display: { xs: 'none', lg: 'inline-flex' } }}
           >
             Note
           </Button>
@@ -243,14 +245,6 @@ export function FamilyScreenActionsMenuV2({
         }}
       >
         <MenuList dense={isDesktop}>
-          {!isDesktop && canUploadDocuments && (
-            <MenuItem onClick={() => closeMenuBeforeOpening(onUploadDocuments)}>
-              <ListItemIcon>
-                <CloudUploadIcon fontSize="small" />
-              </ListItemIcon>
-              <ListItemText className="ph-unmask" primary="Upload" />
-            </MenuItem>
-          )}
           {!isDesktop && canEditFamilyInfo && (
             <MenuItem onClick={() => closeMenuBeforeOpening(onAddAdult)}>
               <ListItemIcon>
@@ -267,17 +261,7 @@ export function FamilyScreenActionsMenuV2({
               <ListItemText className="ph-unmask" primary="Child" />
             </MenuItem>
           )}
-          {!isDesktop && canAddNotes && (
-            <MenuItem onClick={() => closeMenuBeforeOpening(onAddNote)}>
-              <ListItemIcon>
-                <AddCircleIcon fontSize="small" />
-              </ListItemIcon>
-              <ListItemText className="ph-unmask" primary="Note" />
-            </MenuItem>
-          )}
-          {!isDesktop &&
-            (canUploadDocuments || canEditFamilyInfo || canAddNotes) &&
-            hasMoreMenuActions && <Divider />}
+          {!isDesktop && canEditFamilyInfo && hasMoreMenuActions && <Divider />}
           {roleRemovalActions.map((action) => (
             <MenuItem key={action.key} onClick={action.onClick}>
               <ListItemText primary={action.label} />

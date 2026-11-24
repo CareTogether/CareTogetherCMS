@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { MOBILE_BOTTOM_NAV_HEIGHT } from './shellLayoutConstants';
 import {
   Dashboard as DashboardIcon,
   Diversity3 as Diversity3Icon,
@@ -80,6 +81,7 @@ export function ShellBottomNavigation() {
         showLabels
         value={selectedLink}
         sx={{
+          height: MOBILE_BOTTOM_NAV_HEIGHT,
           // width: '100%',
           // position: 'fixed',
           // bottom: 0,
