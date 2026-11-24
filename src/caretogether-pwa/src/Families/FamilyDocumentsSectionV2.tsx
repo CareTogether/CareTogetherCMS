@@ -1,5 +1,16 @@
-import { Box, Stack, Typography } from '@mui/material';
-import { useCallback, useMemo, useRef, useState } from 'react';
+import {
+  Alert,
+  Box,
+  Stack,
+  Typography,
+  useMediaQuery,
+  useTheme,
+} from '@mui/material';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import type {
+  GridColumnVisibilityModel,
+  GridSortModel,
+} from '@mui/x-data-grid-premium';
 import Grid from '../Generic/GridLegacyCompat';
 import type {
   CombinedFamilyInfo,
@@ -15,6 +26,7 @@ import {
 import { DeleteDocumentDialog } from './DeleteDocumentDialog';
 import { FamilyDocumentPreviewDrawerV2 } from './FamilyDocumentPreviewDrawerV2';
 import { FamilyDocumentsDataGridV2 } from './FamilyDocumentsDataGridV2';
+import { FamilyDocumentsListV2 } from './FamilyDocumentsListV2';
 import {
   buildFamilyDocumentRowsV2,
   FamilyDocumentRowV2,
@@ -58,7 +70,20 @@ function EmptyFamilyDocumentsState() {
   );
 }
 
-export function FamilyDocumentsSectionV2({
+export function FamilyDocumentsSectionV2(props: FamilyDocumentsSectionV2Props) {
+  return (
+    <FamilyDocumentsSectionContent
+      key={[
+        props.organizationId,
+        props.locationId,
+        props.family.family?.id,
+      ].join(':')}
+      {...props}
+    />
+  );
+}
+
+function FamilyDocumentsSectionContent({
   family,
   hideTitle = false,
   locationId,
@@ -67,7 +92,29 @@ export function FamilyDocumentsSectionV2({
   referrals = [],
   uploaderLabel,
 }: FamilyDocumentsSectionV2Props) {
+  const theme = useTheme();
+  const isDesktop = useMediaQuery(theme.breakpoints.up('lg'));
+  const [search, setSearch] = useState('');
+  const [downloadError, setDownloadError] = useState<string>();
+  const [columnVisibilityModel, setColumnVisibilityModel] =
+    useState<GridColumnVisibilityModel>({
+      searchText: false,
+      sourceLabel: false,
+    });
+  const [sortModel, setSortModel] = useState<GridSortModel>([
+    { field: 'uploadedAtUtc', sort: 'desc' },
+  ]);
   const previewRequestIdRef = useRef(0);
+  const sectionRef = useRef<HTMLDivElement>(null);
+  const previewTriggerRef = useRef<HTMLElement | null>(null);
+  const pendingDeleteRef = useRef<FamilyDocumentRowV2 | null>(null);
+  useEffect(
+    () => () => {
+      previewRequestIdRef.current += 1;
+      pendingDeleteRef.current = null;
+    },
+    []
+  );
   const [selectedDocumentForPreview, setSelectedDocumentForPreview] =
     useState<FamilyDocumentRowV2 | null>(null);
   const [previewError, setPreviewError] = useState<string | undefined>();
@@ -95,47 +142,68 @@ export function FamilyDocumentsSectionV2({
   }
 
   const downloadDocument = useCallback(
-    (row: FamilyDocumentRowV2) => {
+    async (row: FamilyDocumentRowV2) => {
       if (!row.permissionFlags.canDownload || !row.uploadedDocumentId) return;
+      const requestId = previewRequestIdRef.current;
+      setDownloadError(undefined);
+      try {
+        if (row.source.type === 'family') {
+          await downloadFamilyFile(
+            organizationId,
+            locationId,
+            row.source.familyId,
+            row.uploadedDocumentId
+          );
+          return;
+        }
 
-      if (row.source.type === 'family') {
-        void downloadFamilyFile(
+        await downloadV1ReferralFile(
           organizationId,
           locationId,
-          row.source.familyId,
+          row.source.referralId,
           row.uploadedDocumentId
         );
-        return;
+      } catch {
+        if (previewRequestIdRef.current === requestId)
+          setDownloadError(
+            'Download is unavailable for this document. Please try again.'
+          );
       }
-
-      void downloadV1ReferralFile(
-        organizationId,
-        locationId,
-        row.source.referralId,
-        row.uploadedDocumentId
-      );
     },
     [locationId, organizationId]
   );
 
   const openDeleteDialog = useCallback((row: FamilyDocumentRowV2) => {
-    if (!row.permissionFlags.canDelete || row.source.type !== 'family') return;
+    if (
+      !row.permissionFlags.canDelete ||
+      row.source.type !== 'family' ||
+      !row.uploadedDocumentId
+    )
+      return;
 
     setSelectedDocumentForDelete(row);
   }, []);
 
   const openPreview = useCallback(
     async (row: FamilyDocumentRowV2) => {
+      previewTriggerRef.current =
+        document.activeElement instanceof HTMLElement
+          ? document.activeElement
+          : null;
       const requestId = previewRequestIdRef.current + 1;
 
       previewRequestIdRef.current = requestId;
       setSelectedDocumentForPreview(row);
       setPreviewError(undefined);
+      setDownloadError(undefined);
       setPreviewLoading(true);
       setPreviewUrl(undefined);
 
       if (!row.permissionFlags.canPreview || !row.uploadedDocumentId) {
-        setPreviewError('This document cannot be previewed.');
+        if (!row.uploadedDocumentId)
+          setPreviewError(
+            'This document is unavailable because its identifier is missing.'
+          );
         setPreviewLoading(false);
         return;
       }
@@ -176,23 +244,65 @@ export function FamilyDocumentsSectionV2({
     (row: FamilyDocumentRowV2) => void openPreview(row),
     [openPreview]
   );
+  const previewRow =
+    rows.find((row) => row.id === selectedDocumentForPreview?.id) ?? null;
+
+  function deleteFromDetails(row: FamilyDocumentRowV2) {
+    if (
+      !row.permissionFlags.canDelete ||
+      row.source.type !== 'family' ||
+      !row.uploadedDocumentId
+    )
+      return;
+    pendingDeleteRef.current = row;
+    closePreview();
+  }
+
+  function finishClosingPreview() {
+    const target = pendingDeleteRef.current;
+    pendingDeleteRef.current = null;
+    const current = target && rows.find((row) => row.id === target.id);
+    (previewTriggerRef.current?.isConnected
+      ? previewTriggerRef.current
+      : sectionRef.current
+    )?.focus();
+    if (current) openDeleteDialog(current);
+  }
 
   return (
-    <Grid item xs={12} mb={2}>
+    <Grid item xs={12} mb={2} ref={sectionRef} tabIndex={-1}>
       <Stack spacing={1}>
         {!hideTitle && (
           <Typography className="ph-unmask" variant="h6">
             Documents
           </Typography>
         )}
+        {downloadError && !previewRow && (
+          <Alert severity="error" onClose={() => setDownloadError(undefined)}>
+            {downloadError}
+          </Alert>
+        )}
         {rows.length > 0 ? (
-          <FamilyDocumentsDataGridV2
-            filterScopeId={family.family?.id}
-            rows={rows}
-            onDelete={openDeleteDialog}
-            onDownload={downloadDocument}
-            onPreview={previewDocument}
-          />
+          isDesktop ? (
+            <FamilyDocumentsDataGridV2
+              filterScopeId={family.family?.id}
+              rows={rows}
+              onDelete={openDeleteDialog}
+              onDownload={downloadDocument}
+              onPreview={previewDocument}
+              columnVisibilityModel={columnVisibilityModel}
+              onColumnVisibilityModelChange={setColumnVisibilityModel}
+              sortModel={sortModel}
+              onSortModelChange={setSortModel}
+            />
+          ) : (
+            <FamilyDocumentsListV2
+              rows={rows}
+              search={search}
+              onSearchChange={setSearch}
+              onOpen={previewDocument}
+            />
+          )
         ) : (
           <EmptyFamilyDocumentsState />
         )}
@@ -200,9 +310,12 @@ export function FamilyDocumentsSectionV2({
           error={previewError}
           loading={previewLoading}
           previewUrl={previewUrl}
-          row={selectedDocumentForPreview}
+          row={previewRow}
           onClose={closePreview}
           onDownload={downloadDocument}
+          downloadError={downloadError}
+          onDelete={!isDesktop ? deleteFromDetails : undefined}
+          onExited={finishClosingPreview}
         />
         {selectedDocumentForDelete?.source.type === 'family' && (
           <DeleteDocumentDialog

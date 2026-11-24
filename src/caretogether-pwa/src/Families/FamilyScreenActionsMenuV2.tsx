@@ -18,7 +18,10 @@ import {
 } from '@mui/icons-material';
 import type { MouseEvent, ReactNode } from 'react';
 import { useRef } from 'react';
-import { personFullName, type PrintableFamilyMember } from './FamilyMemberPrintData';
+import {
+  personFullName,
+  type PrintableFamilyMember,
+} from './FamilyMemberPrintData';
 
 type RoleActionV2 = {
   key: string;
@@ -120,6 +123,9 @@ export function FamilyScreenActionsMenuV2({
           {!isDesktop && hasFamilyActions && (
             <IconButton
               aria-label="family actions"
+              aria-controls={menuAnchor ? 'family-more-menu' : undefined}
+              aria-haspopup="menu"
+              aria-expanded={Boolean(menuAnchor)}
               onClick={onOpenMenu}
               size="small"
               sx={{
@@ -154,6 +160,7 @@ export function FamilyScreenActionsMenuV2({
             variant="contained"
             size="small"
             startIcon={<CloudUploadIcon />}
+            sx={{ display: { xs: 'none', lg: 'inline-flex' } }}
           >
             Upload
           </Button>
@@ -187,12 +194,20 @@ export function FamilyScreenActionsMenuV2({
             variant="contained"
             size="small"
             startIcon={<AddCircleIcon />}
+            sx={{ display: { xs: 'none', lg: 'inline-flex' } }}
           >
             Note
           </Button>
         )}
         {isDesktop && hasMoreMenuActions && (
-          <IconButton onClick={onOpenMenu} size="small">
+          <IconButton
+            aria-label="family actions"
+            aria-controls={menuAnchor ? 'family-more-menu' : undefined}
+            aria-haspopup="menu"
+            aria-expanded={Boolean(menuAnchor)}
+            onClick={onOpenMenu}
+            size="small"
+          >
             <MoreVertIcon />
           </IconButton>
         )}
@@ -204,6 +219,22 @@ export function FamilyScreenActionsMenuV2({
         open={Boolean(menuAnchor)}
         onClose={onCloseMenu}
         slotProps={{
+          backdrop: {
+            invisible: false,
+            sx: {
+              backgroundColor: {
+                xs: 'rgba(0, 0, 0, 0.5)',
+                lg: 'transparent',
+              },
+            },
+          },
+          paper: {
+            sx: (theme) => ({
+              [theme.breakpoints.down('lg')]: {
+                '& .MuiMenuItem-root': { minHeight: 48 },
+              },
+            }),
+          },
           transition: {
             onExited: () => {
               const action = pendingDrawerAction.current;
@@ -214,14 +245,6 @@ export function FamilyScreenActionsMenuV2({
         }}
       >
         <MenuList dense={isDesktop}>
-          {!isDesktop && canUploadDocuments && (
-            <MenuItem onClick={() => closeMenuBeforeOpening(onUploadDocuments)}>
-              <ListItemIcon>
-                <CloudUploadIcon fontSize="small" />
-              </ListItemIcon>
-              <ListItemText className="ph-unmask" primary="Upload" />
-            </MenuItem>
-          )}
           {!isDesktop && canEditFamilyInfo && (
             <MenuItem onClick={() => closeMenuBeforeOpening(onAddAdult)}>
               <ListItemIcon>
@@ -238,17 +261,7 @@ export function FamilyScreenActionsMenuV2({
               <ListItemText className="ph-unmask" primary="Child" />
             </MenuItem>
           )}
-          {!isDesktop && canAddNotes && (
-            <MenuItem onClick={() => closeMenuBeforeOpening(onAddNote)}>
-              <ListItemIcon>
-                <AddCircleIcon fontSize="small" />
-              </ListItemIcon>
-              <ListItemText className="ph-unmask" primary="Note" />
-            </MenuItem>
-          )}
-          {!isDesktop &&
-            (canUploadDocuments || canEditFamilyInfo || canAddNotes) &&
-            hasMoreMenuActions && <Divider />}
+          {!isDesktop && canEditFamilyInfo && hasMoreMenuActions && <Divider />}
           {roleRemovalActions.map((action) => (
             <MenuItem key={action.key} onClick={action.onClick}>
               <ListItemText primary={action.label} />
@@ -293,7 +306,10 @@ export function FamilyScreenActionsMenuV2({
 
           {showToggleTestFamilyAction && (
             <MenuItem onClick={onToggleTestFamily}>
-              <ListItemText className="ph-unmask" primary={toggleTestFamilyLabel} />
+              <ListItemText
+                className="ph-unmask"
+                primary={toggleTestFamilyLabel}
+              />
             </MenuItem>
           )}
 

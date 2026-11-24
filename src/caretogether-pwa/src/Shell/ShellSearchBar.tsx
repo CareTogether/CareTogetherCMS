@@ -278,7 +278,7 @@ export function ShellSearchBar({
           fullWidth={params.fullWidth}
           size={params.size}
           variant="outlined"
-          placeholder="Search families and people"
+          placeholder="Search families"
           sx={{
             '.Mui-focused': {
               backgroundColor: theme.palette.primary.dark,
@@ -331,6 +331,7 @@ export function ShellSearchBar({
             htmlInput: {
               ...params.slotProps.htmlInput,
               type: 'search',
+              'aria-label': 'Search families and people',
             },
           }}
         />

@@ -68,6 +68,7 @@ import {
 } from './FamilyMemberPrintData';
 import { FamilyMemberPrintDocument } from './FamilyMemberPrintDocument';
 import { FamilyScreenActionsMenuV2 } from './FamilyScreenActionsMenuV2';
+import { FamilyQuickActionsV2 } from './FamilyQuickActionsV2';
 import { FamilyPrimaryHeaderInfoV2 } from './FamilyPrimaryHeaderInfoV2';
 import { FamilyCaseWorkspaceHeaderV2 } from './FamilyCaseWorkspaceHeaderV2';
 import { FamilyCaseHistoryTabV2 } from './FamilyCaseHistoryTabV2';
@@ -1035,6 +1036,12 @@ export function FamilyScreenV2() {
           </Grid>
         )}
       </Grid>
+      <FamilyQuickActionsV2
+        canAddNotes={familyActionsMenu.canAddNotes}
+        canUploadDocuments={familyActionsMenu.canUploadDocuments}
+        onAddNote={openAddNoteDialog}
+        onUploadDocuments={openUploadDocumentDialog}
+      />
     </Container>
   );
 }

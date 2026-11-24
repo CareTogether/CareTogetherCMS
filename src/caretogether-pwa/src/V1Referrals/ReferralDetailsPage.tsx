@@ -1,5 +1,5 @@
 import Grid from '../Generic/GridLegacyCompat';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import {
   Box,
@@ -11,8 +11,6 @@ import {
   Snackbar,
   Alert,
   IconButton,
-  ListItemIcon,
-  ListItemText,
   Menu,
   MenuItem,
   useMediaQuery,
@@ -49,12 +47,17 @@ import { FunctionAssignmentsSection } from '../FunctionAssignments/FunctionAssig
 import { useReferralDetailsCommands } from './useReferralDetailsCommands';
 import { useReferralFamilyCaseWorkflow } from './useReferralFamilyCaseWorkflow';
 import { useReferralDetailsViewModel } from './useReferralDetailsViewModel';
+import { ReferralQuickActions } from './ReferralQuickActions';
 
 export function ReferralDetailsPage() {
   useScreenTitle('Referrals');
   const theme = useTheme();
-  const isDesktop = useMediaQuery(theme.breakpoints.up('sm'));
+  const isDesktop = useMediaQuery(theme.breakpoints.up('lg'));
   const [menuAnchor, setMenuAnchor] = useState<HTMLElement | null>(null);
+
+  useEffect(() => {
+    if (isDesktop) setMenuAnchor(null);
+  }, [isDesktop]);
 
   const { referralId } = useParams<{ referralId: string }>();
   const appNavigate = useAppNavigate();
@@ -144,7 +147,7 @@ export function ReferralDetailsPage() {
 
   const currentReferral = referral;
   const hasMobileActions =
-    canEditReferral ||
+    (!isClosed && canEditReferral) ||
     (isOpen && canCloseReferral) ||
     canCreateClientFamily ||
     canSelectFamily;
@@ -182,9 +185,10 @@ export function ReferralDetailsPage() {
         sx={{
           display: 'flex',
           justifyContent: 'space-between',
-          alignItems: { xs: 'stretch', md: 'center' },
-          flexDirection: { xs: 'column', md: 'row' },
-          gap: { xs: 2, md: 0 },
+          alignItems: { xs: 'stretch', lg: 'center' },
+          flexDirection: { xs: 'column', lg: 'row' },
+          flexWrap: 'wrap',
+          gap: 2,
           mb: { xs: 2, sm: 3 },
         }}
       >
@@ -195,6 +199,7 @@ export function ReferralDetailsPage() {
             justifyContent: 'space-between',
             gap: 1,
             minWidth: 0,
+            flex: { lg: '1 1 auto' },
           }}
         >
           <Typography variant="h5" sx={{ fontWeight: 600, minWidth: 0 }}>
@@ -232,17 +237,20 @@ export function ReferralDetailsPage() {
                   ? 'grid'
                   : 'none',
               sm: 'grid',
-              md: 'flex',
+              lg: 'flex',
             },
             gridTemplateColumns: {
               xs: 'minmax(0, 1fr)',
               sm: 'repeat(2, minmax(0, 1fr))',
             },
             alignItems: 'center',
-            gap: { xs: 1, md: 3 },
+            gap: { xs: 1, lg: 3 },
+            flexShrink: 0,
+            maxWidth: '100%',
             '& > .MuiButton-root': {
-              minHeight: { xs: 44, md: 'auto' },
-              height: { xs: '100%', md: 'auto' },
+              minHeight: { xs: 44, lg: 'auto' },
+              height: { xs: '100%', lg: 'auto' },
+              whiteSpace: 'nowrap',
             },
           }}
         >
@@ -312,11 +320,20 @@ export function ReferralDetailsPage() {
           onClose={() => setMenuAnchor(null)}
           onClick={() => setMenuAnchor(null)}
           slotProps={{
+            backdrop: {
+              invisible: false,
+              sx: {
+                backgroundColor: {
+                  xs: 'rgba(0, 0, 0, 0.5)',
+                  lg: 'transparent',
+                },
+              },
+            },
             list: { 'aria-label': 'Referral actions' },
             paper: {
               sx: {
                 '& .MuiMenuItem-root': {
-                  minHeight: 44,
+                  minHeight: { xs: 48, lg: 'auto' },
                   whiteSpace: 'normal',
                   overflowWrap: 'anywhere',
                 },
@@ -344,22 +361,6 @@ export function ReferralDetailsPage() {
               Select Family
             </MenuItem>
           )}
-          {canEditReferral && (
-            <MenuItem onClick={() => setOpenAddNoteDrawer(true)}>
-              <ListItemIcon>
-                <AddCircleIcon fontSize="small" />
-              </ListItemIcon>
-              <ListItemText primary="Add Note" />
-            </MenuItem>
-          )}
-          {!isClosed && canEditReferral && (
-            <MenuItem onClick={() => setOpenUploadDocumentDrawer(true)}>
-              <ListItemIcon>
-                <CloudUploadIcon fontSize="small" />
-              </ListItemIcon>
-              <ListItemText primary="Upload" />
-            </MenuItem>
-          )}
         </Menu>
       )}
 
@@ -372,7 +373,7 @@ export function ReferralDetailsPage() {
         >
           <Box
             sx={{
-              display: { xs: 'none', sm: 'flex' },
+              display: { xs: 'none', lg: 'flex' },
               gap: 1,
               mb: 1,
               flexWrap: 'wrap',
@@ -692,6 +693,12 @@ export function ReferralDetailsPage() {
         }
       />
 
+      <ReferralQuickActions
+        canAddNotes={canEditReferral}
+        canUploadDocuments={!isClosed && canEditReferral}
+        onAddNote={() => setOpenAddNoteDrawer(true)}
+        onUploadDocuments={() => setOpenUploadDocumentDrawer(true)}
+      />
       <Snackbar
         open={showAcceptedMessage}
         autoHideDuration={5000}

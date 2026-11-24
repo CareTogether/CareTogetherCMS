@@ -17,6 +17,7 @@ import {
   COLLAPSED_DRAWER_WIDTH,
   DESKTOP_BOTTOM_SAFE_AREA,
   EXPANDED_DRAWER_WIDTH,
+  MOBILE_BOTTOM_NAV_HEIGHT,
   MOBILE_BOTTOM_SAFE_AREA,
   SHELL_APP_BAR_HEIGHT,
 } from './shellLayoutConstants';
@@ -41,7 +42,18 @@ function ShellRootLayout({ children }: React.PropsWithChildren) {
   useFeaturebase();
 
   return (
-    <Box sx={{ flexGrow: 1 }}>
+    <Box
+      sx={{
+        flexGrow: 1,
+        '--shell-content-inline-offset': isDesktop ? `${drawerWidth}px` : '0px',
+        '--shell-bottom-navigation-height': isDesktop
+          ? '0px'
+          : `${MOBILE_BOTTOM_NAV_HEIGHT}px`,
+        '--shell-bottom-clearance': isDesktop
+          ? `${DESKTOP_BOTTOM_SAFE_AREA}px`
+          : `${MOBILE_BOTTOM_SAFE_AREA}px`,
+      }}
+    >
       <ShellAppBar
         menuDrawerOpen={menuDrawerOpen}
         setMenuDrawerOpen={setMenuDrawerOpen}
