@@ -11,8 +11,6 @@ import {
   Snackbar,
   Alert,
   IconButton,
-  ListItemIcon,
-  ListItemText,
   Menu,
   MenuItem,
   useMediaQuery,
@@ -49,6 +47,7 @@ import { FunctionAssignmentsSection } from '../FunctionAssignments/FunctionAssig
 import { useReferralDetailsCommands } from './useReferralDetailsCommands';
 import { useReferralFamilyCaseWorkflow } from './useReferralFamilyCaseWorkflow';
 import { useReferralDetailsViewModel } from './useReferralDetailsViewModel';
+import { ReferralQuickActions } from './ReferralQuickActions';
 
 export function ReferralDetailsPage() {
   useScreenTitle('Referrals');
@@ -148,7 +147,7 @@ export function ReferralDetailsPage() {
 
   const currentReferral = referral;
   const hasMobileActions =
-    canEditReferral ||
+    (!isClosed && canEditReferral) ||
     (isOpen && canCloseReferral) ||
     canCreateClientFamily ||
     canSelectFamily;
@@ -362,22 +361,6 @@ export function ReferralDetailsPage() {
               Select Family
             </MenuItem>
           )}
-          {canEditReferral && (
-            <MenuItem onClick={() => setOpenAddNoteDrawer(true)}>
-              <ListItemIcon>
-                <AddCircleIcon fontSize="small" />
-              </ListItemIcon>
-              <ListItemText primary="Add Note" />
-            </MenuItem>
-          )}
-          {!isClosed && canEditReferral && (
-            <MenuItem onClick={() => setOpenUploadDocumentDrawer(true)}>
-              <ListItemIcon>
-                <CloudUploadIcon fontSize="small" />
-              </ListItemIcon>
-              <ListItemText primary="Upload" />
-            </MenuItem>
-          )}
         </Menu>
       )}
 
@@ -390,7 +373,7 @@ export function ReferralDetailsPage() {
         >
           <Box
             sx={{
-              display: { xs: 'none', sm: 'flex' },
+              display: { xs: 'none', lg: 'flex' },
               gap: 1,
               mb: 1,
               flexWrap: 'wrap',
@@ -710,6 +693,12 @@ export function ReferralDetailsPage() {
         }
       />
 
+      <ReferralQuickActions
+        canAddNotes={canEditReferral}
+        canUploadDocuments={!isClosed && canEditReferral}
+        onAddNote={() => setOpenAddNoteDrawer(true)}
+        onUploadDocuments={() => setOpenUploadDocumentDrawer(true)}
+      />
       <Snackbar
         open={showAcceptedMessage}
         autoHideDuration={5000}
