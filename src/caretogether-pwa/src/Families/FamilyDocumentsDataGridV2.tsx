@@ -13,7 +13,11 @@ import {
   Download as DownloadIcon,
   Visibility as PreviewIcon,
 } from '@mui/icons-material';
-import { GridColDef } from '@mui/x-data-grid-premium';
+import {
+  GridColDef,
+  GridColumnVisibilityModel,
+  GridSortModel,
+} from '@mui/x-data-grid-premium';
 import { useMemo } from 'react';
 import { FamilyDocumentRowV2 } from './familyDocumentsViewModelV2';
 import { v2DataGridStyles } from './v2DataGridStyles';
@@ -22,6 +26,10 @@ import { usePersistedGridFilterModel } from '../Hooks/usePersistedGridFilterMode
 import { PersistedFilterDataGridPremium } from '../Generic/PersistedFilterDataGridPremium';
 
 type FamilyDocumentsDataGridV2Props = {
+  columnVisibilityModel?: GridColumnVisibilityModel;
+  onColumnVisibilityModelChange?: (model: GridColumnVisibilityModel) => void;
+  sortModel?: GridSortModel;
+  onSortModelChange?: (model: GridSortModel) => void;
   filterScopeId?: string;
   onDelete: (row: FamilyDocumentRowV2) => void;
   onDownload: (row: FamilyDocumentRowV2) => void;
@@ -211,6 +219,10 @@ function buildColumns(
 }
 
 export function FamilyDocumentsDataGridV2({
+  columnVisibilityModel,
+  onColumnVisibilityModelChange,
+  sortModel,
+  onSortModelChange,
   filterScopeId,
   onDelete,
   onDownload,
@@ -247,6 +259,10 @@ export function FamilyDocumentsDataGridV2({
       }}
     >
       <PersistedFilterDataGridPremium
+        columnVisibilityModel={columnVisibilityModel}
+        onColumnVisibilityModelChange={onColumnVisibilityModelChange}
+        sortModel={sortModel}
+        onSortModelChange={onSortModelChange}
         showToolbar
         autoHeight
         disableAggregation
