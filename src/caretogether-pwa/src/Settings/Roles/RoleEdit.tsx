@@ -1,3 +1,4 @@
+import { settingsCategoryBreadcrumb } from '../settingsSections';
 import {
   Table,
   TableContainer,
@@ -62,7 +63,7 @@ export function RoleEdit({
 
   const storeEdits = useSetAtom(organizationConfigurationEdited);
 
-  const { organizationId } = useRequiredSelectedLocationContext();
+  const { organizationId, locationId } = useRequiredSelectedLocationContext();
 
   const [workingRole, setWorkingRole] =
     useState<RoleDefinition>(roleDefinition);
@@ -166,6 +167,7 @@ export function RoleEdit({
               to: '../..',
               relative: 'path',
             },
+            settingsCategoryBreadcrumb(organizationId, locationId, 'roles'),
             {
               label: 'Roles',
               to: '..',

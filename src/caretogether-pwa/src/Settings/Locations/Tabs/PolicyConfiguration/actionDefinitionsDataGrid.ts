@@ -1,27 +1,26 @@
-import type { ReactNode } from 'react';
+import { createElement, type ReactNode } from 'react';
 import type { GridColDef } from '@mui/x-data-grid-premium';
 import {
   DocumentLinkRequirement,
   NoteEntryRequirement,
-} from '../../../../GeneratedClient';
-import type {
   ActionRequirement,
-  EffectiveLocationPolicy,
 } from '../../../../GeneratedClient';
+import type { EffectiveLocationPolicy } from '../../../../GeneratedClient';
 import { enumName, formatValidity, listText } from './policyUtils';
 import { getRequirementUsage } from './policyReferences';
+import { ActionValidityEditCell } from './ActionValidityEditCell';
 
 export type ActionDefinitionGridRow = {
   id: string;
   action: ActionRequirement;
   actionName: string;
   alternateNames: string;
-  document: string;
+  document: DocumentLinkRequirement;
   instructions: string;
-  note: string;
+  note: NoteEntryRequirement;
   url: string;
   usage: number;
-  validity: string;
+  validity?: string;
 };
 
 const operationalColumn = {
@@ -31,8 +30,44 @@ const operationalColumn = {
   pivotable: false,
 };
 
-function displayText(value: string | undefined) {
-  return value ?? '-';
+export function canEditActionValidity(value?: string) {
+  return !value || /^[1-9]\d*\.00:00:00$/.test(value);
+}
+
+export function actionDefinitionFromGridRow(row: ActionDefinitionGridRow) {
+  if (
+    !Object.values(DocumentLinkRequirement)
+      .filter((value) => typeof value === 'number')
+      .includes(row.document) ||
+    !Object.values(NoteEntryRequirement)
+      .filter((value) => typeof value === 'number')
+      .includes(row.note)
+  )
+    throw new Error('Select a valid document and notes requirement.');
+  if (
+    row.validity !== row.action.validity &&
+    !canEditActionValidity(row.validity)
+  )
+    throw new Error(
+      'Validity must be a positive whole number of days, months or years.'
+    );
+  return new ActionRequirement({
+    ...row.action,
+    documentLink: row.document,
+    noteEntry: row.note,
+    instructions:
+      row.instructions === (row.action.instructions ?? '')
+        ? row.action.instructions
+        : row.instructions.trim() || undefined,
+    infoLink:
+      row.url === (row.action.infoLink ?? '')
+        ? row.action.infoLink
+        : row.url.trim() || undefined,
+    validity:
+      row.validity === row.action.validity
+        ? row.action.validity
+        : row.validity || undefined,
+  });
 }
 
 export function buildActionDefinitionGridRows(
@@ -45,12 +80,12 @@ export function buildActionDefinitionGridRows(
       action,
       actionName,
       alternateNames: listText(action.alternateNames),
-      document: enumName(DocumentLinkRequirement, action.documentLink),
-      instructions: displayText(action.instructions),
-      note: enumName(NoteEntryRequirement, action.noteEntry),
-      url: displayText(action.infoLink),
+      document: action.documentLink,
+      instructions: action.instructions ?? '',
+      note: action.noteEntry,
+      url: action.infoLink ?? '',
       usage: usage.get(actionName)?.length ?? 0,
-      validity: formatValidity(action.validity),
+      validity: action.validity,
     })
   );
 }
@@ -69,6 +104,16 @@ export function buildActionDefinitionGridColumns(
     {
       ...operationalColumn,
       field: 'document',
+      editable: true,
+      type: 'singleSelect',
+      valueOptions: [
+        DocumentLinkRequirement.None,
+        DocumentLinkRequirement.Allowed,
+        DocumentLinkRequirement.Required,
+      ].map((value) => ({
+        value,
+        label: enumName(DocumentLinkRequirement, value),
+      })),
       headerName: 'Document',
       minWidth: 130,
       flex: 0.6,
@@ -76,6 +121,16 @@ export function buildActionDefinitionGridColumns(
     {
       ...operationalColumn,
       field: 'note',
+      editable: true,
+      type: 'singleSelect',
+      valueOptions: [
+        NoteEntryRequirement.None,
+        NoteEntryRequirement.Allowed,
+        NoteEntryRequirement.Required,
+      ].map((value) => ({
+        value,
+        label: enumName(NoteEntryRequirement, value),
+      })),
       headerName: 'Note',
       minWidth: 120,
       flex: 0.55,
@@ -83,6 +138,7 @@ export function buildActionDefinitionGridColumns(
     {
       ...operationalColumn,
       field: 'instructions',
+      editable: true,
       headerName: 'Instructions',
       minWidth: 200,
       flex: 1.2,
@@ -90,6 +146,7 @@ export function buildActionDefinitionGridColumns(
     {
       ...operationalColumn,
       field: 'url',
+      editable: true,
       headerName: 'URL',
       minWidth: 180,
       flex: 1,
@@ -97,8 +154,17 @@ export function buildActionDefinitionGridColumns(
     {
       ...operationalColumn,
       field: 'validity',
+      editable: true,
+      valueFormatter: (value) => formatValidity(value),
+      renderEditCell: (params) => createElement(ActionValidityEditCell, params),
+      preProcessEditCellProps: ({ props, row }) => ({
+        ...props,
+        error:
+          props.value !== row.action.validity &&
+          !canEditActionValidity(props.value),
+      }),
       headerName: 'Validity',
-      minWidth: 120,
+      minWidth: 210,
       flex: 0.55,
     },
     {
@@ -123,7 +189,7 @@ export function buildActionDefinitionGridColumns(
       headerName: 'Actions',
       align: 'right',
       headerAlign: 'right',
-      width: 96,
+      width: 120,
       sortable: false,
       filterable: false,
       disableColumnMenu: true,

@@ -26,7 +26,7 @@ test('Role editor keeps its table and Save reachable on mobile @pr', async ({
   await expectNoHorizontalOverflow(page);
 });
 
-test('Location Settings navigation and Save remain reachable on mobile @pr', async ({
+test('Location basic configuration and Save remain reachable on mobile @pr', async ({
   page,
 }) => {
   await page.goto(`${ATLANTIS_ROUTE}settings/locations`);
@@ -34,17 +34,6 @@ test('Location Settings navigation and Save remain reachable on mobile @pr', asy
     page.getByRole('heading', { name: 'Basic configuration', exact: true })
   ).toBeVisible();
   await expectNoHorizontalOverflow(page);
-  const expand = page.getByRole('button', {
-    name: 'Expand settings navigation',
-  });
-  await expand.click();
-  const collapse = page.getByRole('button', {
-    name: 'Collapse settings navigation',
-  });
-  await expect(collapse).toHaveAttribute('aria-expanded', 'true');
-  await expectNoHorizontalOverflow(page);
-  await collapse.click();
-  await expect(expand).toHaveAttribute('aria-expanded', 'false');
   const finalField = page.getByRole('combobox', {
     name: 'Referral close reasons',
     exact: true,

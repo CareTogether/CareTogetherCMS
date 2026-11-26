@@ -3314,9 +3314,6 @@ export interface IRequirementDefinition {
 }
 
 export class ArrangementPolicy implements IArrangementPolicy {
-    requiredSetupActions_PRE_MIGRATION!: RequirementDefinition[];
-    requiredMonitoringActions_PRE_MIGRATION!: MonitoringRequirement[];
-    requiredCloseoutActionNames_PRE_MIGRATION!: RequirementDefinition[];
     arrangementType!: string;
     childInvolvement!: ChildInvolvement;
     arrangementFunctions!: ArrangementFunction[];
@@ -3328,6 +3325,9 @@ export class ArrangementPolicy implements IArrangementPolicy {
     requiredCloseoutActions?: RequirementDefinition[] | undefined;
     supersededAtUtc?: Date | undefined;
     policyVersions?: ArrangementPolicyVersion[] | undefined;
+    requiredSetupActions_PRE_MIGRATION!: RequirementDefinition[];
+    requiredMonitoringActions_PRE_MIGRATION!: MonitoringRequirement[];
+    requiredCloseoutActionNames_PRE_MIGRATION!: RequirementDefinition[];
 
     constructor(data?: IArrangementPolicy) {
         if (data) {
@@ -3337,33 +3337,18 @@ export class ArrangementPolicy implements IArrangementPolicy {
             }
         }
         if (!data) {
-            this.requiredSetupActions_PRE_MIGRATION = [];
-            this.requiredMonitoringActions_PRE_MIGRATION = [];
-            this.requiredCloseoutActionNames_PRE_MIGRATION = [];
             this.arrangementFunctions = [];
             this.requiredSetupActionNames = [];
             this.requiredMonitoringActions = [];
             this.requiredCloseoutActionNames = [];
+            this.requiredSetupActions_PRE_MIGRATION = [];
+            this.requiredMonitoringActions_PRE_MIGRATION = [];
+            this.requiredCloseoutActionNames_PRE_MIGRATION = [];
         }
     }
 
     init(_data?: any) {
         if (_data) {
-            if (Array.isArray(_data["requiredSetupActions_PRE_MIGRATION"])) {
-                this.requiredSetupActions_PRE_MIGRATION = [] as any;
-                for (let item of _data["requiredSetupActions_PRE_MIGRATION"])
-                    this.requiredSetupActions_PRE_MIGRATION!.push(RequirementDefinition.fromJS(item));
-            }
-            if (Array.isArray(_data["requiredMonitoringActions_PRE_MIGRATION"])) {
-                this.requiredMonitoringActions_PRE_MIGRATION = [] as any;
-                for (let item of _data["requiredMonitoringActions_PRE_MIGRATION"])
-                    this.requiredMonitoringActions_PRE_MIGRATION!.push(MonitoringRequirement.fromJS(item));
-            }
-            if (Array.isArray(_data["requiredCloseoutActionNames_PRE_MIGRATION"])) {
-                this.requiredCloseoutActionNames_PRE_MIGRATION = [] as any;
-                for (let item of _data["requiredCloseoutActionNames_PRE_MIGRATION"])
-                    this.requiredCloseoutActionNames_PRE_MIGRATION!.push(RequirementDefinition.fromJS(item));
-            }
             this.arrangementType = _data["arrangementType"];
             this.childInvolvement = _data["childInvolvement"];
             if (Array.isArray(_data["arrangementFunctions"])) {
@@ -3407,6 +3392,21 @@ export class ArrangementPolicy implements IArrangementPolicy {
                 for (let item of _data["policyVersions"])
                     this.policyVersions!.push(ArrangementPolicyVersion.fromJS(item));
             }
+            if (Array.isArray(_data["requiredSetupActions_PRE_MIGRATION"])) {
+                this.requiredSetupActions_PRE_MIGRATION = [] as any;
+                for (let item of _data["requiredSetupActions_PRE_MIGRATION"])
+                    this.requiredSetupActions_PRE_MIGRATION!.push(RequirementDefinition.fromJS(item));
+            }
+            if (Array.isArray(_data["requiredMonitoringActions_PRE_MIGRATION"])) {
+                this.requiredMonitoringActions_PRE_MIGRATION = [] as any;
+                for (let item of _data["requiredMonitoringActions_PRE_MIGRATION"])
+                    this.requiredMonitoringActions_PRE_MIGRATION!.push(MonitoringRequirement.fromJS(item));
+            }
+            if (Array.isArray(_data["requiredCloseoutActionNames_PRE_MIGRATION"])) {
+                this.requiredCloseoutActionNames_PRE_MIGRATION = [] as any;
+                for (let item of _data["requiredCloseoutActionNames_PRE_MIGRATION"])
+                    this.requiredCloseoutActionNames_PRE_MIGRATION!.push(RequirementDefinition.fromJS(item));
+            }
         }
     }
 
@@ -3419,21 +3419,6 @@ export class ArrangementPolicy implements IArrangementPolicy {
 
     toJSON(data?: any) {
         data = typeof data === 'object' ? data : {};
-        if (Array.isArray(this.requiredSetupActions_PRE_MIGRATION)) {
-            data["requiredSetupActions_PRE_MIGRATION"] = [];
-            for (let item of this.requiredSetupActions_PRE_MIGRATION)
-                data["requiredSetupActions_PRE_MIGRATION"].push(item ? item.toJSON() : undefined as any);
-        }
-        if (Array.isArray(this.requiredMonitoringActions_PRE_MIGRATION)) {
-            data["requiredMonitoringActions_PRE_MIGRATION"] = [];
-            for (let item of this.requiredMonitoringActions_PRE_MIGRATION)
-                data["requiredMonitoringActions_PRE_MIGRATION"].push(item ? item.toJSON() : undefined as any);
-        }
-        if (Array.isArray(this.requiredCloseoutActionNames_PRE_MIGRATION)) {
-            data["requiredCloseoutActionNames_PRE_MIGRATION"] = [];
-            for (let item of this.requiredCloseoutActionNames_PRE_MIGRATION)
-                data["requiredCloseoutActionNames_PRE_MIGRATION"].push(item ? item.toJSON() : undefined as any);
-        }
         data["arrangementType"] = this.arrangementType;
         data["childInvolvement"] = this.childInvolvement;
         if (Array.isArray(this.arrangementFunctions)) {
@@ -3477,14 +3462,26 @@ export class ArrangementPolicy implements IArrangementPolicy {
             for (let item of this.policyVersions)
                 data["policyVersions"].push(item ? item.toJSON() : undefined as any);
         }
+        if (Array.isArray(this.requiredSetupActions_PRE_MIGRATION)) {
+            data["requiredSetupActions_PRE_MIGRATION"] = [];
+            for (let item of this.requiredSetupActions_PRE_MIGRATION)
+                data["requiredSetupActions_PRE_MIGRATION"].push(item ? item.toJSON() : undefined as any);
+        }
+        if (Array.isArray(this.requiredMonitoringActions_PRE_MIGRATION)) {
+            data["requiredMonitoringActions_PRE_MIGRATION"] = [];
+            for (let item of this.requiredMonitoringActions_PRE_MIGRATION)
+                data["requiredMonitoringActions_PRE_MIGRATION"].push(item ? item.toJSON() : undefined as any);
+        }
+        if (Array.isArray(this.requiredCloseoutActionNames_PRE_MIGRATION)) {
+            data["requiredCloseoutActionNames_PRE_MIGRATION"] = [];
+            for (let item of this.requiredCloseoutActionNames_PRE_MIGRATION)
+                data["requiredCloseoutActionNames_PRE_MIGRATION"].push(item ? item.toJSON() : undefined as any);
+        }
         return data;
     }
 }
 
 export interface IArrangementPolicy {
-    requiredSetupActions_PRE_MIGRATION: RequirementDefinition[];
-    requiredMonitoringActions_PRE_MIGRATION: MonitoringRequirement[];
-    requiredCloseoutActionNames_PRE_MIGRATION: RequirementDefinition[];
     arrangementType: string;
     childInvolvement: ChildInvolvement;
     arrangementFunctions: ArrangementFunction[];
@@ -3496,13 +3493,27 @@ export interface IArrangementPolicy {
     requiredCloseoutActions?: RequirementDefinition[] | undefined;
     supersededAtUtc?: Date | undefined;
     policyVersions?: ArrangementPolicyVersion[] | undefined;
+    requiredSetupActions_PRE_MIGRATION: RequirementDefinition[];
+    requiredMonitoringActions_PRE_MIGRATION: MonitoringRequirement[];
+    requiredCloseoutActionNames_PRE_MIGRATION: RequirementDefinition[];
 }
 
-export class MonitoringRequirement implements IMonitoringRequirement {
-    action!: RequirementDefinition;
-    recurrence!: RecurrencePolicy;
+export enum ChildInvolvement {
+    ChildHousing = 0,
+    DaytimeChildCareOnly = 1,
+    NoChildInvolvement = 2,
+    ChildOrAdultInvolvement = 3,
+}
 
-    constructor(data?: IMonitoringRequirement) {
+export class ArrangementFunction implements IArrangementFunction {
+    functionName!: string;
+    requirement!: FunctionRequirement;
+    eligibleIndividualVolunteerRoles?: string[] | undefined;
+    eligibleVolunteerFamilyRoles?: string[] | undefined;
+    eligiblePeople?: string[] | undefined;
+    variants!: ArrangementFunctionVariant[];
+
+    constructor(data?: IArrangementFunction) {
         if (data) {
             for (var property in data) {
                 if (data.hasOwnProperty(property))
@@ -3510,34 +3521,276 @@ export class MonitoringRequirement implements IMonitoringRequirement {
             }
         }
         if (!data) {
-            this.action = new RequirementDefinition();
+            this.variants = [];
         }
     }
 
     init(_data?: any) {
         if (_data) {
-            this.action = _data["action"] ? RequirementDefinition.fromJS(_data["action"]) : new RequirementDefinition();
-            this.recurrence = _data["recurrence"] ? RecurrencePolicy.fromJS(_data["recurrence"]) : undefined as any;
+            this.functionName = _data["functionName"];
+            this.requirement = _data["requirement"];
+            if (Array.isArray(_data["eligibleIndividualVolunteerRoles"])) {
+                this.eligibleIndividualVolunteerRoles = [] as any;
+                for (let item of _data["eligibleIndividualVolunteerRoles"])
+                    this.eligibleIndividualVolunteerRoles!.push(item);
+            }
+            if (Array.isArray(_data["eligibleVolunteerFamilyRoles"])) {
+                this.eligibleVolunteerFamilyRoles = [] as any;
+                for (let item of _data["eligibleVolunteerFamilyRoles"])
+                    this.eligibleVolunteerFamilyRoles!.push(item);
+            }
+            if (Array.isArray(_data["eligiblePeople"])) {
+                this.eligiblePeople = [] as any;
+                for (let item of _data["eligiblePeople"])
+                    this.eligiblePeople!.push(item);
+            }
+            if (Array.isArray(_data["variants"])) {
+                this.variants = [] as any;
+                for (let item of _data["variants"])
+                    this.variants!.push(ArrangementFunctionVariant.fromJS(item));
+            }
         }
     }
 
-    static fromJS(data: any): MonitoringRequirement {
+    static fromJS(data: any): ArrangementFunction {
         data = typeof data === 'object' ? data : {};
-        let result = new MonitoringRequirement();
+        let result = new ArrangementFunction();
         result.init(data);
         return result;
     }
 
     toJSON(data?: any) {
         data = typeof data === 'object' ? data : {};
-        data["action"] = this.action ? this.action.toJSON() : undefined as any;
+        data["functionName"] = this.functionName;
+        data["requirement"] = this.requirement;
+        if (Array.isArray(this.eligibleIndividualVolunteerRoles)) {
+            data["eligibleIndividualVolunteerRoles"] = [];
+            for (let item of this.eligibleIndividualVolunteerRoles)
+                data["eligibleIndividualVolunteerRoles"].push(item);
+        }
+        if (Array.isArray(this.eligibleVolunteerFamilyRoles)) {
+            data["eligibleVolunteerFamilyRoles"] = [];
+            for (let item of this.eligibleVolunteerFamilyRoles)
+                data["eligibleVolunteerFamilyRoles"].push(item);
+        }
+        if (Array.isArray(this.eligiblePeople)) {
+            data["eligiblePeople"] = [];
+            for (let item of this.eligiblePeople)
+                data["eligiblePeople"].push(item);
+        }
+        if (Array.isArray(this.variants)) {
+            data["variants"] = [];
+            for (let item of this.variants)
+                data["variants"].push(item ? item.toJSON() : undefined as any);
+        }
+        return data;
+    }
+}
+
+export interface IArrangementFunction {
+    functionName: string;
+    requirement: FunctionRequirement;
+    eligibleIndividualVolunteerRoles?: string[] | undefined;
+    eligibleVolunteerFamilyRoles?: string[] | undefined;
+    eligiblePeople?: string[] | undefined;
+    variants: ArrangementFunctionVariant[];
+}
+
+export enum FunctionRequirement {
+    ZeroOrMore = 0,
+    ExactlyOne = 1,
+    OneOrMore = 2,
+}
+
+export class ArrangementFunctionVariant implements IArrangementFunctionVariant {
+    variantName!: string;
+    requiredSetupActionNames!: string[];
+    requiredMonitoringActions!: MonitoringRequirementOld[];
+    requiredCloseoutActionNames!: string[];
+    requiredSetupActions?: RequirementDefinition[] | undefined;
+    requiredMonitoringActionsNew?: MonitoringRequirement[] | undefined;
+    requiredCloseoutActions?: RequirementDefinition[] | undefined;
+    requiredSetupActionNames_PRE_MIGRATION!: RequirementDefinition[];
+    requiredMonitoringActions_PRE_MIGRATION!: MonitoringRequirement[];
+    requiredCloseoutActionNames_PRE_MIGRATION!: RequirementDefinition[];
+
+    constructor(data?: IArrangementFunctionVariant) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+        if (!data) {
+            this.requiredSetupActionNames = [];
+            this.requiredMonitoringActions = [];
+            this.requiredCloseoutActionNames = [];
+            this.requiredSetupActionNames_PRE_MIGRATION = [];
+            this.requiredMonitoringActions_PRE_MIGRATION = [];
+            this.requiredCloseoutActionNames_PRE_MIGRATION = [];
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.variantName = _data["variantName"];
+            if (Array.isArray(_data["requiredSetupActionNames"])) {
+                this.requiredSetupActionNames = [] as any;
+                for (let item of _data["requiredSetupActionNames"])
+                    this.requiredSetupActionNames!.push(item);
+            }
+            if (Array.isArray(_data["requiredMonitoringActions"])) {
+                this.requiredMonitoringActions = [] as any;
+                for (let item of _data["requiredMonitoringActions"])
+                    this.requiredMonitoringActions!.push(MonitoringRequirementOld.fromJS(item));
+            }
+            if (Array.isArray(_data["requiredCloseoutActionNames"])) {
+                this.requiredCloseoutActionNames = [] as any;
+                for (let item of _data["requiredCloseoutActionNames"])
+                    this.requiredCloseoutActionNames!.push(item);
+            }
+            if (Array.isArray(_data["requiredSetupActions"])) {
+                this.requiredSetupActions = [] as any;
+                for (let item of _data["requiredSetupActions"])
+                    this.requiredSetupActions!.push(RequirementDefinition.fromJS(item));
+            }
+            if (Array.isArray(_data["requiredMonitoringActionsNew"])) {
+                this.requiredMonitoringActionsNew = [] as any;
+                for (let item of _data["requiredMonitoringActionsNew"])
+                    this.requiredMonitoringActionsNew!.push(MonitoringRequirement.fromJS(item));
+            }
+            if (Array.isArray(_data["requiredCloseoutActions"])) {
+                this.requiredCloseoutActions = [] as any;
+                for (let item of _data["requiredCloseoutActions"])
+                    this.requiredCloseoutActions!.push(RequirementDefinition.fromJS(item));
+            }
+            if (Array.isArray(_data["requiredSetupActionNames_PRE_MIGRATION"])) {
+                this.requiredSetupActionNames_PRE_MIGRATION = [] as any;
+                for (let item of _data["requiredSetupActionNames_PRE_MIGRATION"])
+                    this.requiredSetupActionNames_PRE_MIGRATION!.push(RequirementDefinition.fromJS(item));
+            }
+            if (Array.isArray(_data["requiredMonitoringActions_PRE_MIGRATION"])) {
+                this.requiredMonitoringActions_PRE_MIGRATION = [] as any;
+                for (let item of _data["requiredMonitoringActions_PRE_MIGRATION"])
+                    this.requiredMonitoringActions_PRE_MIGRATION!.push(MonitoringRequirement.fromJS(item));
+            }
+            if (Array.isArray(_data["requiredCloseoutActionNames_PRE_MIGRATION"])) {
+                this.requiredCloseoutActionNames_PRE_MIGRATION = [] as any;
+                for (let item of _data["requiredCloseoutActionNames_PRE_MIGRATION"])
+                    this.requiredCloseoutActionNames_PRE_MIGRATION!.push(RequirementDefinition.fromJS(item));
+            }
+        }
+    }
+
+    static fromJS(data: any): ArrangementFunctionVariant {
+        data = typeof data === 'object' ? data : {};
+        let result = new ArrangementFunctionVariant();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["variantName"] = this.variantName;
+        if (Array.isArray(this.requiredSetupActionNames)) {
+            data["requiredSetupActionNames"] = [];
+            for (let item of this.requiredSetupActionNames)
+                data["requiredSetupActionNames"].push(item);
+        }
+        if (Array.isArray(this.requiredMonitoringActions)) {
+            data["requiredMonitoringActions"] = [];
+            for (let item of this.requiredMonitoringActions)
+                data["requiredMonitoringActions"].push(item ? item.toJSON() : undefined as any);
+        }
+        if (Array.isArray(this.requiredCloseoutActionNames)) {
+            data["requiredCloseoutActionNames"] = [];
+            for (let item of this.requiredCloseoutActionNames)
+                data["requiredCloseoutActionNames"].push(item);
+        }
+        if (Array.isArray(this.requiredSetupActions)) {
+            data["requiredSetupActions"] = [];
+            for (let item of this.requiredSetupActions)
+                data["requiredSetupActions"].push(item ? item.toJSON() : undefined as any);
+        }
+        if (Array.isArray(this.requiredMonitoringActionsNew)) {
+            data["requiredMonitoringActionsNew"] = [];
+            for (let item of this.requiredMonitoringActionsNew)
+                data["requiredMonitoringActionsNew"].push(item ? item.toJSON() : undefined as any);
+        }
+        if (Array.isArray(this.requiredCloseoutActions)) {
+            data["requiredCloseoutActions"] = [];
+            for (let item of this.requiredCloseoutActions)
+                data["requiredCloseoutActions"].push(item ? item.toJSON() : undefined as any);
+        }
+        if (Array.isArray(this.requiredSetupActionNames_PRE_MIGRATION)) {
+            data["requiredSetupActionNames_PRE_MIGRATION"] = [];
+            for (let item of this.requiredSetupActionNames_PRE_MIGRATION)
+                data["requiredSetupActionNames_PRE_MIGRATION"].push(item ? item.toJSON() : undefined as any);
+        }
+        if (Array.isArray(this.requiredMonitoringActions_PRE_MIGRATION)) {
+            data["requiredMonitoringActions_PRE_MIGRATION"] = [];
+            for (let item of this.requiredMonitoringActions_PRE_MIGRATION)
+                data["requiredMonitoringActions_PRE_MIGRATION"].push(item ? item.toJSON() : undefined as any);
+        }
+        if (Array.isArray(this.requiredCloseoutActionNames_PRE_MIGRATION)) {
+            data["requiredCloseoutActionNames_PRE_MIGRATION"] = [];
+            for (let item of this.requiredCloseoutActionNames_PRE_MIGRATION)
+                data["requiredCloseoutActionNames_PRE_MIGRATION"].push(item ? item.toJSON() : undefined as any);
+        }
+        return data;
+    }
+}
+
+export interface IArrangementFunctionVariant {
+    variantName: string;
+    requiredSetupActionNames: string[];
+    requiredMonitoringActions: MonitoringRequirementOld[];
+    requiredCloseoutActionNames: string[];
+    requiredSetupActions?: RequirementDefinition[] | undefined;
+    requiredMonitoringActionsNew?: MonitoringRequirement[] | undefined;
+    requiredCloseoutActions?: RequirementDefinition[] | undefined;
+    requiredSetupActionNames_PRE_MIGRATION: RequirementDefinition[];
+    requiredMonitoringActions_PRE_MIGRATION: MonitoringRequirement[];
+    requiredCloseoutActionNames_PRE_MIGRATION: RequirementDefinition[];
+}
+
+export class MonitoringRequirementOld implements IMonitoringRequirementOld {
+    actionName!: string;
+    recurrence!: RecurrencePolicy;
+
+    constructor(data?: IMonitoringRequirementOld) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.actionName = _data["actionName"];
+            this.recurrence = _data["recurrence"] ? RecurrencePolicy.fromJS(_data["recurrence"]) : undefined as any;
+        }
+    }
+
+    static fromJS(data: any): MonitoringRequirementOld {
+        data = typeof data === 'object' ? data : {};
+        let result = new MonitoringRequirementOld();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["actionName"] = this.actionName;
         data["recurrence"] = this.recurrence ? this.recurrence.toJSON() : undefined as any;
         return data;
     }
 }
 
-export interface IMonitoringRequirement {
-    action: RequirementDefinition;
+export interface IMonitoringRequirementOld {
+    actionName: string;
     recurrence: RecurrencePolicy;
 }
 
@@ -3803,299 +4056,46 @@ export interface IOneTimeRecurrencePolicy extends IRecurrencePolicy {
     delay?: string | undefined;
 }
 
-export enum ChildInvolvement {
-    ChildHousing = 0,
-    DaytimeChildCareOnly = 1,
-    NoChildInvolvement = 2,
-    ChildOrAdultInvolvement = 3,
-}
-
-export class ArrangementFunction implements IArrangementFunction {
-    functionName!: string;
-    requirement!: FunctionRequirement;
-    eligibleIndividualVolunteerRoles?: string[] | undefined;
-    eligibleVolunteerFamilyRoles?: string[] | undefined;
-    eligiblePeople?: string[] | undefined;
-    variants!: ArrangementFunctionVariant[];
-
-    constructor(data?: IArrangementFunction) {
-        if (data) {
-            for (var property in data) {
-                if (data.hasOwnProperty(property))
-                    (this as any)[property] = (data as any)[property];
-            }
-        }
-        if (!data) {
-            this.variants = [];
-        }
-    }
-
-    init(_data?: any) {
-        if (_data) {
-            this.functionName = _data["functionName"];
-            this.requirement = _data["requirement"];
-            if (Array.isArray(_data["eligibleIndividualVolunteerRoles"])) {
-                this.eligibleIndividualVolunteerRoles = [] as any;
-                for (let item of _data["eligibleIndividualVolunteerRoles"])
-                    this.eligibleIndividualVolunteerRoles!.push(item);
-            }
-            if (Array.isArray(_data["eligibleVolunteerFamilyRoles"])) {
-                this.eligibleVolunteerFamilyRoles = [] as any;
-                for (let item of _data["eligibleVolunteerFamilyRoles"])
-                    this.eligibleVolunteerFamilyRoles!.push(item);
-            }
-            if (Array.isArray(_data["eligiblePeople"])) {
-                this.eligiblePeople = [] as any;
-                for (let item of _data["eligiblePeople"])
-                    this.eligiblePeople!.push(item);
-            }
-            if (Array.isArray(_data["variants"])) {
-                this.variants = [] as any;
-                for (let item of _data["variants"])
-                    this.variants!.push(ArrangementFunctionVariant.fromJS(item));
-            }
-        }
-    }
-
-    static fromJS(data: any): ArrangementFunction {
-        data = typeof data === 'object' ? data : {};
-        let result = new ArrangementFunction();
-        result.init(data);
-        return result;
-    }
-
-    toJSON(data?: any) {
-        data = typeof data === 'object' ? data : {};
-        data["functionName"] = this.functionName;
-        data["requirement"] = this.requirement;
-        if (Array.isArray(this.eligibleIndividualVolunteerRoles)) {
-            data["eligibleIndividualVolunteerRoles"] = [];
-            for (let item of this.eligibleIndividualVolunteerRoles)
-                data["eligibleIndividualVolunteerRoles"].push(item);
-        }
-        if (Array.isArray(this.eligibleVolunteerFamilyRoles)) {
-            data["eligibleVolunteerFamilyRoles"] = [];
-            for (let item of this.eligibleVolunteerFamilyRoles)
-                data["eligibleVolunteerFamilyRoles"].push(item);
-        }
-        if (Array.isArray(this.eligiblePeople)) {
-            data["eligiblePeople"] = [];
-            for (let item of this.eligiblePeople)
-                data["eligiblePeople"].push(item);
-        }
-        if (Array.isArray(this.variants)) {
-            data["variants"] = [];
-            for (let item of this.variants)
-                data["variants"].push(item ? item.toJSON() : undefined as any);
-        }
-        return data;
-    }
-}
-
-export interface IArrangementFunction {
-    functionName: string;
-    requirement: FunctionRequirement;
-    eligibleIndividualVolunteerRoles?: string[] | undefined;
-    eligibleVolunteerFamilyRoles?: string[] | undefined;
-    eligiblePeople?: string[] | undefined;
-    variants: ArrangementFunctionVariant[];
-}
-
-export enum FunctionRequirement {
-    ZeroOrMore = 0,
-    ExactlyOne = 1,
-    OneOrMore = 2,
-}
-
-export class ArrangementFunctionVariant implements IArrangementFunctionVariant {
-    requiredSetupActionNames_PRE_MIGRATION!: RequirementDefinition[];
-    requiredMonitoringActions_PRE_MIGRATION!: MonitoringRequirement[];
-    requiredCloseoutActionNames_PRE_MIGRATION!: RequirementDefinition[];
-    variantName!: string;
-    requiredSetupActionNames!: string[];
-    requiredMonitoringActions!: MonitoringRequirementOld[];
-    requiredCloseoutActionNames!: string[];
-    requiredSetupActions?: RequirementDefinition[] | undefined;
-    requiredMonitoringActionsNew?: MonitoringRequirement[] | undefined;
-    requiredCloseoutActions?: RequirementDefinition[] | undefined;
-
-    constructor(data?: IArrangementFunctionVariant) {
-        if (data) {
-            for (var property in data) {
-                if (data.hasOwnProperty(property))
-                    (this as any)[property] = (data as any)[property];
-            }
-        }
-        if (!data) {
-            this.requiredSetupActionNames_PRE_MIGRATION = [];
-            this.requiredMonitoringActions_PRE_MIGRATION = [];
-            this.requiredCloseoutActionNames_PRE_MIGRATION = [];
-            this.requiredSetupActionNames = [];
-            this.requiredMonitoringActions = [];
-            this.requiredCloseoutActionNames = [];
-        }
-    }
-
-    init(_data?: any) {
-        if (_data) {
-            if (Array.isArray(_data["requiredSetupActionNames_PRE_MIGRATION"])) {
-                this.requiredSetupActionNames_PRE_MIGRATION = [] as any;
-                for (let item of _data["requiredSetupActionNames_PRE_MIGRATION"])
-                    this.requiredSetupActionNames_PRE_MIGRATION!.push(RequirementDefinition.fromJS(item));
-            }
-            if (Array.isArray(_data["requiredMonitoringActions_PRE_MIGRATION"])) {
-                this.requiredMonitoringActions_PRE_MIGRATION = [] as any;
-                for (let item of _data["requiredMonitoringActions_PRE_MIGRATION"])
-                    this.requiredMonitoringActions_PRE_MIGRATION!.push(MonitoringRequirement.fromJS(item));
-            }
-            if (Array.isArray(_data["requiredCloseoutActionNames_PRE_MIGRATION"])) {
-                this.requiredCloseoutActionNames_PRE_MIGRATION = [] as any;
-                for (let item of _data["requiredCloseoutActionNames_PRE_MIGRATION"])
-                    this.requiredCloseoutActionNames_PRE_MIGRATION!.push(RequirementDefinition.fromJS(item));
-            }
-            this.variantName = _data["variantName"];
-            if (Array.isArray(_data["requiredSetupActionNames"])) {
-                this.requiredSetupActionNames = [] as any;
-                for (let item of _data["requiredSetupActionNames"])
-                    this.requiredSetupActionNames!.push(item);
-            }
-            if (Array.isArray(_data["requiredMonitoringActions"])) {
-                this.requiredMonitoringActions = [] as any;
-                for (let item of _data["requiredMonitoringActions"])
-                    this.requiredMonitoringActions!.push(MonitoringRequirementOld.fromJS(item));
-            }
-            if (Array.isArray(_data["requiredCloseoutActionNames"])) {
-                this.requiredCloseoutActionNames = [] as any;
-                for (let item of _data["requiredCloseoutActionNames"])
-                    this.requiredCloseoutActionNames!.push(item);
-            }
-            if (Array.isArray(_data["requiredSetupActions"])) {
-                this.requiredSetupActions = [] as any;
-                for (let item of _data["requiredSetupActions"])
-                    this.requiredSetupActions!.push(RequirementDefinition.fromJS(item));
-            }
-            if (Array.isArray(_data["requiredMonitoringActionsNew"])) {
-                this.requiredMonitoringActionsNew = [] as any;
-                for (let item of _data["requiredMonitoringActionsNew"])
-                    this.requiredMonitoringActionsNew!.push(MonitoringRequirement.fromJS(item));
-            }
-            if (Array.isArray(_data["requiredCloseoutActions"])) {
-                this.requiredCloseoutActions = [] as any;
-                for (let item of _data["requiredCloseoutActions"])
-                    this.requiredCloseoutActions!.push(RequirementDefinition.fromJS(item));
-            }
-        }
-    }
-
-    static fromJS(data: any): ArrangementFunctionVariant {
-        data = typeof data === 'object' ? data : {};
-        let result = new ArrangementFunctionVariant();
-        result.init(data);
-        return result;
-    }
-
-    toJSON(data?: any) {
-        data = typeof data === 'object' ? data : {};
-        if (Array.isArray(this.requiredSetupActionNames_PRE_MIGRATION)) {
-            data["requiredSetupActionNames_PRE_MIGRATION"] = [];
-            for (let item of this.requiredSetupActionNames_PRE_MIGRATION)
-                data["requiredSetupActionNames_PRE_MIGRATION"].push(item ? item.toJSON() : undefined as any);
-        }
-        if (Array.isArray(this.requiredMonitoringActions_PRE_MIGRATION)) {
-            data["requiredMonitoringActions_PRE_MIGRATION"] = [];
-            for (let item of this.requiredMonitoringActions_PRE_MIGRATION)
-                data["requiredMonitoringActions_PRE_MIGRATION"].push(item ? item.toJSON() : undefined as any);
-        }
-        if (Array.isArray(this.requiredCloseoutActionNames_PRE_MIGRATION)) {
-            data["requiredCloseoutActionNames_PRE_MIGRATION"] = [];
-            for (let item of this.requiredCloseoutActionNames_PRE_MIGRATION)
-                data["requiredCloseoutActionNames_PRE_MIGRATION"].push(item ? item.toJSON() : undefined as any);
-        }
-        data["variantName"] = this.variantName;
-        if (Array.isArray(this.requiredSetupActionNames)) {
-            data["requiredSetupActionNames"] = [];
-            for (let item of this.requiredSetupActionNames)
-                data["requiredSetupActionNames"].push(item);
-        }
-        if (Array.isArray(this.requiredMonitoringActions)) {
-            data["requiredMonitoringActions"] = [];
-            for (let item of this.requiredMonitoringActions)
-                data["requiredMonitoringActions"].push(item ? item.toJSON() : undefined as any);
-        }
-        if (Array.isArray(this.requiredCloseoutActionNames)) {
-            data["requiredCloseoutActionNames"] = [];
-            for (let item of this.requiredCloseoutActionNames)
-                data["requiredCloseoutActionNames"].push(item);
-        }
-        if (Array.isArray(this.requiredSetupActions)) {
-            data["requiredSetupActions"] = [];
-            for (let item of this.requiredSetupActions)
-                data["requiredSetupActions"].push(item ? item.toJSON() : undefined as any);
-        }
-        if (Array.isArray(this.requiredMonitoringActionsNew)) {
-            data["requiredMonitoringActionsNew"] = [];
-            for (let item of this.requiredMonitoringActionsNew)
-                data["requiredMonitoringActionsNew"].push(item ? item.toJSON() : undefined as any);
-        }
-        if (Array.isArray(this.requiredCloseoutActions)) {
-            data["requiredCloseoutActions"] = [];
-            for (let item of this.requiredCloseoutActions)
-                data["requiredCloseoutActions"].push(item ? item.toJSON() : undefined as any);
-        }
-        return data;
-    }
-}
-
-export interface IArrangementFunctionVariant {
-    requiredSetupActionNames_PRE_MIGRATION: RequirementDefinition[];
-    requiredMonitoringActions_PRE_MIGRATION: MonitoringRequirement[];
-    requiredCloseoutActionNames_PRE_MIGRATION: RequirementDefinition[];
-    variantName: string;
-    requiredSetupActionNames: string[];
-    requiredMonitoringActions: MonitoringRequirementOld[];
-    requiredCloseoutActionNames: string[];
-    requiredSetupActions?: RequirementDefinition[] | undefined;
-    requiredMonitoringActionsNew?: MonitoringRequirement[] | undefined;
-    requiredCloseoutActions?: RequirementDefinition[] | undefined;
-}
-
-export class MonitoringRequirementOld implements IMonitoringRequirementOld {
-    actionName!: string;
+export class MonitoringRequirement implements IMonitoringRequirement {
+    action!: RequirementDefinition;
     recurrence!: RecurrencePolicy;
 
-    constructor(data?: IMonitoringRequirementOld) {
+    constructor(data?: IMonitoringRequirement) {
         if (data) {
             for (var property in data) {
                 if (data.hasOwnProperty(property))
                     (this as any)[property] = (data as any)[property];
             }
         }
+        if (!data) {
+            this.action = new RequirementDefinition();
+        }
     }
 
     init(_data?: any) {
         if (_data) {
-            this.actionName = _data["actionName"];
+            this.action = _data["action"] ? RequirementDefinition.fromJS(_data["action"]) : new RequirementDefinition();
             this.recurrence = _data["recurrence"] ? RecurrencePolicy.fromJS(_data["recurrence"]) : undefined as any;
         }
     }
 
-    static fromJS(data: any): MonitoringRequirementOld {
+    static fromJS(data: any): MonitoringRequirement {
         data = typeof data === 'object' ? data : {};
-        let result = new MonitoringRequirementOld();
+        let result = new MonitoringRequirement();
         result.init(data);
         return result;
     }
 
     toJSON(data?: any) {
         data = typeof data === 'object' ? data : {};
-        data["actionName"] = this.actionName;
+        data["action"] = this.action ? this.action.toJSON() : undefined as any;
         data["recurrence"] = this.recurrence ? this.recurrence.toJSON() : undefined as any;
         return data;
     }
 }
 
-export interface IMonitoringRequirementOld {
-    actionName: string;
+export interface IMonitoringRequirement {
+    action: RequirementDefinition;
     recurrence: RecurrencePolicy;
 }
 
