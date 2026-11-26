@@ -9,12 +9,10 @@ import {
 import { expectNoHorizontalOverflow } from './support/layout';
 import { ORGANIZATION_APPROVALS_FEATURE_FLAG } from '../src/featureFlags';
 import {
-  FamilyRecordsAggregate,
   ApprovalRenewalRoleScope,
   DisclosedApprovalRenewalState,
   Permission,
   NoteStatus,
-  RecordsAggregate,
   RoleApprovalStatus,
   V1ReferralNoteStatus,
 } from '../src/GeneratedClient';
@@ -226,49 +224,65 @@ test('Dashboard shows scoped requirement counts and opens the arrangement @pr', 
 }) => {
   const loading = Promise.withResolvers<void>();
   let target: { v1CaseId: string; arrangementId: string } | undefined;
+  const dueBy = new Date();
+  dueBy.setUTCDate(dueBy.getUTCDate() + 10);
+  type WireCase = {
+    id: string;
+    arrangements?: { id: string; missingRequirements?: unknown[] }[];
+  };
   await page.route('**/Records', async (route) => {
     await loading.promise;
     const response = await route.fetch();
-    const records = (await response.json()).map(
-      RecordsAggregate.fromJS
-    ) as RecordsAggregate[];
+    const records = (await response.json()) as Array<{
+      id: string;
+      family?: {
+        partneringFamilyInfo?: {
+          openV1Case?: WireCase;
+          closedV1Cases?: WireCase[];
+        };
+      };
+    }>;
+    const isAtlantis = new URL(route.request().url()).pathname.includes(
+      `/${ATLANTIS_LOCATION_ID}/`
+    );
+    let injected = false;
     for (const record of records) {
-      if (!(record instanceof FamilyRecordsAggregate)) continue;
-      const partnering = record.family.partneringFamilyInfo;
+      const partnering = record.family?.partneringFamilyInfo;
       const cases = [...(partnering?.closedV1Cases ?? [])];
       if (partnering?.openV1Case) cases.push(partnering.openV1Case);
       for (const v1Case of cases) {
         for (const arrangement of v1Case.arrangements ?? []) {
           arrangement.missingRequirements = [];
+          if (
+            !isAtlantis ||
+            record.id !== doeId ||
+            v1Case.id !== doeId ||
+            arrangement.id !== doeId
+          ) {
+            continue;
+          }
+          target = { v1CaseId: v1Case.id, arrangementId: arrangement.id };
+          injected = true;
+          const imminent = {
+            action: { actionName: 'Upcoming safety visit', isRequired: true },
+            dueBy: dueBy.toISOString().slice(0, 10),
+          };
+          arrangement.missingRequirements = [
+            imminent,
+            imminent,
+            {
+              action: {
+                actionName: 'Outstanding safety visit',
+                isRequired: true,
+              },
+              pastDueSince: '2020-02-29',
+            },
+          ];
         }
       }
-      const v1Case = partnering?.openV1Case;
-      const arrangement = v1Case?.arrangements?.find(({ id }) => id === doeId);
-      if (record.id !== doeId || !v1Case || !arrangement) continue;
-
-      target = { v1CaseId: v1Case.id, arrangementId: arrangement.id };
-      if (!route.request().url().includes(`/${ATLANTIS_LOCATION_ID}/`))
-        continue;
-
-      const dueBy = new Date();
-      dueBy.setUTCDate(dueBy.getUTCDate() + 10);
-      const imminent = {
-        action: { actionName: 'Upcoming safety visit', isRequired: true },
-        dueBy: dueBy.toISOString().slice(0, 10),
-      };
-      const wireRecord = record.toJSON();
-      wireRecord.family.partneringFamilyInfo.openV1Case.arrangements.find(
-        ({ id }: { id: string }) => id === arrangement.id
-      ).missingRequirements = [
-        imminent,
-        imminent,
-        {
-          action: { actionName: 'Outstanding safety visit', isRequired: true },
-          pastDueSince: '2020-02-29',
-        },
-      ];
-      records[records.indexOf(record)] = wireRecord;
     }
+    if (isAtlantis)
+      expect(injected, 'Seeded Doe case and arrangement').toBe(true);
     await route.fulfill({ response, json: records });
   });
 
@@ -465,6 +479,7 @@ test('shows disclosed approvals and renewals and restores the independent UTC wi
     ],
   };
   const role = {
+    currentStatus: RoleApprovalStatus.Approved,
     effectiveRoleApprovalStatus: timeline,
     roleVersionApprovals: [],
   };
@@ -500,6 +515,7 @@ test('shows disclosed approvals and renewals and restores the independent UTC wi
         'Family Coach': role,
         'Legacy Coach': {
           ...role,
+          currentStatus: RoleApprovalStatus.Expired,
           effectiveRoleApprovalStatus: {
             ranges: [
               {
@@ -521,41 +537,43 @@ test('shows disclosed approvals and renewals and restores the independent UTC wi
           approvalStatusByRole: { 'Individual Coach': role },
         },
       },
-      renewalCandidates: [
-        {
-          candidateKey: 'individual-renewal',
-          target: {
-            discriminator: 'IndividualApprovalRenewalTarget',
-            familyId: doeId,
-            personId: family.family.primaryFamilyContactPersonId,
-          },
-          actionName: 'Safety check renewal',
-          firstUncoveredOnUtc: expirationDate,
-          state: DisclosedApprovalRenewalState.Upcoming,
-          affectedRoles: [
+      renewalCandidates: statusOnly
+        ? []
+        : [
             {
-              scope: ApprovalRenewalRoleScope.Family,
-              roleName: 'Family Coach',
+              candidateKey: 'individual-renewal',
+              target: {
+                discriminator: 'IndividualApprovalRenewalTarget',
+                familyId: doeId,
+                personId: family.family.primaryFamilyContactPersonId,
+              },
+              actionName: 'Safety check renewal',
+              firstUncoveredOnUtc: expirationDate,
+              state: DisclosedApprovalRenewalState.Upcoming,
+              affectedRoles: [
+                {
+                  scope: ApprovalRenewalRoleScope.Family,
+                  roleName: 'Family Coach',
+                },
+              ],
+            },
+            {
+              candidateKey: 'family-renewal',
+              target: {
+                discriminator: 'FamilyApprovalRenewalTarget',
+                familyId: doeId,
+              },
+              actionName: 'Household check renewal',
+              firstUncoveredOnUtc: '2022-04-10',
+              state: DisclosedApprovalRenewalState.Upcoming,
+              affectedRoles: [
+                {
+                  scope: ApprovalRenewalRoleScope.Family,
+                  roleName: 'Family Coach',
+                },
+              ],
             },
           ],
-        },
-        {
-          candidateKey: 'family-renewal',
-          target: {
-            discriminator: 'FamilyApprovalRenewalTarget',
-            familyId: doeId,
-          },
-          actionName: 'Household check renewal',
-          firstUncoveredOnUtc: '2022-04-10',
-          state: DisclosedApprovalRenewalState.Upcoming,
-          affectedRoles: [
-            {
-              scope: ApprovalRenewalRoleScope.Family,
-              roleName: 'Family Coach',
-            },
-          ],
-        },
-      ],
     };
     await route.fulfill({
       response,
@@ -575,6 +593,7 @@ test('shows disclosed approvals and renewals and restores the independent UTC wi
                 'Partner role': role,
                 'Other role': {
                   ...role,
+                  currentStatus: RoleApprovalStatus.Expired,
                   effectiveRoleApprovalStatus: {
                     ranges: [
                       {
@@ -724,10 +743,14 @@ test('shows disclosed approvals and renewals and restores the independent UTC wi
   await expect(
     page.getByRole('button', { name: 'close role details' })
   ).toBeVisible();
+  await expect(page.locator('#role-details-title')).toHaveText('Legacy Coach');
   statusOnly = true;
   await page.reload();
   await expect(
     page.getByText('Dashboard selection', { exact: true })
+  ).toBeVisible();
+  await expect(
+    page.getByRole('button', { name: /Legacy Coach.*Expired/ })
   ).toBeVisible();
   await expect(
     page.getByRole('button', { name: 'close role details' })
