@@ -41,9 +41,11 @@ test.describe('frontend smoke @smoke @pr', () => {
     const navigation = sideNavigation(page);
 
     await expect(navigation).toBeVisible();
-    await expect(navigation.getByText('Dashboard')).toBeVisible();
     await expect(
-      navigation.getByRole('link', { name: 'Calendar' })
+      navigation.getByRole('button', { name: 'Dashboard', exact: true })
+    ).toBeVisible();
+    await expect(
+      navigation.getByRole('button', { name: 'Calendar', exact: true })
     ).toBeVisible();
     await expect(navigation.getByText('Inbox')).toBeVisible();
 
@@ -56,8 +58,14 @@ test.describe('frontend smoke @smoke @pr', () => {
     await openHome(page);
 
     const navigation = sideNavigation(page);
-    const dashboard = navigation.getByRole('link', { name: 'Dashboard' });
-    const calendar = navigation.getByRole('link', { name: 'Calendar' });
+    const dashboard = navigation.getByRole('button', {
+      name: 'Dashboard',
+      exact: true,
+    });
+    const calendar = navigation.getByRole('button', {
+      name: 'Calendar',
+      exact: true,
+    });
     const selected = /\bMui-selected\b/;
 
     await expect(page).toHaveURL(/\/org\/[^/]+\/[^/]+\/$/);

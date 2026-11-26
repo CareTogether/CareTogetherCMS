@@ -10,8 +10,14 @@ test('Calendar is reachable from the mobile menu on a short screen @pr', async (
   await page.goto(ATLANTIS_ROUTE);
   const menu = page.getByRole('button', { name: 'Open navigation menu' });
   const navigation = page.getByRole('list', { name: 'secondary navigation' });
-  const dashboard = navigation.getByRole('link', { name: 'Dashboard' });
-  const calendar = navigation.getByRole('link', { name: 'Calendar' });
+  const dashboard = navigation.getByRole('button', {
+    name: 'Dashboard',
+    exact: true,
+  });
+  const calendar = navigation.getByRole('button', {
+    name: 'Calendar',
+    exact: true,
+  });
   const selected = /\bMui-selected\b/;
   await menu.click();
   await expect(dashboard).toHaveClass(selected);
