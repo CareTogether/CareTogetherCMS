@@ -1,11 +1,21 @@
-import { Box, IconButton, Stack, Tooltip, Typography } from '@mui/material';
+import {
+  Box,
+  IconButton,
+  ListItemIcon,
+  ListItemText,
+  Menu,
+  MenuItem,
+  Stack,
+  Typography,
+} from '@mui/material';
 import {
   DeleteOutlined as DeleteOutlinedIcon,
   Edit as EditIcon,
   Favorite,
   FavoriteBorder,
+  MoreVert as MoreVertIcon,
 } from '@mui/icons-material';
-import { type ReactNode } from 'react';
+import { type ReactNode, useId, useState } from 'react';
 import { useGlobalSnackBar } from '../Hooks/useGlobalSnackBar';
 import { ContactInfoCopyButton } from './ContactInfoCopyButton';
 import { v2Typography } from './v2Typography';
@@ -97,6 +107,14 @@ export function FamilyMemberDrawerContactRowV2({
   type: string;
 }) {
   const { setAndShowGlobalSnackBar } = useGlobalSnackBar();
+  const [menuAnchor, setMenuAnchor] = useState<HTMLElement | null>(null);
+  const menuId = useId();
+
+  const closeMenu = () => setMenuAnchor(null);
+  const runAndCloseMenu = (action: () => void) => () => {
+    closeMenu();
+    action();
+  };
 
   return (
     <Box
@@ -156,32 +174,49 @@ export function FamilyMemberDrawerContactRowV2({
           sx={contactRowActionSx}
           value={copyValue}
         />
-        {onEdit && (
-          <Tooltip enterDelay={800} title={editLabel}>
-            <IconButton
-              aria-label={editLabel}
-              onClick={onEdit}
-              size="small"
-              sx={contactRowActionSx}
-            >
-              <EditIcon fontSize="small" />
-            </IconButton>
-          </Tooltip>
-        )}
-        {onRemove && (
-          <Tooltip title={removeLabel}>
-            <IconButton
-              aria-label={removeLabel}
-              color="error"
-              onClick={onRemove}
-              size="small"
-              sx={contactRowActionSx}
-            >
-              <DeleteOutlinedIcon fontSize="small" />
-            </IconButton>
-          </Tooltip>
+        {(onEdit || onRemove) && (
+          <IconButton
+            aria-controls={menuAnchor ? menuId : undefined}
+            aria-expanded={menuAnchor ? 'true' : undefined}
+            aria-haspopup="true"
+            aria-label={`More actions for ${copyLabel.toLowerCase()}`}
+            onClick={(event) => setMenuAnchor(event.currentTarget)}
+            size="small"
+            sx={contactRowActionSx}
+          >
+            <MoreVertIcon fontSize="small" />
+          </IconButton>
         )}
       </Stack>
+
+      <Menu
+        anchorEl={menuAnchor}
+        anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
+        id={menuId}
+        onClose={closeMenu}
+        open={Boolean(menuAnchor)}
+        transformOrigin={{ horizontal: 'right', vertical: 'top' }}
+      >
+        {onEdit && (
+          <MenuItem onClick={runAndCloseMenu(onEdit)}>
+            <ListItemIcon>
+              <EditIcon fontSize="small" />
+            </ListItemIcon>
+            <ListItemText className="ph-unmask">{editLabel}</ListItemText>
+          </MenuItem>
+        )}
+        {onRemove && (
+          <MenuItem
+            onClick={runAndCloseMenu(onRemove)}
+            sx={{ color: 'error.main' }}
+          >
+            <ListItemIcon sx={{ color: 'inherit' }}>
+              <DeleteOutlinedIcon fontSize="small" />
+            </ListItemIcon>
+            <ListItemText className="ph-unmask">{removeLabel}</ListItemText>
+          </MenuItem>
+        )}
+      </Menu>
     </Box>
   );
 }
