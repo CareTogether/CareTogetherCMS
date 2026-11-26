@@ -36,6 +36,10 @@ import {
   SectionHeader,
 } from './sharedUi';
 import { ArrangementPolicyDetails } from './ArrangementPolicyDetails';
+import {
+  arrangementTypeDeleteBlockedReason,
+  countArrangementsByType,
+} from './arrangementTypeUsage';
 
 export function CasePolicyTab({
   policy,
@@ -58,6 +62,10 @@ export function CasePolicyTab({
   const visibleFamilies = useVisibleFamilies();
   const personOptions = useMemo(
     () => personOptionsFromFamilies(visibleFamilies),
+    [visibleFamilies]
+  );
+  const arrangementCountsByType = useMemo(
+    () => countArrangementsByType(visibleFamilies),
     [visibleFamilies]
   );
   const {
@@ -244,6 +252,12 @@ export function CasePolicyTab({
                         />
                         <DeleteRowAction
                           label={arrangement.arrangementType}
+                          blockedReason={arrangementTypeDeleteBlockedReason(
+                            arrangement.arrangementType,
+                            arrangementCountsByType.get(
+                              arrangement.arrangementType
+                            ) ?? 0
+                          )}
                           onClick={() => deleteArrangementPolicy(arrangement)}
                         />
                       </Stack>

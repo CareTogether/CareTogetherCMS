@@ -98,7 +98,8 @@ namespace CareTogether.Core.Test
                 Mock.Of<IApprovalsResource>(),
                 Mock.Of<IFeatureManager>(),
                 Mock.Of<IAuthorizationEngine>(),
-                communitiesResource.Object
+                communitiesResource.Object,
+                FunctionPolicyValidationTests.V1Cases()
             )
             {
                 ControllerContext = new ControllerContext

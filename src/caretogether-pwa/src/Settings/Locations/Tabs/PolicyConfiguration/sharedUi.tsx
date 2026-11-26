@@ -90,6 +90,7 @@ export function ConfirmedRowAction({
   icon,
   title,
   message,
+  blockedReason,
   onClick,
 }: {
   label: string;
@@ -97,6 +98,8 @@ export function ConfirmedRowAction({
   icon: ReactNode;
   title: string;
   message: string;
+  /** When set, the dialog explains why the action is not possible instead of confirming it. */
+  blockedReason?: string;
   onClick: () => void;
 }) {
   const [confirming, setConfirming] = useState(false);
@@ -131,15 +134,25 @@ export function ConfirmedRowAction({
         onClose={closeDialog}
         onClick={(event) => event.stopPropagation()}
       >
-        <DialogTitle>{title}</DialogTitle>
+        <DialogTitle>
+          {blockedReason ? `Cannot ${action.toLowerCase()} ${label}` : title}
+        </DialogTitle>
         <DialogContent>
-          <DialogContentText>{message}</DialogContentText>
+          <DialogContentText>{blockedReason ?? message}</DialogContentText>
         </DialogContent>
         <DialogActions>
-          <Button onClick={closeDialog}>No</Button>
-          <Button variant="contained" onClick={confirmDuplicate}>
-            Yes
-          </Button>
+          {blockedReason ? (
+            <Button variant="contained" onClick={closeDialog}>
+              OK
+            </Button>
+          ) : (
+            <>
+              <Button onClick={closeDialog}>No</Button>
+              <Button variant="contained" onClick={confirmDuplicate}>
+                Yes
+              </Button>
+            </>
+          )}
         </DialogActions>
       </Dialog>
     </>
@@ -167,9 +180,11 @@ export function DuplicateRowAction({
 
 export function DeleteRowAction({
   label,
+  blockedReason,
   onClick,
 }: {
   label: string;
+  blockedReason?: string;
   onClick: () => void;
 }) {
   return (
@@ -179,6 +194,7 @@ export function DeleteRowAction({
       icon={<DeleteIcon fontSize="small" />}
       title={`Delete ${label}?`}
       message={`Are you sure you want to delete ${label}?`}
+      blockedReason={blockedReason}
       onClick={onClick}
     />
   );

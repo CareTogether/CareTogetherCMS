@@ -5,11 +5,13 @@ using System.Security.Claims;
 using System.Threading.Tasks;
 using CareTogether.Api.Controllers;
 using CareTogether.Engines.Authorization;
+using CareTogether.Resources;
 using CareTogether.Resources.Accounts;
 using CareTogether.Resources.Approvals;
 using CareTogether.Resources.Communities;
 using CareTogether.Resources.Directory;
 using CareTogether.Resources.Policies;
+using CareTogether.Resources.V1Cases;
 using CareTogether.Utilities.ObjectStore;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -340,6 +342,157 @@ namespace CareTogether.Core.Test
             Assert.IsInstanceOfType<EffectiveLocationPolicy>(ok.Value);
         }
 
+        [TestMethod]
+        public async Task PutRejectsRemovingAnArrangementTypeThatExistingArrangementsUse()
+        {
+            var (resource, policyStore, organizationId) = await CreateResourceAsync();
+            var locationId = Guid.NewGuid();
+            var original = WithArrangementTypes(
+                PolicyValidationTests.ValidPolicy(),
+                "Hosting",
+                "Recurring Hosting"
+            );
+            await policyStore.UpsertAsync(organizationId, locationId, "policy", original);
+            var controller = Controller(
+                resource,
+                Authorization(organizationId, locationId, true).Object,
+                V1Cases(CaseWithArrangements("Recurring Hosting", "Recurring Hosting", "Hosting"))
+            );
+
+            var response = await controller.PutEffectiveLocationPolicy(
+                organizationId,
+                locationId,
+                WithArrangementTypes(PolicyValidationTests.ValidPolicy(), "Hosting")
+            );
+            var badRequest = (BadRequestObjectResult)response.Result!;
+            var payload = Newtonsoft.Json.Linq.JObject.FromObject(badRequest.Value!);
+
+            Assert.AreEqual(400, badRequest.StatusCode);
+            Assert.AreEqual(
+                "The arrangement type 'Recurring Hosting' cannot be removed or renamed because 2 existing arrangements use it.",
+                (string?)payload["errors"]![0]
+            );
+            Assert.AreSame(
+                original,
+                await policyStore.GetAsync(organizationId, locationId, "policy")
+            );
+        }
+
+        [TestMethod]
+        public async Task ValidationReportsRemovingAnArrangementTypeThatExistingArrangementsUse()
+        {
+            var (resource, policyStore, organizationId) = await CreateResourceAsync();
+            var locationId = Guid.NewGuid();
+            await policyStore.UpsertAsync(
+                organizationId,
+                locationId,
+                "policy",
+                WithArrangementTypes(PolicyValidationTests.ValidPolicy(), "Hosting", "Friending")
+            );
+            var controller = Controller(
+                resource,
+                Authorization(organizationId, locationId, true).Object,
+                V1Cases(CaseWithArrangements("Friending"))
+            );
+
+            var response = await controller.ValidateEffectiveLocationPolicy(
+                organizationId,
+                locationId,
+                WithArrangementTypes(PolicyValidationTests.ValidPolicy(), "Hosting")
+            );
+            var result = (PolicyValidationResult)((OkObjectResult)response.Result!).Value!;
+
+            CollectionAssert.Contains(
+                result.Errors.ToList(),
+                "The arrangement type 'Friending' cannot be removed or renamed because 1 existing arrangement uses it."
+            );
+        }
+
+        [TestMethod]
+        public async Task PutAllowsRemovingAnArrangementTypeNoArrangementUses()
+        {
+            var (resource, policyStore, organizationId) = await CreateResourceAsync();
+            var locationId = Guid.NewGuid();
+            await policyStore.UpsertAsync(
+                organizationId,
+                locationId,
+                "policy",
+                WithArrangementTypes(PolicyValidationTests.ValidPolicy(), "Hosting", "Friending")
+            );
+            var controller = Controller(
+                resource,
+                Authorization(organizationId, locationId, true).Object,
+                V1Cases(CaseWithArrangements("Hosting"))
+            );
+
+            var response = await controller.PutEffectiveLocationPolicy(
+                organizationId,
+                locationId,
+                WithArrangementTypes(PolicyValidationTests.ValidPolicy(), "Hosting")
+            );
+
+            Assert.IsInstanceOfType<OkObjectResult>(response.Result);
+        }
+
+        private static EffectiveLocationPolicy WithArrangementTypes(
+            EffectiveLocationPolicy policy,
+            params string[] arrangementTypes
+        ) =>
+            policy with
+            {
+                ReferralPolicy = policy.ReferralPolicy with
+                {
+                    ArrangementPolicies = arrangementTypes
+                        .Select(type => new ArrangementPolicy(
+                            ArrangementType: type,
+                            ChildInvolvement: ChildInvolvement.NoChildInvolvement,
+                            ArrangementFunctions: [],
+                            RequiredSetupActionNames: [],
+                            RequiredMonitoringActions: [],
+                            RequiredCloseoutActionNames: []
+                        ))
+                        .ToImmutableList(),
+                },
+            };
+
+        private static V1CaseEntry CaseWithArrangements(params string[] arrangementTypes) =>
+            new(
+                Id: Guid.NewGuid(),
+                FamilyId: Guid.NewGuid(),
+                LinkedV1ReferralIds: [],
+                OpenedAtUtc: DateTime.UtcNow,
+                ClosedAtUtc: null,
+                CloseReason: null,
+                CompletedRequirements: [],
+                ExemptedRequirements: [],
+                CompletedCustomFields: ImmutableDictionary<string, CompletedCustomFieldInfo>.Empty,
+                Arrangements: arrangementTypes
+                    .Select(type => new ArrangementEntry(
+                        Id: Guid.NewGuid(),
+                        ArrangementType: type,
+                        Active: true,
+                        RequestedAtUtc: DateTime.UtcNow,
+                        StartedAtUtc: null,
+                        EndedAtUtc: null,
+                        CancelledAtUtc: null,
+                        PlannedStartUtc: null,
+                        PlannedEndUtc: null,
+                        PartneringFamilyPersonId: Guid.NewGuid(),
+                        CompletedRequirements: [],
+                        ExemptedRequirements: [],
+                        IndividualVolunteerAssignments: [],
+                        FamilyVolunteerAssignments: [],
+                        ChildLocationHistory: [],
+                        ChildLocationPlan: [],
+                        Comments: null,
+                        Reason: null
+                    ))
+                    .ToImmutableDictionary(arrangement => arrangement.Id),
+                AssignedIndividualVolunteers: [],
+                History: [],
+                Comments: null
+            );
+
         private static EffectiveLocationPolicy WarningPolicy()
         {
             var policy = PolicyValidationTests.ValidPolicy();
@@ -416,9 +569,19 @@ namespace CareTogether.Core.Test
             return authorization;
         }
 
-        private static ConfigurationController Controller(
+        internal static IV1CasesResource V1Cases(params V1CaseEntry[] v1Cases)
+        {
+            var resource = new Mock<IV1CasesResource>();
+            resource
+                .Setup(x => x.ListV1CasessAsync(It.IsAny<Guid>(), It.IsAny<Guid>()))
+                .ReturnsAsync(v1Cases.ToImmutableList());
+            return resource.Object;
+        }
+
+        internal static ConfigurationController Controller(
             IPoliciesResource policies,
-            IAuthorizationEngine authorization
+            IAuthorizationEngine authorization,
+            IV1CasesResource? v1Cases = null
         ) =>
             new(
                 policies,
@@ -427,7 +590,8 @@ namespace CareTogether.Core.Test
                 Mock.Of<IApprovalsResource>(),
                 Mock.Of<IFeatureManager>(),
                 authorization,
-                Mock.Of<ICommunitiesResource>()
+                Mock.Of<ICommunitiesResource>(),
+                v1Cases ?? V1Cases()
             )
             {
                 ControllerContext = new ControllerContext
