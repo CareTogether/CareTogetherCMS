@@ -1,6 +1,7 @@
-import { useId, type ReactNode } from 'react';
+import { Children, useId, useState, type ReactNode } from 'react';
 import {
   Box,
+  Button,
   CardActions,
   Chip,
   CircularProgress,
@@ -28,6 +29,7 @@ type DashboardRequirementPanelProps = {
   count?: number;
   itemType?: 'requirement' | 'approval' | 'note';
   showCount?: boolean;
+  emphasis?: 'error';
   loadingMessage?: string;
   headerAction?: ReactNode;
   footer?: ReactNode;
@@ -42,12 +44,19 @@ export function DashboardRequirementPanel({
   count,
   itemType = 'requirement',
   showCount = true,
+  emphasis,
   loadingMessage = `Loading ${itemType}s…`,
   headerAction,
   footer,
   children,
 }: DashboardRequirementPanelProps) {
   const headingId = useId();
+  const listId = useId();
+  const [expanded, setExpanded] = useState(false);
+  const rows = Children.toArray(children);
+  const previewSize = 5;
+  const canExpand = rows.length > previewSize;
+  const urgent = emphasis === 'error' && Boolean(count);
 
   return (
     <Paper
@@ -58,7 +67,7 @@ export function DashboardRequirementPanel({
       sx={{
         minWidth: 0,
         overflow: 'hidden',
-        borderRadius: 3,
+        borderRadius: 2,
         borderColor: 'divider',
       }}
     >
@@ -70,7 +79,10 @@ export function DashboardRequirementPanel({
           p: 2,
           alignItems: 'center',
           flexWrap: 'wrap',
-          bgcolor: 'background.paper',
+          bgcolor: (theme) =>
+            urgent
+              ? alpha(theme.palette.error.main, 0.05)
+              : theme.palette.background.paper,
         }}
       >
         <Stack
@@ -87,8 +99,14 @@ export function DashboardRequirementPanel({
               height: 34,
               flexShrink: 0,
               borderRadius: 1.5,
-              color: 'primary.dark',
-              bgcolor: (theme) => alpha(theme.palette.primary.main, 0.08),
+              color: urgent ? 'error.dark' : 'primary.dark',
+              bgcolor: (theme) =>
+                alpha(
+                  urgent
+                    ? theme.palette.error.main
+                    : theme.palette.primary.main,
+                  0.08
+                ),
             }}
           >
             {icon}
@@ -101,7 +119,7 @@ export function DashboardRequirementPanel({
             sx={{
               minWidth: 0,
               overflowWrap: 'anywhere',
-              fontWeight: 700,
+              fontWeight: 600,
               lineHeight: 1.3,
             }}
           >
@@ -172,26 +190,34 @@ export function DashboardRequirementPanel({
         </Stack>
       ) : (
         <Box
-          role="group"
-          aria-labelledby={headingId}
-          tabIndex={0}
           sx={{
             borderTop: 1,
             borderColor: 'divider',
-            maxHeight: { xs: 'min(72dvh, 36rem)', md: 400 },
-            overflowY: 'auto',
-            overflowX: 'hidden',
-            scrollbarWidth: 'thin',
-            scrollbarColor: (theme) =>
-              `${theme.palette.text.disabled} transparent`,
-            '&:focus-visible': {
-              outline: '2px solid',
-              outlineColor: 'primary.main',
-              outlineOffset: '-2px',
-            },
           }}
         >
-          <List disablePadding>{children}</List>
+          <List disablePadding>{rows.slice(0, previewSize)}</List>
+          {canExpand && (
+            <>
+              <Box sx={{ px: 2, py: 1 }}>
+                <Button
+                  className="ph-unmask"
+                  aria-controls={listId}
+                  aria-expanded={expanded}
+                  onClick={() => setExpanded(!expanded)}
+                  sx={{ textTransform: 'none', minHeight: 44 }}
+                >
+                  {expanded
+                    ? 'Show fewer'
+                    : rows.length === count
+                      ? `View all ${count} ${itemType}s`
+                      : `View all ${rows.length} groups`}
+                </Button>
+              </Box>
+              <List id={listId} hidden={!expanded} disablePadding>
+                {expanded && rows.slice(previewSize)}
+              </List>
+            </>
+          )}
         </Box>
       )}
       {footer}
@@ -225,6 +251,11 @@ export function DashboardRequirementRow({
       : !pastDue && daysFromToday > 0
         ? `Due in ${daysFromToday} ${daysFromToday === 1 ? 'day' : 'days'}`
         : undefined;
+  const deadlineColor = pastDue
+    ? 'error.dark'
+    : daysFromToday >= 0 && daysFromToday <= 3
+      ? 'warning.dark'
+      : 'text.primary';
 
   return (
     <DashboardQueueRow
@@ -246,16 +277,21 @@ export function DashboardRequirementRow({
       >
         <ScheduleOutlined
           aria-hidden
-          sx={{ fontSize: 16, color: pastDue ? 'error.dark' : 'warning.dark' }}
+          sx={{ fontSize: 16, color: deadlineColor }}
         />
         <Typography
           component="span"
           variant="caption"
           className="ph-unmask"
-          color={pastDue ? 'error.dark' : 'text.primary'}
+          color={deadlineColor}
           sx={{ fontWeight: 600 }}
         >
-          {relativeDate ?? (pastDue ? 'Past due since' : 'Due')}
+          {relativeDate ??
+            (pastDue
+              ? 'Past due since'
+              : daysFromToday === 0
+                ? 'Due today'
+                : 'Due')}
         </Typography>
         {relativeDate && (
           <Typography
@@ -312,10 +348,15 @@ export function DashboardQueueRow({
 }) {
   const content = (
     <Stack
+      component="span"
       spacing={0.25}
       sx={{ flex: 1, minWidth: 0, overflowWrap: 'anywhere' }}
     >
-      <Typography component="span" variant="body2" sx={{ fontWeight: 700 }}>
+      <Typography
+        component="span"
+        variant="body2"
+        sx={{ fontSize: 15, fontWeight: 600 }}
+      >
         {title}
       </Typography>
       <Typography component="span" variant="body2" color="text.secondary">
@@ -365,7 +406,15 @@ export function DashboardQueueRow({
       )}
       {actions && (
         <CardActions
-          sx={{ paddingTop: 0, justifyContent: 'flex-end', flexWrap: 'wrap' }}
+          sx={{
+            px: 2,
+            pt: 0,
+            pb: 1.25,
+            justifyContent: 'flex-end',
+            flexWrap: 'wrap',
+            gap: 1,
+          }}
+          disableSpacing
         >
           {actions}
         </CardActions>

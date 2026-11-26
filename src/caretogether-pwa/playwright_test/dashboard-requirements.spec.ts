@@ -27,7 +27,7 @@ test.use({
   viewport: { width: 375, height: 700 },
 });
 
-test('edits and approves family and referral notes without leaving the Dashboard @pr', async ({
+test('edits, approves, and deletes family and referral notes without leaving the Dashboard @pr', async ({
   page,
 }) => {
   const referralId = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaab';
@@ -47,6 +47,18 @@ test('edits and approves family and referral notes without leaving the Dashboard
     lastEditTimestampUtc: timestamp,
     createdTimestampUtc: timestamp,
   };
+  const familyDiscard = {
+    ...familyNote,
+    id: referralId,
+    contents: 'Family draft to delete',
+  };
+  const referralDiscard = {
+    ...referralNote,
+    id: doeId,
+    contents: 'Referral draft to delete',
+  };
+  const familyNotes = [familyNote, familyDiscard];
+  const referralNotes = [referralNote, referralDiscard];
   const referralAggregate = {
     discriminator: 'ReferralRecordsAggregate',
     id: referralId,
@@ -57,7 +69,7 @@ test('edits and approves family and referral notes without leaving the Dashboard
         familyId: doeId,
         title: 'Review intake',
         createdAtUtc: timestamp,
-        notes: [referralNote],
+        notes: referralNotes,
       },
     },
   };
@@ -70,11 +82,12 @@ test('edits and approves family and referral notes without leaving the Dashboard
     }>;
     for (const record of records) {
       if (!record.family) continue;
-      record.family.notes = record.id === doeId ? [familyNote] : [];
+      record.family.notes = record.id === doeId ? familyNotes : [];
       if (record.id !== doeId) continue;
       record.family.userPermissions.push(
         Permission.ApproveNotes,
-        Permission.AddEditDraftNotes
+        Permission.AddEditDraftNotes,
+        Permission.DiscardDraftNotes
       );
       familyAggregate = record;
     }
@@ -101,6 +114,14 @@ test('edits and approves family and referral notes without leaving the Dashboard
       case 'ApproveV1ReferralNote':
         referralNote.status = V1ReferralNoteStatus.Approved;
         break;
+      case 'DiscardDraftNote':
+        expect(command.noteId).toBe(familyDiscard.id);
+        familyNotes.pop();
+        break;
+      case 'DiscardV1ReferralDraftNote':
+        expect(command.noteId).toBe(referralDiscard.id);
+        referralNotes.pop();
+        break;
       default:
         await route.fallback();
         return;
@@ -115,6 +136,11 @@ test('edits and approves family and referral notes without leaving the Dashboard
     .filter({ has: page.getByText('Notes awaiting review', { exact: true }) });
   const row = (contents: string) =>
     panel.getByRole('listitem').filter({ hasText: contents });
+  const reviewSummary = page
+    .getByRole('list', { name: 'Workload overview' })
+    .getByRole('listitem')
+    .filter({ hasText: 'Awaiting review' });
+  await expect(reviewSummary.getByText('4', { exact: true })).toBeVisible();
   await row(familyNote.contents)
     .getByRole('button', { name: /Family draft for review/ })
     .click();
@@ -162,6 +188,7 @@ test('edits and approves family and referral notes without leaving the Dashboard
     release.resolve();
   }
   await expect(row('Edited family draft')).toHaveCount(0);
+  await expect(reviewSummary.getByText('3', { exact: true })).toBeVisible();
   expect(familyApprovalRequests).toBe(1);
   await row('Edited referral draft')
     .getByRole('button', { name: 'Approve', exact: true })
@@ -170,7 +197,27 @@ test('edits and approves family and referral notes without leaving the Dashboard
     .getByRole('dialog')
     .getByRole('button', { name: 'Approve', exact: true })
     .click();
+  await expect(reviewSummary.getByText('2', { exact: true })).toBeVisible();
+  const familyDelete = row(familyDiscard.contents).getByRole('button', {
+    name: 'Delete',
+    exact: true,
+  });
+  const dialog = page.getByRole('dialog');
+  await familyDelete.click();
+  await dialog.getByRole('button', { name: 'Cancel', exact: true }).click();
+  await expect(familyDelete).toBeVisible();
+  await expect(reviewSummary.getByText('2', { exact: true })).toBeVisible();
+  await familyDelete.click();
+  await dialog.getByRole('button', { name: 'Save', exact: true }).click();
+  await expect(row(familyDiscard.contents)).toHaveCount(0);
+  await expect(reviewSummary.getByText('1', { exact: true })).toBeVisible();
+  await row(referralDiscard.contents)
+    .getByRole('button', { name: 'Delete', exact: true })
+    .click();
+  await dialog.getByRole('button', { name: 'Delete', exact: true }).click();
+  await expect(row(referralDiscard.contents)).toHaveCount(0);
   await expect(panel.getByText('No notes awaiting review.')).toBeVisible();
+  await expect(reviewSummary.getByText('0', { exact: true })).toBeVisible();
   await expect(page).toHaveURL(ATLANTIS_ROUTE);
 });
 
@@ -247,7 +294,36 @@ test('Dashboard shows scoped requirement counts and opens the arrangement @pr', 
   const upcoming = page.getByRole('region', { name: 'Upcoming requirements' });
   const pastDue = page.getByRole('region', { name: 'Past-due requirements' });
   await expect(upcoming.getByLabel('2 requirements')).toBeVisible();
+  const upcomingSummary = page
+    .getByRole('list', { name: 'Workload overview' })
+    .getByRole('listitem')
+    .filter({ hasText: 'Upcoming' });
+  await expect(upcomingSummary.getByText('2', { exact: true })).toBeVisible();
   await expect(pastDue.getByLabel('1 requirement')).toBeVisible();
+  await page.setViewportSize({ width: 1440, height: 900 });
+  const expiringPanel = page.getByRole('region', {
+    name: 'Expiring approvals and requirements',
+    exact: true,
+  });
+  const notesPanel = page.getByRole('region', {
+    name: 'Notes awaiting review',
+    exact: true,
+  });
+  await expect
+    .poll(async () => {
+      const [upperLeft, lowerLeft, upperRight, lowerRight] = await Promise.all(
+        [pastDue, notesPanel, upcoming, expiringPanel].map((panel) =>
+          panel.boundingBox()
+        )
+      );
+      if (!upperLeft || !lowerLeft || !upperRight || !lowerRight) return null;
+      return [
+        Math.round(lowerLeft.y - upperLeft.y - upperLeft.height),
+        Math.round(lowerRight.y - upperRight.y - upperRight.height),
+      ];
+    })
+    .toEqual([20, 20]);
+  await page.setViewportSize({ width: 375, height: 700 });
   const action = upcoming.getByRole('button', {
     name: /Upcoming safety visit/,
   });
@@ -315,6 +391,8 @@ test('Dashboard shows scoped requirement counts and opens the arrangement @pr', 
   await upcomingTimeFrame.click();
   await page.getByRole('option', { name: 'Next 7 days', exact: true }).click();
   await expect(upcoming.getByLabel('0 requirements')).toBeVisible();
+  await expect(upcomingSummary.getByText('0', { exact: true })).toBeVisible();
+  await expect(upcomingSummary.getByText('Next 7 days')).toBeVisible();
   await expect(pastDueTimeFrame).toHaveText('All past due');
   await pastDueTimeFrame.click();
   await page.getByRole('option', { name: 'Last 7 days', exact: true }).click();

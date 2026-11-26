@@ -7,14 +7,18 @@ import {
   List,
   ListItem,
   MenuItem,
+  Paper,
   Select,
   Stack,
   ToggleButton,
   ToggleButtonGroup,
   Typography,
+  useMediaQuery,
+  useTheme,
 } from '@mui/material';
 import {
   Check as CheckIcon,
+  DeleteForever as DeleteForeverIcon,
   Edit as EditIcon,
   EventAvailableOutlined,
   EventBusyOutlined,
@@ -43,8 +47,11 @@ import {
 import { AddEditNoteDrawer } from '../Notes/AddEditNoteDrawer';
 import { AddEditNoteDialog } from '../Notes/AddEditNoteDialog';
 import { ApproveNoteDialog } from '../Notes/ApproveNoteDialog';
+import { DiscardNoteDialog } from '../Notes/DiscardNoteDialog';
 import { AddEditV1ReferralNoteDrawer } from '../V1Referrals/AddEditV1ReferralNoteDrawer';
 import { ApproveV1ReferralNoteDialog } from '../V1Referrals/ApproveV1ReferralNoteDialog';
+import { DiscardV1ReferralNoteDialog } from '../V1Referrals/DiscardV1ReferralNoteDialog';
+import type { RecentNoteActionKind } from '../Families/useRecentFamilyNoteActions';
 import {
   useCommunityLookup,
   useFamilyLookup,
@@ -99,13 +106,14 @@ const upcomingPanel = {
 const pastDuePanel = {
   title: 'Past-due requirements',
   icon: <EventBusyOutlined fontSize="small" />,
+  emphasis: 'error' as const,
   emptyTitle: 'No overdue work',
   emptyMessage: 'No past-due requirements.',
 };
 const expirationPanel = {
   title: 'Expiring approvals and requirements',
   icon: <VerifiedUserOutlined fontSize="small" />,
-  emptyTitle: 'Nothing needs attention',
+  emptyTitle: 'No approval work in this view',
   emptyMessage:
     'No approvals or renewals in the selected window, and no expired approvals or unresolved renewals.',
   loadingMessage: 'Loading approvals and requirements…',
@@ -201,24 +209,20 @@ function DashboardApprovalExpirations({
   days,
   onChange,
   familyV2,
+  work,
 }: {
+  work: ReturnType<typeof selectDashboardApprovalWork>;
   days: RequirementWindowDays;
   onChange: (days: RequirementWindowDays) => void;
   familyV2: boolean;
 }) {
   const organizationApprovals =
     useFeatureFlagEnabled(ORGANIZATION_APPROVALS_FEATURE_FLAG) === true;
-  const evaluationTime = new Date();
-  const approvals = useApprovalExpirationWorkQueue(
-    evaluationTime.toISOString().slice(0, 10)
-  );
-  const renewals = useApprovalRenewalWorkQueue();
   const familyLookup = useFamilyLookup();
   const personLookup = usePersonAndFamilyLookup();
   const communityLookup = useCommunityLookup();
   const navigate = useAppNavigate();
-  const { upcoming, uncovered, expiring, expired } =
-    selectDashboardApprovalWork(approvals, renewals, evaluationTime, days);
+  const { upcoming, uncovered, expiring, expired } = work;
 
   function subjectContext(target: ApprovalExpirationWorkItem['target']) {
     switch (target.kind) {
@@ -299,11 +303,6 @@ function DashboardApprovalExpirations({
   return (
     <DashboardRequirementPanel
       {...expirationPanel}
-      emptyTitle={
-        approvals.length || renewals.length
-          ? 'No work in this view'
-          : expirationPanel.emptyTitle
-      }
       count={
         upcoming.length + uncovered.length + expiring.length + expired.length
       }
@@ -402,31 +401,14 @@ const noteReviewPanel = {
   itemType: 'note',
 } as const;
 
-function DashboardNoteReview({
-  familyV2,
-  source,
-  onChange,
-}: {
-  familyV2: boolean;
-  source: DashboardPreferences['noteReviewSource'];
-  onChange: (source: DashboardPreferences['noteReviewSource']) => void;
-}) {
+function useDashboardNoteReview() {
   const families = useVisibleFamilies();
   const referrals = useVisibleReferrals();
   const familyLookup = useFamilyLookup();
-  const noteAuthor = useNoteAuthorLookup();
-  const userLookup = useUserLookup();
   const userId = useAccountInfo()?.userId;
   const roles = useCurrentLocation()?.roles;
   const accessLevels = useLocationConfiguration()?.accessLevels;
-  const [selection, setSelection] = useState<{
-    key: string;
-    action: 'edit' | 'approve';
-  }>();
-  const navigate = useAppNavigate();
-  const referralsEnabled =
-    useFeatureFlagEnabled(REFERRALS_FEATURE_FLAG) === true;
-  const items = useMemo(
+  return useMemo(
     () =>
       buildDashboardNoteReview(
         families,
@@ -436,179 +418,318 @@ function DashboardNoteReview({
       ),
     [families, referrals, familyLookup, userId, roles, accessLevels]
   );
-  const visible = filterDashboardNoteReview(items, source);
-  const noteKey = (item: (typeof items)[number]) =>
-    JSON.stringify([item.source, item.recordId, item.id]);
-  const selected =
-    selection &&
-    items.find(
-      (item) =>
-        noteKey(item) === selection.key &&
-        (item.source === 'family' || referralsEnabled) &&
-        (selection.action === 'approve' || item.canEdit)
-    );
-  const close = () => setSelection(undefined);
-  const FamilyNoteEditor = familyV2 ? AddEditNoteDrawer : AddEditNoteDialog;
+}
 
+type ReviewNote = ReturnType<typeof useDashboardNoteReview>[number];
+
+function noteKey(item: ReviewNote) {
+  return JSON.stringify([item.source, item.recordId, item.id]);
+}
+
+function DashboardNoteReview({
+  familyV2,
+  referralsEnabled,
+  source,
+  onChange,
+  items,
+  visible,
+  onAction,
+}: {
+  familyV2: boolean;
+  referralsEnabled: boolean;
+  source: DashboardPreferences['noteReviewSource'];
+  onChange: (source: DashboardPreferences['noteReviewSource']) => void;
+  items: ReturnType<typeof useDashboardNoteReview>;
+  visible: ReturnType<typeof filterDashboardNoteReview>;
+  onAction: (item: ReviewNote, action: RecentNoteActionKind) => void;
+}) {
+  const familyLookup = useFamilyLookup();
+  const noteAuthor = useNoteAuthorLookup();
+  const userLookup = useUserLookup();
+  const navigate = useAppNavigate();
   return (
-    <>
-      <DashboardRequirementPanel
-        {...noteReviewPanel}
-        emptyTitle={
-          items.length ? 'No notes for this source' : noteReviewPanel.emptyTitle
-        }
-        emptyMessage={
-          items.length
-            ? 'Choose another source to see notes awaiting review.'
-            : noteReviewPanel.emptyMessage
-        }
-        count={visible.length}
-        headerAction={
-          <ToggleButtonGroup
-            exclusive
-            value={source}
-            aria-label="Filter notes awaiting review by source"
-            size="small"
-            sx={{
-              flexWrap: 'wrap',
-              '& .MuiToggleButton-root': { textTransform: 'none', py: 0.5 },
-            }}
-            onChange={(
-              _,
-              value: DashboardPreferences['noteReviewSource'] | null
-            ) => {
-              if (value) onChange(value);
-            }}
-          >
-            <ToggleButton value="all" className="ph-unmask">
-              All notes
-            </ToggleButton>
-            <ToggleButton value="family" className="ph-unmask">
-              Families
-            </ToggleButton>
-            <ToggleButton value="referral" className="ph-unmask">
-              Referrals
-            </ToggleButton>
-          </ToggleButtonGroup>
-        }
-      >
-        {visible.map((item) => {
-          const author =
-            item.source === 'family'
-              ? noteAuthor(item.note)
-              : userLookup(item.note.authorId);
-          const createdAt = item.createdAt;
-          const hasDate = createdAt && Number.isFinite(createdAt.getTime());
-          const familyId = item.familyId;
-          const openFamily =
-            familyId && familyLookup(familyId)
-              ? () =>
-                  navigate.family(
-                    familyId,
-                    familyV2 ? { section: 'notes' } : undefined
-                  )
-              : undefined;
-          const onOpen =
-            item.source === 'referral' &&
-            referralsEnabled &&
-            (familyV2 || !openFamily)
-              ? () => navigate.referral(item.recordId)
-              : openFamily;
-          return (
-            <DashboardQueueRow
-              key={noteKey(item)}
-              title={item.name}
-              context={
-                item.source === 'family' ? 'Family note' : 'Referral note'
-              }
-              onOpen={onOpen}
-              actions={
-                (item.source === 'family' || referralsEnabled) && (
-                  <>
-                    {item.canEdit && (
-                      <Button
-                        size="small"
-                        startIcon={<EditIcon />}
-                        className="ph-unmask"
-                        onClick={() =>
-                          setSelection({ key: noteKey(item), action: 'edit' })
-                        }
-                      >
-                        Edit
-                      </Button>
-                    )}
+    <DashboardRequirementPanel
+      {...noteReviewPanel}
+      emptyTitle={
+        items.length ? 'No notes for this source' : noteReviewPanel.emptyTitle
+      }
+      emptyMessage={
+        items.length
+          ? 'Choose another source to see notes awaiting review.'
+          : noteReviewPanel.emptyMessage
+      }
+      count={visible.length}
+      headerAction={
+        <ToggleButtonGroup
+          exclusive
+          value={source}
+          aria-label="Filter notes awaiting review by source"
+          size="small"
+          sx={{
+            flexWrap: 'wrap',
+            '& .MuiToggleButton-root': { textTransform: 'none', py: 0.5 },
+          }}
+          onChange={(
+            _,
+            value: DashboardPreferences['noteReviewSource'] | null
+          ) => {
+            if (value) onChange(value);
+          }}
+        >
+          <ToggleButton value="all" className="ph-unmask">
+            All notes
+          </ToggleButton>
+          <ToggleButton value="family" className="ph-unmask">
+            Families
+          </ToggleButton>
+          <ToggleButton value="referral" className="ph-unmask">
+            Referrals
+          </ToggleButton>
+        </ToggleButtonGroup>
+      }
+    >
+      {visible.map((item) => {
+        const author =
+          item.source === 'family'
+            ? noteAuthor(item.note)
+            : userLookup(item.note.authorId);
+        const createdAt = item.createdAt;
+        const hasDate = createdAt && Number.isFinite(createdAt.getTime());
+        const familyId = item.familyId;
+        const openFamily =
+          familyId && familyLookup(familyId)
+            ? () =>
+                navigate.family(
+                  familyId,
+                  familyV2 ? { section: 'notes' } : undefined
+                )
+            : undefined;
+        const onOpen =
+          item.source === 'referral' &&
+          referralsEnabled &&
+          (familyV2 || !openFamily)
+            ? () => navigate.referral(item.recordId)
+            : openFamily;
+        return (
+          <DashboardQueueRow
+            key={noteKey(item)}
+            title={item.name}
+            context={item.source === 'family' ? 'Family note' : 'Referral note'}
+            onOpen={onOpen}
+            actions={
+              (item.source === 'family' || referralsEnabled) && (
+                <>
+                  {item.canDelete && (
+                    <Button
+                      className="ph-unmask"
+                      size="small"
+                      color="error"
+                      startIcon={<DeleteForeverIcon />}
+                      onClick={() => onAction(item, 'delete')}
+                    >
+                      Delete
+                    </Button>
+                  )}
+                  {item.canEdit && (
                     <Button
                       size="small"
-                      startIcon={<CheckIcon />}
+                      startIcon={<EditIcon />}
                       className="ph-unmask"
-                      onClick={() =>
-                        setSelection({ key: noteKey(item), action: 'approve' })
-                      }
+                      onClick={() => onAction(item, 'edit')}
                     >
-                      Approve
+                      Edit
                     </Button>
-                  </>
-                )
-              }
-            >
-              {item.preview && (
-                <Typography
-                  component="span"
-                  variant="body2"
-                  sx={{ mt: 0.5, lineHeight: 1.45 }}
-                >
-                  {item.preview}
-                </Typography>
-              )}
-              {(author || hasDate) && (
-                <Typography
-                  component="span"
-                  variant="caption"
-                  color="text.secondary"
-                  sx={{ mt: 0.5 }}
-                >
-                  {author && personNameString(author)}
-                  {author && hasDate && ' · '}
-                  {hasDate && (
-                    <time dateTime={createdAt.toISOString()}>
-                      {format(createdAt, 'M/d/yy h:mm a')}
-                    </time>
                   )}
-                </Typography>
-              )}
-            </DashboardQueueRow>
-          );
-        })}
-      </DashboardRequirementPanel>
-      {selected?.source === 'family' &&
-        (selection?.action === 'edit' ? (
-          <FamilyNoteEditor
-            familyId={selected.recordId}
-            note={selected.note}
-            onClose={close}
-          />
-        ) : (
-          <ApproveNoteDialog
-            familyId={selected.recordId}
-            note={selected.note}
-            onClose={close}
-          />
-        ))}
-      {selected?.source === 'referral' &&
-        (selection?.action === 'edit' ? (
-          <AddEditV1ReferralNoteDrawer
-            referralId={selected.recordId}
-            note={selected.note}
-            onClose={close}
-          />
-        ) : (
-          <ApproveV1ReferralNoteDialog
-            referralId={selected.recordId}
-            note={selected.note}
-            onClose={close}
-          />
-        ))}
-    </>
+                  <Button
+                    size="small"
+                    startIcon={<CheckIcon />}
+                    className="ph-unmask"
+                    onClick={() => onAction(item, 'approve')}
+                  >
+                    Approve
+                  </Button>
+                </>
+              )
+            }
+          >
+            {item.preview && (
+              <Typography
+                component="span"
+                variant="body2"
+                sx={{ mt: 0.75, lineHeight: 1.55 }}
+              >
+                {item.preview}
+              </Typography>
+            )}
+            {(author || hasDate) && (
+              <Typography
+                component="span"
+                variant="caption"
+                color="text.secondary"
+                sx={{ mt: 0.5 }}
+              >
+                {author && personNameString(author)}
+                {author && hasDate && ' · '}
+                {hasDate && (
+                  <time dateTime={createdAt.toISOString()}>
+                    {format(createdAt, 'M/d/yy h:mm a')}
+                  </time>
+                )}
+              </Typography>
+            )}
+          </DashboardQueueRow>
+        );
+      })}
+    </DashboardRequirementPanel>
+  );
+}
+
+function DashboardNoteDialog({
+  item,
+  action,
+  familyV2,
+  onClose,
+}: {
+  item: ReviewNote;
+  action: RecentNoteActionKind;
+  familyV2: boolean;
+  onClose: () => void;
+}) {
+  if (item.source === 'family') {
+    const Dialog = {
+      edit: familyV2 ? AddEditNoteDrawer : AddEditNoteDialog,
+      approve: ApproveNoteDialog,
+      delete: DiscardNoteDialog,
+    }[action];
+    return (
+      <Dialog familyId={item.recordId} note={item.note} onClose={onClose} />
+    );
+  }
+  const Dialog = {
+    edit: AddEditV1ReferralNoteDrawer,
+    approve: ApproveV1ReferralNoteDialog,
+    delete: DiscardV1ReferralNoteDialog,
+  }[action];
+  return (
+    <Dialog referralId={item.recordId} note={item.note} onClose={onClose} />
+  );
+}
+
+function DashboardSummary({
+  counts,
+  preferences,
+}: {
+  counts?: {
+    pastDue: number;
+    upcoming: number;
+    notes: number;
+    approvals: number;
+  };
+  preferences?: DashboardPreferences;
+}) {
+  const cards = [
+    {
+      label: 'Past due',
+      icon: pastDuePanel.icon,
+      count: counts?.pastDue,
+      context:
+        preferences?.pastDueDays === 'all'
+          ? 'All past-due requirements'
+          : preferences && `Last ${preferences.pastDueDays} days`,
+      urgent: Boolean(counts?.pastDue),
+    },
+    {
+      label: 'Upcoming',
+      icon: upcomingPanel.icon,
+      count: counts?.upcoming,
+      context: preferences && `Next ${preferences.upcomingDays} days`,
+    },
+    {
+      label: 'Awaiting review',
+      icon: noteReviewPanel.icon,
+      count: counts?.notes,
+      context:
+        preferences &&
+        {
+          all: 'All notes',
+          family: 'Family notes',
+          referral: 'Referral notes',
+        }[preferences.noteReviewSource],
+    },
+    {
+      label: 'Approvals & renewals',
+      icon: expirationPanel.icon,
+      count: counts?.approvals,
+      context:
+        preferences && `Next ${preferences.expirationDays} days + expired work`,
+    },
+  ];
+
+  return (
+    <Box
+      component="ul"
+      aria-label="Workload overview"
+      sx={{
+        display: 'grid',
+        gridTemplateColumns: {
+          xs: 'repeat(2, minmax(0, 1fr))',
+          md: 'repeat(4, minmax(0, 1fr))',
+        },
+        listStyle: 'none',
+        p: 0,
+        m: 0,
+        mb: 3,
+        gap: { xs: 1.5, sm: 2 },
+      }}
+    >
+      {cards.map(({ label, icon, count, context, urgent }) => (
+        <Paper
+          key={label}
+          component="li"
+          variant="outlined"
+          sx={{
+            minWidth: 0,
+            p: { xs: 1.5, sm: 2 },
+            borderRadius: 2,
+            borderColor: 'divider',
+            overflowWrap: 'anywhere',
+          }}
+        >
+          <Stack spacing={0.5}>
+            <Stack
+              direction="row"
+              spacing={0.75}
+              sx={{
+                alignItems: 'center',
+                color: urgent ? 'error.dark' : 'primary.dark',
+                '& .MuiSvgIcon-root': { flexShrink: 0 },
+              }}
+            >
+              {icon}
+              <Typography
+                className="ph-unmask"
+                variant="body2"
+                sx={{ fontWeight: 600 }}
+              >
+                {label}
+              </Typography>
+            </Stack>
+            <Typography
+              component="div"
+              sx={{ fontSize: 30, fontWeight: 600, lineHeight: 1.2 }}
+              color={urgent ? 'error.dark' : 'text.primary'}
+            >
+              {count ?? <span aria-label="Loading">—</span>}
+            </Typography>
+            {count !== undefined && (
+              <Typography variant="caption" color="text.secondary">
+                {context}
+              </Typography>
+            )}
+          </Stack>
+        </Paper>
+      ))}
+    </Box>
   );
 }
 
@@ -623,39 +744,47 @@ function DashboardColumns({
   pastDue: ReactNode;
   approvals: ReactNode;
 }) {
+  const theme = useTheme();
+  const desktop = useMediaQuery(theme.breakpoints.up('lg'));
+
+  if (!desktop) {
+    return (
+      <Stack spacing={2}>
+        {pastDue}
+        {upcoming}
+        {notes}
+        {approvals}
+      </Stack>
+    );
+  }
   return (
     <Box
       sx={{
         display: 'grid',
-        gridTemplateColumns: {
-          xs: 'minmax(0, 1fr)',
-          md: 'repeat(2, minmax(0, 1fr))',
-          xl: 'repeat(3, minmax(0, 1fr))',
-        },
+        gridTemplateColumns: 'minmax(0, 3fr) minmax(0, 2fr)',
         alignItems: 'start',
-        gap: 2,
+        gap: 2.5,
       }}
     >
-      <Stack spacing={2} sx={{ minWidth: 0 }}>
-        {upcoming}
+      <Stack spacing={2.5} sx={{ minWidth: 0 }}>
+        {pastDue}
         {notes}
       </Stack>
-      <Box
-        sx={{
-          display: { xs: 'flex', xl: 'contents' },
-          flexDirection: 'column',
-          gap: 2,
-          minWidth: 0,
-        }}
-      >
-        {pastDue}
+      <Stack spacing={2.5} sx={{ minWidth: 0 }}>
+        {upcoming}
         {approvals}
-      </Box>
+      </Stack>
     </Box>
   );
 }
 
 function DashboardRequirements({ storageKey }: { storageKey: string | null }) {
+  const [noteSelection, setNoteSelection] = useState<{
+    key: string;
+    action: RecentNoteActionKind;
+  }>();
+  const referralsEnabled =
+    useFeatureFlagEnabled(REFERRALS_FEATURE_FLAG) === true;
   const familyV2 =
     useFeatureFlagEnabled(FAMILY_SCREEN_V2_EARLY_ACCESS_FEATURE_FLAG) === true;
   const [preferences, setPreferences] = useState(() =>
@@ -671,6 +800,40 @@ function DashboardRequirements({ storageKey }: { storageKey: string | null }) {
     () => selectDashboardRequirements(items, today, preferences),
     [items, today, preferences]
   );
+  const evaluationTime = new Date();
+  const approvals = useApprovalExpirationWorkQueue(
+    evaluationTime.toISOString().slice(0, 10)
+  );
+  const renewals = useApprovalRenewalWorkQueue();
+  const approvalWork = selectDashboardApprovalWork(
+    approvals,
+    renewals,
+    evaluationTime,
+    preferences.expirationDays
+  );
+  const notes = useDashboardNoteReview();
+  const selectedNote =
+    noteSelection &&
+    notes.find(
+      (item) =>
+        noteKey(item) === noteSelection.key &&
+        (item.source === 'family' || referralsEnabled) &&
+        (noteSelection.action !== 'edit' || item.canEdit) &&
+        (noteSelection.action !== 'delete' || item.canDelete)
+    );
+  const visibleNotes = filterDashboardNoteReview(
+    notes,
+    preferences.noteReviewSource
+  );
+  const counts = {
+    upcoming: upcoming.reduce((sum, group) => sum + group.count, 0),
+    pastDue: pastDue.reduce((sum, group) => sum + group.count, 0),
+    notes: visibleNotes.length,
+    approvals: Object.values(approvalWork).reduce(
+      (sum, rows) => sum + rows.length,
+      0
+    ),
+  };
 
   function updatePreferences(change: Partial<DashboardPreferences>) {
     const next = { ...preferences, ...change };
@@ -722,11 +885,12 @@ function DashboardRequirements({ storageKey }: { storageKey: string | null }) {
         : 'No upcoming work',
       emptyMessage: `No upcoming requirements in the next ${preferences.upcomingDays} days.`,
       groups: upcoming,
+      count: counts.upcoming,
       footer: (
         <Typography
           variant="body2"
           color="text.secondary"
-          sx={{ px: 2, pb: 1 }}
+          sx={{ px: 2, py: 1.25 }}
         >
           Some recurring requirements show only the next occurrence.
         </Typography>
@@ -750,6 +914,7 @@ function DashboardRequirements({ storageKey }: { storageKey: string | null }) {
           ? pastDuePanel.emptyMessage
           : `No past-due requirements in the last ${preferences.pastDueDays} days.`,
       groups: pastDue,
+      count: counts.pastDue,
       headerAction: (
         <Select
           size="small"
@@ -797,11 +962,7 @@ function DashboardRequirements({ storageKey }: { storageKey: string | null }) {
       ),
     },
   ].map(({ groups, ...panel }) => (
-    <DashboardRequirementPanel
-      key={panel.title}
-      {...panel}
-      count={groups.reduce((total, group) => total + group.count, 0)}
-    >
+    <DashboardRequirementPanel key={panel.title} {...panel}>
       {groups.map((group) => {
         return (
           <DashboardRequirementRow
@@ -823,26 +984,44 @@ function DashboardRequirements({ storageKey }: { storageKey: string | null }) {
   ));
 
   return (
-    <DashboardColumns
-      upcoming={upcomingRequirements}
-      pastDue={pastDueRequirements}
-      approvals={
-        <DashboardApprovalExpirations
+    <>
+      <DashboardSummary counts={counts} preferences={preferences} />
+      <DashboardColumns
+        upcoming={upcomingRequirements}
+        pastDue={pastDueRequirements}
+        approvals={
+          <DashboardApprovalExpirations
+            work={approvalWork}
+            familyV2={familyV2}
+            days={preferences.expirationDays}
+            onChange={(expirationDays) => updatePreferences({ expirationDays })}
+          />
+        }
+        notes={
+          <DashboardNoteReview
+            referralsEnabled={referralsEnabled}
+            onAction={(item, action) =>
+              setNoteSelection({ key: noteKey(item), action })
+            }
+            items={notes}
+            visible={visibleNotes}
+            familyV2={familyV2}
+            source={preferences.noteReviewSource}
+            onChange={(noteReviewSource) =>
+              updatePreferences({ noteReviewSource })
+            }
+          />
+        }
+      />
+      {selectedNote && noteSelection && (
+        <DashboardNoteDialog
+          item={selectedNote}
+          action={noteSelection.action}
           familyV2={familyV2}
-          days={preferences.expirationDays}
-          onChange={(expirationDays) => updatePreferences({ expirationDays })}
+          onClose={() => setNoteSelection(undefined)}
         />
-      }
-      notes={
-        <DashboardNoteReview
-          familyV2={familyV2}
-          source={preferences.noteReviewSource}
-          onChange={(noteReviewSource) =>
-            updatePreferences({ noteReviewSource })
-          }
-        />
-      }
-    />
+      )}
+    </>
   );
 }
 
@@ -854,13 +1033,21 @@ export function Dashboard() {
   );
 
   return (
-    <Container disableGutters maxWidth={false} sx={{ minWidth: 0, pt: 3 }}>
+    <Container
+      disableGutters
+      maxWidth={false}
+      sx={{ minWidth: 0, pt: 3, pb: 3 }}
+    >
       <Stack component="header" spacing={0.5} sx={{ mb: 2.5 }}>
         <Typography
           className="ph-unmask"
           {...v2Typography.pageTitle}
           component="h1"
-          sx={{ fontWeight: 700, lineHeight: 1.2 }}
+          sx={{
+            fontWeight: 600,
+            fontSize: { xs: 28, sm: 32 },
+            lineHeight: 1.2,
+          }}
         >
           Dashboard
         </Typography>
@@ -869,17 +1056,20 @@ export function Dashboard() {
           variant="body2"
           color="text.secondary"
         >
-          Track deadlines, approvals, and notes that need review.
+          Manage your priorities and stay on top of your responsibilities.
         </Typography>
       </Stack>
       <Suspense
         fallback={
-          <DashboardColumns
-            upcoming={<DashboardRequirementPanel {...upcomingPanel} />}
-            notes={<DashboardRequirementPanel {...noteReviewPanel} />}
-            pastDue={<DashboardRequirementPanel {...pastDuePanel} />}
-            approvals={<DashboardRequirementPanel {...expirationPanel} />}
-          />
+          <>
+            <DashboardSummary />
+            <DashboardColumns
+              upcoming={<DashboardRequirementPanel {...upcomingPanel} />}
+              notes={<DashboardRequirementPanel {...noteReviewPanel} />}
+              pastDue={<DashboardRequirementPanel {...pastDuePanel} />}
+              approvals={<DashboardRequirementPanel {...expirationPanel} />}
+            />
+          </>
         }
       >
         <DashboardRequirements key={storageKey} storageKey={storageKey} />

@@ -23,6 +23,7 @@ type NoteReviewItem = {
   preview: string;
   createdAt?: Date;
   canEdit: boolean;
+  canDelete: boolean;
 } & (
   | { source: 'family'; note: Note }
   | { source: 'referral'; note: V1ReferralNoteEntry }
@@ -54,17 +55,18 @@ export function buildDashboardNoteReview(
       const restrictedRoles = reviewer?.accessLevels?.find(
         (level) => level.name === note.accessLevel
       )?.organizationRoles;
-      const canEditAtAccessLevel =
+      const allowedAtAccessLevel =
         !note.accessLevel ||
         (!!reviewer?.accessLevels &&
           (!restrictedRoles?.length ||
             restrictedRoles.some((role) => reviewer.roles?.includes(role))));
-      const { canEdit } = familyNoteActionAvailability(
+      const { canEdit, canDelete } = familyNoteActionAvailability(
         note,
         reviewer?.userId,
         (permission) =>
-          (permission !== Permission.AddEditDraftNotes ||
-            canEditAtAccessLevel) &&
+          ((permission !== Permission.AddEditDraftNotes &&
+            permission !== Permission.DiscardDraftNotes) ||
+            allowedAtAccessLevel) &&
           family.userPermissions.includes(permission)
       );
       items.set(JSON.stringify(['family', id, note.id]), {
@@ -75,6 +77,7 @@ export function buildDashboardNoteReview(
         name: familyName(id) ?? 'Family',
         note,
         canEdit,
+        canDelete,
         preview: preview(note.contents),
         createdAt: note.createdTimestampUtc,
       });
@@ -94,7 +97,7 @@ export function buildDashboardNoteReview(
       .join(' · ');
     for (const note of referral.notes ?? []) {
       if (!note.id || note.status !== V1ReferralNoteStatus.Draft) continue;
-      const { canEdit } = referralNoteActionAvailability(
+      const { canEdit, canDelete } = referralNoteActionAvailability(
         referral.referralId,
         note,
         (permission) => userPermissions.includes(permission)
@@ -107,6 +110,7 @@ export function buildDashboardNoteReview(
         name,
         note,
         canEdit,
+        canDelete,
         preview: preview(note.contents),
         createdAt: note.createdTimestampUtc,
       });

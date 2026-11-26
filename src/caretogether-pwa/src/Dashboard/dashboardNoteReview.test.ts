@@ -170,6 +170,68 @@ test('excludes approved or unclassified notes even without an approval timestamp
   assert.deepEqual(items, []);
 });
 
+test('draft deletion uses ownership and access-level permissions independently of editing', () => {
+  const actions = (
+    permission: PermissionValue,
+    userId: string,
+    roles: string[]
+  ) =>
+    buildDashboardNoteReview(
+      [
+        family(
+          [
+            {
+              ...familyDraft,
+              authorUserId: 'author',
+              accessLevel: 'Restricted',
+            },
+          ],
+          [Permission.ApproveNotes, permission]
+        ),
+      ],
+      [],
+      names,
+      {
+        userId,
+        roles,
+        accessLevels: [
+          AccessLevel.fromJS({
+            name: 'Restricted',
+            organizationRoles: ['Reviewer'],
+          }),
+        ],
+      }
+    )[0];
+
+  assert.equal(
+    actions(Permission.AddEditDraftNotes, 'reviewer', ['Reviewer']).canDelete,
+    false
+  );
+  assert.equal(
+    actions(Permission.DiscardOwnDraftNotes, 'author', []).canDelete,
+    true
+  );
+  assert.equal(
+    actions(Permission.DiscardOwnDraftNotes, 'reviewer', ['Reviewer'])
+      .canDelete,
+    false
+  );
+  assert.equal(
+    actions(Permission.DiscardDraftNotes, 'reviewer', []).canDelete,
+    false
+  );
+  const authorized = actions(Permission.DiscardDraftNotes, 'reviewer', [
+    'Reviewer',
+  ]);
+  assert.equal(authorized.canDelete, true);
+  assert.equal(authorized.canEdit, false);
+  assert.equal(
+    buildDashboardNoteReview([], [referral([referralDraft])], names)[0]
+      .canDelete,
+    true
+  );
+});
+
 test('requires review permissions and uses only disclosed note content', () => {
   assert.deepEqual(
     buildDashboardNoteReview(
