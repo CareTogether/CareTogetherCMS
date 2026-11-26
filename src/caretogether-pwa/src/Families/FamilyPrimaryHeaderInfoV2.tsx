@@ -1,65 +1,17 @@
 import { TestFamilyBadge } from './TestFamilyBadge';
-import { Box, Chip, IconButton, Tooltip, Typography } from '@mui/material';
+import { Box, Chip, Typography } from '@mui/material';
 import {
-  Check as CheckIcon,
-  ContentCopy as ContentCopyIcon,
   Email as EmailIcon,
   Handshake as HandshakeIcon,
   Home as HomeIcon,
   People as PeopleIcon,
   Phone as PhoneIcon,
 } from '@mui/icons-material';
-import { useState } from 'react';
 import { CombinedFamilyInfo } from '../GeneratedClient';
+import { ContactInfoCopyButton } from './ContactInfoCopyButton';
 import { familyLastName } from './FamilyUtils';
 import { PrimaryContactEditor } from './PrimaryContactEditor';
 import { v2Typography } from './v2Typography';
-
-type ContactInfoCopyButtonProps = {
-  value: string;
-  label: string;
-  onCopied: (message: string) => void;
-};
-
-function ContactInfoCopyButton({
-  value,
-  label,
-  onCopied,
-}: ContactInfoCopyButtonProps) {
-  const [copied, setCopied] = useState(false);
-
-  async function handleCopy() {
-    try {
-      await navigator.clipboard.writeText(value);
-      setCopied(true);
-      onCopied(`${label} copied`);
-      setTimeout(() => setCopied(false), 1500);
-    } catch {
-      onCopied(`Unable to copy ${label.toLowerCase()}`);
-    }
-  }
-
-  return (
-    <Tooltip title={copied ? 'Copied' : `Copy ${label.toLowerCase()}`}>
-      <IconButton
-        size="small"
-        aria-label={`copy ${label.toLowerCase()}`}
-        onClick={() => void handleCopy()}
-        sx={{
-          p: 0.25,
-          minWidth: { xs: 44, sm: 0 },
-          minHeight: { xs: 44, sm: 0 },
-        }}
-      >
-        {copied ? (
-          <CheckIcon color="success" fontSize="small" />
-        ) : (
-          <ContentCopyIcon fontSize="small" />
-        )}
-      </IconButton>
-    </Tooltip>
-  );
-}
 
 type FamilyPrimaryHeaderInfoV2Props = {
   family: CombinedFamilyInfo;

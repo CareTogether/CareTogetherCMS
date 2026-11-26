@@ -1,11 +1,23 @@
-import { Box, IconButton, Stack, Tooltip, Typography } from '@mui/material';
+import {
+  Box,
+  IconButton,
+  ListItemIcon,
+  ListItemText,
+  Menu,
+  MenuItem,
+  Stack,
+  Typography,
+} from '@mui/material';
 import {
   DeleteOutlined as DeleteOutlinedIcon,
   Edit as EditIcon,
   Favorite,
   FavoriteBorder,
+  MoreVert as MoreVertIcon,
 } from '@mui/icons-material';
-import { type ReactNode } from 'react';
+import { type ReactNode, useId, useState } from 'react';
+import { useGlobalSnackBar } from '../Hooks/useGlobalSnackBar';
+import { ContactInfoCopyButton } from './ContactInfoCopyButton';
 import { v2Typography } from './v2Typography';
 
 export function FamilyMemberDrawerSectionV2({
@@ -71,8 +83,12 @@ export function FamilyMemberDrawerDetailFieldV2({
   );
 }
 
+const contactRowActionSx = { height: 44, width: 44 };
+
 export function FamilyMemberDrawerContactRowV2({
   children,
+  copyLabel,
+  copyValue,
   editLabel,
   isPreferred,
   onEdit,
@@ -81,6 +97,8 @@ export function FamilyMemberDrawerContactRowV2({
   type,
 }: {
   children: ReactNode;
+  copyLabel: string;
+  copyValue: string;
   editLabel: string;
   isPreferred: boolean;
   onEdit?: () => void;
@@ -88,6 +106,16 @@ export function FamilyMemberDrawerContactRowV2({
   removeLabel: string;
   type: string;
 }) {
+  const { setAndShowGlobalSnackBar } = useGlobalSnackBar();
+  const [menuAnchor, setMenuAnchor] = useState<HTMLElement | null>(null);
+  const menuId = useId();
+
+  const closeMenu = () => setMenuAnchor(null);
+  const runAndCloseMenu = (action: () => void) => () => {
+    closeMenu();
+    action();
+  };
+
   return (
     <Box
       sx={{
@@ -139,35 +167,56 @@ export function FamilyMemberDrawerContactRowV2({
         </Box>
       </Box>
 
-      {onEdit && onRemove && (
-        <Stack direction="row" spacing={0.25} sx={{ flexShrink: 0 }}>
-          <Tooltip enterDelay={800} title={editLabel}>
-            <IconButton
-              aria-label={editLabel}
-              onClick={onEdit}
-              size="small"
-              sx={{ height: 44, width: 44 }}
-            >
+      <Stack direction="row" spacing={0.25} sx={{ flexShrink: 0 }}>
+        <ContactInfoCopyButton
+          label={copyLabel}
+          onCopied={setAndShowGlobalSnackBar}
+          sx={contactRowActionSx}
+          value={copyValue}
+        />
+        {(onEdit || onRemove) && (
+          <IconButton
+            aria-controls={menuAnchor ? menuId : undefined}
+            aria-expanded={menuAnchor ? 'true' : undefined}
+            aria-haspopup="true"
+            aria-label={`More actions for ${copyLabel.toLowerCase()}`}
+            onClick={(event) => setMenuAnchor(event.currentTarget)}
+            size="small"
+            sx={contactRowActionSx}
+          >
+            <MoreVertIcon fontSize="small" />
+          </IconButton>
+        )}
+      </Stack>
+
+      <Menu
+        anchorEl={menuAnchor}
+        anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
+        id={menuId}
+        onClose={closeMenu}
+        open={Boolean(menuAnchor)}
+        transformOrigin={{ horizontal: 'right', vertical: 'top' }}
+      >
+        {onEdit && (
+          <MenuItem onClick={runAndCloseMenu(onEdit)}>
+            <ListItemIcon>
               <EditIcon fontSize="small" />
-            </IconButton>
-          </Tooltip>
-          <Tooltip enterDelay={800} title={removeLabel}>
-            <IconButton
-              aria-label={removeLabel}
-              onClick={onRemove}
-              size="small"
-              sx={{
-                color: 'text.secondary',
-                height: 44,
-                width: 44,
-                '&:hover': { color: 'error.main' },
-              }}
-            >
+            </ListItemIcon>
+            <ListItemText className="ph-unmask">{editLabel}</ListItemText>
+          </MenuItem>
+        )}
+        {onRemove && (
+          <MenuItem
+            onClick={runAndCloseMenu(onRemove)}
+            sx={{ color: 'error.main' }}
+          >
+            <ListItemIcon sx={{ color: 'inherit' }}>
               <DeleteOutlinedIcon fontSize="small" />
-            </IconButton>
-          </Tooltip>
-        </Stack>
-      )}
+            </ListItemIcon>
+            <ListItemText className="ph-unmask">{removeLabel}</ListItemText>
+          </MenuItem>
+        )}
+      </Menu>
     </Box>
   );
 }
