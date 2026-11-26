@@ -3,14 +3,30 @@ import { ATLANTIS_ROUTE } from './support/constants';
 import { expectNoHorizontalOverflow } from './support/layout';
 import { MOBILE_BOTTOM_NAV_HEIGHT } from '../src/Shell/shellLayoutConstants';
 
-test('Dashboard controls remain reachable on a short mobile screen @pr', async ({
+test('Calendar is reachable from the mobile menu on a short screen @pr', async ({
   page,
 }) => {
   await page.setViewportSize({ width: 375, height: 500 });
   await page.goto(ATLANTIS_ROUTE);
+  const menu = page.getByRole('button', { name: 'Open navigation menu' });
+  const navigation = page.getByRole('list', { name: 'secondary navigation' });
+  const dashboard = navigation.getByRole('link', { name: 'Dashboard' });
+  const calendar = navigation.getByRole('link', { name: 'Calendar' });
+  const selected = /\bMui-selected\b/;
+  await menu.click();
+  await expect(dashboard).toHaveClass(selected);
+  await expect(calendar).not.toHaveClass(selected);
+  await calendar.click();
+  await expect(menu).toHaveAttribute('aria-expanded', 'false');
+  await expect(page).toHaveURL(/\/calendar$/);
   await expect(
-    page.getByRole('heading', { name: 'Dashboard', exact: true })
+    page.getByRole('heading', { name: 'Calendar', level: 1, exact: true })
   ).toBeVisible();
+  await menu.click();
+  await expect(calendar).toHaveClass(selected);
+  await expect(dashboard).not.toHaveClass(selected);
+  await page.keyboard.press('Escape');
+  await expect(menu).toHaveAttribute('aria-expanded', 'false');
   for (const control of [
     page.getByRole('button', { name: 'Actual childcare', exact: true }),
     page.getByRole('button', { name: /^Next /i }).first(),

@@ -20,6 +20,7 @@ test.describe('V2 shell', () => {
 
     for (const [route, title] of [
       ['', 'Dashboard'],
+      ['calendar', 'Calendar'],
       ['inbox', 'Inbox'],
       ['organizations', 'Organizations'],
       ['referrals', 'Referrals'],

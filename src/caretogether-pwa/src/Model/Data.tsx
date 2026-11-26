@@ -1,10 +1,18 @@
 import { useCallback } from 'react';
-import { atom, useAtomValue, useSetAtom } from 'jotai';
+import { atom, useAtomValue, useSetAtom, useStore } from 'jotai';
 import { atomFamily } from 'jotai-family';
 import { api } from '../Api/Api';
 import { accountInfoState } from '../Authentication/Auth';
 import type { LocationScope } from './LocationScope';
 import { isSameLocationScope } from './LocationScope';
+import {
+  createRecordsScopeCache,
+  type VisibleAggregatesAction,
+} from './recordsScopeCache';
+import {
+  mergeRecordsCommandResult,
+  runAtomicRecordsCommand,
+} from './recordsCommandUpdates';
 import { useJotaiLoadable } from '../State/jotai/useJotaiLoadable';
 import {
   createRefreshAtom,
@@ -95,72 +103,11 @@ const currentLocationAtom = atom(async (get) => {
 // When the records for the current location are loaded, this will be populated with those records.
 // Subsequently, this will be imperatively managed by the Model codebase as browser-local state.
 // The client can write a refresh action to force a refresh of a particular scope's visible records.
-type VisibleAggregatesAction =
-  | { type: 'refresh' }
-  | RecordsAggregate[]
-  | ((current: RecordsAggregate[]) => RecordsAggregate[]);
-
 export const visibleAggregatesForScopeData = atomFamily(
-  (scope: LocationContext) => {
-    const visibleAggregatesBaseAtom = atom<
-      RecordsAggregate[] | Promise<RecordsAggregate[]>
-    >(
+  (scope: LocationContext) =>
+    createRecordsScopeCache(() =>
       api.records.listVisibleAggregates(scope.organizationId, scope.locationId)
-    );
-    let updateQueue: Promise<void> = Promise.resolve();
-
-    function enqueueVisibleAggregatesUpdate(
-      update: () => void | Promise<void>
-    ) {
-      const queuedUpdate = updateQueue.then(update, update);
-
-      // Keep this scope's queue usable after a failed update while still
-      // returning the original rejection to the caller that caused it.
-      updateQueue = queuedUpdate.then(
-        () => undefined,
-        () => undefined
-      );
-
-      return queuedUpdate;
-    }
-
-    return atom(
-      (get) => get(visibleAggregatesBaseAtom),
-      async (get, set, action: VisibleAggregatesAction) => {
-        if (
-          typeof action === 'object' &&
-          !Array.isArray(action) &&
-          'type' in action &&
-          action.type === 'refresh'
-        ) {
-          await enqueueVisibleAggregatesUpdate(() =>
-            set(
-              visibleAggregatesBaseAtom,
-              api.records.listVisibleAggregates(
-                scope.organizationId,
-                scope.locationId
-              )
-            )
-          );
-          return;
-        }
-
-        if (typeof action === 'function') {
-          await enqueueVisibleAggregatesUpdate(async () => {
-            const current = await get(visibleAggregatesBaseAtom);
-            set(visibleAggregatesBaseAtom, action(current));
-          });
-          return;
-        }
-
-        if (Array.isArray(action)) {
-          await enqueueVisibleAggregatesUpdate(() =>
-            set(visibleAggregatesBaseAtom, action)
-          );
-        }
-      }
-    );
-  },
+    ),
   isSameLocationScope
 );
 
@@ -183,72 +130,26 @@ export const visibleAggregatesState = atom(
   }
 );
 
-type AggregateLike = RecordsAggregate | null;
-
-function mergeVisibleAggregate(
-  current: RecordsAggregate[],
-  aggregateId: string,
-  updatedAggregate: AggregateLike
-) {
-  return updatedAggregate == null
-    ? current.filter((currentEntry) => currentEntry.id !== aggregateId)
-    : current.some(
-          (currentEntry) =>
-            currentEntry.id === updatedAggregate.id &&
-            currentEntry.constructor === updatedAggregate.constructor
-        )
-      ? current.map((currentEntry) =>
-          currentEntry.id === updatedAggregate.id &&
-          currentEntry.constructor === updatedAggregate.constructor
-            ? updatedAggregate
-            : currentEntry
-        )
-      : current.concat(updatedAggregate);
-}
-
-function upsertVisibleAggregates(
-  set: (
-    valueOrUpdater:
-      | RecordsAggregate[]
-      | ((current: RecordsAggregate[]) => RecordsAggregate[])
-  ) => Promise<void>,
-  aggregateId: string,
-  updatedAggregates: AggregateLike[]
-) {
-  return set((current: RecordsAggregate[]) =>
-    updatedAggregates.reduce(
-      (next, updatedAggregate) =>
-        mergeVisibleAggregate(next, aggregateId, updatedAggregate),
-      current
-    )
-  );
-}
-
 export function useAtomicRecordsCommandCallback<
   T extends unknown[],
   U extends AtomicRecordsCommand,
 >(callback: (aggregateId: string, ...args: T) => Promise<U>) {
   const context = useRequiredSelectedLocationContext();
-  const setVisibleAggregates = useSetAtom(visibleAggregatesState);
+  const store = useStore();
 
   return useCallback(
     async (aggregateId: string, ...args: T) => {
-      const { organizationId, locationId } = context;
       const command = await callback(aggregateId, ...args);
-
-      const updatedAggregates = await api.records.submitAtomicRecordsCommand(
-        organizationId,
-        locationId,
-        command
-      );
-
-      await upsertVisibleAggregates(
-        setVisibleAggregates,
+      await runAtomicRecordsCommand(
+        api.records,
+        context,
         aggregateId,
-        updatedAggregates
+        command,
+        (scope, update) =>
+          store.set(visibleAggregatesForScopeData(scope), update)
       );
     },
-    [callback, context, setVisibleAggregates]
+    [callback, context, store]
   );
 }
 
@@ -259,7 +160,7 @@ export function useCompositeRecordsCommandCallback<T extends unknown[]>(
   ) => Promise<CompositeRecordsCommand>
 ) {
   const context = useRequiredSelectedLocationContext();
-  const setVisibleAggregates = useSetAtom(visibleAggregatesState);
+  const store = useStore();
 
   return useCallback(
     async (aggregateId: string, ...args: T) => {
@@ -272,13 +173,11 @@ export function useCompositeRecordsCommandCallback<T extends unknown[]>(
         command
       );
 
-      await upsertVisibleAggregates(
-        setVisibleAggregates,
-        aggregateId,
-        updatedAggregates
+      await store.set(visibleAggregatesForScopeData(context), (current) =>
+        mergeRecordsCommandResult(current, aggregateId, updatedAggregates)
       );
     },
-    [callback, context, setVisibleAggregates]
+    [callback, context, store]
   );
 }
 
@@ -358,7 +257,7 @@ export const visibleFamiliesAtom = atom((get) => {
   );
 });
 
-const visibleCommunitiesAtom = atom((get) => {
+export const visibleCommunitiesAtom = atom((get) => {
   const visibleAggregates = get(visibleAggregatesState);
   return mapVisibleAggregates(visibleAggregates, (aggregates) =>
     aggregates

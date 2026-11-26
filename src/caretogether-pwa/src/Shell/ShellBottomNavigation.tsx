@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import {
+  CalendarMonth as CalendarMonthIcon,
   Dashboard as DashboardIcon,
   Diversity3 as Diversity3Icon,
   Inbox,
@@ -199,6 +200,13 @@ export function ShellBottomNavigation() {
                   to={`${locationPrefix}`}
                   primary="Dashboard"
                   icon={<DashboardIcon />}
+                />
+                <ListItemLink
+                  className="ph-unmask"
+                  darkColor
+                  to={`${locationPrefix}/calendar`}
+                  primary="Calendar"
+                  icon={<CalendarMonthIcon />}
                 />
                 {canAccessReferrals && (
                   <ListItemLink

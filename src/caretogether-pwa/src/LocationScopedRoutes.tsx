@@ -1,5 +1,6 @@
 /* eslint-disable react-refresh/only-export-components */
 import { Navigate, useLocation, useRoutes } from 'react-router-dom';
+import { Calendar } from './Calendar/Calendar';
 import { Dashboard } from './Dashboard/Dashboard';
 import { InboxScreen } from './Inbox/InboxScreen';
 import { FamilyScreenRoute } from './Families/FamilyScreenRoute';
@@ -38,6 +39,7 @@ function CommunitiesToOrganizationsRedirect() {
 
 export const locationScopedRoutes = [
   { index: true, element: <Dashboard />, locationSwitch: 'same-path' },
+  { path: 'calendar', element: <Calendar />, locationSwitch: 'same-path' },
   { path: 'inbox', element: <InboxScreen />, locationSwitch: 'same-path' },
   { path: 'inbox/*', element: <InboxScreen />, locationSwitch: 'dashboard' },
   {

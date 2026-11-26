@@ -510,7 +510,12 @@ namespace CareTogether.Engines.PolicyEvaluation
         ImmutableList<Resources.ExemptedRequirementInfo> ExemptedFamilyRequirements,
         ImmutableDictionary<Guid, ImmutableList<Resources.CompletedRequirementInfo>> CompletedIndividualRequirements,
         ImmutableDictionary<Guid, ImmutableList<Resources.ExemptedRequirementInfo>> ExemptedIndividualRequirements
-    );
+    )
+    {
+        [JsonIgnore]
+        [Newtonsoft.Json.JsonIgnore]
+        internal ImmutableList<ApprovalRenewalCandidate> RenewalCandidates { get; init; } = [];
+    }
 
     public sealed record OrganizationApprovalStatus(
         ImmutableDictionary<string, OrganizationRoleApprovalStatus> ApprovalStatusByRole
@@ -598,7 +603,12 @@ namespace CareTogether.Engines.PolicyEvaluation
         OrganizationApprovalStatus ApprovalStatus,
         ImmutableList<Resources.CompletedRequirementInfo> CompletedRequirements,
         ImmutableList<Resources.ExemptedRequirementInfo> ExemptedRequirements
-    );
+    )
+    {
+        [JsonIgnore]
+        [Newtonsoft.Json.JsonIgnore]
+        internal ImmutableList<ApprovalRenewalCandidate> RenewalCandidates { get; init; } = [];
+    }
 
     public sealed record FamilyRoleVersionApprovalStatus(
         string RoleName,

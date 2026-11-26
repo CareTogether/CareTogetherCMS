@@ -9,7 +9,7 @@ import {
   FormControlLabel,
   Checkbox,
 } from '@mui/material';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { V1ReferralNoteEntry, V1ReferralNoteStatus } from '../GeneratedClient';
 import { useV1ReferralNotesModel } from '../Model/V1ReferralNotesModel';
 
@@ -27,6 +27,7 @@ export function ApproveV1ReferralNoteDialog({
   const { approveReferralNote } = useV1ReferralNotesModel();
 
   const [working, setWorking] = useState(false);
+  const submitting = useRef(false);
   const [contents, setContents] = useState(note.contents ?? '');
   const [accessLevel, setAccessLevel] = useState<string>(
     note.accessLevel ?? ''
@@ -42,12 +43,13 @@ export function ApproveV1ReferralNoteDialog({
   }, [note]);
 
   async function onApprove() {
-    if (!canApprove) return;
+    if (!canApprove || submitting.current) return;
     if (!contents.trim()) return;
 
     const backdatedTimestampUtc =
       useBackdate && backdatedLocal ? new Date(backdatedLocal) : undefined;
 
+    submitting.current = true;
     setWorking(true);
     try {
       await approveReferralNote(
@@ -59,12 +61,20 @@ export function ApproveV1ReferralNoteDialog({
       );
       onClose();
     } finally {
+      submitting.current = false;
       setWorking(false);
     }
   }
 
   return (
-    <Dialog open onClose={onClose} fullWidth maxWidth="sm">
+    <Dialog
+      open
+      onClose={() => {
+        if (!submitting.current) onClose();
+      }}
+      fullWidth
+      maxWidth="sm"
+    >
       <DialogTitle>Approve note</DialogTitle>
 
       <DialogContent sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>

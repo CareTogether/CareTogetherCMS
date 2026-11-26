@@ -1,4 +1,5 @@
 import {
+  CalendarMonth as CalendarMonthIcon,
   Dashboard as DashboardIcon,
   Diversity3 as Diversity3Icon,
   Inbox,
@@ -96,6 +97,13 @@ function SideNavigationMenu({ open }: SideNavigationMenuProps) {
             to={`${locationPrefix}`}
             primary="Dashboard"
             icon={<DashboardIcon />}
+            collapsed={collapsed}
+          />
+          <ListItemLink
+            className="ph-unmask"
+            to={`${locationPrefix}/calendar`}
+            primary="Calendar"
+            icon={<CalendarMonthIcon />}
             collapsed={collapsed}
           />
           <ListItemLink

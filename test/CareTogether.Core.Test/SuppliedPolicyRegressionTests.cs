@@ -2,8 +2,13 @@ using System;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using Azure;
+using Azure.Storage.Blobs;
+using Azure.Storage.Blobs.Specialized;
 using CareTogether.Resources.Accounts;
 using CareTogether.Resources.Policies;
+using CareTogether.Utilities.ObjectStore;
+using Microsoft.Extensions.Caching.Memory;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Newtonsoft.Json;
 
@@ -132,6 +137,56 @@ namespace CareTogether.Core.Test
                 "Case Policies Intake Requirements references unknown action 'QA missing action'."
             }, error.Errors.ToArray());
             Assert.AreSame(original, await store.GetAsync(organizationId, locationId, "policy"));
+        }
+
+        [TestMethod]
+        public async Task BlobObjectCacheReflectsWritesAndPreservesStoredValueAfterRejectedWrite()
+        {
+            var options = new BlobClientOptions(BlobClientOptions.ServiceVersion.V2021_10_04);
+            options.Retry.MaxRetries = 0;
+            var client = new BlobServiceClient("UseDevelopmentStorage=true", options);
+            try
+            {
+                await client.GetPropertiesAsync();
+            }
+            catch (RequestFailedException ex) when (ex.Status == 0)
+            {
+                Assert.Inconclusive("Local Azurite Blob service is unavailable.");
+            }
+
+            using var cache = new MemoryCache(new MemoryCacheOptions());
+            var store = new JsonBlobObjectStore<string>(
+                client, "policies", cache, TimeSpan.FromMinutes(1)
+            );
+            var tenant = Guid.NewGuid();
+            var location = Guid.NewGuid();
+            var container = client.GetBlobContainerClient(tenant.ToString());
+            try
+            {
+                await store.UpsertAsync(tenant, location, "policy", "original");
+                Assert.AreEqual("original", await store.GetAsync(tenant, location, "policy"));
+                await store.UpsertAsync(tenant, location, "policy", "updated");
+                Assert.AreEqual("updated", await store.GetAsync(tenant, location, "policy"));
+
+                var lease = container.GetBlobClient($"{location}/policies/policy.json")
+                    .GetBlobLeaseClient();
+                await lease.AcquireAsync(TimeSpan.FromSeconds(15));
+                try
+                {
+                    await Assert.ThrowsExactlyAsync<RequestFailedException>(() =>
+                        store.UpsertAsync(tenant, location, "policy", "rejected")
+                    );
+                    Assert.AreEqual("updated", await store.GetAsync(tenant, location, "policy"));
+                }
+                finally
+                {
+                    await lease.ReleaseAsync();
+                }
+            }
+            finally
+            {
+                await container.DeleteIfExistsAsync();
+            }
         }
 
         private static async Task<(

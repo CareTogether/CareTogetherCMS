@@ -14,7 +14,7 @@ import {
 } from '@mui/material';
 import { alpha, Theme } from '@mui/material/styles';
 import { format } from 'date-fns';
-import { useState } from 'react';
+import { Fragment, useState } from 'react';
 import {
   CommunityInfo,
   EffectiveLocationPolicy,
@@ -22,6 +22,8 @@ import {
   RoleRemovalReason,
 } from '../GeneratedClient';
 import { ApprovalLedgerSection } from '../Approvals/ApprovalLedgerSection';
+import { uniqueMatch } from '../Hooks/workResolutionTarget';
+import { WorkResolutionFocus } from '../Generic/WorkResolutionFocus';
 import type { ApprovalLedgerRow } from '../Approvals/approvalLedgerViewModel';
 import { ApprovalLedgerStatusChip } from '../Approvals/ApprovalLedgerStatusChip';
 import { v2Typography } from '../Families/v2Typography';
@@ -298,10 +300,14 @@ export function OrganizationApprovalSection({
   communityInfo,
   policy,
   viewModel,
+  linkedRow,
+  onLinkedRowClose,
 }: {
   communityInfo: CommunityInfo;
   policy: EffectiveLocationPolicy;
   viewModel: OrganizationApprovalViewModel;
+  linkedRow?: ApprovalLedgerRow;
+  onLinkedRowClose?: () => void;
 }) {
   const permissions = useCommunityPermissions(communityInfo);
   const { approvalLedgerRows } = viewModel;
@@ -319,6 +325,8 @@ export function OrganizationApprovalSection({
       {canViewProgress && (
         <ApprovalLedgerSection
           rows={approvalLedgerRows}
+          linkedRow={linkedRow}
+          onLinkedRowClose={onLinkedRowClose}
           renderDetailsDrawer={(row, open, onClose) => (
             <OrganizationApprovalDetailsDrawerV2
               communityInfo={communityInfo}
@@ -343,13 +351,23 @@ export function OrganizationApprovalSection({
 export function OrganizationApprovalRoleSummaryCards({
   communityInfo,
   viewModel,
+  linkedRoleName,
+  onLinkedRoleClose,
 }: {
   communityInfo: CommunityInfo;
   viewModel: OrganizationApprovalViewModel;
+  linkedRoleName?: string;
+  onLinkedRoleClose?: () => void;
 }) {
   const permissions = useCommunityPermissions(communityInfo);
   const [selectedRole, setSelectedRole] = useState<SelectedRole | null>(null);
   const { removedRoleSummaries, roleSummaryCards } = viewModel;
+  const linkedRole = uniqueMatch(
+    roleSummaryCards,
+    (card) => card.roleName === linkedRoleName
+  );
+  const showLinkedDrawer =
+    !!linkedRole && permissions(Permission.ViewApprovalProgress);
 
   if (
     !communityInfo.approvalInfo ||
@@ -367,14 +385,20 @@ export function OrganizationApprovalRoleSummaryCards({
           spacing={1}
           sx={{ width: 'max-content', minWidth: '100%' }}
         >
-          {roleSummaryCards.map((card) => (
-            <OrganizationRoleCard
-              key={card.id}
-              card={card}
-              organizationName={communityInfo.community.name}
-              onClick={() => setSelectedRole({ kind: 'active', card })}
-            />
-          ))}
+          {roleSummaryCards.map((card) => {
+            const content = (
+              <OrganizationRoleCard
+                card={card}
+                organizationName={communityInfo.community.name}
+                onClick={() => setSelectedRole({ kind: 'active', card })}
+              />
+            );
+            return card === linkedRole ? (
+              <WorkResolutionFocus key={card.id}>{content}</WorkResolutionFocus>
+            ) : (
+              <Fragment key={card.id}>{content}</Fragment>
+            );
+          })}
           {removedRoleSummaries.map((card) => (
             <OrganizationRoleCard
               key={card.id}
@@ -387,8 +411,13 @@ export function OrganizationApprovalRoleSummaryCards({
       </Box>
       <OrganizationRoleDetailsDrawer
         communityInfo={communityInfo}
-        selectedRole={selectedRole}
-        onClose={() => setSelectedRole(null)}
+        selectedRole={
+          showLinkedDrawer ? { kind: 'active', card: linkedRole } : selectedRole
+        }
+        onClose={() => {
+          setSelectedRole(null);
+          if (showLinkedDrawer) onLinkedRoleClose?.();
+        }}
       />
     </Box>
   );

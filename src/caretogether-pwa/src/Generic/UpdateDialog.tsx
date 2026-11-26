@@ -5,6 +5,7 @@ import {
   DialogContent,
   DialogTitle,
 } from '@mui/material';
+import { useRef, useState } from 'react';
 import { useBackdrop } from '../Hooks/useBackdrop';
 import { handleBackdropClick } from '../Utilities/handleBackdropClick';
 
@@ -30,6 +31,8 @@ export const UpdateDialog: React.FC<UpdateDialogProps> = ({
   children,
 }) => {
   const withBackdrop = useBackdrop();
+  const submitting = useRef(false);
+  const [saving, setSaving] = useState(false);
 
   // Whether the dialog is open or not can be controlled by the caller; otherwise it will always be open.
   const isOpen = typeof open === 'undefined' ? true : open;
@@ -37,31 +40,41 @@ export const UpdateDialog: React.FC<UpdateDialogProps> = ({
   const saveButtonLabel = typeof saveLabel === 'undefined' ? 'Save' : saveLabel;
 
   async function saveHandler() {
-    await withBackdrop(async () => {
-      await onSave();
-      !noAutoClose && onClose();
-    });
+    if (submitting.current || (enableSave && !enableSave())) return;
+    submitting.current = true;
+    setSaving(true);
+    try {
+      await withBackdrop(async () => {
+        await onSave();
+        if (!noAutoClose) onClose();
+      });
+    } finally {
+      submitting.current = false;
+      setSaving(false);
+    }
   }
 
   return (
     <Dialog
       fullWidth
       open={isOpen}
-      onClose={(event, reason) => handleBackdropClick(onClose, event, reason)}
+      onClose={(event, reason) => {
+        if (!submitting.current) handleBackdropClick(onClose, event, reason);
+      }}
       scroll="body"
       aria-labelledby="update-dialog-title"
     >
       <DialogTitle id="update-dialog-title">{title}</DialogTitle>
       <DialogContent>{children}</DialogContent>
       <DialogActions>
-        <Button onClick={onClose} color="secondary">
+        <Button onClick={onClose} color="secondary" disabled={saving}>
           Cancel
         </Button>
         <Button
           onClick={saveHandler}
           variant="contained"
           color="primary"
-          disabled={enableSave && !enableSave()}
+          disabled={saving || (enableSave && !enableSave())}
         >
           {saveButtonLabel}
         </Button>

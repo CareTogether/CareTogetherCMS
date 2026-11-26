@@ -26,7 +26,7 @@ import {
   useGlobalPermissions,
 } from '../Model/SessionModel';
 import { useBackdrop } from '../Hooks/useBackdrop';
-import { useSetAtom } from 'jotai';
+import { useStore } from 'jotai';
 import { personNameString } from './PersonName';
 import {
   AccountCircle,
@@ -39,7 +39,7 @@ import { useState } from 'react';
 import { api } from '../Api/Api';
 import {
   useRequiredSelectedLocationContext,
-  visibleAggregatesState,
+  visibleAggregatesForScopeData,
 } from '../Model/Data';
 import { UserLoginInfoDisplay } from './UserLoginInfoDisplay';
 import { useGlobalSnackBar } from '../Hooks/useGlobalSnackBar';
@@ -119,7 +119,7 @@ export function ManageUserDrawer({
 
   const unsavedChanges = rolesChanged;
 
-  const setVisibleAggregates = useSetAtom(visibleAggregatesState);
+  const store = useStore();
 
   const savePersonRoles = async () => {
     const updatedAggregate = await api.users.changePersonRoles(
@@ -129,19 +129,21 @@ export function ManageUserDrawer({
       selectedRoles
     );
 
-    await setVisibleAggregates((current) =>
-      current.some(
-        (currentEntry) =>
-          currentEntry.id === updatedAggregate.id &&
-          currentEntry.constructor === updatedAggregate.constructor
-      )
-        ? current.map((currentEntry) =>
+    await store.set(
+      visibleAggregatesForScopeData({ organizationId, locationId }),
+      (current) =>
+        current.some(
+          (currentEntry) =>
             currentEntry.id === updatedAggregate.id &&
             currentEntry.constructor === updatedAggregate.constructor
-            ? updatedAggregate
-            : currentEntry
-          )
-        : current.concat(updatedAggregate)
+        )
+          ? current.map((currentEntry) =>
+              currentEntry.id === updatedAggregate.id &&
+              currentEntry.constructor === updatedAggregate.constructor
+                ? updatedAggregate
+                : currentEntry
+            )
+          : current.concat(updatedAggregate)
     );
   };
 

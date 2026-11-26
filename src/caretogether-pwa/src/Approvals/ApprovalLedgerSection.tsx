@@ -12,6 +12,8 @@ import { ApprovalsDataGridV2 } from './ApprovalsDataGridV2';
 type ApprovalLedgerSectionProps = {
   groupByMember?: boolean;
   rows: ApprovalLedgerRow[];
+  linkedRow?: ApprovalLedgerRow;
+  onLinkedRowClose?: () => void;
   renderDetailsDrawer: (
     row: ApprovalLedgerRow | null,
     open: boolean,
@@ -40,6 +42,8 @@ function sortStrings(a: string, b: string) {
 export function ApprovalLedgerSection({
   groupByMember = false,
   rows,
+  linkedRow,
+  onLinkedRowClose,
   renderDetailsDrawer,
 }: ApprovalLedgerSectionProps) {
   const [statusFilter, setStatusFilter] =
@@ -104,6 +108,7 @@ export function ApprovalLedgerSection({
 
   function closeDetailsDrawer() {
     setSelectedRowId(null);
+    if (linkedRow) onLinkedRowClose?.();
   }
 
   function openDetailsDrawer(rowId: string) {
@@ -181,8 +186,8 @@ export function ApprovalLedgerSection({
         onRowClick={(row) => openDetailsDrawer(row.id)}
       />
       {renderDetailsDrawer(
-        selectedRow,
-        selectedRow !== null,
+        linkedRow ?? selectedRow,
+        !!linkedRow || selectedRow !== null,
         closeDetailsDrawer
       )}
     </Box>

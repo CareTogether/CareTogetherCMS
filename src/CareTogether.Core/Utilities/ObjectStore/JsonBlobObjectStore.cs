@@ -19,6 +19,8 @@ namespace CareTogether.Utilities.ObjectStore
         private readonly string objectType;
         private readonly IMemoryCache memoryCache;
         private readonly TimeSpan cacheExpiration;
+        private readonly object cacheLock = new();
+        private long cacheGeneration;
         private readonly ConcurrentDictionary<
             Guid,
             BlobContainerClient
@@ -40,35 +42,40 @@ namespace CareTogether.Utilities.ObjectStore
 
         public async Task DeleteAsync(Guid organizationId, Guid locationId, string objectId)
         {
-            memoryCache.Remove(CacheKey(organizationId, locationId, objectId));
-
             var tenantContainer = await CreateContainerIfNotExists(organizationId);
             var objectBlob = tenantContainer.GetBlockBlobClient(
                 $"{locationId}/{objectType}/{objectId}.json"
             );
 
-            await objectBlob.DeleteIfExistsAsync();
+            try
+            {
+                await objectBlob.DeleteIfExistsAsync();
+            }
+            finally
+            {
+                InvalidateCache(CacheKey(organizationId, locationId, objectId));
+            }
         }
 
         public async Task<T> GetAsync(Guid organizationId, Guid locationId, string objectId)
         {
-            if (
-                memoryCache.TryGetValue<T>(
-                    CacheKey(organizationId, locationId, objectId),
-                    out var cachedValue
-                )
-                && cachedValue != null
-            )
-                return cachedValue;
+            var key = CacheKey(organizationId, locationId, objectId);
+            long generation;
+            lock (cacheLock)
+            {
+                if (memoryCache.TryGetValue<T>(key, out var cached) && cached is not null)
+                    return cached;
+                generation = cacheGeneration;
+            }
 
             var tenantContainer = await CreateContainerIfNotExists(organizationId);
             var objectBlob = tenantContainer.GetBlockBlobClient(
                 $"{locationId}/{objectType}/{objectId}.json"
             );
 
-            var objectStream = await objectBlob.DownloadStreamingAsync();
-            var objectText = new StreamReader(objectStream.Value.Content).ReadToEnd();
-            var objectValue = JsonConvert.DeserializeObject<T>(objectText);
+            var response = (await objectBlob.DownloadStreamingAsync()).Value;
+            using var reader = new StreamReader(response.Content);
+            var objectValue = JsonConvert.DeserializeObject<T>(await reader.ReadToEndAsync());
 
             if (objectValue == null)
                 throw new InvalidOperationException(
@@ -77,12 +84,11 @@ namespace CareTogether.Utilities.ObjectStore
                         + $"Expected type: {typeof(T).FullName}"
                 );
 
-            memoryCache.Set(
-                CacheKey(organizationId, locationId, objectId),
-                objectValue,
-                cacheExpiration
-            );
-
+            lock (cacheLock)
+            {
+                if (generation == cacheGeneration)
+                    memoryCache.Set(key, objectValue, cacheExpiration);
+            }
             return objectValue;
         }
 
@@ -99,16 +105,30 @@ namespace CareTogether.Utilities.ObjectStore
             );
 
             var objectText = JsonConvert.SerializeObject(value);
-            var objectStream = new MemoryStream(Encoding.UTF8.GetBytes(objectText));
-            await objectBlob.UploadAsync(
-                objectStream,
-                new BlobUploadOptions
-                {
-                    HttpHeaders = new BlobHttpHeaders { ContentType = "application/json" },
-                }
-            );
+            using var objectStream = new MemoryStream(Encoding.UTF8.GetBytes(objectText));
+            try
+            {
+                await objectBlob.UploadAsync(
+                    objectStream,
+                    new BlobUploadOptions
+                    {
+                        HttpHeaders = new BlobHttpHeaders { ContentType = "application/json" },
+                    }
+                );
+            }
+            finally
+            {
+                InvalidateCache(CacheKey(organizationId, locationId, objectId));
+            }
+        }
 
-            memoryCache.Set(CacheKey(organizationId, locationId, objectId), value, cacheExpiration);
+        private void InvalidateCache(string key)
+        {
+            lock (cacheLock)
+            {
+                cacheGeneration++;
+                memoryCache.Remove(key);
+            }
         }
 
         public async IAsyncEnumerable<string> ListAsync(Guid organizationId, Guid locationId)
