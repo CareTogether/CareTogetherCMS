@@ -197,6 +197,8 @@ export function EmailAddressEditor({
             </Button>
           ) : (
             <FamilyMemberDrawerContactRowV2
+              copyLabel="Email address"
+              copyValue={emailAddress!.address!}
               editLabel="Edit email address"
               isPreferred={isPreferred}
               onEdit={canEdit ? () => editor.setEditing(true) : undefined}

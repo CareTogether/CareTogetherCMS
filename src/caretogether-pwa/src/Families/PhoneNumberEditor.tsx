@@ -202,6 +202,8 @@ export function PhoneNumberEditor({
             </Button>
           ) : (
             <FamilyMemberDrawerContactRowV2
+              copyLabel="Phone number"
+              copyValue={phoneNumber!.number!}
               editLabel="Edit phone number"
               isPreferred={isPreferred}
               onEdit={canEdit ? () => editor.setEditing(true) : undefined}

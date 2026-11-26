@@ -6,6 +6,8 @@ import {
   FavoriteBorder,
 } from '@mui/icons-material';
 import { type ReactNode } from 'react';
+import { useGlobalSnackBar } from '../Hooks/useGlobalSnackBar';
+import { ContactInfoCopyButton } from './ContactInfoCopyButton';
 import { v2Typography } from './v2Typography';
 
 export function FamilyMemberDrawerSectionV2({
@@ -71,8 +73,12 @@ export function FamilyMemberDrawerDetailFieldV2({
   );
 }
 
+const contactRowActionSx = { height: 44, width: 44 };
+
 export function FamilyMemberDrawerContactRowV2({
   children,
+  copyLabel,
+  copyValue,
   editLabel,
   isPreferred,
   onEdit,
@@ -81,6 +87,8 @@ export function FamilyMemberDrawerContactRowV2({
   type,
 }: {
   children: ReactNode;
+  copyLabel: string;
+  copyValue: string;
   editLabel: string;
   isPreferred: boolean;
   onEdit?: () => void;
@@ -88,6 +96,8 @@ export function FamilyMemberDrawerContactRowV2({
   removeLabel: string;
   type: string;
 }) {
+  const { setAndShowGlobalSnackBar } = useGlobalSnackBar();
+
   return (
     <Box
       sx={{
@@ -139,35 +149,39 @@ export function FamilyMemberDrawerContactRowV2({
         </Box>
       </Box>
 
-      {onEdit && onRemove && (
-        <Stack direction="row" spacing={0.25} sx={{ flexShrink: 0 }}>
+      <Stack direction="row" spacing={0.25} sx={{ flexShrink: 0 }}>
+        <ContactInfoCopyButton
+          label={copyLabel}
+          onCopied={setAndShowGlobalSnackBar}
+          sx={contactRowActionSx}
+          value={copyValue}
+        />
+        {onEdit && (
           <Tooltip enterDelay={800} title={editLabel}>
             <IconButton
               aria-label={editLabel}
               onClick={onEdit}
               size="small"
-              sx={{ height: 44, width: 44 }}
+              sx={contactRowActionSx}
             >
               <EditIcon fontSize="small" />
             </IconButton>
           </Tooltip>
-          <Tooltip enterDelay={800} title={removeLabel}>
+        )}
+        {onRemove && (
+          <Tooltip title={removeLabel}>
             <IconButton
               aria-label={removeLabel}
+              color="error"
               onClick={onRemove}
               size="small"
-              sx={{
-                color: 'text.secondary',
-                height: 44,
-                width: 44,
-                '&:hover': { color: 'error.main' },
-              }}
+              sx={contactRowActionSx}
             >
               <DeleteOutlinedIcon fontSize="small" />
             </IconButton>
           </Tooltip>
-        </Stack>
-      )}
+        )}
+      </Stack>
     </Box>
   );
 }
