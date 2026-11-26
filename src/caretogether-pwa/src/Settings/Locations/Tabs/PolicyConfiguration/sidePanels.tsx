@@ -18,7 +18,7 @@ import {
   Tooltip,
   Typography,
 } from '@mui/material';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import Grid from '../../../../Generic/GridLegacyCompat';
 import { ValidateDatePicker } from '../../../../Generic/Forms/ValidateDatePicker';
 import {
@@ -1488,16 +1488,27 @@ function VolunteerRequirementsEditor({
   requirements: VolunteerRequirementDraft[];
   onChange: (requirements: VolunteerRequirementDraft[]) => void;
 }) {
+  const rowKeys = useRef(new WeakMap<VolunteerRequirementDraft, string>());
+
+  function requirementKey(requirement: VolunteerRequirementDraft) {
+    const existingKey = rowKeys.current.get(requirement);
+    if (existingKey) return existingKey;
+    const key = crypto.randomUUID();
+    rowKeys.current.set(requirement, key);
+    return key;
+  }
+
   function updateRequirement(
     index: number,
     changes: Partial<VolunteerRequirementDraft>
   ) {
     onChange(
-      requirements.map((requirement, requirementIndex) =>
-        requirementIndex === index
-          ? { ...requirement, ...changes }
-          : requirement
-      )
+      requirements.map((requirement, requirementIndex) => {
+        if (requirementIndex !== index) return requirement;
+        const updated = { ...requirement, ...changes };
+        rowKeys.current.set(updated, requirementKey(requirement));
+        return updated;
+      })
     );
   }
 
@@ -1507,6 +1518,25 @@ function VolunteerRequirementsEditor({
     );
   }
 
+  const addButton = (
+    <Button
+      size="small"
+      variant="contained"
+      startIcon={<AddIcon />}
+      sx={organization ? { alignSelf: 'flex-start' } : undefined}
+      onClick={() => {
+        const requirement = newVolunteerRequirementDraft(family);
+        onChange(
+          organization
+            ? [...requirements, requirement]
+            : [requirement, ...requirements]
+        );
+      }}
+    >
+      Add
+    </Button>
+  );
+
   return (
     <Stack spacing={1.5}>
       <Stack
@@ -1515,16 +1545,7 @@ function VolunteerRequirementsEditor({
         sx={{ alignItems: 'center', justifyContent: 'space-between' }}
       >
         <Typography variant="subtitle1">Requirements</Typography>
-        <Button
-          size="small"
-          variant="contained"
-          startIcon={<AddIcon />}
-          onClick={() =>
-            onChange([...requirements, newVolunteerRequirementDraft(family)])
-          }
-        >
-          Add
-        </Button>
+        {!organization && addButton}
       </Stack>
 
       {requirements.length === 0 ? (
@@ -1554,7 +1575,7 @@ function VolunteerRequirementsEditor({
                   actionName.length > 0 && !actionNames.includes(actionName);
 
                 return (
-                  <TableRow key={index}>
+                  <TableRow key={requirementKey(requirement)}>
                     <TableCell>
                       <TextField
                         fullWidth
@@ -1673,6 +1694,7 @@ function VolunteerRequirementsEditor({
           </Table>
         </TableContainer>
       )}
+      {organization && addButton}
     </Stack>
   );
 }
