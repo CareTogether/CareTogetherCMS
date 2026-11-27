@@ -63,7 +63,7 @@ function project(
   };
 }
 
-test('only authoritative arrangement-level tokens make requirements snoozable', () => {
+test('only authoritative backend tokens make requirements snoozable', () => {
   const items = buildArrangementWorkQueue(scope, [
     family([
       { action, dueBy: new Date('2026-12-02'), snoozeEpisodeToken: 'episode' },
@@ -76,12 +76,83 @@ test('only authoritative arrangement-level tokens make requirements snoozable', 
         volunteerFamilyId: 'volunteer',
         snoozeEpisodeToken: 'assignment',
       },
+      {
+        action,
+        dueBy: new Date('2026-12-06'),
+        arrangementFunction: 'Host',
+        volunteerFamilyId: 'volunteer',
+      },
+      {
+        action,
+        dueBy: new Date('2026-12-07'),
+        arrangementFunction: 'Host',
+        snoozeEpisodeToken: 'malformed',
+      },
     ]),
   ]);
   assert.deepEqual(
-    items.map(({ snoozeToken }) => snoozeToken),
-    ['episode', undefined, undefined, undefined]
+    items.map(({ occurrenceDate, snoozeToken }) => [
+      occurrenceDate,
+      snoozeToken,
+    ]),
+    [
+      ['2026-12-02', 'episode'],
+      ['2026-12-03', undefined],
+      ['2026-12-04', undefined],
+      ['2026-12-05', 'assignment'],
+      ['2026-12-06', undefined],
+    ]
   );
+});
+
+test('assignment requirements with identical display information snooze independently', () => {
+  const local = storage();
+  const coach = {
+    action,
+    pastDueSince: new Date('2026-11-20'),
+    arrangementFunction: 'Family Coach',
+    volunteerFamilyId: 'volunteer',
+    personId: 'coach',
+  };
+  const rows = [
+    { ...coach, snoozeEpisodeToken: 'first-lifetime' },
+    { ...coach, snoozeEpisodeToken: 'second-lifetime' },
+    {
+      ...coach,
+      personId: undefined,
+      snoozeEpisodeToken: 'family-assignment',
+    },
+  ];
+  const before = project(rows, 100, local);
+  assert.deepEqual(
+    before.visible.pastDue.map(({ item, count }) => [
+      item.snoozeToken,
+      item.assignment?.personId ?? null,
+      count,
+    ]),
+    [
+      ['first-lifetime', 'coach', 1],
+      ['second-lifetime', 'coach', 1],
+      ['family-assignment', null, 1],
+    ]
+  );
+
+  assert.equal(
+    writeSnooze(snoozeScope, 'first-lifetime', 500, 100, local),
+    true
+  );
+  const snoozed = project(rows, 100, local);
+  assert.deepEqual(
+    snoozed.visible.pastDue.map(({ item }) => item.snoozeToken),
+    ['second-lifetime', 'family-assignment']
+  );
+  assert.deepEqual(
+    snoozed.snoozed.map(({ token }) => token),
+    ['first-lifetime']
+  );
+  assert.equal(project(rows, 500, local).visible.pastDue.length, 3);
+  assert.equal(removeSnooze(snoozeScope, 'first-lifetime', local), true);
+  assert.equal(project(rows, 100, local).visible.pastDue.length, 3);
 });
 
 test('snoozed requirements leave active counts, keep their occurrence when overdue, wake, and restore', () => {

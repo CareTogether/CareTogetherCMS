@@ -289,6 +289,22 @@ namespace CareTogether.Resources.Policies
             Guid locationId
         ) => (await ReadPolicySnapshotAsync(organizationId, locationId)).Policy;
 
+        internal async Task<ETag?> ConfigurationRevisionAsync(Guid organizationId, bool revalidate)
+        {
+            if (configurationStore is not JsonBlobObjectStore<OrganizationConfiguration> blobStore)
+                return null;
+            try
+            {
+                return (
+                    await blobStore.ReadSnapshotAsync(organizationId, Guid.Empty, CONFIG, revalidate)
+                ).Revision;
+            }
+            catch (RequestFailedException)
+            {
+                return null;
+            }
+        }
+
         internal async Task<ETag?> ValidatePolicyRevisionAsync(Guid organizationId, Guid locationId)
         {
             if (locationPoliciesStore is not JsonBlobObjectStore<EffectiveLocationPolicy> blobStore)

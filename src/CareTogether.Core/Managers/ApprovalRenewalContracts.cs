@@ -11,7 +11,11 @@ namespace CareTogether.Managers
         DateOnly FirstUncoveredOnUtc,
         DisclosedApprovalRenewalState State,
         ImmutableList<DisclosedApprovalRenewalRole> AffectedRoles
-    );
+    )
+    {
+        [Newtonsoft.Json.JsonProperty(NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
+        public string? SnoozeEpisodeToken { get; init; }
+    }
 
     [JsonHierarchyBase]
     public abstract partial record ApprovalRenewalTarget;
@@ -21,7 +25,8 @@ namespace CareTogether.Managers
     public sealed record IndividualApprovalRenewalTarget(Guid FamilyId, Guid PersonId)
         : ApprovalRenewalTarget;
 
-    public sealed record OrganizationApprovalRenewalTarget(Guid CommunityId) : ApprovalRenewalTarget;
+    public sealed record OrganizationApprovalRenewalTarget(Guid CommunityId)
+        : ApprovalRenewalTarget;
 
     public enum DisclosedApprovalRenewalState
     {
@@ -29,7 +34,10 @@ namespace CareTogether.Managers
         Uncovered,
     }
 
-    public sealed record DisclosedApprovalRenewalRole(ApprovalRenewalRoleScope Scope, string RoleName);
+    public sealed record DisclosedApprovalRenewalRole(
+        ApprovalRenewalRoleScope Scope,
+        string RoleName
+    );
 
     public enum ApprovalRenewalRoleScope
     {

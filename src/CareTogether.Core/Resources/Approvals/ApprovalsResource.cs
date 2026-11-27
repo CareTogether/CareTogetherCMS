@@ -7,7 +7,7 @@ namespace CareTogether.Resources.Approvals
 {
     public sealed class ApprovalsResource : IApprovalsResource
     {
-        private readonly IEventLog<ApprovalEvent> eventLog;
+        private readonly TrackedEventStream<ApprovalEvent> stream;
         private readonly ConcurrentLockingStore<
             (Guid organizationId, Guid locationId),
             ApprovalModel
@@ -15,13 +15,22 @@ namespace CareTogether.Resources.Approvals
 
         public ApprovalsResource(IEventLog<ApprovalEvent> eventLog)
         {
-            this.eventLog = eventLog;
+            stream = new TrackedEventStream<ApprovalEvent>(
+                eventLog,
+                domainEvent =>
+                    domainEvent switch
+                    {
+                        VolunteerFamilyCommandExecuted e => e.Command.FamilyId,
+                        VolunteerCommandExecuted e => e.Command.FamilyId,
+                        _ => (Guid?)null,
+                    }
+            );
             tenantModels = new ConcurrentLockingStore<
                 (Guid organizationId, Guid locationId),
                 ApprovalModel
             >(key =>
                 ApprovalModel.InitializeAsync(
-                    eventLog.GetAllEventsAsync(key.organizationId, key.locationId)
+                    stream.ReplayAsync(key.organizationId, key.locationId)
                 )
             );
         }
@@ -45,13 +54,13 @@ namespace CareTogether.Resources.Approvals
                     DateTime.UtcNow
                 );
 
-                await eventLog.AppendEventAsync(
+                await stream.CommitAsync(
                     organizationId,
                     locationId,
                     result.Event,
-                    result.SequenceNumber
+                    result.SequenceNumber,
+                    result.OnCommit
                 );
-                result.OnCommit();
                 return result.VolunteerFamilyEntry;
             }
         }
@@ -75,13 +84,13 @@ namespace CareTogether.Resources.Approvals
                     DateTime.UtcNow
                 );
 
-                await eventLog.AppendEventAsync(
+                await stream.CommitAsync(
                     organizationId,
                     locationId,
                     result.Event,
-                    result.SequenceNumber
+                    result.SequenceNumber,
+                    result.OnCommit
                 );
-                result.OnCommit();
                 return result.VolunteerFamilyEntry;
             }
         }
@@ -112,5 +121,24 @@ namespace CareTogether.Resources.Approvals
                 return lockedModel.Value.FindVolunteerFamilyEntries(_ => true);
             }
         }
+
+        internal async Task<EventStreamSnapshot?> CaptureStreamAsync(
+            Guid organizationId,
+            Guid locationId
+        )
+        {
+            using var lockedModel = await tenantModels.ReadLockItemAsync(
+                (organizationId, locationId)
+            );
+            return stream.Current(organizationId, locationId);
+        }
+
+        internal async Task<bool> VerifyStreamAsync(
+            Guid organizationId,
+            Guid locationId,
+            EventStreamSnapshot captured
+        ) =>
+            ReferenceEquals(await CaptureStreamAsync(organizationId, locationId), captured)
+            && await stream.IsCurrentAsync(organizationId, locationId, captured);
     }
 }

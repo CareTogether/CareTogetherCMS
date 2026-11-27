@@ -510,3 +510,196 @@ test('a refresh evaluated before a command cannot restore an obsolete snooze epi
   );
   assert.deepEqual(await snoozeTokens(store, originCache), [null]);
 });
+
+const { createSnoozeFreshnessTracker } = await import(
+  './recordsSnoozeFreshness.ts'
+);
+const { selectDashboardApprovalWork } = await import(
+  '../Dashboard/dashboardApprovalRenewals.ts'
+);
+const { partitionSnoozed, writeSnooze, removeSnooze } = await import(
+  '../Dashboard/dashboardSnoozes.ts'
+);
+
+function approvalWire(
+  roleToken: string | undefined,
+  renewalToken: string | undefined,
+  freshness?: object
+) {
+  const coach = familyWire.family.volunteerFamilyInfo.familyRoleApprovals.Coach;
+  const [renewal] = familyWire.family.volunteerFamilyInfo.renewalCandidates;
+  return FamilyRecordsAggregate.fromJS({
+    ...familyWire,
+    ...(freshness && { snoozeFreshness: freshness }),
+    family: {
+      ...familyWire.family,
+      volunteerFamilyInfo: {
+        ...familyWire.family.volunteerFamilyInfo,
+        familyRoleApprovals: {
+          Coach: { ...coach, snoozeEpisodeToken: roleToken },
+        },
+        renewalCandidates: [{ ...renewal, snoozeEpisodeToken: renewalToken }],
+      },
+    },
+  });
+}
+
+function approvalTokens(records: RecordsAggregate[]) {
+  const families = records.flatMap((record) =>
+    record instanceof FamilyRecordsAggregate ? [record.family] : []
+  );
+  return [
+    ...buildApprovalExpirationWorkQueue(
+      origin,
+      families,
+      [],
+      new Date('2026-11-25')
+    ).map(({ snoozeToken }) => snoozeToken ?? null),
+    ...buildApprovalRenewalWorkQueue(origin, families, []).map(
+      ({ snoozeToken }) => snoozeToken ?? null
+    ),
+  ];
+}
+
+const freshness = (
+  referralsRevision: number,
+  approvalsRevision?: number,
+  directoryRevision = approvalsRevision
+) => ({
+  referralsRevision,
+  policyRevision: 'p',
+  ...(approvalsRevision !== undefined && {
+    approvalsRevision,
+    directoryRevision,
+  }),
+});
+
+test('approval and renewal tokens become dated, independent snooze keys', () => {
+  const [expiration, renewal] = approvalTokens([
+    approvalWire('role', 'renewal', freshness(1, 1)),
+  ]);
+  assert.equal(
+    expiration,
+    JSON.stringify(['approval-expiration', 'role', '2026-12-02'])
+  );
+  assert.equal(renewal, 'renewal');
+  assert.deepEqual(approvalTokens([approvalWire(' ', undefined)]), [
+    null,
+    null,
+  ]);
+});
+
+test('stale approval streams cannot restore obsolete approval snoozes', () => {
+  const admit = createSnoozeFreshnessTracker();
+  assert.deepEqual(
+    approvalTokens(
+      admit([approvalWire('new', 'new-renewal', freshness(5, 9))])
+    ),
+    [
+      JSON.stringify(['approval-expiration', 'new', '2026-12-02']),
+      'new-renewal',
+    ]
+  );
+  assert.deepEqual(
+    approvalTokens(
+      admit([approvalWire('old', 'old-renewal', freshness(6, 8))])
+    ),
+    [null, null]
+  );
+  assert.deepEqual(
+    approvalTokens(
+      admit([approvalWire('mixed', 'mixed', freshness(6, 10, 1))])
+    ),
+    [null, null]
+  );
+  assert.deepEqual(
+    approvalTokens(admit([approvalWire('partial', 'partial', freshness(7))])),
+    [null, null]
+  );
+  assert.deepEqual(
+    approvalTokens(admit([approvalWire('next', 'next', freshness(7, 10, 10))])),
+    [JSON.stringify(['approval-expiration', 'next', '2026-12-02']), 'next']
+  );
+});
+
+test('stale community responses lose approval tokens', () => {
+  const admit = createSnoozeFreshnessTracker();
+  const community = (token: string, revision: number) =>
+    CommunityRecordsAggregate.fromJS({
+      id: 'community',
+      snoozeFreshness: {
+        referralsRevision: 1,
+        policyRevision: 'p',
+        organizationApprovalsRevision: revision,
+      },
+      community: {
+        community: { id: 'community' },
+        approvalInfo: {
+          approvalStatusByRole: { Partner: { snoozeEpisodeToken: token } },
+          renewalCandidates: [],
+        },
+      },
+    });
+  const tokenOf = (records: RecordsAggregate[]) => {
+    const [record] = records;
+    assert.ok(record instanceof CommunityRecordsAggregate);
+    return (
+      record.community.approvalInfo?.approvalStatusByRole?.Partner
+        ?.snoozeEpisodeToken ?? null
+    );
+  };
+  assert.equal(tokenOf(admit([community('current', 4)])), 'current');
+  assert.equal(tokenOf(admit([community('obsolete', 3)])), null);
+});
+
+test('snoozed approval work leaves counts, wakes, and restores', () => {
+  const values = new Map<string, string>();
+  const storage = {
+    getItem: (key: string) => values.get(key) ?? null,
+    setItem: (key: string, value: string) => void values.set(key, value),
+    removeItem: (key: string) => void values.delete(key),
+  };
+  const scope = { ...origin, userId: 'user' };
+  const families = [approvalWire('role', 'renewal', freshness(1, 1)).family];
+  const now = new Date('2026-11-25');
+  const approvals = buildApprovalExpirationWorkQueue(origin, families, [], now);
+  const renewals = buildApprovalRenewalWorkQueue(origin, families, []);
+  const project = (instant: number) => {
+    const approval = partitionSnoozed(
+      approvals,
+      ({ snoozeToken }) => snoozeToken,
+      scope,
+      instant,
+      storage
+    );
+    const renewal = partitionSnoozed(
+      renewals,
+      ({ snoozeToken }) => snoozeToken,
+      scope,
+      instant,
+      storage
+    );
+    const work = selectDashboardApprovalWork(
+      approval.active,
+      renewal.active,
+      now,
+      30
+    );
+    return {
+      count: Object.values(work).reduce((sum, rows) => sum + rows.length, 0),
+      snoozed: approval.snoozed.length + renewal.snoozed.length,
+      nextWake: approval.nextWake ?? renewal.nextWake,
+    };
+  };
+  const before = project(100);
+  assert.equal(before.snoozed, 0);
+  assert.ok(writeSnooze(scope, renewals[0].snoozeToken!, 500, 100, storage));
+  const snoozed = project(100);
+  assert.equal(snoozed.count, before.count - 1);
+  assert.equal(snoozed.snoozed, 1);
+  assert.equal(snoozed.nextWake, 500);
+  assert.equal(project(500).count, before.count);
+  assert.ok(removeSnooze(scope, renewals[0].snoozeToken!, storage));
+  assert.equal(project(100).count, before.count);
+  assert.ok([...values.keys()].every((key) => !key.includes('Safety check')));
+});

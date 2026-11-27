@@ -117,8 +117,9 @@ function projectRequirement(
       assignment,
       occurrenceDate,
       status: dueBy == null ? 'past-due' : 'upcoming',
-      ...(assignment === undefined &&
-        hasIdentity(snoozeEpisodeToken) && { snoozeToken: snoozeEpisodeToken }),
+      ...(hasIdentity(snoozeEpisodeToken) && {
+        snoozeToken: snoozeEpisodeToken,
+      }),
     },
   ];
 }

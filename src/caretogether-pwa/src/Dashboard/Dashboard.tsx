@@ -87,6 +87,7 @@ import {
   DashboardRequirementRow,
   DashboardQueueRow,
   DashboardSnoozedList,
+  type DashboardSnoozedItem,
 } from './DashboardRequirementPanel';
 import {
   affectedApprovalRoleLabel,
@@ -118,7 +119,7 @@ import {
   type SnoozeScope,
 } from './dashboardSnoozes';
 
-type SnoozeKind = 'note' | 'upcoming' | 'pastDue';
+type SnoozeKind = 'note' | 'upcoming' | 'pastDue' | 'approval';
 
 const upcomingPanel = {
   title: 'Upcoming requirements',
@@ -233,8 +234,20 @@ function DashboardApprovalExpirations({
   onChange,
   familyV2,
   work,
+  snoozedWork,
+  wakeAt,
+  onSnooze,
+  onUnsnooze,
+  focusSnoozed,
+  onSnoozedFocused,
 }: {
   work: ReturnType<typeof selectDashboardApprovalWork>;
+  snoozedWork: ReturnType<typeof selectDashboardApprovalWork>;
+  wakeAt: (token: string) => number | undefined;
+  onSnooze: ((token: string) => void) | undefined;
+  onUnsnooze: (token: string) => void;
+  focusSnoozed: boolean;
+  onSnoozedFocused: () => void;
   days: RequirementWindowDays;
   onChange: (days: RequirementWindowDays) => void;
   familyV2: boolean;
@@ -281,11 +294,67 @@ function DashboardApprovalExpirations({
     };
   }
 
+  function snoozeAction(token: string | undefined, title: string) {
+    return (
+      onSnooze &&
+      token && (
+        <Tooltip title="Snooze approval work">
+          <IconButton
+            size="small"
+            aria-label={`Snooze ${title}`}
+            onClick={() => onSnooze(token)}
+          >
+            <SnoozeOutlined fontSize="small" />
+          </IconButton>
+        </Tooltip>
+      )
+    );
+  }
+
+  const snoozedItems: DashboardSnoozedItem[] = [
+    ...snoozedWork.upcoming,
+    ...snoozedWork.uncovered,
+  ]
+    .map((row) => ({
+      token: row.snoozeToken,
+      title: row.actionName,
+      target: row.target,
+      label: `Coverage loss ${formatUtcDateOnly(new Date(row.firstUncoveredOnUtc))}`,
+    }))
+    .concat(
+      [...snoozedWork.expiring, ...snoozedWork.expired].map((row) => ({
+        token: row.snoozeToken,
+        title: row.roleName,
+        target: row.target,
+        label: `${row.status === 'expired' ? 'Expired on' : 'Expires on'} ${formatUtcDateOnly(new Date(row.expirationDate))}`,
+      }))
+    )
+    .flatMap(({ token, title, target, label }) => {
+      const wake = token && wakeAt(token);
+      return token && wake
+        ? [
+            {
+              key: token,
+              title,
+              details: (
+                <Typography variant="body2" color="text.secondary">
+                  {subjectContext(target)} · {label}
+                </Typography>
+              ),
+              wakeAt: wake,
+              restoreLabel: `Unsnooze ${title}`,
+              onRestore: () => onUnsnooze(token),
+            },
+          ]
+        : [];
+    });
+
   function renewalRow(row: (typeof upcoming)[number], isUncovered: boolean) {
     return (
       <DashboardQueueRow
         key={row.renderKey}
         title={row.actionName}
+        trailingAction={snoozeAction(row.snoozeToken, row.actionName)}
         {...destination(row.target, {
           kind: 'requirement',
           name: row.actionName,
@@ -326,8 +395,19 @@ function DashboardApprovalExpirations({
   return (
     <DashboardRequirementPanel
       {...expirationPanel}
+      {...(snoozedItems.length > 0 && {
+        emptyTitle: 'No active approval work in this view',
+        emptyMessage: 'Snoozed approval work is listed below.',
+      })}
       count={
         upcoming.length + uncovered.length + expiring.length + expired.length
+      }
+      footer={
+        <DashboardSnoozedList
+          items={snoozedItems}
+          focusToggle={focusSnoozed}
+          onToggleFocused={onSnoozedFocused}
+        />
       }
       headerAction={
         <NextDaysSelect
@@ -350,10 +430,18 @@ function DashboardApprovalExpirations({
         itemType="approval"
       >
         {expiring.map(
-          ({ id, target, roleName, expirationDate, relatedRenewals }) => (
+          ({
+            id,
+            target,
+            roleName,
+            expirationDate,
+            relatedRenewals,
+            snoozeToken,
+          }) => (
             <DashboardQueueRow
               key={id}
               title={roleName}
+              trailingAction={snoozeAction(snoozeToken, roleName)}
               {...destination(target, { kind: 'role', name: roleName })}
             >
               <Typography
@@ -390,20 +478,27 @@ function DashboardApprovalExpirations({
         count={expired.length}
         itemType="approval"
       >
-        {expired.map(({ id, target, roleName, expirationDate }) => (
-          <DashboardQueueRow
-            key={id}
-            title={roleName}
-            {...destination(target, { kind: 'role', name: roleName })}
-          >
-            <Typography component="span" variant="body2" color="text.secondary">
-              <span className="ph-unmask">Expired on</span>{' '}
-              <time dateTime={expirationDate}>
-                {formatUtcDateOnly(new Date(expirationDate))}
-              </time>
-            </Typography>
-          </DashboardQueueRow>
-        ))}
+        {expired.map(
+          ({ id, target, roleName, expirationDate, snoozeToken }) => (
+            <DashboardQueueRow
+              key={id}
+              title={roleName}
+              trailingAction={snoozeAction(snoozeToken, roleName)}
+              {...destination(target, { kind: 'role', name: roleName })}
+            >
+              <Typography
+                component="span"
+                variant="body2"
+                color="text.secondary"
+              >
+                <span className="ph-unmask">Expired on</span>{' '}
+                <time dateTime={expirationDate}>
+                  {formatUtcDateOnly(new Date(expirationDate))}
+                </time>
+              </Typography>
+            </DashboardQueueRow>
+          )
+        )}
       </ApprovalWorkSection>
       <ApprovalWorkSection
         title="Expired and unresolved"
@@ -902,11 +997,34 @@ function DashboardRequirements({ storageKey }: { storageKey: string | null }) {
     evaluationTime.toISOString().slice(0, 10)
   );
   const renewals = useApprovalRenewalWorkQueue();
-  const approvalWork = selectDashboardApprovalWork(
+  const approvalSnoozes = partitionSnoozed(
     approvals,
+    ({ snoozeToken }) => snoozeToken,
+    snoozeScope,
+    evaluationTime.getTime()
+  );
+  const renewalSnoozes = partitionSnoozed(
     renewals,
+    ({ snoozeToken }) => snoozeToken,
+    snoozeScope,
+    evaluationTime.getTime()
+  );
+  const approvalWork = selectDashboardApprovalWork(
+    approvalSnoozes.active,
+    renewalSnoozes.active,
     evaluationTime,
     preferences.expirationDays
+  );
+  const snoozedApprovalWork = selectDashboardApprovalWork(
+    approvalSnoozes.snoozed.map(({ item }) => item),
+    renewalSnoozes.snoozed.map(({ item }) => item),
+    evaluationTime,
+    preferences.expirationDays
+  );
+  const approvalWakeAt = new Map(
+    [...approvalSnoozes.snoozed, ...renewalSnoozes.snoozed].map(
+      ({ token, wakeAt }) => [token, wakeAt]
+    )
   );
   const notes = useDashboardNoteReview();
   const selectedNote =
@@ -931,9 +1049,12 @@ function DashboardRequirements({ storageKey }: { storageKey: string | null }) {
     snoozeScope,
     evaluationTime.getTime()
   );
-  const wakeTimes = [nextNoteWake, requirementSnoozes.nextWake].filter(
-    (wake) => wake !== undefined
-  );
+  const wakeTimes = [
+    nextNoteWake,
+    requirementSnoozes.nextWake,
+    approvalSnoozes.nextWake,
+    renewalSnoozes.nextWake,
+  ].filter((wake) => wake !== undefined);
   const nextWake = wakeTimes.length ? Math.min(...wakeTimes) : undefined;
   const visibleNotes = filterDashboardNoteReview(
     activeNotes,
@@ -953,9 +1074,16 @@ function DashboardRequirements({ storageKey }: { storageKey: string | null }) {
             (item.source === 'family' || referralsEnabled) &&
             noteSnoozeToken(item) === snoozeSelection.token
         )
-      : (snoozeSelection.kind === 'upcoming' ? upcoming : pastDue).some(
-          ({ item }) => item.snoozeToken === snoozeSelection.token
-        ));
+      : snoozeSelection.kind === 'approval'
+        ? [
+            ...approvalWork.upcoming,
+            ...approvalWork.uncovered,
+            ...approvalWork.expiring,
+            ...approvalWork.expired,
+          ].some(({ snoozeToken }) => snoozeToken === snoozeSelection.token)
+        : (snoozeSelection.kind === 'upcoming' ? upcoming : pastDue).some(
+            ({ item }) => item.snoozeToken === snoozeSelection.token
+          ));
 
   function restoreSnooze(token: string, message: string) {
     const saved = removeSnooze(snoozeScope, token);
@@ -1219,6 +1347,18 @@ function DashboardRequirements({ storageKey }: { storageKey: string | null }) {
         approvals={
           <DashboardApprovalExpirations
             work={approvalWork}
+            snoozedWork={snoozedApprovalWork}
+            wakeAt={(token) => approvalWakeAt.get(token)}
+            onSnooze={
+              snoozeScope
+                ? (token) => setSnoozeSelection({ token, kind: 'approval' })
+                : undefined
+            }
+            onUnsnooze={(token) =>
+              restoreSnooze(token, 'Approval work returned to the dashboard.')
+            }
+            focusSnoozed={focusSnoozed === 'approval'}
+            onSnoozedFocused={clearSnoozedFocus}
             familyV2={familyV2}
             days={preferences.expirationDays}
             onChange={(expirationDays) => updatePreferences({ expirationDays })}
@@ -1275,7 +1415,9 @@ function DashboardRequirements({ storageKey }: { storageKey: string | null }) {
               saved
                 ? snoozeSelection.kind === 'note'
                   ? 'Note snoozed.'
-                  : 'Requirement snoozed.'
+                  : snoozeSelection.kind === 'approval'
+                    ? 'Approval work snoozed.'
+                    : 'Requirement snoozed.'
                 : 'Could not save the snooze on this device.'
             );
             if (saved) setFocusSnoozed(snoozeSelection.kind);

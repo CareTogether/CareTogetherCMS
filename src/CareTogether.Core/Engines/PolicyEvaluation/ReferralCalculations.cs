@@ -397,8 +397,22 @@ namespace CareTogether.Engines.PolicyEvaluation
                     if (functionVariant == null)
                         return ImmutableList<MissingArrangementRequirement>.Empty;
 
+                    var assignmentEpisodes = ArrangementMonitoringEpisode.ForAssignmentRules(
+                        arrangementPolicy,
+                        fva.ArrangementFunction,
+                        functionVariant,
+                        arrangement,
+                        new Resources.V1Cases.VolunteerAssignmentKey(
+                            fva.FamilyId,
+                            null,
+                            fva.ArrangementFunction,
+                            fva.ArrangementFunctionVariant
+                        ),
+                        policyRevision
+                    );
+
                     return functionVariant
-                        .RequiredMonitoringActions_PRE_MIGRATION.SelectMany(monitoringRequirement =>
+                        .RequiredMonitoringActions_PRE_MIGRATION.SelectMany((monitoringRequirement, ruleIndex) =>
                             (
                                 arrangement.StartedAt.HasValue
                                     ? CalculateMissingMonitoringRequirementInstances(
@@ -440,7 +454,12 @@ namespace CareTogether.Engines.PolicyEvaluation
                                     monitoringRequirement.Action,
                                     DueBy: missingDueDate > today ? missingDueDate : null,
                                     PastDueSince: missingDueDate <= today ? missingDueDate : null
-                                ))
+                                )
+                                {
+                                    MonitoringEpisode = assignmentEpisodes[ruleIndex]?.Invoke(
+                                        missingDueDate
+                                    ),
+                                })
                         )
                         .ToImmutableList();
                 })
@@ -460,8 +479,22 @@ namespace CareTogether.Engines.PolicyEvaluation
                     if (functionVariant == null)
                         return ImmutableList<MissingArrangementRequirement>.Empty;
 
+                    var assignmentEpisodes = ArrangementMonitoringEpisode.ForAssignmentRules(
+                        arrangementPolicy,
+                        iva.ArrangementFunction,
+                        functionVariant,
+                        arrangement,
+                        new Resources.V1Cases.VolunteerAssignmentKey(
+                            iva.FamilyId,
+                            iva.PersonId,
+                            iva.ArrangementFunction,
+                            iva.ArrangementFunctionVariant
+                        ),
+                        policyRevision
+                    );
+
                     return functionVariant
-                        .RequiredMonitoringActions_PRE_MIGRATION.SelectMany(monitoringRequirement =>
+                        .RequiredMonitoringActions_PRE_MIGRATION.SelectMany((monitoringRequirement, ruleIndex) =>
                             (
                                 arrangement.StartedAt.HasValue
                                     ? CalculateMissingMonitoringRequirementInstances(
@@ -503,15 +536,33 @@ namespace CareTogether.Engines.PolicyEvaluation
                                     monitoringRequirement.Action,
                                     DueBy: missingDueDate > today ? missingDueDate : null,
                                     PastDueSince: missingDueDate <= today ? missingDueDate : null
-                                ))
+                                )
+                                {
+                                    MonitoringEpisode = assignmentEpisodes[ruleIndex]?.Invoke(
+                                        missingDueDate
+                                    ),
+                                })
                         )
                         .ToImmutableList();
                 })
                 .ToImmutableList();
 
-            return arrangementLevelResults
+            var results = arrangementLevelResults
                 .Concat(familyAssignmentResults)
                 .Concat(individualAssignmentResults)
+                .ToImmutableList();
+            var sharedEpisodes = results
+                .Where(requirement => requirement.MonitoringEpisode is not null)
+                .GroupBy(requirement => requirement.MonitoringEpisode)
+                .Where(group => group.Count() > 1)
+                .Select(group => group.Key)
+                .ToHashSet();
+            return results
+                .Select(requirement =>
+                    requirement.MonitoringEpisode is { } episode && sharedEpisodes.Contains(episode)
+                        ? requirement with { MonitoringEpisode = null }
+                        : requirement
+                )
                 .ToImmutableList();
         }
 

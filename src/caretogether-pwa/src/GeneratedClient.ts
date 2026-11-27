@@ -5464,6 +5464,7 @@ export interface IRecordsAggregate {
 
 export class CommunityRecordsAggregate extends RecordsAggregate implements ICommunityRecordsAggregate {
     community!: CommunityInfo;
+    snoozeFreshness?: RequirementSnoozeFreshness | undefined;
 
     constructor(data?: ICommunityRecordsAggregate) {
         super(data);
@@ -5477,6 +5478,7 @@ export class CommunityRecordsAggregate extends RecordsAggregate implements IComm
         super.init(_data);
         if (_data) {
             this.community = _data["community"] ? CommunityInfo.fromJS(_data["community"]) : new CommunityInfo();
+            this.snoozeFreshness = _data["snoozeFreshness"] ? RequirementSnoozeFreshness.fromJS(_data["snoozeFreshness"]) : undefined as any;
         }
     }
 
@@ -5490,6 +5492,7 @@ export class CommunityRecordsAggregate extends RecordsAggregate implements IComm
     override toJSON(data?: any) {
         data = typeof data === 'object' ? data : {};
         data["community"] = this.community ? this.community.toJSON() : undefined as any;
+        data["snoozeFreshness"] = this.snoozeFreshness ? this.snoozeFreshness.toJSON() : undefined as any;
         super.toJSON(data);
         return data;
     }
@@ -5497,6 +5500,7 @@ export class CommunityRecordsAggregate extends RecordsAggregate implements IComm
 
 export interface ICommunityRecordsAggregate extends IRecordsAggregate {
     community: CommunityInfo;
+    snoozeFreshness?: RequirementSnoozeFreshness | undefined;
 }
 
 export class CommunityInfo implements ICommunityInfo {
@@ -5874,6 +5878,7 @@ export class OrganizationRoleApprovalStatus implements IOrganizationRoleApproval
     effectiveRoleApprovalStatus?: DateOnlyTimelineOfRoleApprovalStatus | undefined;
     roleVersionApprovals!: OrganizationRoleVersionApprovalStatus[];
     currentStatus?: RoleApprovalStatus | undefined;
+    snoozeEpisodeToken?: string | undefined;
 
     constructor(data?: IOrganizationRoleApprovalStatus) {
         if (data) {
@@ -5896,6 +5901,7 @@ export class OrganizationRoleApprovalStatus implements IOrganizationRoleApproval
                     this.roleVersionApprovals!.push(OrganizationRoleVersionApprovalStatus.fromJS(item));
             }
             this.currentStatus = _data["currentStatus"];
+            this.snoozeEpisodeToken = _data["snoozeEpisodeToken"];
         }
     }
 
@@ -5915,6 +5921,7 @@ export class OrganizationRoleApprovalStatus implements IOrganizationRoleApproval
                 data["roleVersionApprovals"].push(item ? item.toJSON() : undefined as any);
         }
         data["currentStatus"] = this.currentStatus;
+        data["snoozeEpisodeToken"] = this.snoozeEpisodeToken;
         return data;
     }
 }
@@ -5923,6 +5930,7 @@ export interface IOrganizationRoleApprovalStatus {
     effectiveRoleApprovalStatus?: DateOnlyTimelineOfRoleApprovalStatus | undefined;
     roleVersionApprovals: OrganizationRoleVersionApprovalStatus[];
     currentStatus?: RoleApprovalStatus | undefined;
+    snoozeEpisodeToken?: string | undefined;
 }
 
 export class DateOnlyTimelineOfRoleApprovalStatus implements IDateOnlyTimelineOfRoleApprovalStatus {
@@ -6440,6 +6448,7 @@ export class DisclosedApprovalRenewalCandidate implements IDisclosedApprovalRene
     firstUncoveredOnUtc!: Date;
     state!: DisclosedApprovalRenewalState;
     affectedRoles!: DisclosedApprovalRenewalRole[];
+    snoozeEpisodeToken?: string | undefined;
 
     constructor(data?: IDisclosedApprovalRenewalCandidate) {
         if (data) {
@@ -6465,6 +6474,7 @@ export class DisclosedApprovalRenewalCandidate implements IDisclosedApprovalRene
                 for (let item of _data["affectedRoles"])
                     this.affectedRoles!.push(DisclosedApprovalRenewalRole.fromJS(item));
             }
+            this.snoozeEpisodeToken = _data["snoozeEpisodeToken"];
         }
     }
 
@@ -6487,6 +6497,7 @@ export class DisclosedApprovalRenewalCandidate implements IDisclosedApprovalRene
             for (let item of this.affectedRoles)
                 data["affectedRoles"].push(item ? item.toJSON() : undefined as any);
         }
+        data["snoozeEpisodeToken"] = this.snoozeEpisodeToken;
         return data;
     }
 }
@@ -6498,6 +6509,7 @@ export interface IDisclosedApprovalRenewalCandidate {
     firstUncoveredOnUtc: Date;
     state: DisclosedApprovalRenewalState;
     affectedRoles: DisclosedApprovalRenewalRole[];
+    snoozeEpisodeToken?: string | undefined;
 }
 
 export abstract class ApprovalRenewalTarget implements IApprovalRenewalTarget {
@@ -6702,6 +6714,58 @@ export enum ApprovalRenewalRoleScope {
     Family = 0,
     Individual = 1,
     Organization = 2,
+}
+
+export class RequirementSnoozeFreshness implements IRequirementSnoozeFreshness {
+    referralsRevision!: number;
+    policyRevision!: string;
+    approvalsRevision?: number | undefined;
+    directoryRevision?: number | undefined;
+    organizationApprovalsRevision?: number | undefined;
+
+    constructor(data?: IRequirementSnoozeFreshness) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.referralsRevision = _data["referralsRevision"];
+            this.policyRevision = _data["policyRevision"];
+            this.approvalsRevision = _data["approvalsRevision"];
+            this.directoryRevision = _data["directoryRevision"];
+            this.organizationApprovalsRevision = _data["organizationApprovalsRevision"];
+        }
+    }
+
+    static fromJS(data: any): RequirementSnoozeFreshness {
+        data = typeof data === 'object' ? data : {};
+        let result = new RequirementSnoozeFreshness();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["referralsRevision"] = this.referralsRevision;
+        data["policyRevision"] = this.policyRevision;
+        data["approvalsRevision"] = this.approvalsRevision;
+        data["directoryRevision"] = this.directoryRevision;
+        data["organizationApprovalsRevision"] = this.organizationApprovalsRevision;
+        return data;
+    }
+}
+
+export interface IRequirementSnoozeFreshness {
+    referralsRevision: number;
+    policyRevision: string;
+    approvalsRevision?: number | undefined;
+    directoryRevision?: number | undefined;
+    organizationApprovalsRevision?: number | undefined;
 }
 
 export class FamilyRecordsAggregate extends RecordsAggregate implements IFamilyRecordsAggregate {
@@ -9185,6 +9249,7 @@ export class FamilyRoleApprovalStatus implements IFamilyRoleApprovalStatus {
     effectiveRoleApprovalStatus?: DateOnlyTimelineOfRoleApprovalStatus | undefined;
     roleVersionApprovals!: FamilyRoleVersionApprovalStatus[];
     currentStatus?: RoleApprovalStatus | undefined;
+    snoozeEpisodeToken?: string | undefined;
     currentMissingFamilyRequirements!: ValueTupleOfStringAndValueTuple_2Of[];
     currentMissingOptionalFamilyRequirements!: ValueTupleOfStringAndValueTuple_2Of[];
     currentAvailableFamilyApplications!: string[];
@@ -9215,6 +9280,7 @@ export class FamilyRoleApprovalStatus implements IFamilyRoleApprovalStatus {
                     this.roleVersionApprovals!.push(FamilyRoleVersionApprovalStatus.fromJS(item));
             }
             this.currentStatus = _data["currentStatus"];
+            this.snoozeEpisodeToken = _data["snoozeEpisodeToken"];
             if (Array.isArray(_data["currentMissingFamilyRequirements"])) {
                 this.currentMissingFamilyRequirements = [] as any;
                 for (let item of _data["currentMissingFamilyRequirements"])
@@ -9254,6 +9320,7 @@ export class FamilyRoleApprovalStatus implements IFamilyRoleApprovalStatus {
                 data["roleVersionApprovals"].push(item ? item.toJSON() : undefined as any);
         }
         data["currentStatus"] = this.currentStatus;
+        data["snoozeEpisodeToken"] = this.snoozeEpisodeToken;
         if (Array.isArray(this.currentMissingFamilyRequirements)) {
             data["currentMissingFamilyRequirements"] = [];
             for (let item of this.currentMissingFamilyRequirements)
@@ -9282,6 +9349,7 @@ export interface IFamilyRoleApprovalStatus {
     effectiveRoleApprovalStatus?: DateOnlyTimelineOfRoleApprovalStatus | undefined;
     roleVersionApprovals: FamilyRoleVersionApprovalStatus[];
     currentStatus?: RoleApprovalStatus | undefined;
+    snoozeEpisodeToken?: string | undefined;
     currentMissingFamilyRequirements: ValueTupleOfStringAndValueTuple_2Of[];
     currentMissingOptionalFamilyRequirements: ValueTupleOfStringAndValueTuple_2Of[];
     currentAvailableFamilyApplications: string[];
@@ -9731,6 +9799,7 @@ export class IndividualRoleApprovalStatus implements IIndividualRoleApprovalStat
     effectiveRoleApprovalStatus?: DateOnlyTimelineOfRoleApprovalStatus | undefined;
     roleVersionApprovals!: IndividualRoleVersionApprovalStatus[];
     currentStatus?: RoleApprovalStatus | undefined;
+    snoozeEpisodeToken?: string | undefined;
     currentMissingRequirements!: ValueTupleOfStringAndValueTuple_2Of[];
     currentMissingOptionalRequirements!: ValueTupleOfStringAndValueTuple_2Of[];
     currentAvailableApplications!: string[];
@@ -9759,6 +9828,7 @@ export class IndividualRoleApprovalStatus implements IIndividualRoleApprovalStat
                     this.roleVersionApprovals!.push(IndividualRoleVersionApprovalStatus.fromJS(item));
             }
             this.currentStatus = _data["currentStatus"];
+            this.snoozeEpisodeToken = _data["snoozeEpisodeToken"];
             if (Array.isArray(_data["currentMissingRequirements"])) {
                 this.currentMissingRequirements = [] as any;
                 for (let item of _data["currentMissingRequirements"])
@@ -9793,6 +9863,7 @@ export class IndividualRoleApprovalStatus implements IIndividualRoleApprovalStat
                 data["roleVersionApprovals"].push(item ? item.toJSON() : undefined as any);
         }
         data["currentStatus"] = this.currentStatus;
+        data["snoozeEpisodeToken"] = this.snoozeEpisodeToken;
         if (Array.isArray(this.currentMissingRequirements)) {
             data["currentMissingRequirements"] = [];
             for (let item of this.currentMissingRequirements)
@@ -9816,6 +9887,7 @@ export interface IIndividualRoleApprovalStatus {
     effectiveRoleApprovalStatus?: DateOnlyTimelineOfRoleApprovalStatus | undefined;
     roleVersionApprovals: IndividualRoleVersionApprovalStatus[];
     currentStatus?: RoleApprovalStatus | undefined;
+    snoozeEpisodeToken?: string | undefined;
     currentMissingRequirements: ValueTupleOfStringAndValueTuple_2Of[];
     currentMissingOptionalRequirements: ValueTupleOfStringAndValueTuple_2Of[];
     currentAvailableApplications: string[];
@@ -10187,46 +10259,6 @@ export interface INote {
 export enum NoteStatus {
     Draft = 0,
     Approved = 1,
-}
-
-export class RequirementSnoozeFreshness implements IRequirementSnoozeFreshness {
-    referralsRevision!: number;
-    policyRevision!: string;
-
-    constructor(data?: IRequirementSnoozeFreshness) {
-        if (data) {
-            for (var property in data) {
-                if (data.hasOwnProperty(property))
-                    (this as any)[property] = (data as any)[property];
-            }
-        }
-    }
-
-    init(_data?: any) {
-        if (_data) {
-            this.referralsRevision = _data["referralsRevision"];
-            this.policyRevision = _data["policyRevision"];
-        }
-    }
-
-    static fromJS(data: any): RequirementSnoozeFreshness {
-        data = typeof data === 'object' ? data : {};
-        let result = new RequirementSnoozeFreshness();
-        result.init(data);
-        return result;
-    }
-
-    toJSON(data?: any) {
-        data = typeof data === 'object' ? data : {};
-        data["referralsRevision"] = this.referralsRevision;
-        data["policyRevision"] = this.policyRevision;
-        return data;
-    }
-}
-
-export interface IRequirementSnoozeFreshness {
-    referralsRevision: number;
-    policyRevision: string;
 }
 
 export class ReferralRecordsAggregate extends RecordsAggregate implements IReferralRecordsAggregate {

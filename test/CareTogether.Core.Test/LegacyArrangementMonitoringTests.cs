@@ -214,19 +214,22 @@ namespace CareTogether.Core.Test
                 ArrangementMonitoringEpisode.RuleIdentity(hosting, LegacyRule),
                 ArrangementMonitoringEpisode.RuleIdentity(hosting, conflicting)
             );
-            Assert.IsNull(
-                ArrangementMonitoringEpisode.RuleIdentity(
-                    hosting,
-                    LegacyRule with
-                    {
-                        Recurrence = new ChildCareOccurrenceBasedRecurrencePolicy(
-                            TimeSpan.FromDays(1),
-                            1,
-                            0,
-                            false
-                        ),
-                    }
-                )
+            var childCare = ArrangementMonitoringEpisode.RuleIdentity(
+                hosting,
+                LegacyRule with
+                {
+                    Recurrence = new ChildCareOccurrenceBasedRecurrencePolicy(
+                        TimeSpan.FromDays(1),
+                        1,
+                        0,
+                        false
+                    ),
+                }
+            );
+            Assert.IsNotNull(childCare);
+            Assert.AreNotEqual(
+                ArrangementMonitoringEpisode.RuleIdentity(hosting, LegacyRule),
+                childCare
             );
         }
 

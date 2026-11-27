@@ -7,7 +7,7 @@ namespace CareTogether.Resources.OrganizationApprovals
 {
     public sealed class OrganizationApprovalsResource : IOrganizationApprovalsResource
     {
-        private readonly IEventLog<OrganizationApprovalEvent> eventLog;
+        private readonly TrackedEventStream<OrganizationApprovalEvent> stream;
         private readonly ConcurrentLockingStore<
             (Guid tenantId, Guid locationId),
             OrganizationApprovalModel
@@ -15,13 +15,19 @@ namespace CareTogether.Resources.OrganizationApprovals
 
         public OrganizationApprovalsResource(IEventLog<OrganizationApprovalEvent> eventLog)
         {
-            this.eventLog = eventLog;
+            stream = new TrackedEventStream<OrganizationApprovalEvent>(
+                eventLog,
+                domainEvent =>
+                    domainEvent is OrganizationApprovalCommandExecuted e
+                        ? e.Command.OrganizationId
+                        : null
+            );
             tenantModels = new ConcurrentLockingStore<
                 (Guid tenantId, Guid locationId),
                 OrganizationApprovalModel
             >(key =>
                 OrganizationApprovalModel.InitializeAsync(
-                    eventLog.GetAllEventsAsync(key.tenantId, key.locationId)
+                    stream.ReplayAsync(key.tenantId, key.locationId)
                 )
             );
         }
@@ -54,14 +60,33 @@ namespace CareTogether.Resources.OrganizationApprovals
         {
             using var lockedModel = await tenantModels.WriteLockItemAsync((tenantId, locationId));
             var result = lockedModel.Value.ExecuteCommand(command, userId, DateTime.UtcNow);
-            await eventLog.AppendEventAsync(
+            await stream.CommitAsync(
                 tenantId,
                 locationId,
                 result.Event,
-                result.SequenceNumber
+                result.SequenceNumber,
+                result.OnCommit
             );
-            result.OnCommit();
             return result.Entry;
         }
+
+        internal async Task<EventStreamSnapshot?> CaptureStreamAsync(
+            Guid organizationId,
+            Guid locationId
+        )
+        {
+            using var lockedModel = await tenantModels.ReadLockItemAsync(
+                (organizationId, locationId)
+            );
+            return stream.Current(organizationId, locationId);
+        }
+
+        internal async Task<bool> VerifyStreamAsync(
+            Guid organizationId,
+            Guid locationId,
+            EventStreamSnapshot captured
+        ) =>
+            ReferenceEquals(await CaptureStreamAsync(organizationId, locationId), captured)
+            && await stream.IsCurrentAsync(organizationId, locationId, captured);
     }
 }

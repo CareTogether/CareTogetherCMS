@@ -244,6 +244,9 @@ namespace CareTogether.Engines.PolicyEvaluation
         public RoleApprovalStatus? CurrentStatus =>
             EffectiveRoleApprovalStatus?.ValueAt(DateTime.UtcNow);
 
+        [Newtonsoft.Json.JsonProperty(NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
+        public string? SnoozeEpisodeToken { get; init; }
+
         public ImmutableList<(
             string ActionName,
             (string Version, string RoleName)[] Versions
@@ -383,6 +386,9 @@ namespace CareTogether.Engines.PolicyEvaluation
     {
         public RoleApprovalStatus? CurrentStatus =>
             EffectiveRoleApprovalStatus?.ValueAt(DateTime.UtcNow);
+
+        [Newtonsoft.Json.JsonProperty(NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
+        public string? SnoozeEpisodeToken { get; init; }
 
         public ImmutableList<(
             string ActionName,
@@ -528,6 +534,9 @@ namespace CareTogether.Engines.PolicyEvaluation
     {
         public RoleApprovalStatus? CurrentStatus =>
             EffectiveRoleApprovalStatus?.ValueAt(DateTime.UtcNow);
+
+        [Newtonsoft.Json.JsonProperty(NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
+        public string? SnoozeEpisodeToken { get; init; }
 
         [JsonIgnore]
         [Newtonsoft.Json.JsonIgnore]

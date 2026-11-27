@@ -138,10 +138,24 @@ namespace CareTogether.Managers.Records
         public RequirementSnoozeFreshness? SnoozeFreshness { get; init; }
     }
 
-    public sealed record RequirementSnoozeFreshness(long ReferralsRevision, string PolicyRevision);
+    public sealed record RequirementSnoozeFreshness(long ReferralsRevision, string PolicyRevision)
+    {
+        [Newtonsoft.Json.JsonProperty(NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
+        public long? ApprovalsRevision { get; init; }
+
+        [Newtonsoft.Json.JsonProperty(NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
+        public long? DirectoryRevision { get; init; }
+
+        [Newtonsoft.Json.JsonProperty(NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
+        public long? OrganizationApprovalsRevision { get; init; }
+    }
 
     public sealed record CommunityRecordsAggregate(CommunityInfo Community)
-        : RecordsAggregate(Community.Community.Id);
+        : RecordsAggregate(Community.Community.Id)
+    {
+        [Newtonsoft.Json.JsonProperty(NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
+        public RequirementSnoozeFreshness? SnoozeFreshness { get; init; }
+    }
 
     public sealed record ReferralRecordsAggregate(V1ReferralInfo Referral)
         : RecordsAggregate(Referral.Referral.ReferralId);

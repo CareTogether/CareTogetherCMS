@@ -27,10 +27,12 @@ export type ApprovalExpirationWorkItem = {
   expirationDate: string;
   status: 'expiring' | 'expired';
   previousStatus: EffectiveStatus;
+  snoozeToken?: string;
 };
 
 type EffectiveRole = {
   effectiveRoleApprovalStatus?: DateOnlyTimelineOfRoleApprovalStatus;
+  snoozeEpisodeToken?: string;
 };
 
 const millisecondsPerDay = 86_400_000;
@@ -187,7 +189,20 @@ export function buildApprovalExpirationWorkQueue(
         ...subjectIds,
         roleName,
       ]);
-      items.push({ id, scope, target, roleName, ...expiration });
+      items.push({
+        id,
+        scope,
+        target,
+        roleName,
+        ...expiration,
+        ...(hasIdentity(role?.snoozeEpisodeToken) && {
+          snoozeToken: JSON.stringify([
+            'approval-expiration',
+            role.snoozeEpisodeToken,
+            expiration.expirationDate,
+          ]),
+        }),
+      });
     }
   }
 

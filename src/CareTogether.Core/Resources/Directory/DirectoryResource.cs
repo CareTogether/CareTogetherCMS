@@ -9,7 +9,7 @@ namespace CareTogether.Resources.Directory
 {
     public sealed class DirectoryResource : IDirectoryResource
     {
-        private readonly IEventLog<DirectoryEvent> eventLog;
+        private readonly TrackedEventStream<DirectoryEvent> stream;
         private readonly IFileStore fileStore;
         private readonly ConcurrentLockingStore<
             (Guid organizationId, Guid locationId),
@@ -18,14 +18,18 @@ namespace CareTogether.Resources.Directory
 
         public DirectoryResource(IEventLog<DirectoryEvent> eventLog, IFileStore fileStore)
         {
-            this.eventLog = eventLog;
+            stream = new TrackedEventStream<DirectoryEvent>(
+                eventLog,
+                domainEvent =>
+                    domainEvent is FamilyCommandExecuted executed ? executed.Command.FamilyId : null
+            );
             this.fileStore = fileStore;
             tenantModels = new ConcurrentLockingStore<
                 (Guid organizationId, Guid locationId),
                 DirectoryModel
             >(key =>
                 DirectoryModel.InitializeAsync(
-                    eventLog.GetAllEventsAsync(key.organizationId, key.locationId)
+                    stream.ReplayAsync(key.organizationId, key.locationId)
                 )
             );
         }
@@ -49,13 +53,13 @@ namespace CareTogether.Resources.Directory
                     DateTime.UtcNow
                 );
 
-                await eventLog.AppendEventAsync(
+                await stream.CommitAsync(
                     organizationId,
                     locationId,
                     result.Event,
-                    result.SequenceNumber
+                    result.SequenceNumber,
+                    result.OnCommit
                 );
-                result.OnCommit();
                 return result.Family;
             }
         }
@@ -79,13 +83,13 @@ namespace CareTogether.Resources.Directory
                     DateTime.UtcNow
                 );
 
-                await eventLog.AppendEventAsync(
+                await stream.CommitAsync(
                     organizationId,
                     locationId,
                     result.Event,
-                    result.SequenceNumber
+                    result.SequenceNumber,
+                    result.OnCommit
                 );
-                result.OnCommit();
                 return result.Person;
             }
         }
@@ -204,5 +208,24 @@ namespace CareTogether.Resources.Directory
 
             return valetUrl;
         }
+
+        internal async Task<EventStreamSnapshot?> CaptureStreamAsync(
+            Guid organizationId,
+            Guid locationId
+        )
+        {
+            using var lockedModel = await tenantModels.ReadLockItemAsync(
+                (organizationId, locationId)
+            );
+            return stream.Current(organizationId, locationId);
+        }
+
+        internal async Task<bool> VerifyStreamAsync(
+            Guid organizationId,
+            Guid locationId,
+            EventStreamSnapshot captured
+        ) =>
+            ReferenceEquals(await CaptureStreamAsync(organizationId, locationId), captured)
+            && await stream.IsCurrentAsync(organizationId, locationId, captured);
     }
 }

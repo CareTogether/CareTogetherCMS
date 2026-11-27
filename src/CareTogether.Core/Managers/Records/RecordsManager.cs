@@ -120,6 +120,11 @@ namespace CareTogether.Managers.Records
                 ? ArrangementSnoozeCertification.CertifyAsync(
                     cases,
                     policies,
+                    new ApprovalStreams(
+                        approvalsResource as ApprovalsResource,
+                        directoryResource as DirectoryResource,
+                        organizationApprovalsResource as OrganizationApprovalsResource
+                    ),
                     organizationId,
                     locationId,
                     render

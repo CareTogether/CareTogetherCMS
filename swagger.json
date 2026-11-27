@@ -3597,6 +3597,14 @@
             "properties": {
               "community": {
                 "$ref": "#/components/schemas/CommunityInfo"
+              },
+              "snoozeFreshness": {
+                "nullable": true,
+                "oneOf": [
+                  {
+                    "$ref": "#/components/schemas/RequirementSnoozeFreshness"
+                  }
+                ]
               }
             }
           }
@@ -3809,6 +3817,10 @@
                 "$ref": "#/components/schemas/RoleApprovalStatus"
               }
             ]
+          },
+          "snoozeEpisodeToken": {
+            "type": "string",
+            "nullable": true
           }
         }
       },
@@ -4151,6 +4163,10 @@
             "items": {
               "$ref": "#/components/schemas/DisclosedApprovalRenewalRole"
             }
+          },
+          "snoozeEpisodeToken": {
+            "type": "string",
+            "nullable": true
           }
         }
       },
@@ -4281,6 +4297,38 @@
           1,
           2
         ]
+      },
+      "RequirementSnoozeFreshness": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "referralsRevision",
+          "policyRevision"
+        ],
+        "properties": {
+          "referralsRevision": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "policyRevision": {
+            "type": "string"
+          },
+          "approvalsRevision": {
+            "type": "integer",
+            "format": "int64",
+            "nullable": true
+          },
+          "directoryRevision": {
+            "type": "integer",
+            "format": "int64",
+            "nullable": true
+          },
+          "organizationApprovalsRevision": {
+            "type": "integer",
+            "format": "int64",
+            "nullable": true
+          }
+        }
       },
       "FamilyRecordsAggregate": {
         "allOf": [
@@ -5803,6 +5851,10 @@
               }
             ]
           },
+          "snoozeEpisodeToken": {
+            "type": "string",
+            "nullable": true
+          },
           "currentMissingFamilyRequirements": {
             "type": "array",
             "items": {
@@ -6066,6 +6118,10 @@
                 "$ref": "#/components/schemas/RoleApprovalStatus"
               }
             ]
+          },
+          "snoozeEpisodeToken": {
+            "type": "string",
+            "nullable": true
           },
           "currentMissingRequirements": {
             "type": "array",
@@ -6346,23 +6402,6 @@
           0,
           1
         ]
-      },
-      "RequirementSnoozeFreshness": {
-        "type": "object",
-        "additionalProperties": false,
-        "required": [
-          "referralsRevision",
-          "policyRevision"
-        ],
-        "properties": {
-          "referralsRevision": {
-            "type": "integer",
-            "format": "int64"
-          },
-          "policyRevision": {
-            "type": "string"
-          }
-        }
       },
       "ReferralRecordsAggregate": {
         "allOf": [

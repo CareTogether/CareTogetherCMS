@@ -63,7 +63,22 @@ namespace CareTogether.Core.Test
                 Guid.NewGuid(),
                 Guid.NewGuid()
             );
+            await Configuration()
+                .UpsertAsync(
+                    organizationId,
+                    Guid.Empty,
+                    "config",
+                    JsonConvert.DeserializeObject<OrganizationConfiguration>("{}")!
+                );
         }
+
+        private JsonBlobObjectStore<OrganizationConfiguration> Configuration() =>
+            new(
+                client,
+                "Configuration",
+                new MemoryCache(new MemoryCacheOptions()),
+                TimeSpan.FromMinutes(1)
+            );
 
         [TestCleanup]
         public async Task Cleanup() =>
@@ -74,7 +89,7 @@ namespace CareTogether.Core.Test
 
         private PoliciesResource Policies() =>
             new(
-                new MemoryObjectStore<OrganizationConfiguration>(),
+                Configuration(),
                 new JsonBlobObjectStore<EffectiveLocationPolicy>(
                     client,
                     "LocationPolicies",

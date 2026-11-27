@@ -1,80 +1,115 @@
 import type {
+  CommunityRecordsAggregate,
   FamilyRecordsAggregate,
   RecordsAggregate,
+  RequirementSnoozeFreshness,
 } from '../GeneratedClient';
 
-type FreshnessMark = { revision: number; policy: string | null };
+type Revisions = (number | undefined)[];
+type FreshnessMark = { revisions: Revisions; policy: string | null };
+type CertifiedRecord = FamilyRecordsAggregate | CommunityRecordsAggregate;
 
-type RequirementData = { snoozeEpisodeToken?: string };
-type CaseData = {
-  arrangements?: { missingRequirements?: RequirementData[] }[];
-};
-type FamilyData = {
-  family?: {
-    partneringFamilyInfo?: {
-      openV1Case?: CaseData;
-      closedV1Cases?: CaseData[];
-    };
-  };
-};
+const revisionKeys = [
+  'referralsRevision',
+  'approvalsRevision',
+  'directoryRevision',
+  'organizationApprovalsRevision',
+] as const satisfies readonly (keyof RequirementSnoozeFreshness)[];
 
-function isFamilyRecord(
-  record: RecordsAggregate
-): record is FamilyRecordsAggregate {
-  return 'family' in record;
+function isCertifiable(record: RecordsAggregate): record is CertifiedRecord {
+  return 'family' in record || 'community' in record;
 }
 
-function requirements(family: FamilyData) {
-  const info = family.family?.partneringFamilyInfo;
-  const cases = info ? [info.openV1Case, ...(info.closedV1Cases ?? [])] : [];
-  return cases.flatMap((v1Case) =>
-    (v1Case?.arrangements ?? []).flatMap(
-      (arrangement) => arrangement.missingRequirements ?? []
-    )
+function hasSnoozeToken(value: unknown): boolean {
+  if (Array.isArray(value)) return value.some(hasSnoozeToken);
+  if (!value || typeof value !== 'object' || value instanceof Date)
+    return false;
+  return Object.entries(value).some(
+    ([key, nested]) =>
+      (key === 'snoozeEpisodeToken' && Boolean(nested)) ||
+      hasSnoozeToken(nested)
   );
 }
 
-function withoutSnoozeTokens(record: FamilyRecordsAggregate) {
-  if (
-    !requirements(record as FamilyData).some(
-      (requirement) => requirement.snoozeEpisodeToken
-    )
-  )
-    return record;
+function removeSnoozeTokens(value: unknown) {
+  if (Array.isArray(value)) {
+    value.forEach(removeSnoozeTokens);
+    return;
+  }
+  if (!value || typeof value !== 'object') return;
+  const data = value as Record<string, unknown>;
+  delete data.snoozeEpisodeToken;
+  Object.values(data).forEach(removeSnoozeTokens);
+}
 
-  const data: FamilyData = record.toJSON();
-  for (const requirement of requirements(data))
-    delete requirement.snoozeEpisodeToken;
+function withoutSnoozeTokens(record: CertifiedRecord) {
+  if (!hasSnoozeToken(record)) return record;
+  const data: unknown = record.toJSON();
+  removeSnoozeTokens(data);
   const type = record.constructor as unknown as {
-    fromJS(data: unknown): FamilyRecordsAggregate;
+    fromJS(data: unknown): CertifiedRecord;
   };
   return type.fromJS(data);
+}
+
+function readRevisions(
+  freshness: RequirementSnoozeFreshness | undefined
+): Revisions | undefined {
+  if (!freshness?.policyRevision) return;
+  const revisions = revisionKeys.map((key) => freshness[key]);
+  return revisions[0] !== undefined &&
+    revisions.every(
+      (revision) => revision === undefined || Number.isSafeInteger(revision)
+    )
+    ? revisions
+    : undefined;
+}
+
+function compare(incoming: Revisions, known: Revisions) {
+  if (
+    incoming.some(
+      (revision, index) =>
+        (revision === undefined) !== (known[index] === undefined)
+    )
+  )
+    return 'incomparable';
+  const pairs = incoming.flatMap((revision, index) =>
+    revision === undefined ? [] : [[revision, known[index]!] as const]
+  );
+  if (pairs.every(([next, previous]) => next === previous)) return 'equal';
+  if (pairs.every(([next, previous]) => next >= previous)) return 'newer';
+  if (pairs.every(([next, previous]) => next <= previous)) return 'older';
+  return 'incomparable';
 }
 
 export function createSnoozeFreshnessTracker() {
   const marks = new Map<string, FreshnessMark>();
 
   function admit(record: RecordsAggregate): RecordsAggregate {
-    if (!isFamilyRecord(record)) return record;
+    if (!isCertifiable(record)) return record;
 
-    const revision = record.snoozeFreshness?.referralsRevision;
+    const revisions = readRevisions(record.snoozeFreshness);
     const policy = record.snoozeFreshness?.policyRevision;
-    if (
-      !record.id ||
-      !Number.isSafeInteger(revision) ||
-      typeof revision !== 'number' ||
-      !policy
-    )
-      return withoutSnoozeTokens(record);
+    if (!record.id || !revisions || !policy) return withoutSnoozeTokens(record);
 
     const mark = marks.get(record.id);
-    if (!mark || revision > mark.revision) {
-      marks.set(record.id, { revision, policy });
+    const comparison = mark ? compare(revisions, mark.revisions) : 'newer';
+    if (comparison === 'newer') {
+      marks.set(record.id, { revisions, policy });
       return record;
     }
-    if (revision === mark.revision && mark.policy === policy) return record;
-    if (revision === mark.revision)
-      marks.set(record.id, { revision, policy: null });
+    if (comparison === 'equal' && mark?.policy === policy) return record;
+    if (mark && comparison === 'equal')
+      marks.set(record.id, { revisions, policy: null });
+    if (mark && comparison === 'incomparable')
+      marks.set(record.id, {
+        revisions: revisions.map((revision, index) =>
+          revision === undefined || mark.revisions[index] === undefined
+            ? (revision ?? mark.revisions[index])
+            : Math.max(revision, mark.revisions[index]!)
+        ),
+        policy: null,
+      });
     return withoutSnoozeTokens(record);
   }
 

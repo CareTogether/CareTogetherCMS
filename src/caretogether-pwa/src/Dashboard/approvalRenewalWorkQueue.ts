@@ -18,6 +18,7 @@ export type ApprovalRenewalWorkItem = Pick<
   DisclosedApprovalRenewalCandidate,
   'candidateKey' | 'actionName' | 'state'
 > & {
+  snoozeToken?: string;
   scope: LocationScope;
   target: RenewalTarget;
   firstUncoveredOnUtc: string;
@@ -70,6 +71,7 @@ function normalize(
     firstUncoveredOnUtc,
     state,
     affectedRoles,
+    snoozeEpisodeToken,
   } = candidate;
   if (
     !target ||
@@ -102,6 +104,9 @@ function normalize(
       affectedRoles,
       scope,
       target,
+      ...(hasIdentity(snoozeEpisodeToken) && {
+        snoozeToken: snoozeEpisodeToken,
+      }),
     },
   ];
 }
