@@ -13,7 +13,7 @@ namespace CareTogether.Engines.PolicyEvaluation
     {
         public sealed record RequirementCheckResult(bool IsMetOrExempted, DateOnly? ExpiresAtUtc);
 
-        internal static KeyValuePair<string, ActionRequirement>? FindActionDefinition(
+        private static KeyValuePair<string, ActionRequirement>? FindActionDefinition(
             EffectiveLocationPolicy locationPolicy,
             string requiredAction
         )

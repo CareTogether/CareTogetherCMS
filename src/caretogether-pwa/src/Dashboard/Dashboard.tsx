@@ -36,7 +36,7 @@ import {
 } from './DashboardRequirementPanel';
 import { DashboardSnoozeDrawer } from './DashboardSnoozeDrawer';
 import type { ArrangementWorkQueueItem } from './arrangementWorkQueue';
-import { selectDashboardApprovalWork } from './dashboardApprovalRenewals';
+import { selectDashboardApprovalWork } from './dashboardApprovalWork';
 import { filterDashboardNoteReview } from './dashboardNoteReview';
 import {
   dashboardPreferencesKey,
@@ -60,7 +60,7 @@ import {
 } from './dashboardSnoozes';
 import { openDashboardArrangement } from './dashboardWorkNavigation';
 import { useApprovalExpirationWorkQueue } from './useApprovalExpirationWorkQueue';
-import { useApprovalRenewalWorkQueue } from './useApprovalRenewalWorkQueue';
+import { useExpiringRequirementWorkQueue } from './useExpiringRequirementWorkQueue';
 import { useArrangementWorkQueue } from './useArrangementWorkQueue';
 
 import { DashboardApprovalExpirations } from './DashboardApprovalSection';
@@ -152,33 +152,33 @@ function DashboardRequirements({ storageKey }: { storageKey: string | null }) {
   const approvals = useApprovalExpirationWorkQueue(
     evaluationTime.toISOString().slice(0, 10)
   );
-  const renewals = useApprovalRenewalWorkQueue();
+  const requirementsExpiring = useExpiringRequirementWorkQueue();
   const approvalSnoozes = partitionSnoozed(
     approvals,
     ({ snoozeToken }) => snoozeToken,
     snoozeScope,
     evaluationTime.getTime()
   );
-  const renewalSnoozes = partitionSnoozed(
-    renewals,
+  const requirementExpirySnoozes = partitionSnoozed(
+    requirementsExpiring,
     ({ snoozeToken }) => snoozeToken,
     snoozeScope,
     evaluationTime.getTime()
   );
   const approvalWork = selectDashboardApprovalWork(
     approvalSnoozes.active,
-    renewalSnoozes.active,
+    requirementExpirySnoozes.active,
     evaluationTime,
     preferences.expirationDays
   );
   const snoozedApprovalWork = selectDashboardApprovalWork(
     approvalSnoozes.snoozed.map(({ item }) => item),
-    renewalSnoozes.snoozed.map(({ item }) => item),
+    requirementExpirySnoozes.snoozed.map(({ item }) => item),
     evaluationTime,
     preferences.expirationDays
   );
   const approvalWakeAt = new Map(
-    [...approvalSnoozes.snoozed, ...renewalSnoozes.snoozed].map(
+    [...approvalSnoozes.snoozed, ...requirementExpirySnoozes.snoozed].map(
       ({ token, wakeAt }) => [token, wakeAt]
     )
   );
@@ -209,7 +209,7 @@ function DashboardRequirements({ storageKey }: { storageKey: string | null }) {
     nextNoteWake,
     requirementSnoozes.nextWake,
     approvalSnoozes.nextWake,
-    renewalSnoozes.nextWake,
+    requirementExpirySnoozes.nextWake,
   ].filter((wake) => wake !== undefined);
   const nextWake = wakeTimes.length ? Math.min(...wakeTimes) : undefined;
   const visibleNotes = filterDashboardNoteReview(
@@ -232,8 +232,8 @@ function DashboardRequirements({ storageKey }: { storageKey: string | null }) {
         )
       : snoozeSelection.kind === 'approval'
         ? [
-            ...approvalWork.upcoming,
-            ...approvalWork.uncovered,
+            ...approvalWork.expiringRequirements,
+            ...approvalWork.expiredRequirements,
             ...approvalWork.expiring,
             ...approvalWork.expired,
           ].some(({ snoozeToken }) => snoozeToken === snoozeSelection.token)

@@ -924,7 +924,6 @@ namespace CareTogether.Engines.Authorization
             ImmutableList<Permission> contextPermissions
         )
         {
-            var disclosedFamily = DiscloseFamily(family.Family, contextPermissions);
             return family with
             {
                 PartneringFamilyInfo =
@@ -939,11 +938,10 @@ namespace CareTogether.Engines.Authorization
                     family.VolunteerFamilyInfo == null
                         ? null
                         : DiscloseVolunteerFamilyInfo(
-                            disclosedFamily,
                             family.VolunteerFamilyInfo,
                             contextPermissions
                         ),
-                Family = disclosedFamily,
+                Family = DiscloseFamily(family.Family, contextPermissions),
                 Notes = (
                     await family
                         .Notes.Select(async note =>
@@ -1018,10 +1016,6 @@ namespace CareTogether.Engines.Authorization
                         ? null
                         : community.ApprovalInfo with
                         {
-                            RenewalCandidates = ApprovalRenewalDisclosure.ForOrganization(
-                                community.Community.Id, community.ApprovalInfo, contextPermissions
-                            ),
-                            InternalRenewalCandidates = [],
                             ApprovalStatusByRole = contextPermissions.Contains(
                                 Permission.ViewApprovalStatus
                             )
@@ -1248,17 +1242,12 @@ namespace CareTogether.Engines.Authorization
         }
 
         internal static VolunteerFamilyInfo DiscloseVolunteerFamilyInfo(
-            Family disclosedFamily,
             VolunteerFamilyInfo volunteerFamilyInfo,
             ImmutableList<Permission> contextPermissions
         )
         {
             return volunteerFamilyInfo with
             {
-                RenewalCandidates = ApprovalRenewalDisclosure.ForFamily(
-                    disclosedFamily, volunteerFamilyInfo, contextPermissions
-                ),
-                InternalRenewalCandidates = [],
                 FamilyRoleApprovals = contextPermissions.Contains(Permission.ViewApprovalStatus)
                     ? volunteerFamilyInfo.FamilyRoleApprovals
                     : ImmutableDictionary<string, FamilyRoleApprovalStatus>.Empty,

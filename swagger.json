@@ -3866,8 +3866,7 @@
           "exemptedRequirements",
           "availableApplications",
           "missingRequirements",
-          "roleRemovals",
-          "renewalCandidates"
+          "roleRemovals"
         ],
         "properties": {
           "approvalStatusByRole": {
@@ -3904,12 +3903,6 @@
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/RoleRemoval"
-            }
-          },
-          "renewalCandidates": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/DisclosedApprovalRenewalCandidate"
             }
           }
         }
@@ -4244,170 +4237,6 @@
           "Inactive",
           "OptOut",
           "Denied"
-        ],
-        "enum": [
-          0,
-          1,
-          2
-        ]
-      },
-      "DisclosedApprovalRenewalCandidate": {
-        "type": "object",
-        "additionalProperties": false,
-        "required": [
-          "candidateKey",
-          "target",
-          "actionName",
-          "firstUncoveredOnUtc",
-          "state",
-          "affectedRoles"
-        ],
-        "properties": {
-          "candidateKey": {
-            "type": "string"
-          },
-          "target": {
-            "$ref": "#/components/schemas/ApprovalRenewalTarget"
-          },
-          "actionName": {
-            "type": "string"
-          },
-          "firstUncoveredOnUtc": {
-            "type": "string",
-            "format": "date"
-          },
-          "state": {
-            "$ref": "#/components/schemas/DisclosedApprovalRenewalState"
-          },
-          "affectedRoles": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/DisclosedApprovalRenewalRole"
-            }
-          }
-        }
-      },
-      "ApprovalRenewalTarget": {
-        "type": "object",
-        "discriminator": {
-          "propertyName": "discriminator",
-          "mapping": {
-            "FamilyApprovalRenewalTarget": "#/components/schemas/FamilyApprovalRenewalTarget",
-            "IndividualApprovalRenewalTarget": "#/components/schemas/IndividualApprovalRenewalTarget",
-            "OrganizationApprovalRenewalTarget": "#/components/schemas/OrganizationApprovalRenewalTarget"
-          }
-        },
-        "x-abstract": true,
-        "additionalProperties": false,
-        "required": [
-          "discriminator"
-        ],
-        "properties": {
-          "discriminator": {
-            "type": "string"
-          }
-        }
-      },
-      "FamilyApprovalRenewalTarget": {
-        "allOf": [
-          {
-            "$ref": "#/components/schemas/ApprovalRenewalTarget"
-          },
-          {
-            "type": "object",
-            "additionalProperties": false,
-            "required": [
-              "familyId"
-            ],
-            "properties": {
-              "familyId": {
-                "type": "string",
-                "format": "guid"
-              }
-            }
-          }
-        ]
-      },
-      "IndividualApprovalRenewalTarget": {
-        "allOf": [
-          {
-            "$ref": "#/components/schemas/ApprovalRenewalTarget"
-          },
-          {
-            "type": "object",
-            "additionalProperties": false,
-            "required": [
-              "familyId",
-              "personId"
-            ],
-            "properties": {
-              "familyId": {
-                "type": "string",
-                "format": "guid"
-              },
-              "personId": {
-                "type": "string",
-                "format": "guid"
-              }
-            }
-          }
-        ]
-      },
-      "OrganizationApprovalRenewalTarget": {
-        "allOf": [
-          {
-            "$ref": "#/components/schemas/ApprovalRenewalTarget"
-          },
-          {
-            "type": "object",
-            "additionalProperties": false,
-            "required": [
-              "communityId"
-            ],
-            "properties": {
-              "communityId": {
-                "type": "string",
-                "format": "guid"
-              }
-            }
-          }
-        ]
-      },
-      "DisclosedApprovalRenewalState": {
-        "type": "integer",
-        "description": "",
-        "x-enumNames": [
-          "Upcoming",
-          "Uncovered"
-        ],
-        "enum": [
-          0,
-          1
-        ]
-      },
-      "DisclosedApprovalRenewalRole": {
-        "type": "object",
-        "additionalProperties": false,
-        "required": [
-          "scope",
-          "roleName"
-        ],
-        "properties": {
-          "scope": {
-            "$ref": "#/components/schemas/ApprovalRenewalRoleScope"
-          },
-          "roleName": {
-            "type": "string"
-          }
-        }
-      },
-      "ApprovalRenewalRoleScope": {
-        "type": "integer",
-        "description": "",
-        "x-enumNames": [
-          "Family",
-          "Individual",
-          "Organization"
         ],
         "enum": [
           0,
@@ -5805,8 +5634,7 @@
           "roleRemovals",
           "individualVolunteers",
           "history",
-          "assignments",
-          "renewalCandidates"
+          "assignments"
         ],
         "properties": {
           "familyRoleApprovals": {
@@ -5881,12 +5709,6 @@
             "nullable": true,
             "items": {
               "type": "string"
-            }
-          },
-          "renewalCandidates": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/DisclosedApprovalRenewalCandidate"
             }
           }
         }

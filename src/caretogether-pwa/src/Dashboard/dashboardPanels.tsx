@@ -8,7 +8,7 @@ export const expirationPanel = {
   title: 'Expiring approvals and requirements',
   icon: <VerifiedUserOutlined fontSize="small" />,
   emptyTitle: 'All clear in this view',
-  emptyMessage: 'No approvals or renewals require attention in this view.',
+  emptyMessage: 'No approvals or requirements need attention in this view.',
   emptyIcon: <VerifiedUserOutlined fontSize="small" color="action" />,
   itemType: 'approval work item',
   loadingMessage: 'Loading approvals and requirements…',

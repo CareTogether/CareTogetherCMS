@@ -12,9 +12,7 @@ import {
 } from '@mui/material';
 import {
   Permission,
-  FamilyApprovalRenewalTarget,
   RecentRecordType,
-  IndividualApprovalRenewalTarget,
   V1Referral,
   RoleRemovalReason,
   Note,
@@ -64,7 +62,7 @@ import { useGlobalSnackBar } from '../Hooks/useGlobalSnackBar';
 import { ApprovalLedgerSection } from '../Approvals/ApprovalLedgerSection';
 import {
   clearApprovalTarget,
-  findRenewalRow,
+  findExpiringRequirementRow,
   readApprovalTarget,
   uniqueMatch,
 } from '../Hooks/workResolutionTarget';
@@ -447,28 +445,13 @@ export function FamilyScreenV2() {
     permissions(Permission.ViewApprovalStatus) &&
     permissions(Permission.ViewApprovalProgress) &&
     !!family?.volunteerFamilyInfo;
-  const renewal =
-    approvalTarget?.kind === 'requirement'
-      ? uniqueMatch(
-          family?.volunteerFamilyInfo?.renewalCandidates ?? [],
-          (candidate) =>
-            candidate.actionName === approvalTarget.name &&
-            (approvalTarget.personId
-              ? candidate.target instanceof IndividualApprovalRenewalTarget &&
-                candidate.target.familyId === familyId &&
-                candidate.target.personId === approvalTarget.personId
-              : candidate.target instanceof FamilyApprovalRenewalTarget &&
-                candidate.target.familyId === familyId)
-        )
-      : undefined;
-  const linkedRenewal =
-    canLinkRenewal && renewal && approvalTarget?.kind === 'requirement'
-      ? findRenewalRow(
+  const linkedRequirementRow =
+    canLinkRenewal && approvalTarget?.kind === 'requirement'
+      ? findExpiringRequirementRow(
           approvalLedgerRows,
           approvalTarget.name,
           approvalTarget.personId ? 'person' : 'family',
-          approvalTarget.personId ?? familyId,
-          renewal.affectedRoles.map(({ roleName }) => roleName)
+          approvalTarget.personId ?? familyId
         )
       : undefined;
   const linkedRole =
@@ -1081,7 +1064,7 @@ export function FamilyScreenV2() {
                     <ApprovalLedgerSection
                       groupByMember
                       rows={approvalLedgerRows}
-                      linkedRow={linkedRenewal}
+                      linkedRow={linkedRequirementRow}
                       onLinkedRowClose={closeApprovalTarget}
                       renderDetailsDrawer={(row, open, onClose) => (
                         <ApprovalDetailsDrawerV2

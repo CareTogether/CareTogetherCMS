@@ -157,7 +157,7 @@ function occurrenceId(
   return [subject.scope, subject.id, status, requirementName, index].join('|');
 }
 
-function filterAppliedRoles(roles: string[], appliedRoleNames: Set<string>) {
+export function filterAppliedRoles(roles: string[], appliedRoleNames: Set<string>) {
   if (roles.length === 0) {
     return [];
   }
@@ -165,7 +165,7 @@ function filterAppliedRoles(roles: string[], appliedRoleNames: Set<string>) {
   return roles.filter((role) => appliedRoleNames.has(role));
 }
 
-function shouldIncludeRoleRelatedRow(originalRoles: string[], roles: string[]) {
+export function shouldIncludeRoleRelatedRow(originalRoles: string[], roles: string[]) {
   return originalRoles.length === 0 || roles.length > 0;
 }
 
@@ -244,7 +244,7 @@ export function sortApprovalLedgerRows(rows: ApprovalLedgerRow[]) {
   });
 }
 
-function buildAppliedRoleNames(input: BuildApprovalLedgerRowsInput) {
+export function buildAppliedRoleNames(input: BuildApprovalLedgerRowsInput) {
   const roleNames = new Set<string>();
 
   Object.keys(input.family.familyRoleApprovals ?? {}).forEach((role) =>

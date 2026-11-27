@@ -1,34 +1,28 @@
-import {
-  ApprovalRenewalRoleScope,
-  DisclosedApprovalRenewalState,
-  type DisclosedApprovalRenewalRole,
-} from '../GeneratedClient.ts';
 import type { ApprovalExpirationWorkItem } from './approvalExpirationWorkQueue';
-import type { ApprovalRenewalWorkItem } from './approvalRenewalWorkQueue';
 import {
   approvalExpirationWindow,
   selectDashboardApprovalExpirations,
 } from './dashboardApprovalExpirations.ts';
 import type { RequirementWindowDays } from './dashboardPreferences';
+import type {
+  ExpiringRequirementRole,
+  ExpiringRequirementWorkItem,
+} from './expiringRequirementWorkQueue';
 
 type ApprovalTarget = ApprovalExpirationWorkItem['target'];
-type RenewalRow = ApprovalRenewalWorkItem & {
-  renderKey: string;
-  dateReached: boolean;
-};
 
 function roleTarget(
   target: ApprovalTarget,
-  role: DisclosedApprovalRenewalRole
+  role: ExpiringRequirementRole
 ): ApprovalTarget | undefined {
   switch (role.scope) {
-    case ApprovalRenewalRoleScope.Family:
+    case 'family':
       return target.kind === 'organization'
         ? undefined
         : { kind: 'family', familyId: target.familyId };
-    case ApprovalRenewalRoleScope.Individual:
+    case 'individual':
       return target.kind === 'individual' ? target : undefined;
-    case ApprovalRenewalRoleScope.Organization:
+    case 'organization':
       return target.kind === 'organization' ? target : undefined;
   }
 }
@@ -50,58 +44,64 @@ function relationshipKey(
   ]);
 }
 
-export function affectedApprovalRoleLabel(role: DisclosedApprovalRenewalRole) {
+export function affectedApprovalRoleLabel(role: ExpiringRequirementRole) {
   const labels = {
-    [ApprovalRenewalRoleScope.Family]: 'Family',
-    [ApprovalRenewalRoleScope.Individual]: 'Individual',
-    [ApprovalRenewalRoleScope.Organization]: 'Organization',
+    family: 'Family',
+    individual: 'Individual',
+    organization: 'Organization',
   };
   return `${labels[role.scope]}: ${role.roleName}`;
 }
 
+function firstDayOfWindow(today: string, days: RequirementWindowDays) {
+  const first = new Date(today);
+  first.setUTCDate(first.getUTCDate() - days);
+  return first.toISOString().slice(0, 10);
+}
+
+/**
+ * Splits approval work into the dashboard's groups for the selected window:
+ * requirements that expire in the next `days` days or expired in the last
+ * `days` days, and role approvals that are expiring or expired. An expiring
+ * approval lists the requirements that expire on the same day for that role.
+ */
 export function selectDashboardApprovalWork(
   approvals: readonly ApprovalExpirationWorkItem[],
-  renewals: readonly ApprovalRenewalWorkItem[],
+  requirements: readonly ExpiringRequirementWorkItem[],
   evaluationTime: Date,
   days: RequirementWindowDays
 ) {
   const { today, lastDay } = approvalExpirationWindow(evaluationTime, days);
-  const occurrences = new Map<string, number>();
-  const upcoming: RenewalRow[] = [];
-  const uncovered: RenewalRow[] = [];
-  const relationships = new Map<string, ApprovalRenewalWorkItem[]>();
+  const firstDay = firstDayOfWindow(today, days);
+  const expiringRequirements: ExpiringRequirementWorkItem[] = [];
+  const expiredRequirements: ExpiringRequirementWorkItem[] = [];
+  const relationships = new Map<string, ExpiringRequirementWorkItem[]>();
 
-  for (const renewal of renewals) {
-    const occurrence = occurrences.get(renewal.candidateKey) ?? 0;
-    occurrences.set(renewal.candidateKey, occurrence + 1);
-    const isUncovered =
-      renewal.state === DisclosedApprovalRenewalState.Uncovered;
-    if (!isUncovered && renewal.firstUncoveredOnUtc > lastDay) continue;
-
-    const row = {
-      ...renewal,
-      renderKey: JSON.stringify([renewal.candidateKey, occurrence]),
-      dateReached: !isUncovered && renewal.firstUncoveredOnUtc <= today,
-    };
-    (isUncovered ? uncovered : upcoming).push(row);
+  for (const requirement of requirements) {
+    const { expirationDate } = requirement;
+    if (expirationDate > today && expirationDate <= lastDay)
+      expiringRequirements.push(requirement);
+    else if (expirationDate <= today && expirationDate > firstDay)
+      expiredRequirements.push(requirement);
+    else continue;
 
     const keys = new Set<string>();
-    for (const role of renewal.affectedRoles) {
-      const target = roleTarget(renewal.target, role);
+    for (const role of requirement.affectedRoles) {
+      const target = roleTarget(requirement.target, role);
       if (target)
         keys.add(
           relationshipKey(
-            renewal.scope,
+            requirement.scope,
             target,
             role.roleName,
-            renewal.firstUncoveredOnUtc
+            expirationDate
           )
         );
     }
     for (const key of keys) {
       const related = relationships.get(key);
-      if (related) related.push(renewal);
-      else relationships.set(key, [renewal]);
+      if (related) related.push(requirement);
+      else relationships.set(key, [requirement]);
     }
   }
 
@@ -111,7 +111,7 @@ export function selectDashboardApprovalWork(
     days
   ).map((approval) => ({
     ...approval,
-    relatedRenewals:
+    relatedRequirements:
       relationships.get(
         relationshipKey(
           approval.scope,
@@ -122,5 +122,5 @@ export function selectDashboardApprovalWork(
       ) ?? [],
   }));
   const expired = approvals.filter(({ status }) => status === 'expired');
-  return { upcoming, uncovered, expiring, expired };
+  return { expiringRequirements, expiredRequirements, expiring, expired };
 }

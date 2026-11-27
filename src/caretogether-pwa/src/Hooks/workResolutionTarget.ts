@@ -47,19 +47,22 @@ export function uniqueMatch<T>(
   return found.length === 1 ? found[0] : undefined;
 }
 
-export function findRenewalRow(
+/**
+ * The ledger row a dashboard "expiring requirement" link points to: the
+ * subject's completion or exemption of that requirement with the latest
+ * validity, as long as it is the only one with that date.
+ */
+export function findExpiringRequirementRow(
   rows: readonly ApprovalLedgerRow[],
   actionName: string,
   scope: 'family' | 'person' | 'organization',
-  subjectId: string,
-  affectedRoles: readonly string[]
+  subjectId: string
 ) {
-  return uniqueMatch(
-    rows,
+  const candidates = rows.filter(
     (row) =>
       row.requirementName === actionName &&
-      ['missing', 'expired', 'expiring'].includes(row.status) &&
-      row.neededForRoles.some((role) => affectedRoles.includes(role)) &&
+      ['completed', 'exempted', 'expiring', 'expired'].includes(row.status) &&
+      row.validUntil !== undefined &&
       row.occurrences.length > 0 &&
       row.occurrences.every(
         ({ subject, context }) =>
@@ -70,6 +73,10 @@ export function findRenewalRow(
             : subject.id === subjectId)
       )
   );
+  const latest = Math.max(
+    ...candidates.map((row) => row.validUntil!.getTime())
+  );
+  return uniqueMatch(candidates, (row) => row.validUntil!.getTime() === latest);
 }
 
 export type ArrangementRequirementTarget = {

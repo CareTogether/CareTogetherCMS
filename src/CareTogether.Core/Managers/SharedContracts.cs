@@ -113,14 +113,7 @@ namespace CareTogether.Managers
         ImmutableList<Resources.V1Cases.ArrangementEntry> Assignments,
         ImmutableList<Resources.CompletedCustomFieldInfo>? CompletedCustomFields = null,
         ImmutableList<string>? MissingCustomFields = null
-    )
-    {
-        public ImmutableList<DisclosedApprovalRenewalCandidate> RenewalCandidates { get; init; } = [];
-
-        [System.Text.Json.Serialization.JsonIgnore]
-        [Newtonsoft.Json.JsonIgnore]
-        internal ImmutableList<ApprovalRenewalCandidate> InternalRenewalCandidates { get; init; } = [];
-    }
+    );
 
     public sealed record VolunteerInfo(
         ImmutableDictionary<string, IndividualRoleApprovalStatus> ApprovalStatusByRole,
@@ -153,12 +146,5 @@ namespace CareTogether.Managers
         ImmutableList<string> AvailableApplications,
         ImmutableList<string> MissingRequirements,
         ImmutableList<RoleRemoval> RoleRemovals
-    )
-    {
-        public ImmutableList<DisclosedApprovalRenewalCandidate> RenewalCandidates { get; init; } = [];
-
-        [System.Text.Json.Serialization.JsonIgnore]
-        [Newtonsoft.Json.JsonIgnore]
-        internal ImmutableList<ApprovalRenewalCandidate> InternalRenewalCandidates { get; init; } = [];
-    }
+    );
 }
