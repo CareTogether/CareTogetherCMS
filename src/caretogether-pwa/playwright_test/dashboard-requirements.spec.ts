@@ -13,8 +13,6 @@ import {
   snoozeStoragePrefix,
 } from '../src/Dashboard/dashboardSnoozes';
 import {
-  ApprovalRenewalRoleScope,
-  DisclosedApprovalRenewalState,
   Permission,
   NoteStatus,
   RoleApprovalStatus,
@@ -563,7 +561,7 @@ test('Dashboard shows scoped requirement counts and opens the arrangement @pr', 
   ).toEqual(calendarPreferences);
 });
 
-test('shows disclosed approvals and renewals and restores the independent UTC window @pr', async ({
+test('shows expiring approvals and requirements and restores the independent UTC window @pr', async ({
   page,
 }) => {
   const communityId = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa';
@@ -572,6 +570,22 @@ test('shows disclosed approvals and renewals and restores the independent UTC wi
   now.setUTCDate(now.getUTCDate() + 12);
   const expirationDate = now.toISOString().slice(0, 10);
   now.setUTCDate(now.getUTCDate() - 1);
+  const lastValidDay = now.toISOString().slice(0, 10);
+  const daysAgo = (days: number) => {
+    const date = new Date();
+    date.setUTCDate(date.getUTCDate() - days);
+    return date.toISOString().slice(0, 10);
+  };
+  const completed = (
+    requirementName: string,
+    expiresAtUtc: string,
+    roleNames: string[]
+  ) => ({
+    requirementName,
+    completedAtUtc: '2020-01-01',
+    expiresAtUtc,
+    roleNames,
+  });
   const timeline = {
     ranges: [
       {
@@ -619,6 +633,10 @@ test('shows disclosed approvals and renewals and restores the independent UTC wi
       );
     }
     family.volunteerFamilyInfo = {
+      completedRequirements: [
+        completed('Household check', daysAgo(3), ['Family Coach']),
+      ],
+      exemptedRequirements: [],
       familyRoleApprovals: {
         'Family Coach': role,
         'Legacy Coach': {
@@ -643,45 +661,12 @@ test('shows disclosed approvals and renewals and restores the independent UTC wi
       individualVolunteers: {
         [family.family.primaryFamilyContactPersonId]: {
           approvalStatusByRole: { 'Individual Coach': role },
+          completedRequirements: [
+            completed('Safety check', lastValidDay, ['Family Coach']),
+          ],
+          exemptedRequirements: [],
         },
       },
-      renewalCandidates: statusOnly
-        ? []
-        : [
-            {
-              candidateKey: 'individual-renewal',
-              target: {
-                discriminator: 'IndividualApprovalRenewalTarget',
-                familyId: doeId,
-                personId: family.family.primaryFamilyContactPersonId,
-              },
-              actionName: 'Safety check renewal',
-              firstUncoveredOnUtc: expirationDate,
-              state: DisclosedApprovalRenewalState.Upcoming,
-              affectedRoles: [
-                {
-                  scope: ApprovalRenewalRoleScope.Family,
-                  roleName: 'Family Coach',
-                },
-              ],
-            },
-            {
-              candidateKey: 'family-renewal',
-              target: {
-                discriminator: 'FamilyApprovalRenewalTarget',
-                familyId: doeId,
-              },
-              actionName: 'Household check renewal',
-              firstUncoveredOnUtc: '2022-04-10',
-              state: DisclosedApprovalRenewalState.Upcoming,
-              affectedRoles: [
-                {
-                  scope: ApprovalRenewalRoleScope.Family,
-                  roleName: 'Family Coach',
-                },
-              ],
-            },
-          ],
     };
     await route.fulfill({
       response,
@@ -713,24 +698,12 @@ test('shows disclosed approvals and renewals and restores the independent UTC wi
                   },
                 },
               },
-              renewalCandidates: [
-                {
-                  candidateKey: 'organization-renewal',
-                  target: {
-                    discriminator: 'OrganizationApprovalRenewalTarget',
-                    communityId,
-                  },
-                  actionName: 'Partner screening renewal',
-                  firstUncoveredOnUtc: '2022-04-08',
-                  state: DisclosedApprovalRenewalState.Uncovered,
-                  affectedRoles: [
-                    {
-                      scope: ApprovalRenewalRoleScope.Organization,
-                      roleName: 'Other role',
-                    },
-                  ],
-                },
+              completedRequirements: [
+                completed('Partner screening', daysAgo(2), ['Other role']),
               ],
+              exemptedRequirements: [],
+              missingRequirements: [],
+              availableApplications: [],
             },
           },
         },
@@ -747,13 +720,17 @@ test('shows disclosed approvals and renewals and restores the independent UTC wi
     name: 'Expiring approvals',
     exact: true,
   });
-  const upcoming = approvals.getByRole('region', { name: 'Upcoming renewals' });
+  const upcoming = approvals.getByRole('region', {
+    name: 'Expiring requirements',
+    exact: true,
+  });
   const expired = approvals.getByRole('region', {
     name: 'Expired approvals',
     exact: true,
   });
   const uncovered = approvals.getByRole('region', {
-    name: 'Expired and unresolved',
+    name: 'Expired requirements',
+    exact: true,
   });
   const window = approvals.getByRole('combobox', {
     name: 'Expiring approvals and requirements time frame',
@@ -761,7 +738,7 @@ test('shows disclosed approvals and renewals and restores the independent UTC wi
   await expect(window).toHaveText('Next 30 days');
   await expect(approvals.getByLabel('7 approval work items')).toBeVisible();
   await expect(approvals.getByRole('button', { name: /^Snooze/ })).toHaveCount(
-    0
+    7
   );
   await page.setViewportSize({ width: 1440, height: 900 });
   const approvalList = approvals.getByRole('group', {
@@ -781,8 +758,8 @@ test('shows disclosed approvals and renewals and restores the independent UTC wi
   ).toBe(headerPosition);
   await page.setViewportSize({ width: 375, height: 700 });
   await expect(effective.getByLabel('3 approvals')).toBeVisible();
-  await expect(upcoming.getByLabel('2 renewals')).toBeVisible();
-  await expect(uncovered.getByLabel('1 renewal')).toBeVisible();
+  await expect(upcoming.getByLabel('1 requirement')).toBeVisible();
+  await expect(uncovered.getByLabel('2 requirements')).toBeVisible();
   const family = effective.getByRole('button', {
     name: /Family Coach.*Doe Family/,
   });
@@ -795,12 +772,9 @@ test('shows disclosed approvals and renewals and restores the independent UTC wi
   await expect(family).toBeVisible();
   await expect(individual).toBeVisible();
   await expect(organization).toBeVisible();
-  await expect(family).toContainText('Related renewals');
-  await expect(family).toContainText('Safety check renewal');
-  await expect(individual.getByText('Related renewals')).toHaveCount(0);
-  await expect(
-    upcoming.getByText('Coverage-loss date reached. Last reported as upcoming.')
-  ).toBeVisible();
+  await expect(family).toContainText('Expiring requirements');
+  await expect(family).toContainText('Safety check');
+  await expect(individual.getByText('Expiring requirements')).toHaveCount(0);
   const formattedDate = new Intl.DateTimeFormat('en-US', {
     timeZone: 'UTC',
     day: '2-digit',
@@ -817,8 +791,8 @@ test('shows disclosed approvals and renewals and restores the independent UTC wi
   await expect(effective).toHaveCount(0);
   await expect(approvals.getByLabel('3 approval work items')).toBeVisible();
   await expect(expired.getByLabel('1 approval')).toBeVisible();
-  await expect(upcoming.getByLabel('1 renewal')).toBeVisible();
-  await expect(uncovered.getByLabel('1 renewal')).toBeVisible();
+  await expect(upcoming).toHaveCount(0);
+  await expect(uncovered.getByLabel('2 requirements')).toBeVisible();
   await page.reload();
   await expect(window).toHaveText('Next 7 days');
   await expect(
@@ -830,36 +804,32 @@ test('shows disclosed approvals and renewals and restores the independent UTC wi
   await window.click();
   await page.getByRole('option', { name: 'Next 14 days' }).click();
 
-  const familyRenewal = upcoming.getByRole('button', {
-    name: /Household check renewal.*Doe Family/,
+  const familyRequirement = uncovered.getByRole('button', {
+    name: /Household check.*Doe Family/,
   });
-  await familyRenewal.focus();
-  await familyRenewal.press('Enter');
+  await familyRequirement.focus();
+  await familyRequirement.press('Enter');
   await expect(page).toHaveURL(
     (url) =>
       url.pathname.endsWith(`/families/${doeId}`) &&
-      url.searchParams.get('approvalAction') === 'Household check renewal'
+      url.searchParams.get('approvalAction') === 'Household check'
   );
   await page.goBack();
-  await upcoming
-    .getByRole('button', { name: /Safety check renewal.*Doe/ })
-    .click();
+  await upcoming.getByRole('button', { name: /Safety check.*Doe/ }).click();
   await expect(page).toHaveURL(
     (url) =>
       url.pathname.endsWith(`/families/${doeId}`) &&
       url.searchParams.has('approvalPersonId') &&
-      url.searchParams.get('approvalAction') === 'Safety check renewal'
+      url.searchParams.get('approvalAction') === 'Safety check'
   );
   await page.goBack();
   await uncovered
-    .getByRole('button', {
-      name: /Partner screening renewal.*Community partners/,
-    })
+    .getByRole('button', { name: /Partner screening.*Community partners/ })
     .click();
   await expect(page).toHaveURL(
     (url) =>
       url.pathname.endsWith(`/organizations/organization/${communityId}`) &&
-      url.searchParams.get('approvalAction') === 'Partner screening renewal'
+      url.searchParams.get('approvalAction') === 'Partner screening'
   );
   await page.goBack();
   await expired

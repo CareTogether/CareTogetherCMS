@@ -304,10 +304,7 @@ namespace CareTogether.Managers.Records
                     availableApplications,
                     missingRequirements,
                     effectiveApprovalEntry.RoleRemovals
-                )
-                {
-                    InternalRenewalCandidates = calculation.RenewalCandidates,
-                },
+                ),
             };
         }
 

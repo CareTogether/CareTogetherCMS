@@ -5744,7 +5744,6 @@ export class OrganizationApprovalInfo implements IOrganizationApprovalInfo {
     availableApplications!: string[];
     missingRequirements!: string[];
     roleRemovals!: RoleRemoval[];
-    renewalCandidates!: DisclosedApprovalRenewalCandidate[];
 
     constructor(data?: IOrganizationApprovalInfo) {
         if (data) {
@@ -5760,7 +5759,6 @@ export class OrganizationApprovalInfo implements IOrganizationApprovalInfo {
             this.availableApplications = [];
             this.missingRequirements = [];
             this.roleRemovals = [];
-            this.renewalCandidates = [];
         }
     }
 
@@ -5797,11 +5795,6 @@ export class OrganizationApprovalInfo implements IOrganizationApprovalInfo {
                 this.roleRemovals = [] as any;
                 for (let item of _data["roleRemovals"])
                     this.roleRemovals!.push(RoleRemoval.fromJS(item));
-            }
-            if (Array.isArray(_data["renewalCandidates"])) {
-                this.renewalCandidates = [] as any;
-                for (let item of _data["renewalCandidates"])
-                    this.renewalCandidates!.push(DisclosedApprovalRenewalCandidate.fromJS(item));
             }
         }
     }
@@ -5847,11 +5840,6 @@ export class OrganizationApprovalInfo implements IOrganizationApprovalInfo {
             for (let item of this.roleRemovals)
                 data["roleRemovals"].push(item ? item.toJSON() : undefined as any);
         }
-        if (Array.isArray(this.renewalCandidates)) {
-            data["renewalCandidates"] = [];
-            for (let item of this.renewalCandidates)
-                data["renewalCandidates"].push(item ? item.toJSON() : undefined as any);
-        }
         return data;
     }
 }
@@ -5863,7 +5851,6 @@ export interface IOrganizationApprovalInfo {
     availableApplications: string[];
     missingRequirements: string[];
     roleRemovals: RoleRemoval[];
-    renewalCandidates: DisclosedApprovalRenewalCandidate[];
 }
 
 export class OrganizationRoleApprovalStatus implements IOrganizationRoleApprovalStatus {
@@ -6427,277 +6414,6 @@ export enum RoleRemovalReason {
     Inactive = 0,
     OptOut = 1,
     Denied = 2,
-}
-
-export class DisclosedApprovalRenewalCandidate implements IDisclosedApprovalRenewalCandidate {
-    candidateKey!: string;
-    target!: ApprovalRenewalTarget;
-    actionName!: string;
-    firstUncoveredOnUtc!: Date;
-    state!: DisclosedApprovalRenewalState;
-    affectedRoles!: DisclosedApprovalRenewalRole[];
-
-    constructor(data?: IDisclosedApprovalRenewalCandidate) {
-        if (data) {
-            for (var property in data) {
-                if (data.hasOwnProperty(property))
-                    (this as any)[property] = (data as any)[property];
-            }
-        }
-        if (!data) {
-            this.affectedRoles = [];
-        }
-    }
-
-    init(_data?: any) {
-        if (_data) {
-            this.candidateKey = _data["candidateKey"];
-            this.target = _data["target"] ? ApprovalRenewalTarget.fromJS(_data["target"]) : undefined as any;
-            this.actionName = _data["actionName"];
-            this.firstUncoveredOnUtc = _data["firstUncoveredOnUtc"] ? new Date(_data["firstUncoveredOnUtc"].toString()) : undefined as any;
-            this.state = _data["state"];
-            if (Array.isArray(_data["affectedRoles"])) {
-                this.affectedRoles = [] as any;
-                for (let item of _data["affectedRoles"])
-                    this.affectedRoles!.push(DisclosedApprovalRenewalRole.fromJS(item));
-            }
-        }
-    }
-
-    static fromJS(data: any): DisclosedApprovalRenewalCandidate {
-        data = typeof data === 'object' ? data : {};
-        let result = new DisclosedApprovalRenewalCandidate();
-        result.init(data);
-        return result;
-    }
-
-    toJSON(data?: any) {
-        data = typeof data === 'object' ? data : {};
-        data["candidateKey"] = this.candidateKey;
-        data["target"] = this.target ? this.target.toJSON() : undefined as any;
-        data["actionName"] = this.actionName;
-        data["firstUncoveredOnUtc"] = this.firstUncoveredOnUtc ? formatDate(this.firstUncoveredOnUtc) : undefined as any;
-        data["state"] = this.state;
-        if (Array.isArray(this.affectedRoles)) {
-            data["affectedRoles"] = [];
-            for (let item of this.affectedRoles)
-                data["affectedRoles"].push(item ? item.toJSON() : undefined as any);
-        }
-        return data;
-    }
-}
-
-export interface IDisclosedApprovalRenewalCandidate {
-    candidateKey: string;
-    target: ApprovalRenewalTarget;
-    actionName: string;
-    firstUncoveredOnUtc: Date;
-    state: DisclosedApprovalRenewalState;
-    affectedRoles: DisclosedApprovalRenewalRole[];
-}
-
-export abstract class ApprovalRenewalTarget implements IApprovalRenewalTarget {
-
-    protected _discriminator: string;
-
-    constructor(data?: IApprovalRenewalTarget) {
-        if (data) {
-            for (var property in data) {
-                if (data.hasOwnProperty(property))
-                    (this as any)[property] = (data as any)[property];
-            }
-        }
-        this._discriminator = "ApprovalRenewalTarget";
-    }
-
-    init(_data?: any) {
-    }
-
-    static fromJS(data: any): ApprovalRenewalTarget {
-        data = typeof data === 'object' ? data : {};
-        if (data["discriminator"] === "FamilyApprovalRenewalTarget") {
-            let result = new FamilyApprovalRenewalTarget();
-            result.init(data);
-            return result;
-        }
-        if (data["discriminator"] === "IndividualApprovalRenewalTarget") {
-            let result = new IndividualApprovalRenewalTarget();
-            result.init(data);
-            return result;
-        }
-        if (data["discriminator"] === "OrganizationApprovalRenewalTarget") {
-            let result = new OrganizationApprovalRenewalTarget();
-            result.init(data);
-            return result;
-        }
-        throw new Error("The abstract class 'ApprovalRenewalTarget' cannot be instantiated.");
-    }
-
-    toJSON(data?: any) {
-        data = typeof data === 'object' ? data : {};
-        data["discriminator"] = this._discriminator;
-        return data;
-    }
-}
-
-export interface IApprovalRenewalTarget {
-}
-
-export class FamilyApprovalRenewalTarget extends ApprovalRenewalTarget implements IFamilyApprovalRenewalTarget {
-    familyId!: string;
-
-    constructor(data?: IFamilyApprovalRenewalTarget) {
-        super(data);
-        this._discriminator = "FamilyApprovalRenewalTarget";
-    }
-
-    override init(_data?: any) {
-        super.init(_data);
-        if (_data) {
-            this.familyId = _data["familyId"];
-        }
-    }
-
-    static override fromJS(data: any): FamilyApprovalRenewalTarget {
-        data = typeof data === 'object' ? data : {};
-        let result = new FamilyApprovalRenewalTarget();
-        result.init(data);
-        return result;
-    }
-
-    override toJSON(data?: any) {
-        data = typeof data === 'object' ? data : {};
-        data["familyId"] = this.familyId;
-        super.toJSON(data);
-        return data;
-    }
-}
-
-export interface IFamilyApprovalRenewalTarget extends IApprovalRenewalTarget {
-    familyId: string;
-}
-
-export class IndividualApprovalRenewalTarget extends ApprovalRenewalTarget implements IIndividualApprovalRenewalTarget {
-    familyId!: string;
-    personId!: string;
-
-    constructor(data?: IIndividualApprovalRenewalTarget) {
-        super(data);
-        this._discriminator = "IndividualApprovalRenewalTarget";
-    }
-
-    override init(_data?: any) {
-        super.init(_data);
-        if (_data) {
-            this.familyId = _data["familyId"];
-            this.personId = _data["personId"];
-        }
-    }
-
-    static override fromJS(data: any): IndividualApprovalRenewalTarget {
-        data = typeof data === 'object' ? data : {};
-        let result = new IndividualApprovalRenewalTarget();
-        result.init(data);
-        return result;
-    }
-
-    override toJSON(data?: any) {
-        data = typeof data === 'object' ? data : {};
-        data["familyId"] = this.familyId;
-        data["personId"] = this.personId;
-        super.toJSON(data);
-        return data;
-    }
-}
-
-export interface IIndividualApprovalRenewalTarget extends IApprovalRenewalTarget {
-    familyId: string;
-    personId: string;
-}
-
-export class OrganizationApprovalRenewalTarget extends ApprovalRenewalTarget implements IOrganizationApprovalRenewalTarget {
-    communityId!: string;
-
-    constructor(data?: IOrganizationApprovalRenewalTarget) {
-        super(data);
-        this._discriminator = "OrganizationApprovalRenewalTarget";
-    }
-
-    override init(_data?: any) {
-        super.init(_data);
-        if (_data) {
-            this.communityId = _data["communityId"];
-        }
-    }
-
-    static override fromJS(data: any): OrganizationApprovalRenewalTarget {
-        data = typeof data === 'object' ? data : {};
-        let result = new OrganizationApprovalRenewalTarget();
-        result.init(data);
-        return result;
-    }
-
-    override toJSON(data?: any) {
-        data = typeof data === 'object' ? data : {};
-        data["communityId"] = this.communityId;
-        super.toJSON(data);
-        return data;
-    }
-}
-
-export interface IOrganizationApprovalRenewalTarget extends IApprovalRenewalTarget {
-    communityId: string;
-}
-
-export enum DisclosedApprovalRenewalState {
-    Upcoming = 0,
-    Uncovered = 1,
-}
-
-export class DisclosedApprovalRenewalRole implements IDisclosedApprovalRenewalRole {
-    scope!: ApprovalRenewalRoleScope;
-    roleName!: string;
-
-    constructor(data?: IDisclosedApprovalRenewalRole) {
-        if (data) {
-            for (var property in data) {
-                if (data.hasOwnProperty(property))
-                    (this as any)[property] = (data as any)[property];
-            }
-        }
-    }
-
-    init(_data?: any) {
-        if (_data) {
-            this.scope = _data["scope"];
-            this.roleName = _data["roleName"];
-        }
-    }
-
-    static fromJS(data: any): DisclosedApprovalRenewalRole {
-        data = typeof data === 'object' ? data : {};
-        let result = new DisclosedApprovalRenewalRole();
-        result.init(data);
-        return result;
-    }
-
-    toJSON(data?: any) {
-        data = typeof data === 'object' ? data : {};
-        data["scope"] = this.scope;
-        data["roleName"] = this.roleName;
-        return data;
-    }
-}
-
-export interface IDisclosedApprovalRenewalRole {
-    scope: ApprovalRenewalRoleScope;
-    roleName: string;
-}
-
-export enum ApprovalRenewalRoleScope {
-    Family = 0,
-    Individual = 1,
-    Organization = 2,
 }
 
 export class FamilyRecordsAggregate extends RecordsAggregate implements IFamilyRecordsAggregate {
@@ -8973,7 +8689,6 @@ export class VolunteerFamilyInfo implements IVolunteerFamilyInfo {
     assignments!: ArrangementEntry[];
     completedCustomFields?: CompletedCustomFieldInfo[] | undefined;
     missingCustomFields?: string[] | undefined;
-    renewalCandidates!: DisclosedApprovalRenewalCandidate[];
 
     constructor(data?: IVolunteerFamilyInfo) {
         if (data) {
@@ -8993,7 +8708,6 @@ export class VolunteerFamilyInfo implements IVolunteerFamilyInfo {
             this.individualVolunteers = {};
             this.history = [];
             this.assignments = [];
-            this.renewalCandidates = [];
         }
     }
 
@@ -9062,11 +8776,6 @@ export class VolunteerFamilyInfo implements IVolunteerFamilyInfo {
                 this.missingCustomFields = [] as any;
                 for (let item of _data["missingCustomFields"])
                     this.missingCustomFields!.push(item);
-            }
-            if (Array.isArray(_data["renewalCandidates"])) {
-                this.renewalCandidates = [] as any;
-                for (let item of _data["renewalCandidates"])
-                    this.renewalCandidates!.push(DisclosedApprovalRenewalCandidate.fromJS(item));
             }
         }
     }
@@ -9144,11 +8853,6 @@ export class VolunteerFamilyInfo implements IVolunteerFamilyInfo {
             for (let item of this.missingCustomFields)
                 data["missingCustomFields"].push(item);
         }
-        if (Array.isArray(this.renewalCandidates)) {
-            data["renewalCandidates"] = [];
-            for (let item of this.renewalCandidates)
-                data["renewalCandidates"].push(item ? item.toJSON() : undefined as any);
-        }
         return data;
     }
 }
@@ -9166,7 +8870,6 @@ export interface IVolunteerFamilyInfo {
     assignments: ArrangementEntry[];
     completedCustomFields?: CompletedCustomFieldInfo[] | undefined;
     missingCustomFields?: string[] | undefined;
-    renewalCandidates: DisclosedApprovalRenewalCandidate[];
 }
 
 export class FamilyRoleApprovalStatus implements IFamilyRoleApprovalStatus {

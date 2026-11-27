@@ -14,10 +14,7 @@ import {
   useParams,
   useSearchParams,
 } from 'react-router-dom';
-import {
-  OrganizationApprovalRenewalTarget,
-  Permission,
-} from '../GeneratedClient';
+import { Permission } from '../GeneratedClient';
 import { useCommunityPermissions } from '../Model/SessionModel';
 import { useScreenTitle } from '../Shell/ShellScreenTitle';
 import {
@@ -58,9 +55,8 @@ import { useOrganizationApprovalViewModel } from './useOrganizationApprovalViewM
 import { usePolicy } from '../Model/PolicyModel';
 import {
   clearApprovalTarget,
-  findRenewalRow,
+  findExpiringRequirementRow,
   readApprovalTarget,
-  uniqueMatch,
 } from '../Hooks/workResolutionTarget';
 
 type OrganizationScreenTabValue = 'overview' | 'approvals';
@@ -118,25 +114,14 @@ export function CommunityScreen() {
     permissions(Permission.ViewApprovalStatus) &&
     approvalTarget?.kind === 'requirement' &&
     !approvalTarget.personId;
-  const renewal = openApprovalsFromLink
-    ? uniqueMatch(
-        communityInfo?.approvalInfo?.renewalCandidates ?? [],
-        (candidate) =>
-          candidate.actionName === approvalTarget.name &&
-          candidate.target instanceof OrganizationApprovalRenewalTarget &&
-          candidate.target.communityId === communityId
+  const linkedRequirementRow = openApprovalsFromLink
+    ? findExpiringRequirementRow(
+        organizationApprovalViewModel.approvalLedgerRows,
+        approvalTarget.name,
+        'organization',
+        communityId
       )
     : undefined;
-  const linkedRenewal =
-    openApprovalsFromLink && renewal
-      ? findRenewalRow(
-          organizationApprovalViewModel.approvalLedgerRows,
-          approvalTarget.name,
-          'organization',
-          communityId,
-          renewal.affectedRoles.map(({ roleName }) => roleName)
-        )
-      : undefined;
 
   useEffect(() => {
     if (openApprovalsFromLink) setSelectedTab('approvals');
@@ -351,7 +336,7 @@ export function CommunityScreen() {
       )}
       {selectedTab === 'approvals' && policy && (
         <OrganizationApprovalSection
-          linkedRow={linkedRenewal}
+          linkedRow={linkedRequirementRow}
           onLinkedRowClose={closeApprovalTarget}
           communityInfo={communityInfo}
           policy={policy}

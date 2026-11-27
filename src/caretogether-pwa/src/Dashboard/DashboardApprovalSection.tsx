@@ -30,7 +30,7 @@ import type { ApprovalExpirationWorkItem } from './approvalExpirationWorkQueue';
 import {
   affectedApprovalRoleLabel,
   selectDashboardApprovalWork,
-} from './dashboardApprovalRenewals';
+} from './dashboardApprovalWork';
 import { type RequirementWindowDays } from './dashboardPreferences';
 import { openDashboardApproval } from './dashboardWorkNavigation';
 
@@ -46,7 +46,7 @@ function ApprovalWorkSection({
 }: {
   title: string;
   count: number;
-  itemType: 'approval' | 'renewal';
+  itemType: 'approval' | 'requirement';
   children: ReactNode;
 }) {
   const headingId = useId();
@@ -111,7 +111,7 @@ export function DashboardApprovalExpirations({
   const personLookup = usePersonAndFamilyLookup();
   const communityLookup = useCommunityLookup();
   const navigate = useAppNavigate();
-  const { upcoming, uncovered, expiring, expired } = work;
+  const { expiringRequirements, expiredRequirements, expiring, expired } = work;
 
   function subjectContext(target: ApprovalExpirationWorkItem['target']) {
     switch (target.kind) {
@@ -164,15 +164,19 @@ export function DashboardApprovalExpirations({
     );
   }
 
+  const today = new Date().toISOString().slice(0, 10);
+  const expirationLabel = (date: string) =>
+    `${date <= today ? 'Expired on' : 'Expires on'} ${formatUtcDateOnly(new Date(date))}`;
+
   const snoozedItems: DashboardSnoozedItem[] = [
-    ...snoozedWork.upcoming,
-    ...snoozedWork.uncovered,
+    ...snoozedWork.expiringRequirements,
+    ...snoozedWork.expiredRequirements,
   ]
     .map((row) => ({
-      token: row.snoozeToken,
+      token: row.snoozeToken as string | undefined,
       title: row.actionName,
       target: row.target,
-      label: `Coverage loss ${formatUtcDateOnly(new Date(row.firstUncoveredOnUtc))}`,
+      label: expirationLabel(row.expirationDate),
     }))
     .concat(
       [...snoozedWork.expiring, ...snoozedWork.expired].map((row) => ({
@@ -202,10 +206,11 @@ export function DashboardApprovalExpirations({
         : [];
     });
 
-  function renewalRow(row: (typeof upcoming)[number], isUncovered: boolean) {
+  function requirementRow(row: (typeof expiringRequirements)[number]) {
+    const isExpired = row.expirationDate <= today;
     return (
       <DashboardQueueRow
-        key={row.renderKey}
+        key={row.key}
         title={row.actionName}
         trailingAction={snoozeAction(row.snoozeToken, row.actionName)}
         {...destination(row.target, {
@@ -216,28 +221,18 @@ export function DashboardApprovalExpirations({
         <Typography
           component="span"
           variant="body2"
-          color={isUncovered ? 'error.main' : 'text.secondary'}
+          color={isExpired ? 'error.main' : 'text.secondary'}
         >
           <span className="ph-unmask">
-            {isUncovered ? 'Uncovered since' : 'Projected coverage loss on'}
+            {isExpired ? 'Expired on' : 'Expires on'}
           </span>{' '}
-          <time dateTime={row.firstUncoveredOnUtc}>
-            {formatUtcDateOnly(new Date(row.firstUncoveredOnUtc))}
+          <time dateTime={row.expirationDate}>
+            {formatUtcDateOnly(new Date(row.expirationDate))}
           </time>
         </Typography>
-        {row.dateReached && (
-          <Typography
-            className="ph-unmask"
-            component="span"
-            variant="body2"
-            color="text.secondary"
-          >
-            Coverage-loss date reached. Last reported as upcoming.
-          </Typography>
-        )}
         {row.affectedRoles.length > 0 && (
           <Typography component="span" variant="body2" color="text.secondary">
-            <span className="ph-unmask">Affected roles</span>{' '}
+            <span className="ph-unmask">Needed for</span>{' '}
             {row.affectedRoles.map(affectedApprovalRoleLabel).join(' · ')}
           </Typography>
         )}
@@ -253,7 +248,10 @@ export function DashboardApprovalExpirations({
         emptyMessage: 'Snoozed approval work is listed below.',
       })}
       count={
-        upcoming.length + uncovered.length + expiring.length + expired.length
+        expiringRequirements.length +
+        expiredRequirements.length +
+        expiring.length +
+        expired.length
       }
       footer={
         <DashboardSnoozedList
@@ -271,11 +269,11 @@ export function DashboardApprovalExpirations({
       }
     >
       <ApprovalWorkSection
-        title="Upcoming renewals"
-        count={upcoming.length}
-        itemType="renewal"
+        title="Expiring requirements"
+        count={expiringRequirements.length}
+        itemType="requirement"
       >
-        {upcoming.map((item) => renewalRow(item, false))}
+        {expiringRequirements.map(requirementRow)}
       </ApprovalWorkSection>
       <ApprovalWorkSection
         title="Expiring approvals"
@@ -288,7 +286,7 @@ export function DashboardApprovalExpirations({
             target,
             roleName,
             expirationDate,
-            relatedRenewals,
+            relatedRequirements,
             snoozeToken,
           }) => (
             <DashboardQueueRow
@@ -307,14 +305,14 @@ export function DashboardApprovalExpirations({
                   {formatUtcDateOnly(new Date(expirationDate))}
                 </time>
               </Typography>
-              {relatedRenewals.length > 0 && (
+              {relatedRequirements.length > 0 && (
                 <Typography
                   component="span"
                   variant="body2"
                   color="text.secondary"
                 >
-                  <span className="ph-unmask">Related renewals</span>{' '}
-                  {relatedRenewals
+                  <span className="ph-unmask">Expiring requirements</span>{' '}
+                  {relatedRequirements
                     .map(
                       (item) =>
                         `${item.actionName} (${subjectContext(item.target)})`
@@ -354,11 +352,11 @@ export function DashboardApprovalExpirations({
         )}
       </ApprovalWorkSection>
       <ApprovalWorkSection
-        title="Expired and unresolved"
-        count={uncovered.length}
-        itemType="renewal"
+        title="Expired requirements"
+        count={expiredRequirements.length}
+        itemType="requirement"
       >
-        {uncovered.map((item) => renewalRow(item, true))}
+        {expiredRequirements.map(requirementRow)}
       </ApprovalWorkSection>
     </DashboardRequirementPanel>
   );

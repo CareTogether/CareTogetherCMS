@@ -7,7 +7,7 @@ import {
   arrangementRequirementQuery,
   clearApprovalTarget,
   findArrangementRequirement,
-  findRenewalRow,
+  findExpiringRequirementRow,
   readApprovalTarget,
   uniqueMatch,
 } from './workResolutionTarget.ts';
@@ -75,7 +75,7 @@ test('arrangement links distinguish assignment and occurrence and reject duplica
   assert.equal(findArrangementRequirement([upcoming], 'invalid'), undefined);
 });
 
-test('renewal targets require a unique unresolved action for the authorized subject and role', () => {
+test('expiring requirement links open the latest unique completion for the subject', () => {
   for (const [scope, context] of [
     ['family', { kind: 'Volunteer Family', volunteerFamilyId: 'subject' }],
     [
@@ -90,7 +90,8 @@ test('renewal targets require a unique unresolved action for the authorized subj
   ] as const) {
     const row = {
       requirementName: 'Check',
-      status: 'missing',
+      status: 'completed',
+      validUntil: new Date('2027-01-07'),
       neededForRoles: ['Driver'],
       occurrences: [
         {
@@ -99,15 +100,20 @@ test('renewal targets require a unique unresolved action for the authorized subj
         },
       ],
     } as ApprovalLedgerRow;
-    const find = (rows: ApprovalLedgerRow[], roles = ['Driver']) =>
-      findRenewalRow(rows, 'Check', scope, 'subject', roles);
-    assert.equal(find([row]), row);
-    assert.equal(find([row], []), undefined);
-    assert.equal(find([{ ...row, status: 'completed' }]), undefined);
+    const older = {
+      ...row,
+      status: 'expired',
+      validUntil: new Date('2025-01-07'),
+    } as ApprovalLedgerRow;
+    const find = (rows: ApprovalLedgerRow[]) =>
+      findExpiringRequirementRow(rows, 'Check', scope, 'subject');
+    assert.equal(find([older, row]), row);
+    assert.equal(find([{ ...row, status: 'missing' }]), undefined);
+    assert.equal(find([{ ...row, validUntil: undefined }]), undefined);
     assert.equal(find([row, { ...row }]), undefined);
     assert.equal(find([{ ...row, occurrences: [] }]), undefined);
     assert.equal(
-      findRenewalRow([row], 'Check', scope, 'other', ['Driver']),
+      findExpiringRequirementRow([row], 'Check', scope, 'other'),
       undefined
     );
   }
