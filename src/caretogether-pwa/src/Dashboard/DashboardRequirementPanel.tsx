@@ -1,7 +1,6 @@
-import { Children, useId, useState, type ReactNode } from 'react';
+import { useId, type ReactNode } from 'react';
 import {
   Box,
-  Button,
   CardActions,
   Chip,
   CircularProgress,
@@ -12,12 +11,8 @@ import {
   Stack,
   Typography,
 } from '@mui/material';
-import { alpha } from '@mui/material/styles';
-import {
-  ChevronRight,
-  InboxOutlined,
-  ScheduleOutlined,
-} from '@mui/icons-material';
+import { alpha, darken } from '@mui/material/styles';
+import { ChevronRight, InboxOutlined } from '@mui/icons-material';
 import { formatUtcDateOnly } from '../Utilities/dateUtils';
 import type { RequirementGroup } from './dashboardRequirements';
 
@@ -26,9 +21,9 @@ type DashboardRequirementPanelProps = {
   icon: ReactNode;
   emptyTitle: string;
   emptyMessage: string;
+  emptyIcon?: ReactNode;
   count?: number;
-  itemType?: 'requirement' | 'approval' | 'note';
-  showCount?: boolean;
+  itemType?: 'requirement' | 'approval work item' | 'note';
   emphasis?: 'error';
   loadingMessage?: string;
   headerAction?: ReactNode;
@@ -41,9 +36,9 @@ export function DashboardRequirementPanel({
   icon,
   emptyTitle,
   emptyMessage,
+  emptyIcon = <InboxOutlined fontSize="small" color="action" />,
   count,
   itemType = 'requirement',
-  showCount = true,
   emphasis,
   loadingMessage = `Loading ${itemType}s…`,
   headerAction,
@@ -51,11 +46,6 @@ export function DashboardRequirementPanel({
   children,
 }: DashboardRequirementPanelProps) {
   const headingId = useId();
-  const listId = useId();
-  const [expanded, setExpanded] = useState(false);
-  const rows = Children.toArray(children);
-  const previewSize = 5;
-  const canExpand = rows.length > previewSize;
   const urgent = emphasis === 'error' && Boolean(count);
 
   return (
@@ -65,10 +55,13 @@ export function DashboardRequirementPanel({
       variant="outlined"
       elevation={0}
       sx={{
+        display: 'flex',
+        flexDirection: 'column',
         minWidth: 0,
         overflow: 'hidden',
         borderRadius: 2,
         borderColor: 'divider',
+        containerType: 'inline-size',
       }}
     >
       <Stack
@@ -79,10 +72,9 @@ export function DashboardRequirementPanel({
           p: 2,
           alignItems: 'center',
           flexWrap: 'wrap',
-          bgcolor: (theme) =>
-            urgent
-              ? alpha(theme.palette.error.main, 0.05)
-              : theme.palette.background.paper,
+          bgcolor: (theme) => alpha(theme.palette.primary.main, 0.035),
+          borderBottom: 1,
+          borderColor: 'divider',
         }}
       >
         <Stack
@@ -125,14 +117,15 @@ export function DashboardRequirementPanel({
           >
             {title}
           </Typography>
-          {showCount && count !== undefined && (
+          {count !== undefined && (
             <Chip
               size="small"
               label={count}
               aria-label={`${count} ${itemType}${count === 1 ? '' : 's'}`}
               sx={{
                 height: 22,
-                fontWeight: 600,
+                fontWeight: 500,
+                fontVariantNumeric: 'tabular-nums',
                 bgcolor: 'action.hover',
                 flexShrink: 0,
               }}
@@ -165,17 +158,14 @@ export function DashboardRequirementPanel({
             bgcolor: 'action.hover',
           }}
         >
-          <InboxOutlined
-            fontSize="small"
-            color="action"
-            aria-hidden
-            sx={{ flexShrink: 0 }}
-          />
+          <Box aria-hidden sx={{ display: 'flex', flexShrink: 0 }}>
+            {emptyIcon}
+          </Box>
           <Box sx={{ minWidth: 0 }}>
             <Typography
               className="ph-unmask"
               variant="body2"
-              sx={{ fontWeight: 600 }}
+              sx={{ fontWeight: 500 }}
             >
               {emptyTitle}
             </Typography>
@@ -190,34 +180,21 @@ export function DashboardRequirementPanel({
         </Stack>
       ) : (
         <Box
+          role="group"
+          aria-labelledby={headingId}
+          tabIndex={0}
           sx={{
-            borderTop: 1,
-            borderColor: 'divider',
+            maxHeight: { xs: 'min(65dvh, 36rem)', lg: 'min(42dvh, 18rem)' },
+            overflowY: 'auto',
+            overflowX: 'hidden',
+            '&:focus-visible': {
+              outline: '2px solid',
+              outlineColor: 'primary.dark',
+              outlineOffset: '-2px',
+            },
           }}
         >
-          <List disablePadding>{rows.slice(0, previewSize)}</List>
-          {canExpand && (
-            <>
-              <Box sx={{ px: 2, py: 1 }}>
-                <Button
-                  className="ph-unmask"
-                  aria-controls={listId}
-                  aria-expanded={expanded}
-                  onClick={() => setExpanded(!expanded)}
-                  sx={{ textTransform: 'none', minHeight: 44 }}
-                >
-                  {expanded
-                    ? 'Show fewer'
-                    : rows.length === count
-                      ? `View all ${count} ${itemType}s`
-                      : `View all ${rows.length} groups`}
-                </Button>
-              </Box>
-              <List id={listId} hidden={!expanded} disablePadding>
-                {expanded && rows.slice(previewSize)}
-              </List>
-            </>
-          )}
+          <List disablePadding>{children}</List>
         </Box>
       )}
       {footer}
@@ -254,7 +231,7 @@ export function DashboardRequirementRow({
   const deadlineColor = pastDue
     ? 'error.dark'
     : daysFromToday >= 0 && daysFromToday <= 3
-      ? 'warning.dark'
+      ? undefined
       : 'text.primary';
 
   return (
@@ -262,53 +239,38 @@ export function DashboardRequirementRow({
       title={item.requirementName}
       context={context}
       onOpen={onOpen}
+      deadline={
+        <>
+          <Typography
+            component="span"
+            variant="body2"
+            className="ph-unmask"
+            sx={{
+              fontWeight: 500,
+              color: (theme) =>
+                deadlineColor ?? darken(theme.palette.warning.dark, 0.2),
+            }}
+          >
+            {relativeDate ??
+              (pastDue
+                ? 'Past due since'
+                : daysFromToday === 0
+                  ? 'Due today'
+                  : 'Due')}
+          </Typography>
+          <Typography component="span" variant="caption" color="text.secondary">
+            <time dateTime={item.occurrenceDate}>
+              {formatUtcDateOnly(new Date(item.occurrenceDate))}
+            </time>
+          </Typography>
+        </>
+      }
     >
       {assignment && (
         <Typography component="span" variant="caption" color="text.secondary">
           {assignment}
         </Typography>
       )}
-      <Stack
-        component="span"
-        direction="row"
-        spacing={0.75}
-        useFlexGap
-        sx={{ flexWrap: 'wrap', alignItems: 'center', mt: 0.5 }}
-      >
-        <ScheduleOutlined
-          aria-hidden
-          sx={{ fontSize: 16, color: deadlineColor }}
-        />
-        <Typography
-          component="span"
-          variant="caption"
-          className="ph-unmask"
-          color={deadlineColor}
-          sx={{ fontWeight: 600 }}
-        >
-          {relativeDate ??
-            (pastDue
-              ? 'Past due since'
-              : daysFromToday === 0
-                ? 'Due today'
-                : 'Due')}
-        </Typography>
-        {relativeDate && (
-          <Typography
-            component="span"
-            variant="caption"
-            color="text.secondary"
-            aria-hidden
-          >
-            ·
-          </Typography>
-        )}
-        <Typography component="span" variant="caption" color="text.secondary">
-          <time dateTime={item.occurrenceDate}>
-            {formatUtcDateOnly(new Date(item.occurrenceDate))}
-          </time>
-        </Typography>
-      </Stack>
       {dateReached && (
         <Typography
           component="span"
@@ -338,24 +300,26 @@ export function DashboardQueueRow({
   context,
   onOpen,
   actions,
+  deadline,
   children,
 }: {
   title: string;
   context: string;
   onOpen?: () => void;
   actions?: ReactNode;
+  deadline?: ReactNode;
   children: ReactNode;
 }) {
   const content = (
     <Stack
       component="span"
       spacing={0.25}
-      sx={{ flex: 1, minWidth: 0, overflowWrap: 'anywhere' }}
+      sx={{ flex: 1, minWidth: 0, overflowWrap: 'anywhere', gridArea: 'main' }}
     >
       <Typography
         component="span"
         variant="body2"
-        sx={{ fontSize: 15, fontWeight: 600 }}
+        sx={{ fontSize: 15, fontWeight: 500 }}
       >
         {title}
       </Typography>
@@ -385,6 +349,16 @@ export function DashboardQueueRow({
             px: 2,
             py: actions ? 1.25 : 1.5,
             textAlign: 'left',
+            ...(deadline && {
+              display: 'grid',
+              gridTemplateColumns: 'minmax(0, 1fr) auto',
+              gridTemplateAreas: '"main arrow" "deadline arrow"',
+              rowGap: 0.5,
+              '@container (min-width: 28rem)': {
+                gridTemplateColumns: 'minmax(0, 1fr) minmax(0, auto) auto',
+                gridTemplateAreas: '"main deadline arrow"',
+              },
+            }),
             '&:hover, &.Mui-focusVisible': { bgcolor: 'action.hover' },
             '&.Mui-focusVisible': {
               outline: '2px solid',
@@ -394,11 +368,27 @@ export function DashboardQueueRow({
           }}
         >
           {content}
+          {deadline && (
+            <Stack
+              component="span"
+              sx={{
+                flexShrink: 0,
+                minWidth: 0,
+                overflowWrap: 'anywhere',
+                alignItems: 'flex-start',
+                fontVariantNumeric: 'tabular-nums',
+                gridArea: 'deadline',
+                '@container (min-width: 28rem)': { alignItems: 'flex-end' },
+              }}
+            >
+              {deadline}
+            </Stack>
+          )}
           <ChevronRight
             fontSize="small"
             color="action"
             aria-hidden
-            sx={{ flexShrink: 0 }}
+            sx={{ flexShrink: 0, gridArea: 'arrow' }}
           />
         </ListItemButton>
       ) : (
@@ -413,6 +403,12 @@ export function DashboardQueueRow({
             justifyContent: 'flex-end',
             flexWrap: 'wrap',
             gap: 1,
+            '& .MuiButton-root': { minHeight: 32 },
+            '& .Mui-focusVisible': {
+              outline: '2px solid',
+              outlineColor: 'primary.dark',
+              outlineOffset: '2px',
+            },
           }}
           disableSpacing
         >

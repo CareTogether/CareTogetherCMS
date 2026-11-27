@@ -139,6 +139,15 @@ test('edits, approves, and deletes family and referral notes without leaving the
     .getByRole('listitem')
     .filter({ hasText: 'Awaiting review' });
   await expect(reviewSummary.getByText('4', { exact: true })).toBeVisible();
+  await expect(
+    panel.getByRole('button', { name: 'All notes (4)' })
+  ).toHaveAttribute('aria-pressed', 'true');
+  await expect(
+    panel.getByRole('button', { name: 'Families (2)' })
+  ).toBeVisible();
+  await expect(
+    panel.getByRole('button', { name: 'Referrals (2)' })
+  ).toBeVisible();
   await row(familyNote.contents)
     .getByRole('button', { name: /Family draft for review/ })
     .click();
@@ -201,7 +210,7 @@ test('edits, approves, and deletes family and referral notes without leaving the
     exact: true,
   });
   const dialog = page.getByRole('dialog');
-  await familyDelete.click();
+  await familyDelete.press('Enter');
   await dialog.getByRole('button', { name: 'Cancel', exact: true }).click();
   await expect(familyDelete).toBeVisible();
   await expect(reviewSummary.getByText('2', { exact: true })).toBeVisible();
@@ -297,9 +306,7 @@ test('Dashboard shows scoped requirement counts and opens the arrangement @pr', 
     ).toBeVisible();
     await expect(page.getByText('No past-due requirements.')).toHaveCount(0);
     await expect(
-      page.getByText(
-        'No approvals or renewals in the selected window, and no expired approvals or unresolved renewals.'
-      )
+      page.getByText('No approvals or renewals require attention in this view.')
     ).toHaveCount(0);
   } finally {
     loading.resolve();
@@ -332,11 +339,24 @@ test('Dashboard shows scoped requirement counts and opens the arrangement @pr', 
       );
       if (!upperLeft || !lowerLeft || !upperRight || !lowerRight) return null;
       return [
-        Math.round(lowerLeft.y - upperLeft.y - upperLeft.height),
-        Math.round(lowerRight.y - upperRight.y - upperRight.height),
+        Math.round(upperLeft.y - upperRight.y),
+        Math.round(lowerLeft.y - lowerRight.y),
+        Math.round(
+          upperLeft.y + upperLeft.height - (upperRight.y + upperRight.height)
+        ),
+        Math.round(
+          lowerLeft.y + lowerLeft.height - (lowerRight.y + lowerRight.height)
+        ),
+        Math.round(
+          lowerLeft.y -
+            Math.max(
+              upperLeft.y + upperLeft.height,
+              upperRight.y + upperRight.height
+            )
+        ),
       ];
     })
-    .toEqual([20, 20]);
+    .toEqual([0, 0, 0, 0, 20]);
   await page.setViewportSize({ width: 375, height: 700 });
   const action = upcoming.getByRole('button', {
     name: /Upcoming safety visit/,
@@ -651,6 +671,24 @@ test('shows disclosed approvals and renewals and restores the independent UTC wi
     name: 'Expiring approvals and requirements time frame',
   });
   await expect(window).toHaveText('Next 30 days');
+  await expect(approvals.getByLabel('7 approval work items')).toBeVisible();
+  await page.setViewportSize({ width: 1440, height: 900 });
+  const approvalList = approvals.getByRole('group', {
+    name: 'Expiring approvals and requirements',
+    exact: true,
+  });
+  await approvalList.focus();
+  const headerPosition = await window.evaluate(
+    (element) => element.getBoundingClientRect().top
+  );
+  await approvalList.press('End');
+  await expect
+    .poll(() => approvalList.evaluate((element) => element.scrollTop))
+    .toBeGreaterThan(0);
+  expect(
+    await window.evaluate((element) => element.getBoundingClientRect().top)
+  ).toBe(headerPosition);
+  await page.setViewportSize({ width: 375, height: 700 });
   await expect(effective.getByLabel('3 approvals')).toBeVisible();
   await expect(upcoming.getByLabel('2 renewals')).toBeVisible();
   await expect(uncovered.getByLabel('1 renewal')).toBeVisible();
@@ -686,6 +724,7 @@ test('shows disclosed approvals and renewals and restores the independent UTC wi
   await window.click();
   await page.getByRole('option', { name: 'Next 7 days' }).click();
   await expect(effective).toHaveCount(0);
+  await expect(approvals.getByLabel('3 approval work items')).toBeVisible();
   await expect(expired.getByLabel('1 approval')).toBeVisible();
   await expect(upcoming.getByLabel('1 renewal')).toBeVisible();
   await expect(uncovered.getByLabel('1 renewal')).toBeVisible();

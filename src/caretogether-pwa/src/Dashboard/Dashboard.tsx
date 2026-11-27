@@ -13,8 +13,6 @@ import {
   ToggleButton,
   ToggleButtonGroup,
   Typography,
-  useMediaQuery,
-  useTheme,
 } from '@mui/material';
 import {
   Check as CheckIcon,
@@ -113,11 +111,11 @@ const pastDuePanel = {
 const expirationPanel = {
   title: 'Expiring approvals and requirements',
   icon: <VerifiedUserOutlined fontSize="small" />,
-  emptyTitle: 'No approval work in this view',
-  emptyMessage:
-    'No approvals or renewals in the selected window, and no expired approvals or unresolved renewals.',
+  emptyTitle: 'All clear in this view',
+  emptyMessage: 'No approvals or renewals require attention in this view.',
+  emptyIcon: <VerifiedUserOutlined fontSize="small" color="action" />,
+  itemType: 'approval work item',
   loadingMessage: 'Loading approvals and requirements…',
-  showCount: false,
 } as const;
 
 function ApprovalWorkSection({
@@ -147,7 +145,7 @@ function ApprovalWorkSection({
             className="ph-unmask"
             component="h3"
             variant="subtitle2"
-            sx={{ fontWeight: 700, minWidth: 0, overflowWrap: 'anywhere' }}
+            sx={{ fontWeight: 600, minWidth: 0, overflowWrap: 'anywhere' }}
           >
             {title}
           </Typography>
@@ -155,7 +153,7 @@ function ApprovalWorkSection({
             size="small"
             label={count}
             aria-label={`${count} ${itemType}${count === 1 ? '' : 's'}`}
-            sx={{ height: 22, fontWeight: 600, flexShrink: 0 }}
+            sx={{ height: 22, fontWeight: 500, flexShrink: 0 }}
           />
         </Stack>
         <List disablePadding>{children}</List>
@@ -447,6 +445,7 @@ function DashboardNoteReview({
   const noteAuthor = useNoteAuthorLookup();
   const userLookup = useUserLookup();
   const navigate = useAppNavigate();
+  const familyCount = items.filter(({ source }) => source === 'family').length;
   return (
     <DashboardRequirementPanel
       {...noteReviewPanel}
@@ -467,7 +466,12 @@ function DashboardNoteReview({
           size="small"
           sx={{
             flexWrap: 'wrap',
-            '& .MuiToggleButton-root': { textTransform: 'none', py: 0.5 },
+            '& .MuiToggleButton-root': {
+              textTransform: 'none',
+              minHeight: 32,
+              color: 'text.secondary',
+              fontVariantNumeric: 'tabular-nums',
+            },
           }}
           onChange={(
             _,
@@ -476,14 +480,15 @@ function DashboardNoteReview({
             if (value) onChange(value);
           }}
         >
-          <ToggleButton value="all" className="ph-unmask">
-            All notes
+          <ToggleButton value="all">
+            <span className="ph-unmask">All notes</span>&nbsp;({items.length})
           </ToggleButton>
-          <ToggleButton value="family" className="ph-unmask">
-            Families
+          <ToggleButton value="family">
+            <span className="ph-unmask">Families</span>&nbsp;({familyCount})
           </ToggleButton>
-          <ToggleButton value="referral" className="ph-unmask">
-            Referrals
+          <ToggleButton value="referral">
+            <span className="ph-unmask">Referrals</span>&nbsp;(
+            {items.length - familyCount})
           </ToggleButton>
         </ToggleButtonGroup>
       }
@@ -556,7 +561,7 @@ function DashboardNoteReview({
               <Typography
                 component="span"
                 variant="body2"
-                sx={{ mt: 0.75, lineHeight: 1.55 }}
+                sx={{ mt: 0.5, lineHeight: 1.5 }}
               >
                 {item.preview}
               </Typography>
@@ -709,7 +714,7 @@ function DashboardSummary({
               <Typography
                 className="ph-unmask"
                 variant="body2"
-                sx={{ fontWeight: 600 }}
+                sx={{ fontWeight: 500 }}
               >
                 {label}
               </Typography>
@@ -744,36 +749,22 @@ function DashboardColumns({
   pastDue: ReactNode;
   approvals: ReactNode;
 }) {
-  const theme = useTheme();
-  const desktop = useMediaQuery(theme.breakpoints.up('lg'));
-
-  if (!desktop) {
-    return (
-      <Stack spacing={2}>
-        {pastDue}
-        {upcoming}
-        {notes}
-        {approvals}
-      </Stack>
-    );
-  }
   return (
     <Box
       sx={{
         display: 'grid',
-        gridTemplateColumns: 'minmax(0, 3fr) minmax(0, 2fr)',
-        alignItems: 'start',
-        gap: 2.5,
+        gridTemplateColumns: {
+          xs: 'minmax(0, 1fr)',
+          lg: 'minmax(0, 3fr) minmax(0, 2fr)',
+        },
+        alignItems: { xs: 'start', lg: 'stretch' },
+        gap: { xs: 2, lg: 2.5 },
       }}
     >
-      <Stack spacing={2.5} sx={{ minWidth: 0 }}>
-        {pastDue}
-        {notes}
-      </Stack>
-      <Stack spacing={2.5} sx={{ minWidth: 0 }}>
-        {upcoming}
-        {approvals}
-      </Stack>
+      {pastDue}
+      {upcoming}
+      {notes}
+      {approvals}
     </Box>
   );
 }
@@ -890,7 +881,7 @@ function DashboardRequirements({ storageKey }: { storageKey: string | null }) {
         <Typography
           variant="body2"
           color="text.secondary"
-          sx={{ px: 2, py: 1.25 }}
+          sx={{ px: 2, py: 1.25, mt: 'auto' }}
         >
           Some recurring requirements show only the next occurrence.
         </Typography>
@@ -1044,7 +1035,7 @@ export function Dashboard() {
           {...v2Typography.pageTitle}
           component="h1"
           sx={{
-            fontWeight: 600,
+            fontWeight: 700,
             fontSize: { xs: 28, sm: 32 },
             lineHeight: 1.2,
           }}
