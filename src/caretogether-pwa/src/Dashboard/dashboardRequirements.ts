@@ -92,3 +92,31 @@ export function selectDashboardRequirements(
     olderPastDueCount,
   };
 }
+
+export type RequirementDeadlineUrgency = 'overdue' | 'soon' | 'normal';
+
+const soonWindowDays = 3;
+
+function pluralDays(days: number) {
+  return `${days} ${days === 1 ? 'day' : 'days'}`;
+}
+
+export function requirementDeadline(
+  {
+    status,
+    occurrenceDate,
+  }: Pick<ArrangementWorkQueueItem, 'status' | 'occurrenceDate'>,
+  today: string
+): { label: string; urgency: RequirementDeadlineUrgency } {
+  const days = (Date.parse(occurrenceDate) - Date.parse(today)) / 86_400_000;
+
+  if (status === 'past-due') {
+    return {
+      label: days < 0 ? `${pluralDays(-days)} overdue` : 'Past due since',
+      urgency: 'overdue',
+    };
+  }
+  const urgency = days >= 0 && days <= soonWindowDays ? 'soon' : 'normal';
+  if (days > 0) return { label: `Due in ${pluralDays(days)}`, urgency };
+  return { label: days === 0 ? 'Due today' : 'Due', urgency };
+}

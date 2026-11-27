@@ -3,6 +3,7 @@ import test from 'node:test';
 import type { ArrangementWorkQueueItem } from './arrangementWorkQueue';
 import {
   locationCalendarDate,
+  requirementDeadline,
   selectDashboardRequirements,
 } from './dashboardRequirements.ts';
 
@@ -133,4 +134,60 @@ test('uses the location calendar day across time zones and falls back to the pol
   assert.equal(locationCalendarDate(now, 'America/Sao_Paulo'), '2026-03-08');
   assert.equal(locationCalendarDate(now), '2026-03-07');
   assert.equal(locationCalendarDate(now, 'unsupported-zone'), '2026-03-07');
+});
+
+test('labels past-due requirements as overdue', () => {
+  assert.deepEqual(
+    requirementDeadline(requirement('2026-01-01', 'past-due'), '2026-02-20'),
+    { label: '50 days overdue', urgency: 'overdue' }
+  );
+  assert.deepEqual(
+    requirementDeadline(requirement('2026-02-19', 'past-due'), '2026-02-20'),
+    { label: '1 day overdue', urgency: 'overdue' }
+  );
+  assert.deepEqual(
+    requirementDeadline(requirement('2026-02-20', 'past-due'), '2026-02-20'),
+    { label: 'Past due since', urgency: 'overdue' }
+  );
+});
+
+test('marks upcoming requirements due within three days as soon', () => {
+  assert.deepEqual(
+    requirementDeadline(requirement('2026-02-20'), '2026-02-20'),
+    {
+      label: 'Due today',
+      urgency: 'soon',
+    }
+  );
+  assert.deepEqual(
+    requirementDeadline(requirement('2026-02-21'), '2026-02-20'),
+    {
+      label: 'Due in 1 day',
+      urgency: 'soon',
+    }
+  );
+  assert.deepEqual(
+    requirementDeadline(requirement('2026-02-23'), '2026-02-20'),
+    {
+      label: 'Due in 3 days',
+      urgency: 'soon',
+    }
+  );
+});
+
+test('leaves later upcoming requirements at normal urgency', () => {
+  assert.deepEqual(
+    requirementDeadline(requirement('2026-02-26'), '2026-02-20'),
+    {
+      label: 'Due in 6 days',
+      urgency: 'normal',
+    }
+  );
+  assert.deepEqual(
+    requirementDeadline(requirement('2026-02-19'), '2026-02-20'),
+    {
+      label: 'Due',
+      urgency: 'normal',
+    }
+  );
 });

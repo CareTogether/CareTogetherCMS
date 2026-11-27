@@ -15,14 +15,19 @@ import {
   Tooltip,
   Typography,
 } from '@mui/material';
-import { alpha, darken } from '@mui/material/styles';
+import { alpha, darken, type Theme } from '@mui/material/styles';
 import {
-  ChevronRight,
+  ErrorOutlineOutlined,
   InboxOutlined,
+  ScheduleOutlined,
   SnoozeOutlined,
 } from '@mui/icons-material';
 import { formatUtcDateOnly } from '../Utilities/dateUtils';
-import type { RequirementGroup } from './dashboardRequirements';
+import {
+  requirementDeadline,
+  type RequirementDeadlineUrgency,
+  type RequirementGroup,
+} from './dashboardRequirements';
 
 type DashboardRequirementPanelProps = {
   title: string;
@@ -240,6 +245,24 @@ export function DashboardRequirementPanel({
   );
 }
 
+// Each urgency level gets a distinct icon so it never relies on color alone
+// (WCAG 1.4.1). Text colors are the dark palette variants, which keep 4.5:1
+// contrast on the paper background.
+const deadlinePresentation: Record<
+  RequirementDeadlineUrgency,
+  {
+    Icon?: typeof ErrorOutlineOutlined;
+    color: string | ((theme: Theme) => string);
+  }
+> = {
+  overdue: { Icon: ErrorOutlineOutlined, color: 'error.dark' },
+  soon: {
+    Icon: ScheduleOutlined,
+    color: (theme) => darken(theme.palette.warning.dark, 0.2),
+  },
+  normal: { color: 'text.primary' },
+};
+
 type DashboardRequirementRowProps = {
   dateReached: boolean;
   today: string;
@@ -259,20 +282,8 @@ export function DashboardRequirementRow({
   onOpen,
   onSnooze,
 }: DashboardRequirementRowProps) {
-  const pastDue = item.status === 'past-due';
-  const daysFromToday =
-    (Date.parse(item.occurrenceDate) - Date.parse(today)) / 86_400_000;
-  const relativeDate =
-    pastDue && daysFromToday < 0
-      ? `${-daysFromToday} ${daysFromToday === -1 ? 'day' : 'days'} overdue`
-      : !pastDue && daysFromToday > 0
-        ? `Due in ${daysFromToday} ${daysFromToday === 1 ? 'day' : 'days'}`
-        : undefined;
-  const deadlineColor = pastDue
-    ? 'error.dark'
-    : daysFromToday >= 0 && daysFromToday <= 3
-      ? undefined
-      : 'text.primary';
+  const { label, urgency } = requirementDeadline(item, today);
+  const { Icon, color } = deadlinePresentation[urgency];
 
   return (
     <DashboardQueueRow
@@ -299,17 +310,17 @@ export function DashboardRequirementRow({
             variant="body2"
             className="ph-unmask"
             sx={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 0.5,
               fontWeight: 500,
-              color: (theme) =>
-                deadlineColor ?? darken(theme.palette.warning.dark, 0.2),
+              color,
             }}
           >
-            {relativeDate ??
-              (pastDue
-                ? 'Past due since'
-                : daysFromToday === 0
-                  ? 'Due today'
-                  : 'Due')}
+            {Icon && (
+              <Icon aria-hidden sx={{ fontSize: '1rem', flexShrink: 0 }} />
+            )}
+            {label}
           </Typography>
           <Typography component="span" variant="caption" color="text.secondary">
             <time dateTime={item.occurrenceDate}>
@@ -348,6 +359,36 @@ export function DashboardRequirementRow({
   );
 }
 
+function TruncatedText({ children }: { children: string }) {
+  const ref = useRef<HTMLSpanElement>(null);
+  const [open, setOpen] = useState(false);
+  const isTruncated = () =>
+    !!ref.current && ref.current.scrollWidth > ref.current.clientWidth;
+  return (
+    // Tooltip text renders in a masked popper; a `title` attribute would not
+    // be masked in session recordings.
+    <Tooltip
+      title={children}
+      describeChild
+      open={open}
+      onOpen={() => setOpen(isTruncated())}
+      onClose={() => setOpen(false)}
+      disableFocusListener
+      disableTouchListener
+    >
+      <Typography
+        ref={ref}
+        component="span"
+        variant="body2"
+        color="text.secondary"
+        noWrap
+      >
+        {children}
+      </Typography>
+    </Tooltip>
+  );
+}
+
 export function DashboardQueueRow({
   title,
   context,
@@ -378,9 +419,7 @@ export function DashboardQueueRow({
       >
         {title}
       </Typography>
-      <Typography component="span" variant="body2" color="text.secondary">
-        {context}
-      </Typography>
+      <TruncatedText>{context}</TruncatedText>
       {children}
     </Stack>
   );
@@ -388,9 +427,14 @@ export function DashboardQueueRow({
     <ListItem
       disablePadding={!!onOpen}
       divider
-      sx={
-        actions ? { flexDirection: 'column', alignItems: 'stretch' } : undefined
-      }
+      sx={{
+        ...(actions && { flexDirection: 'column', alignItems: 'stretch' }),
+        // Highlight at the item level so hovering or focusing the trailing
+        // action keeps the whole row highlighted.
+        ...(onOpen && {
+          '&:hover, &:has(.Mui-focusVisible)': { bgcolor: 'action.hover' },
+        }),
+      }}
     >
       {onOpen ? (
         <ListItemButton
@@ -407,15 +451,16 @@ export function DashboardQueueRow({
             textAlign: 'left',
             ...(deadline && {
               display: 'grid',
-              gridTemplateColumns: 'minmax(0, 1fr) auto',
-              gridTemplateAreas: '"main arrow" "deadline arrow"',
+              gridTemplateColumns: 'minmax(0, 1fr)',
+              gridTemplateAreas: '"main" "deadline"',
               rowGap: 0.5,
               '@container (min-width: 28rem)': {
-                gridTemplateColumns: 'minmax(0, 1fr) minmax(0, auto) auto',
-                gridTemplateAreas: '"main deadline arrow"',
+                gridTemplateColumns: 'minmax(0, 1fr) minmax(0, auto)',
+                gridTemplateAreas: '"main deadline"',
               },
             }),
-            '&:hover, &.Mui-focusVisible': { bgcolor: 'action.hover' },
+            // The ListItem owns the highlight; avoid stacking a second one.
+            '&:hover, &.Mui-focusVisible': { bgcolor: 'transparent' },
             '&.Mui-focusVisible': {
               outline: '2px solid',
               outlineColor: 'primary.main',
@@ -440,23 +485,20 @@ export function DashboardQueueRow({
               {deadline}
             </Stack>
           )}
-          <ChevronRight
-            fontSize="small"
-            color="action"
-            aria-hidden
-            sx={{ flexShrink: 0, gridArea: 'arrow' }}
-          />
         </ListItemButton>
       ) : (
         content
       )}
       {trailingAction && (
+        // A sibling of the row button (never nested in it), so clicks don't
+        // open the row and Tab order is row → action.
         <Box
           sx={{
             display: 'flex',
             alignItems: 'center',
+            alignSelf: 'center',
             flexShrink: 0,
-            pr: 1,
+            pr: 2,
             '& .Mui-focusVisible': {
               outline: '2px solid',
               outlineColor: 'primary.dark',

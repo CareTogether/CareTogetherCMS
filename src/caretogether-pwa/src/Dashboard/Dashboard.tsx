@@ -35,6 +35,8 @@ import {
   SnoozeOutlined,
   VerifiedUserOutlined,
 } from '@mui/icons-material';
+import { alpha, darken } from '@mui/material/styles';
+import { arrangementPhaseColor } from '../V1Cases/Arrangements/arrangementPresentationV2';
 import { useAccountInfo } from '../Authentication/Auth';
 import { useFeatureFlagEnabled } from 'posthog-js/react';
 import {
@@ -814,11 +816,77 @@ const assignmentViews = {
   roles: { label: 'Roles', empty: 'No organization roles assigned to you' },
 } satisfies Record<AssignmentView, { label: string; empty: string }>;
 
-const arrangementPhaseLabels: Partial<Record<ArrangementPhase, string>> = {
+// My assignments only lists active arrangements, so `Started` is the normal
+// state; only phases that still need attention get a chip.
+const attentionPhaseLabels: Partial<Record<ArrangementPhase, string>> = {
   [ArrangementPhase.SettingUp]: 'Setting up',
   [ArrangementPhase.ReadyToStart]: 'Ready to start',
-  [ArrangementPhase.Started]: 'Started',
 };
+
+function ArrangementAssignmentStatus({
+  phase,
+  assignedToFamily,
+}: {
+  phase: ArrangementPhase;
+  assignedToFamily: boolean;
+}) {
+  const label = attentionPhaseLabels[phase];
+  if (!label && !assignedToFamily) return null;
+
+  return (
+    <Stack
+      component="span"
+      direction="row"
+      spacing={1}
+      useFlexGap
+      sx={{ alignItems: 'center', flexWrap: 'wrap' }}
+    >
+      {label && <ArrangementPhaseChip phase={phase} label={label} />}
+      {assignedToFamily && (
+        <Typography
+          className="ph-unmask"
+          component="span"
+          variant="caption"
+          color="text.secondary"
+        >
+          Assigned to your family
+        </Typography>
+      )}
+    </Stack>
+  );
+}
+
+function ArrangementPhaseChip({
+  phase,
+  label,
+}: {
+  phase: ArrangementPhase;
+  label: string;
+}) {
+  const color = arrangementPhaseColor(phase) ?? 'default';
+
+  return (
+    <Chip
+      // Rendered inside the row's <button>, so it must be phrasing content.
+      component="span"
+      className="ph-unmask"
+      size="small"
+      variant="outlined"
+      label={label}
+      sx={{
+        height: 22,
+        fontSize: 'caption.fontSize',
+        fontWeight: 500,
+        // The palette `main` shades fall below 4.5:1 on white at this size,
+        // so text and border use a darkened `dark` shade instead.
+        ...(color !== 'default' && {
+          color: (theme) => darken(theme.palette[color].dark, 0.2),
+          borderColor: (theme) => alpha(theme.palette[color].dark, 0.5),
+        }),
+      }}
+    />
+  );
+}
 
 function DashboardMyAssignments({ familyV2 }: { familyV2: boolean }) {
   const personId = useCurrentLocation()?.personId;
@@ -937,21 +1005,10 @@ function DashboardMyAssignments({ familyV2 }: { familyV2: boolean }) {
               )
             }
           >
-            <Typography
-              className="ph-unmask"
-              component="span"
-              variant="caption"
-              color="text.secondary"
-            >
-              {[
-                arrangementPhaseLabels[assignment.phase],
-                assignment.assignee === 'family'
-                  ? 'Assigned to your family'
-                  : undefined,
-              ]
-                .filter(Boolean)
-                .join(' · ')}
-            </Typography>
+            <ArrangementAssignmentStatus
+              phase={assignment.phase}
+              assignedToFamily={assignment.assignee === 'family'}
+            />
           </DashboardQueueRow>
         ))}
       {view === 'roles' &&
