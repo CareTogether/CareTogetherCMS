@@ -29,6 +29,7 @@ import {
   DeleteForever as DeleteForeverIcon,
   Edit as EditIcon,
   EventAvailableOutlined,
+  AssignmentIndOutlined,
   EventBusyOutlined,
   FactCheckOutlined,
   SnoozeOutlined,
@@ -44,13 +45,14 @@ import {
 import { familyNameString } from '../Families/FamilyName';
 import { personNameString } from '../Families/PersonName';
 import { v2Typography } from '../Families/v2Typography';
-import type { CombinedFamilyInfo } from '../GeneratedClient';
+import { ArrangementPhase, type CombinedFamilyInfo } from '../GeneratedClient';
 import { useAppNavigate } from '../Hooks/useAppNavigate';
 import { useLocationConfiguration } from '../Model/ConfigurationModel';
 import {
   useCurrentLocation,
   useSelectedLocationContext,
   useVisibleFamilies,
+  useVisibleCommunities,
   useVisibleReferrals,
 } from '../Model/Data';
 import { AddEditNoteDrawer } from '../Notes/AddEditNoteDrawer';
@@ -109,6 +111,7 @@ import { useApprovalExpirationWorkQueue } from './useApprovalExpirationWorkQueue
 import { useApprovalRenewalWorkQueue } from './useApprovalRenewalWorkQueue';
 import { useArrangementWorkQueue } from './useArrangementWorkQueue';
 import { DashboardSnoozeDrawer } from './DashboardSnoozeDrawer';
+import { selectMyAssignments, type MyAssignments } from './myAssignments';
 import {
   noteSnoozeToken,
   partitionSnoozed,
@@ -790,6 +793,181 @@ function DashboardNoteDialog({
   );
 }
 
+const myAssignmentsPanel = {
+  title: 'My assignments',
+  icon: <AssignmentIndOutlined fontSize="small" />,
+  emptyTitle: 'No assignments',
+  emptyMessage: 'You have no active case, arrangement, or role assignments.',
+  itemType: 'assignment',
+  loadingMessage: 'Loading assignments…',
+} as const;
+
+type AssignmentView = keyof MyAssignments;
+
+const assignmentViews = {
+  cases: { label: 'Cases', empty: 'No cases assigned to you' },
+  arrangements: {
+    label: 'Arrangements',
+    empty: 'No active arrangements assigned to you',
+  },
+  roles: { label: 'Roles', empty: 'No organization roles assigned to you' },
+} satisfies Record<AssignmentView, { label: string; empty: string }>;
+
+const arrangementPhaseLabels: Partial<Record<ArrangementPhase, string>> = {
+  [ArrangementPhase.SettingUp]: 'Setting up',
+  [ArrangementPhase.ReadyToStart]: 'Ready to start',
+  [ArrangementPhase.Started]: 'Started',
+};
+
+function DashboardMyAssignments({ familyV2 }: { familyV2: boolean }) {
+  const personId = useCurrentLocation()?.personId;
+  const families = useVisibleFamilies();
+  const communities = useVisibleCommunities();
+  const familyLookup = useFamilyLookup();
+  const navigate = useAppNavigate();
+  const assignments = useMemo(
+    () => selectMyAssignments(personId, families, communities),
+    [personId, families, communities]
+  );
+  const [selectedView, setSelectedView] = useState<AssignmentView>();
+  const view =
+    selectedView ??
+    (Object.keys(assignmentViews) as AssignmentView[]).find(
+      (key) => assignments[key].length > 0
+    ) ??
+    'cases';
+  const total =
+    assignments.cases.length +
+    assignments.arrangements.length +
+    assignments.roles.length;
+
+  function familyName(familyId: string) {
+    return disclosedFamilyName(familyLookup(familyId)) ?? 'Family';
+  }
+
+  return (
+    <DashboardRequirementPanel
+      {...myAssignmentsPanel}
+      compact
+      count={assignments[view].length}
+      {...(!personId
+        ? {
+            emptyTitle: 'No linked person record',
+            emptyMessage:
+              'Your account is not linked to a person in this location.',
+          }
+        : total > 0 && {
+            emptyTitle: assignmentViews[view].empty,
+            emptyMessage: 'Choose another assignment type.',
+          })}
+      headerAction={
+        <ToggleButtonGroup
+          exclusive
+          value={view}
+          aria-label="Assignment type"
+          size="small"
+          sx={{
+            flexWrap: 'wrap',
+            '& .MuiToggleButton-root': {
+              textTransform: 'none',
+              minHeight: 32,
+              color: 'text.secondary',
+              fontVariantNumeric: 'tabular-nums',
+            },
+          }}
+          onChange={(_, value: AssignmentView | null) => {
+            if (value) setSelectedView(value);
+          }}
+        >
+          {(Object.keys(assignmentViews) as AssignmentView[]).map((key) => (
+            <ToggleButton key={key} value={key}>
+              <span className="ph-unmask">{assignmentViews[key].label}</span>
+              &nbsp;({assignments[key].length})
+            </ToggleButton>
+          ))}
+        </ToggleButtonGroup>
+      }
+    >
+      {view === 'cases' &&
+        assignments.cases.map((assignment) => (
+          <DashboardQueueRow
+            key={assignment.key}
+            title={assignment.role}
+            context={familyName(assignment.familyId)}
+            onOpen={() =>
+              navigate.family(assignment.familyId, {
+                v1CaseId: assignment.v1CaseId,
+              })
+            }
+          >
+            <Typography
+              className="ph-unmask"
+              component="span"
+              variant="caption"
+              color="text.secondary"
+            >
+              Open case
+            </Typography>
+          </DashboardQueueRow>
+        ))}
+      {view === 'arrangements' &&
+        assignments.arrangements.map((assignment) => (
+          <DashboardQueueRow
+            key={assignment.key}
+            title={[
+              assignment.arrangementFunction,
+              assignment.arrangementFunctionVariant,
+            ]
+              .filter(Boolean)
+              .join(' · ')}
+            context={[
+              familyName(assignment.familyId),
+              assignment.arrangementType || 'Arrangement',
+            ].join(' · ')}
+            onOpen={() =>
+              navigate.family(
+                assignment.familyId,
+                familyV2
+                  ? {
+                      v1CaseId: assignment.v1CaseId,
+                      arrangementId: assignment.arrangementId,
+                    }
+                  : { v1CaseId: assignment.v1CaseId }
+              )
+            }
+          >
+            <Typography
+              className="ph-unmask"
+              component="span"
+              variant="caption"
+              color="text.secondary"
+            >
+              {[
+                arrangementPhaseLabels[assignment.phase],
+                assignment.assignee === 'family'
+                  ? 'Assigned to your family'
+                  : undefined,
+              ]
+                .filter(Boolean)
+                .join(' · ')}
+            </Typography>
+          </DashboardQueueRow>
+        ))}
+      {view === 'roles' &&
+        assignments.roles.map((assignment) => (
+          <DashboardQueueRow
+            key={assignment.key}
+            title={assignment.role}
+            context={assignment.communityName || 'Organization'}
+            onOpen={() => navigate.organization(assignment.communityId)}
+          >
+            {null}
+          </DashboardQueueRow>
+        ))}
+    </DashboardRequirementPanel>
+  );
+}
+
 function DashboardColumns({
   upcoming,
   notes,
@@ -1216,6 +1394,9 @@ function DashboardRequirements({ storageKey }: { storageKey: string | null }) {
 
   return (
     <>
+      <Box sx={{ mb: { xs: 2, lg: 2.5 } }}>
+        <DashboardMyAssignments familyV2={familyV2} />
+      </Box>
       <DashboardColumns
         upcoming={upcomingRequirements}
         pastDue={pastDueRequirements}
@@ -1346,12 +1527,17 @@ export function Dashboard() {
       </Stack>
       <Suspense
         fallback={
-          <DashboardColumns
-            upcoming={<DashboardRequirementPanel {...upcomingPanel} />}
-            notes={<DashboardRequirementPanel {...noteReviewPanel} />}
-            pastDue={<DashboardRequirementPanel {...pastDuePanel} />}
-            approvals={<DashboardRequirementPanel {...expirationPanel} />}
-          />
+          <>
+            <Box sx={{ mb: { xs: 2, lg: 2.5 } }}>
+              <DashboardRequirementPanel {...myAssignmentsPanel} />
+            </Box>
+            <DashboardColumns
+              upcoming={<DashboardRequirementPanel {...upcomingPanel} />}
+              notes={<DashboardRequirementPanel {...noteReviewPanel} />}
+              pastDue={<DashboardRequirementPanel {...pastDuePanel} />}
+              approvals={<DashboardRequirementPanel {...expirationPanel} />}
+            />
+          </>
         }
       >
         <DashboardRequirements key={storageKey} storageKey={storageKey} />

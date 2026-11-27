@@ -31,11 +31,12 @@ type DashboardRequirementPanelProps = {
   emptyMessage: string;
   emptyIcon?: ReactNode;
   count?: number;
-  itemType?: 'requirement' | 'approval work item' | 'note';
+  itemType?: 'requirement' | 'approval work item' | 'note' | 'assignment';
   emphasis?: 'error';
   loadingMessage?: string;
   headerAction?: ReactNode;
   footer?: ReactNode;
+  compact?: boolean;
   children?: ReactNode;
 };
 
@@ -51,6 +52,7 @@ export function DashboardRequirementPanel({
   loadingMessage = `Loading ${itemType}s…`,
   headerAction,
   footer,
+  compact = false,
   children,
 }: DashboardRequirementPanelProps) {
   const headingId = useId();
@@ -207,7 +209,9 @@ export function DashboardRequirementPanel({
           aria-labelledby={headingId}
           tabIndex={0}
           sx={{
-            maxHeight: { xs: 'min(65dvh, 36rem)', lg: 'min(42dvh, 18rem)' },
+            maxHeight: compact
+              ? { xs: 'min(50dvh, 20rem)', lg: '15rem' }
+              : { xs: 'min(65dvh, 36rem)', lg: 'min(42dvh, 18rem)' },
             overflowY: 'auto',
             overflowX: 'hidden',
             '&:focus-visible': {
