@@ -101,6 +101,7 @@ export function FamilyScreenV2() {
   const location = useLocation();
   const navigate = useNavigate();
   const searchParams = new URLSearchParams(location.search);
+  const notesSectionRequested = searchParams.get('section') === 'notes';
   const familyMemberIdFromQuery =
     searchParams.get('familyMemberId') ?? undefined;
   const arrangementIdFromQuery = searchParams.get('arrangementId') ?? undefined;
@@ -423,6 +424,10 @@ export function FamilyScreenV2() {
     selectedTab,
     selectedV1Case,
   });
+
+  useEffect(() => {
+    if (notesSectionRequested) setSelectedTab('timelineAndNotes');
+  }, [notesSectionRequested, location.key, setSelectedTab]);
 
   useEffect(() => {
     if (!familyMemberPrintRequested || !familyMemberToPrint) return;

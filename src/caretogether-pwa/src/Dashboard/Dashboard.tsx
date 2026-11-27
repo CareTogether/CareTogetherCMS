@@ -12,6 +12,7 @@ import { useFeatureFlagEnabled } from 'posthog-js/react';
 import { Suspense, useCallback, useEffect, useState } from 'react';
 import { useAccountInfo } from '../Authentication/Auth';
 import { personNameString } from '../Families/PersonName';
+import type { RecentNoteActionKind } from '../Families/useRecentFamilyNoteActions';
 import { v2Typography } from '../Families/v2Typography';
 import { useAppNavigate } from '../Hooks/useAppNavigate';
 import { useLocationConfiguration } from '../Model/ConfigurationModel';
@@ -22,7 +23,10 @@ import {
 } from '../Model/DirectoryModel';
 import { useScreenTitle } from '../Shell/ShellScreenTitle';
 import { formatUtcDateOnly } from '../Utilities/dateUtils';
-import { FAMILY_SCREEN_V2_EARLY_ACCESS_FEATURE_FLAG } from '../featureFlags';
+import {
+  FAMILY_SCREEN_V2_EARLY_ACCESS_FEATURE_FLAG,
+  REFERRALS_FEATURE_FLAG,
+} from '../featureFlags';
 import {
   DashboardRequirementPanel,
   DashboardRequirementRow,
@@ -30,6 +34,7 @@ import {
 } from './DashboardRequirementPanel';
 import { DashboardSnoozeDrawer } from './DashboardSnoozeDrawer';
 import type { ArrangementWorkQueueItem } from './arrangementWorkQueue';
+import { filterDashboardNoteReview } from './dashboardNoteReview';
 import {
   dashboardPreferencesKey,
   readDashboardPreferences,
@@ -43,6 +48,7 @@ import {
   selectDashboardRequirements,
 } from './dashboardRequirements';
 import {
+  noteSnoozeToken,
   partitionSnoozed,
   removeSnooze,
   snoozeStoragePrefix,
@@ -52,12 +58,18 @@ import {
 import { openDashboardArrangement } from './dashboardWorkNavigation';
 import { useArrangementWorkQueue } from './useArrangementWorkQueue';
 
+import {
+  DashboardNoteDialog,
+  DashboardNoteReview,
+} from './DashboardNoteReviewSection';
 import { disclosedFamilyName } from './dashboardFamilyName';
 import {
   DashboardColumns,
   NextDaysSelect,
   type SnoozeKind,
 } from './dashboardLayout';
+import { noteReviewPanel } from './dashboardPanels';
+import { noteKey, useDashboardNoteReview } from './useDashboardNoteReview';
 
 const upcomingPanel = {
   title: 'Upcoming requirements',
@@ -89,6 +101,12 @@ function DashboardRequirements({ storageKey }: { storageKey: string | null }) {
   const clearSnoozedFocus = useCallback(() => setFocusSnoozed(undefined), []);
   const [snoozeFeedback, setSnoozeFeedback] = useState('');
   const [, setSnoozeRevision] = useState(0);
+  const [noteSelection, setNoteSelection] = useState<{
+    key: string;
+    action: RecentNoteActionKind;
+  }>();
+  const referralsEnabled =
+    useFeatureFlagEnabled(REFERRALS_FEATURE_FLAG) === true;
   const familyV2 =
     useFeatureFlagEnabled(FAMILY_SCREEN_V2_EARLY_ACCESS_FEATURE_FLAG) === true;
   const [preferences, setPreferences] = useState(() =>
@@ -120,13 +138,54 @@ function DashboardRequirements({ storageKey }: { storageKey: string | null }) {
   const requirementWakeAt = new Map(
     requirementSnoozes.snoozed.map(({ token, wakeAt }) => [token, wakeAt])
   );
-  const nextWake = requirementSnoozes.nextWake;
+  const notes = useDashboardNoteReview();
+  const selectedNote =
+    noteSelection &&
+    notes.find(
+      (item) =>
+        noteKey(item) === noteSelection.key &&
+        (item.source === 'family' || referralsEnabled) &&
+        (noteSelection.action !== 'edit' || item.canEdit) &&
+        (noteSelection.action !== 'delete' || item.canDelete)
+    );
+  const {
+    active: activeNotes,
+    snoozed: snoozedNotes,
+    nextWake: nextNoteWake,
+  } = partitionSnoozed(
+    notes,
+    (item) =>
+      item.source === 'family' || referralsEnabled
+        ? noteSnoozeToken(item)
+        : null,
+    snoozeScope,
+    evaluationTime.getTime()
+  );
+  const wakeTimes = [nextNoteWake, requirementSnoozes.nextWake].filter(
+    (wake) => wake !== undefined
+  );
+  const nextWake = wakeTimes.length ? Math.min(...wakeTimes) : undefined;
+  const visibleNotes = filterDashboardNoteReview(
+    activeNotes,
+    preferences.noteReviewSource
+  );
+  const visibleSnoozed = snoozedNotes.filter(
+    ({ item }) =>
+      preferences.noteReviewSource === 'all' ||
+      item.source === preferences.noteReviewSource
+  );
   const selectedSnooze =
     snoozeSelection &&
     snoozeScope &&
-    (snoozeSelection.kind === 'upcoming' ? upcoming : pastDue).some(
-      ({ item }) => item.snoozeToken === snoozeSelection.token
-    );
+    (snoozeSelection.kind === 'note'
+      ? visibleNotes.some(
+          (item) =>
+            (item.source === 'family' || referralsEnabled) &&
+            noteSnoozeToken(item) === snoozeSelection.token
+        )
+      : (snoozeSelection.kind === 'upcoming' ? upcoming : pastDue).some(
+          ({ item }) => item.snoozeToken === snoozeSelection.token
+        ));
 
   function restoreSnooze(token: string, message: string) {
     const saved = removeSnooze(snoozeScope, token);
@@ -382,8 +441,42 @@ function DashboardRequirements({ storageKey }: { storageKey: string | null }) {
         upcoming={upcomingRequirements}
         pastDue={pastDueRequirements}
         approvals={null}
-        notes={null}
+        notes={
+          <DashboardNoteReview
+            referralsEnabled={referralsEnabled}
+            onAction={(item, action) =>
+              setNoteSelection({ key: noteKey(item), action })
+            }
+            items={activeNotes}
+            hasNotes={notes.length > 0}
+            visible={visibleNotes}
+            snoozed={visibleSnoozed}
+            onSnooze={
+              snoozeScope
+                ? (token) => setSnoozeSelection({ token, kind: 'note' })
+                : undefined
+            }
+            onUnsnooze={(token) =>
+              restoreSnooze(token, 'Note returned to the review queue.')
+            }
+            focusSnoozed={focusSnoozed === 'note'}
+            onSnoozedFocused={clearSnoozedFocus}
+            familyV2={familyV2}
+            source={preferences.noteReviewSource}
+            onChange={(noteReviewSource) =>
+              updatePreferences({ noteReviewSource })
+            }
+          />
+        }
       />
+      {selectedNote && noteSelection && (
+        <DashboardNoteDialog
+          item={selectedNote}
+          action={noteSelection.action}
+          familyV2={familyV2}
+          onClose={() => setNoteSelection(undefined)}
+        />
+      )}
       {selectedSnooze && (
         <DashboardSnoozeDrawer
           onClose={() => setSnoozeSelection(undefined)}
@@ -397,7 +490,9 @@ function DashboardRequirements({ storageKey }: { storageKey: string | null }) {
             setSnoozeRevision((revision) => revision + 1);
             setSnoozeFeedback(
               saved
-                ? 'Requirement snoozed.'
+                ? snoozeSelection.kind === 'note'
+                  ? 'Note snoozed.'
+                  : 'Requirement snoozed.'
                 : 'Could not save the snooze on this device.'
             );
             if (saved) setFocusSnoozed(snoozeSelection.kind);
@@ -456,7 +551,7 @@ export function Dashboard() {
           <>
             <DashboardColumns
               upcoming={<DashboardRequirementPanel {...upcomingPanel} />}
-              notes={null}
+              notes={<DashboardRequirementPanel {...noteReviewPanel} />}
               pastDue={<DashboardRequirementPanel {...pastDuePanel} />}
               approvals={null}
             />

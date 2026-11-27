@@ -1,5 +1,8 @@
 import { Divider, Typography } from '@mui/material';
-import { useDirectoryModel, useNoteAuthorLookup } from '../Model/DirectoryModel';
+import {
+  useDirectoryModel,
+  useNoteAuthorLookup,
+} from '../Model/DirectoryModel';
 import { UpdateDialog } from '../Generic/UpdateDialog';
 import { Note } from '../GeneratedClient';
 import { PersonName } from '../Families/PersonName';
@@ -34,6 +37,7 @@ export function ApproveNoteDialog({
       title="Do you want to approve and finalize this note?"
       onClose={onClose}
       onSave={approve}
+      saveLabel="Approve"
     >
       <Typography variant="body2" component="p">
         <PersonName person={noteAuthorLookup(note)} /> -&nbsp;

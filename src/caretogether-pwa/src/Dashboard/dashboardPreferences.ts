@@ -1,5 +1,5 @@
 import type { LocationScope } from '../Model/LocationScope';
-type NoteReviewSource = 'family' | 'referral';
+import type { NoteReviewSource } from './dashboardNoteReview';
 
 export const requirementWindowDays = [7, 14, 30, 60, 90] as const;
 

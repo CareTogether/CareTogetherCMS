@@ -5,7 +5,7 @@ import {
   type RequirementWindowDays,
 } from './dashboardPreferences';
 
-export type SnoozeKind = 'upcoming' | 'pastDue';
+export type SnoozeKind = 'note' | 'upcoming' | 'pastDue';
 
 export function NextDaysSelect({
   label,

@@ -6,7 +6,7 @@ import {
   Button,
   Typography,
 } from '@mui/material';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { V1ReferralNoteEntry, V1ReferralNoteStatus } from '../GeneratedClient';
 import { useV1ReferralNotesModel } from '../Model/V1ReferralNotesModel';
 
@@ -23,23 +23,33 @@ export function DiscardV1ReferralNoteDialog({
 }: DiscardV1ReferralNoteDialogProps) {
   const { discardDraftReferralNote } = useV1ReferralNotesModel();
   const [working, setWorking] = useState(false);
+  const submitting = useRef(false);
 
   const canDiscard = note.status === V1ReferralNoteStatus.Draft;
 
   async function onDelete() {
-    if (!canDiscard) return;
+    if (!canDiscard || submitting.current) return;
 
+    submitting.current = true;
     setWorking(true);
     try {
       await discardDraftReferralNote(referralId, note.id);
       onClose();
     } finally {
+      submitting.current = false;
       setWorking(false);
     }
   }
 
   return (
-    <Dialog open onClose={onClose} fullWidth maxWidth="xs">
+    <Dialog
+      open
+      onClose={() => {
+        if (!submitting.current) onClose();
+      }}
+      fullWidth
+      maxWidth="xs"
+    >
       <DialogTitle>Delete draft note?</DialogTitle>
 
       <DialogContent>
