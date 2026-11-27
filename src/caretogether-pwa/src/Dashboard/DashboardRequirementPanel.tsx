@@ -31,9 +31,15 @@ type DashboardRequirementPanelProps = {
   emptyMessage: string;
   emptyIcon?: ReactNode;
   count?: number;
-  itemType?: 'requirement' | 'approval work item' | 'note' | 'assignment';
+  itemType?:
+    | 'requirement'
+    | 'approval work item'
+    | 'note'
+    | 'assignment'
+    | 'record';
   emphasis?: 'error';
   loadingMessage?: string;
+  errorMessage?: string;
   headerAction?: ReactNode;
   footer?: ReactNode;
   compact?: boolean;
@@ -52,6 +58,7 @@ export function DashboardRequirementPanel({
   loadingMessage = `Loading ${itemType}s…`,
   headerAction,
   footer,
+  errorMessage,
   compact = false,
   children,
 }: DashboardRequirementPanelProps) {
@@ -159,7 +166,11 @@ export function DashboardRequirementPanel({
         </Stack>
         {headerAction}
       </Stack>
-      {count === undefined ? (
+      {errorMessage ? (
+        <Typography role="status" color="text.secondary" sx={{ p: 2 }}>
+          {errorMessage}
+        </Typography>
+      ) : count === undefined ? (
         <Stack
           direction="row"
           spacing={1}

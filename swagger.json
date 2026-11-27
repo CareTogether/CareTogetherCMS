@@ -969,6 +969,96 @@
         }
       }
     },
+    "/api/{organizationId}/{locationId}/RecentRecords": {
+      "get": {
+        "tags": [
+          "RecentRecords"
+        ],
+        "operationId": "RecentRecords_List",
+        "parameters": [
+          {
+            "name": "organizationId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "guid"
+            },
+            "x-position": 1
+          },
+          {
+            "name": "locationId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "guid"
+            },
+            "x-position": 2
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/RecentRecord"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "RecentRecords"
+        ],
+        "operationId": "RecentRecords_Record",
+        "parameters": [
+          {
+            "name": "organizationId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "guid"
+            },
+            "x-position": 1
+          },
+          {
+            "name": "locationId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "guid"
+            },
+            "x-position": 2
+          }
+        ],
+        "requestBody": {
+          "x-name": "record",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RecentRecordKey"
+              }
+            }
+          },
+          "required": true,
+          "x-position": 3
+        },
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        }
+      }
+    },
     "/api/{organizationId}/{locationId}/Records": {
       "get": {
         "tags": [
@@ -3556,6 +3646,54 @@
             "format": "uri"
           }
         }
+      },
+      "RecentRecord": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "record",
+          "accessedAtUtc"
+        ],
+        "properties": {
+          "record": {
+            "$ref": "#/components/schemas/RecentRecordKey"
+          },
+          "accessedAtUtc": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "RecentRecordKey": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "type",
+          "id"
+        ],
+        "properties": {
+          "type": {
+            "$ref": "#/components/schemas/RecentRecordType"
+          },
+          "id": {
+            "type": "string",
+            "format": "guid"
+          }
+        }
+      },
+      "RecentRecordType": {
+        "type": "integer",
+        "description": "",
+        "x-enumNames": [
+          "Family",
+          "Referral",
+          "Organization"
+        ],
+        "enum": [
+          0,
+          1,
+          2
+        ]
       },
       "RecordsAggregate": {
         "type": "object",

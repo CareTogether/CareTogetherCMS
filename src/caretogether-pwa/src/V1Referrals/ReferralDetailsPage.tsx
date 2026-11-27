@@ -1,4 +1,7 @@
 import Grid from '../Generic/GridLegacyCompat';
+import { useRecordVisit } from '../Hooks/useRecordVisit';
+import { useReferralsAccessGate } from './useReferralsAccessGate';
+import { RecentRecordType } from '../GeneratedClient';
 import { useState } from 'react';
 import { useParams } from 'react-router-dom';
 import {
@@ -129,6 +132,12 @@ export function ReferralDetailsPage() {
     },
     onSelectedExistingFamilySaved: continueAfterFamilySelected,
   });
+
+  const { shouldShowReferrals } = useReferralsAccessGate();
+  useRecordVisit(
+    RecentRecordType.Referral,
+    shouldShowReferrals ? referral?.referralId : undefined
+  );
 
   if (!referralId) {
     return <Typography sx={{ p: 3 }}>Invalid referral.</Typography>;

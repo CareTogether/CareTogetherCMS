@@ -112,6 +112,7 @@ import { useApprovalRenewalWorkQueue } from './useApprovalRenewalWorkQueue';
 import { useArrangementWorkQueue } from './useArrangementWorkQueue';
 import { DashboardSnoozeDrawer } from './DashboardSnoozeDrawer';
 import { selectMyAssignments, type MyAssignments } from './myAssignments';
+import { DashboardRecentRecords } from './DashboardRecentRecords';
 import {
   noteSnoozeToken,
   partitionSnoozed,
@@ -1396,6 +1397,9 @@ function DashboardRequirements({ storageKey }: { storageKey: string | null }) {
     <>
       <Box sx={{ mb: { xs: 2, lg: 2.5 } }}>
         <DashboardMyAssignments familyV2={familyV2} />
+      </Box>
+      <Box sx={{ mb: { xs: 2, lg: 2.5 } }}>
+        <DashboardRecentRecords />
       </Box>
       <DashboardColumns
         upcoming={upcomingRequirements}
