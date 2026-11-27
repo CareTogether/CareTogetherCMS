@@ -837,6 +837,104 @@ export class FilesClient {
     }
 }
 
+export class RecentRecordsClient {
+    private http: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> };
+    private baseUrl: string;
+    protected jsonParseReviver: ((key: string, value: any) => any) | undefined = undefined;
+
+    constructor(baseUrl?: string, http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }) {
+        this.http = http ? http : window as any;
+        this.baseUrl = baseUrl ?? "";
+    }
+
+    list(organizationId: string, locationId: string): Promise<RecentRecord[]> {
+        let url_ = this.baseUrl + "/api/{organizationId}/{locationId}/RecentRecords";
+        if (organizationId === undefined || organizationId === null)
+            throw new globalThis.Error("The parameter 'organizationId' must be defined.");
+        url_ = url_.replace("{organizationId}", encodeURIComponent("" + organizationId));
+        if (locationId === undefined || locationId === null)
+            throw new globalThis.Error("The parameter 'locationId' must be defined.");
+        url_ = url_.replace("{locationId}", encodeURIComponent("" + locationId));
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "GET",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processList(_response);
+        });
+    }
+
+    protected processList(response: Response): Promise<RecentRecord[]> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            if (Array.isArray(resultData200)) {
+                result200 = [] as any;
+                for (let item of resultData200)
+                    result200!.push(RecentRecord.fromJS(item));
+            }
+            else {
+                result200 = null as any;
+            }
+            return result200;
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<RecentRecord[]>(null as any);
+    }
+
+    record(organizationId: string, locationId: string, record: RecentRecordKey): Promise<void> {
+        let url_ = this.baseUrl + "/api/{organizationId}/{locationId}/RecentRecords";
+        if (organizationId === undefined || organizationId === null)
+            throw new globalThis.Error("The parameter 'organizationId' must be defined.");
+        url_ = url_.replace("{organizationId}", encodeURIComponent("" + organizationId));
+        if (locationId === undefined || locationId === null)
+            throw new globalThis.Error("The parameter 'locationId' must be defined.");
+        url_ = url_.replace("{locationId}", encodeURIComponent("" + locationId));
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(record);
+
+        let options_: RequestInit = {
+            body: content_,
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processRecord(_response);
+        });
+    }
+
+    protected processRecord(response: Response): Promise<void> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 204) {
+            return response.text().then((_responseText) => {
+            return;
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<void>(null as any);
+    }
+}
+
 export class RecordsClient {
     private http: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> };
     private baseUrl: string;
@@ -5403,6 +5501,95 @@ export class DocumentUploadInfo implements IDocumentUploadInfo {
 export interface IDocumentUploadInfo {
     documentId: string;
     valetUrl: string;
+}
+
+export class RecentRecord implements IRecentRecord {
+    record!: RecentRecordKey;
+    accessedAtUtc!: Date;
+
+    constructor(data?: IRecentRecord) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+        if (!data) {
+            this.record = new RecentRecordKey();
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.record = _data["record"] ? RecentRecordKey.fromJS(_data["record"]) : new RecentRecordKey();
+            this.accessedAtUtc = _data["accessedAtUtc"] ? new Date(_data["accessedAtUtc"].toString()) : undefined as any;
+        }
+    }
+
+    static fromJS(data: any): RecentRecord {
+        data = typeof data === 'object' ? data : {};
+        let result = new RecentRecord();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["record"] = this.record ? this.record.toJSON() : undefined as any;
+        data["accessedAtUtc"] = this.accessedAtUtc ? this.accessedAtUtc.toISOString() : undefined as any;
+        return data;
+    }
+}
+
+export interface IRecentRecord {
+    record: RecentRecordKey;
+    accessedAtUtc: Date;
+}
+
+export class RecentRecordKey implements IRecentRecordKey {
+    type!: RecentRecordType;
+    id!: string;
+
+    constructor(data?: IRecentRecordKey) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.type = _data["type"];
+            this.id = _data["id"];
+        }
+    }
+
+    static fromJS(data: any): RecentRecordKey {
+        data = typeof data === 'object' ? data : {};
+        let result = new RecentRecordKey();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["type"] = this.type;
+        data["id"] = this.id;
+        return data;
+    }
+}
+
+export interface IRecentRecordKey {
+    type: RecentRecordType;
+    id: string;
+}
+
+export enum RecentRecordType {
+    Family = 0,
+    Referral = 1,
+    Organization = 2,
 }
 
 export abstract class RecordsAggregate implements IRecordsAggregate {

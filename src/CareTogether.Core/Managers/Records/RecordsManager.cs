@@ -99,10 +99,47 @@ namespace CareTogether.Managers.Records
             return userContext;
         }
 
-        public async Task<ImmutableList<RecordsAggregate>> ListVisibleAggregatesAsync(
+        public Task<ImmutableList<RecordsAggregate>> ListVisibleAggregatesAsync(
             ClaimsPrincipal user,
             Guid organizationId,
             Guid locationId
+        ) => RenderVisibleAggregatesAsync(user, organizationId, locationId);
+
+        public async Task<ImmutableHashSet<RecentRecordKey>> FilterVisibleRecentRecordsAsync(
+            ClaimsPrincipal user,
+            Guid organizationId,
+            Guid locationId,
+            ImmutableHashSet<RecentRecordKey> records
+        )
+        {
+            if (records.IsEmpty)
+                return records;
+
+            var aggregates = await RenderVisibleAggregatesAsync(
+                user,
+                organizationId,
+                locationId,
+                records
+            );
+            return aggregates
+                .Select(aggregate => new RecentRecordKey(
+                    aggregate switch
+                    {
+                        FamilyRecordsAggregate => RecentRecordType.Family,
+                        ReferralRecordsAggregate => RecentRecordType.Referral,
+                        CommunityRecordsAggregate => RecentRecordType.Organization,
+                        _ => throw new InvalidOperationException("Unexpected recent record type."),
+                    },
+                    aggregate.Id
+                ))
+                .ToImmutableHashSet();
+        }
+
+        private async Task<ImmutableList<RecordsAggregate>> RenderVisibleAggregatesAsync(
+            ClaimsPrincipal user,
+            Guid organizationId,
+            Guid locationId,
+            ImmutableHashSet<RecentRecordKey>? recentRecords = null
         )
         {
             var userContext = await CreateSessionUserContext(user, organizationId, locationId);
@@ -157,18 +194,26 @@ namespace CareTogether.Managers.Records
             );
 
             var visibleFamilies = (
-                families.Select(family =>
-                {
-                    var permissions = userAccessCalculation.AuthorizeUserAccess(
-                        authorizationSnapshot,
-                        new FamilyAuthorizationContext(family.Id, family)
-                    );
-                    return (
-                        family,
-                        permissions,
-                        hasPermissions: permissions.Except(irrelevantPermissions).Any()
-                    );
-                })
+                families
+                    .Where(family =>
+                        recentRecords == null
+                        || (
+                            family.Active
+                            && recentRecords.Contains(new(RecentRecordType.Family, family.Id))
+                        )
+                    )
+                    .Select(family =>
+                    {
+                        var permissions = userAccessCalculation.AuthorizeUserAccess(
+                            authorizationSnapshot,
+                            new FamilyAuthorizationContext(family.Id, family)
+                        );
+                        return (
+                            family,
+                            permissions,
+                            hasPermissions: permissions.Except(irrelevantPermissions).Any()
+                        );
+                    })
             ).Where(x => x.hasPermissions).ToImmutableList();
 
             var renderedFamilies = (
@@ -195,6 +240,12 @@ namespace CareTogether.Managers.Records
 
             var renderedReferrals = (
                 await referrals
+                    .Where(referral =>
+                        recentRecords == null
+                        || recentRecords.Contains(
+                            new(RecentRecordType.Referral, referral.ReferralId)
+                        )
+                    )
                     .Select(async referral =>
                     {
                         var permissions = userAccessCalculation.AuthorizeUserAccess(
@@ -216,18 +267,23 @@ namespace CareTogether.Managers.Records
             ).WhereNotNull().ToImmutableList();
 
             var visibleCommunities = (
-                communities.Select(community =>
-                {
-                    var permissions = userAccessCalculation.AuthorizeUserAccess(
-                        authorizationSnapshot,
-                        new CommunityAuthorizationContext(community.Id)
-                    );
-                    return (
-                        community,
-                        permissions,
-                        hasPermissions: permissions.Except(irrelevantPermissions).Any()
-                    );
-                })
+                communities
+                    .Where(community =>
+                        recentRecords == null
+                        || recentRecords.Contains(new(RecentRecordType.Organization, community.Id))
+                    )
+                    .Select(community =>
+                    {
+                        var permissions = userAccessCalculation.AuthorizeUserAccess(
+                            authorizationSnapshot,
+                            new CommunityAuthorizationContext(community.Id)
+                        );
+                        return (
+                            community,
+                            permissions,
+                            hasPermissions: permissions.Except(irrelevantPermissions).Any()
+                        );
+                    })
             ).Where(x => x.hasPermissions).ToImmutableList();
 
             var renderedCommunities = await visibleCommunities
@@ -365,12 +421,11 @@ namespace CareTogether.Managers.Records
             {
                 await ValidateCommandAsync(organizationId, locationId, command);
 
-                var commandResultRenderingContext =
-                    await CreateCommandResultRenderingContextAsync(
-                        organizationId,
-                        locationId,
-                        command
-                    );
+                var commandResultRenderingContext = await CreateCommandResultRenderingContextAsync(
+                    organizationId,
+                    locationId,
+                    command
+                );
 
                 await ExecuteCommandAsync(organizationId, locationId, user, command);
 
@@ -1123,14 +1178,16 @@ namespace CareTogether.Managers.Records
                     locationId,
                     assignIndividualVolunteer
                 ),
-                OrganizationApprovalRecordsCommand c =>
-                    ValidateOrganizationApprovalCommandAsync(
-                        organizationId,
-                        locationId,
-                        c.Command
-                    ),
-                ArrangementRecordsCommand c =>
-                    ValidateArrangementTypeChangeAsync(organizationId, locationId, c.Command),
+                OrganizationApprovalRecordsCommand c => ValidateOrganizationApprovalCommandAsync(
+                    organizationId,
+                    locationId,
+                    c.Command
+                ),
+                ArrangementRecordsCommand c => ValidateArrangementTypeChangeAsync(
+                    organizationId,
+                    locationId,
+                    c.Command
+                ),
                 _ => Task.CompletedTask,
             };
 
@@ -1440,14 +1497,14 @@ namespace CareTogether.Managers.Records
                 var results = ImmutableList.CreateBuilder<RecordsAggregate>();
                 results.Add(new ReferralRecordsAggregate(renderedReferral));
 
-                var linkedFamilyIds = commandResultRenderingContext != null
-                    && commandResultRenderingContext
-                        .PreviouslyLinkedReferralFamilyIdsByReferralId.TryGetValue(
+                var linkedFamilyIds =
+                    commandResultRenderingContext != null
+                    && commandResultRenderingContext.PreviouslyLinkedReferralFamilyIdsByReferralId.TryGetValue(
                         referralId,
                         out var previousFamilyIds
                     )
-                    ? previousFamilyIds
-                    : ImmutableHashSet<Guid>.Empty;
+                        ? previousFamilyIds
+                        : ImmutableHashSet<Guid>.Empty;
 
                 if (renderedReferral.Referral.FamilyId.HasValue)
                     linkedFamilyIds = linkedFamilyIds.Add(renderedReferral.Referral.FamilyId.Value);
