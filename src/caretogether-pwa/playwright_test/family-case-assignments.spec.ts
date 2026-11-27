@@ -4,6 +4,8 @@ import {
   ATLANTIS_LOCATION_ID,
   ATLANTIS_ORGANIZATION_ID,
   ATLANTIS_ROUTE,
+  EL_DORADO_LOCATION_ID,
+  locationRoute,
 } from './support/constants';
 import {
   AssignedIndividualVolunteer,
@@ -66,6 +68,7 @@ type AssignmentSetupOptions = {
   unassigned?: boolean;
   noCase?: boolean;
   commandRole?: string;
+  beforeAssignResponse?: () => Promise<void>;
 };
 
 // Use the seeded assignments by default. Only override data for scenarios the
@@ -84,6 +87,10 @@ async function prepareAssignments(
     options.commandRole !== undefined;
   if (needsRecordsOverride) {
     await page.route('**/Records', async (route) => {
+      if (!route.request().url().includes(`/${ATLANTIS_LOCATION_ID}/`)) {
+        await route.continue();
+        return;
+      }
       const response = await route.fetch();
       const records = (await response.json()).map(
         RecordsAggregate.fromJS
@@ -147,6 +154,7 @@ async function prepareAssignments(
             assignedAtUtc: new Date().toISOString(),
           })
         );
+        await options.beforeAssignResponse?.();
       }
       await route.fulfill({ json: [target] });
     });
@@ -493,6 +501,62 @@ test.describe('UIV2 case function assignments @pr', () => {
       },
     ]);
     expect(commands).toHaveLength(2);
+  });
+
+  test('applies a late assignment response to its originating location', async ({
+    page,
+  }) => {
+    const started = Promise.withResolvers<void>();
+    const release = Promise.withResolvers<void>();
+    await prepareAssignments(page, {
+      commandRole: coordinatorRole,
+      beforeAssignResponse: () => {
+        started.resolve();
+        return release.promise;
+      },
+    });
+    const switchTo = (target: string) =>
+      page.evaluate((path) => {
+        window.history.pushState({}, '', path);
+        window.dispatchEvent(new PopStateEvent('popstate'));
+      }, target);
+    const origin = `${ATLANTIS_ROUTE}families/${familyId}?v1CaseId=${openCaseId}`;
+    const destination = locationRoute(
+      ATLANTIS_ORGANIZATION_ID,
+      EL_DORADO_LOCATION_ID
+    );
+    await openFamily(page);
+    const coordinator = assignmentField(page, coordinatorRole);
+    await coordinator
+      .getByRole('button', { name: 'Edit Case Coordinator', exact: true })
+      .click();
+    await page.getByRole('combobox', { name: 'Assigned person' }).fill('Leia');
+    await page
+      .getByRole('option', { name: 'Leia Skywalker', exact: true })
+      .click();
+    try {
+      await page.getByRole('button', { name: 'Save', exact: true }).click();
+      await started.promise;
+      await switchTo(destination);
+      await expect(
+        page.getByRole('heading', { name: 'Dashboard', level: 1, exact: true })
+      ).toBeVisible();
+      const response = page.waitForResponse(
+        (result) =>
+          result.url().endsWith(recordsCommandPath) &&
+          result.request().postDataJSON().command?.discriminator ===
+            'AssignIndividualVolunteer'
+      );
+      release.resolve();
+      expect(await (await response).finished()).toBeNull();
+      await expect(page).toHaveURL(destination);
+      await switchTo(origin);
+      await expect(
+        coordinator.getByText('Leia Skywalker', { exact: true })
+      ).toBeVisible();
+    } finally {
+      release.resolve();
+    }
   });
 
   test('preserves an assignment after its policy is removed', async ({
