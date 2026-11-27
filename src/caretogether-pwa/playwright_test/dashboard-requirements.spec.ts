@@ -92,9 +92,6 @@ test('Dashboard shows scoped requirement counts and opens the arrangement @pr', 
         .first()
     ).toBeVisible();
     await expect(page.getByText('No past-due requirements.')).toHaveCount(0);
-    await expect(
-      page.getByText('No approvals or renewals require attention in this view.')
-    ).toHaveCount(0);
   } finally {
     loading.resolve();
   }
@@ -104,51 +101,23 @@ test('Dashboard shows scoped requirement counts and opens the arrangement @pr', 
   await expect(upcoming.getByLabel('2 requirements')).toBeVisible();
   await expect(pastDue.getByLabel('1 requirement')).toBeVisible();
   await page.setViewportSize({ width: 1440, height: 900 });
-  const expiringPanel = page.getByRole('region', {
-    name: 'Expiring approvals and requirements',
-    exact: true,
-  });
-  const notesPanel = page.getByRole('region', {
-    name: 'Notes awaiting review',
-    exact: true,
-  });
   await expect
     .poll(async () => {
-      const [upperLeft, lowerLeft, upperRight, lowerRight] = await Promise.all(
-        [pastDue, notesPanel, upcoming, expiringPanel].map((panel) =>
-          panel.boundingBox()
-        )
+      const [left, right] = await Promise.all(
+        [pastDue, upcoming].map((panel) => panel.boundingBox())
       );
-      if (!upperLeft || !lowerLeft || !upperRight || !lowerRight) return null;
-      return [
-        Math.round(upperLeft.y - upperRight.y),
-        Math.round(lowerLeft.y - lowerRight.y),
-        Math.round(
-          upperLeft.y + upperLeft.height - (upperRight.y + upperRight.height)
-        ),
-        Math.round(
-          lowerLeft.y + lowerLeft.height - (lowerRight.y + lowerRight.height)
-        ),
-        Math.round(
-          lowerLeft.y -
-            Math.max(
-              upperLeft.y + upperLeft.height,
-              upperRight.y + upperRight.height
-            )
-        ),
-      ];
+      return left && right ? Math.round(left.y - right.y) : null;
     })
-    .toEqual([0, 0, 0, 0, 20]);
+    .toBe(0);
   await page.setViewportSize({ width: 375, height: 700 });
   const action = upcoming.getByRole('button', {
-    name: /Upcoming safety visit/,
+    name: /^(?!Snooze).*Upcoming safety visit/,
   });
   await expect(action).toHaveCount(1);
   await expect(action).toContainText('2 matching requirements');
-  await expect(upcoming.getByRole('button', { name: /^Snooze/ })).toHaveCount(
-    0
-  );
-  await expect(pastDue.getByRole('button', { name: /^Snooze/ })).toHaveCount(0);
+  await expect(
+    upcoming.getByRole('button', { name: 'Snooze Upcoming safety visit' })
+  ).toHaveCount(1);
   await expect(pastDue.getByText('02/29/20')).toBeVisible();
   await expectNoHorizontalOverflow(page);
 
@@ -179,7 +148,7 @@ test('Dashboard shows scoped requirement counts and opens the arrangement @pr', 
   ).toBeVisible();
   await page.goBack();
   await pastDue
-    .getByRole('button', { name: /Outstanding safety visit/ })
+    .getByRole('button', { name: /^(?!Snooze).*Outstanding safety visit/ })
     .click();
   await expect(
     page.getByText('Dashboard selection', { exact: true })
@@ -203,11 +172,6 @@ test('Dashboard shows scoped requirement counts and opens the arrangement @pr', 
   const pastDueTimeFrame = pastDue.getByRole('combobox', {
     name: 'Past-due requirements time frame',
   });
-  const approvalTimeFrame = page.getByRole('combobox', {
-    name: 'Expiring approvals and requirements time frame',
-  });
-  await approvalTimeFrame.click();
-  await page.getByRole('option', { name: 'Next 60 days', exact: true }).click();
   await upcomingTimeFrame.click();
   await page.getByRole('option', { name: 'Next 7 days', exact: true }).click();
   await expect(upcoming.getByLabel('0 requirements')).toBeVisible();
@@ -246,11 +210,9 @@ test('Dashboard shows scoped requirement counts and opens the arrangement @pr', 
   await expect(pastDue.getByText('No past-due requirements.')).toBeVisible();
   await expect(upcomingTimeFrame).toHaveText('Next 30 days');
   await expect(pastDueTimeFrame).toHaveText('All past due');
-  await expect(approvalTimeFrame).toHaveText('Next 30 days');
   await page.goBack();
   await expect(upcomingTimeFrame).toHaveText('Next 7 days');
   await expect(pastDueTimeFrame).toHaveText('Last 7 days');
-  await expect(approvalTimeFrame).toHaveText('Next 60 days');
   expect(
     await page.evaluate(
       (keys) =>
