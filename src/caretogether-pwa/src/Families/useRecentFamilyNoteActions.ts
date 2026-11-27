@@ -5,7 +5,7 @@ import {
   Permission,
   V1Referral,
   V1ReferralNoteStatus,
-} from '../GeneratedClient';
+} from '../GeneratedClient.ts';
 
 type PermissionCheck = (permission: Permission) => boolean;
 export type RecentNoteActionKind = 'delete' | 'edit' | 'approve';
@@ -53,7 +53,7 @@ export function familyNoteActionAvailability(
   currentUserId: string | undefined,
   permissions: PermissionCheck
 ): RecentNoteActionAvailability {
-  const isOwnNote = note.authorUserId === currentUserId;
+  const isOwnNote = !!currentUserId && note.authorUserId === currentUserId;
   const isDraft = note.status === NoteStatus.Draft;
 
   return availability({

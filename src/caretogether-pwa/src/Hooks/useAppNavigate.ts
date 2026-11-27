@@ -32,6 +32,7 @@ type AppNavigateOptions = {
 };
 
 export type FamilyNavigationOptions = {
+  section?: 'notes';
   v1CaseId?: string;
   arrangementId?: string;
   familyMemberId?: string;
@@ -74,6 +75,9 @@ export function useAppNavigate(): AppNavigate {
               replace: options?.replace,
             };
       const searchParams = new URLSearchParams();
+      if (familyNavigationOptions.section) {
+        searchParams.set('section', familyNavigationOptions.section);
+      }
       if (
         familyNavigationOptions.arrangementId &&
         familyNavigationOptions.arrangementRequirement
