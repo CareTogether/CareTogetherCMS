@@ -1485,12 +1485,14 @@ function DashboardRequirements({ storageKey }: { storageKey: string | null }) {
           }}
         />
       )}
-      <Snackbar
-        open={Boolean(snoozeFeedback)}
-        autoHideDuration={5000}
-        onClose={() => setSnoozeFeedback('')}
-        message={snoozeFeedback}
-      />
+      {!selectedSnooze && (
+        <Snackbar
+          open={Boolean(snoozeFeedback)}
+          autoHideDuration={5000}
+          onClose={() => setSnoozeFeedback('')}
+          message={snoozeFeedback}
+        />
+      )}
     </>
   );
 }

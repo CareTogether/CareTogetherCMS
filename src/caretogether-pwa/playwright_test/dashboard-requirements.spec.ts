@@ -9,6 +9,10 @@ import {
 import { expectNoHorizontalOverflow } from './support/layout';
 import { ORGANIZATION_APPROVALS_FEATURE_FLAG } from '../src/featureFlags';
 import {
+  noteSnoozeToken,
+  snoozeStoragePrefix,
+} from '../src/Dashboard/dashboardSnoozes';
+import {
   ApprovalRenewalRoleScope,
   DisclosedApprovalRenewalState,
   Permission,
@@ -37,6 +41,34 @@ test('edits, approves, and deletes family and referral notes without leaving the
     lastEditTimestampUtc: timestamp,
     createdTimestampUtc: timestamp,
   };
+  const familySnoozeToken = noteSnoozeToken({
+    source: 'family',
+    recordId: doeId,
+    id: familyNote.id,
+    note: {
+      createdTimestampUtc: new Date(timestamp),
+      lastEditTimestampUtc: new Date(timestamp),
+    },
+  });
+  const scopePrefix = snoozeStoragePrefix({
+    userId: '',
+    organizationId: ATLANTIS_ORGANIZATION_ID,
+    locationId: ATLANTIS_LOCATION_ID,
+  });
+  const scopeStart = scopePrefix.indexOf('[');
+  const scopeSuffix = scopePrefix.slice(scopePrefix.indexOf(','));
+  async function storedFamilySnoozes() {
+    return page.evaluate(
+      ({ prefix, suffix }) =>
+        Object.keys(localStorage)
+          .filter((key) => key.startsWith(prefix) && key.endsWith(suffix))
+          .map((key) => ({ key, wakeAt: Number(localStorage.getItem(key)) })),
+      {
+        prefix: scopePrefix.slice(0, scopeStart) + '["',
+        suffix: scopeSuffix + familySnoozeToken,
+      }
+    );
+  }
   const referralNote = {
     id: referralId,
     referralId,
@@ -128,6 +160,7 @@ test('edits, approves, and deletes family and referral notes without leaving the
       json: [command.referralId ? referralAggregate : familyAggregate],
     });
   });
+  await page.clock.install();
   await page.goto(ATLANTIS_ROUTE);
   const panel = page
     .locator('section')
@@ -139,6 +172,7 @@ test('edits, approves, and deletes family and referral notes without leaving the
       exact: true,
     });
   await expect(noteCount(4)).toBeVisible();
+  expect(await storedFamilySnoozes()).toHaveLength(0);
   await expect(
     panel.getByRole('button', { name: 'All notes (4)' })
   ).toHaveAttribute('aria-pressed', 'true');
@@ -172,31 +206,45 @@ test('edits, approves, and deletes family and referral notes without leaving the
   await expect(row(familyNote.contents)).toHaveCount(0);
   await expect(page).toHaveURL(ATLANTIS_ROUTE);
   await expect(noteCount(3)).toBeVisible();
+  const persisted = await storedFamilySnoozes();
+  expect(persisted).toHaveLength(1);
+  expect(persisted[0].wakeAt).toBeGreaterThan(
+    await page.evaluate(() => Date.now())
+  );
   await page.reload();
+  await expect(noteCount(3)).toBeVisible();
   await expect(row(familyNote.contents)).toHaveCount(0);
   await panel.getByRole('button', { name: 'Show snoozed (1)' }).click();
   await expect(row(familyNote.contents).locator('time')).toBeVisible();
   await row(familyNote.contents)
-    .getByRole('button', { name: 'Unsnooze' })
+    .getByRole('button', { name: 'Unsnooze note', exact: true })
     .click();
   await expect(noteCount(4)).toBeVisible();
+  expect(await storedFamilySnoozes()).toHaveLength(0);
   await expect(
     panel.getByRole('button', { name: 'All notes (4)' })
   ).toHaveAttribute('aria-pressed', 'true');
+  const restoredFeedback = page.getByText(
+    'Note returned to the review queue.',
+    { exact: true }
+  );
+  await expect(restoredFeedback).toBeVisible();
   await familySnooze.click();
+  await expect(restoredFeedback).toHaveCount(0);
   await snoozeDrawer
     .getByRole('button', { name: 'Snooze', exact: true })
     .click();
   await expect(familySnooze).toHaveCount(0);
-  await page.evaluate(() => {
-    const key = Object.keys(localStorage).find((entry) =>
-      entry.startsWith('caretogether:dashboardSnoozes:v1:')
-    );
-    if (!key) throw new Error('Snooze was not persisted');
-    const newValue = JSON.stringify(Date.now() + 300);
+  await expect(noteCount(3)).toBeVisible();
+  await expect(row(familyNote.contents)).toHaveCount(0);
+  const resnoozed = await storedFamilySnoozes();
+  expect(resnoozed.map(({ key }) => key)).toEqual([persisted[0].key]);
+  await page.evaluate((key) => {
+    const newValue = JSON.stringify(Date.now() + 1000);
     localStorage.setItem(key, newValue);
     window.dispatchEvent(new StorageEvent('storage', { key, newValue }));
-  });
+  }, persisted[0].key);
+  await page.clock.fastForward(1000);
   await expect(familySnooze).toBeVisible();
   await expect(noteCount(4)).toBeVisible();
   await row(familyNote.contents).getByRole('button', { name: 'Edit' }).click();
