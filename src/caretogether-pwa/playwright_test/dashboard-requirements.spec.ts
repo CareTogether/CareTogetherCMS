@@ -161,12 +161,12 @@ test('edits, approves, and deletes family and referral notes without leaving the
     name: 'Snooze note',
   });
   await familySnooze.click();
-  const snoozeDialog = page.getByRole('dialog', { name: 'Snooze until' });
-  await expect(snoozeDialog.getByRole('radio')).toHaveCount(4);
-  await snoozeDialog.getByRole('button', { name: 'Cancel' }).click();
+  const snoozeDrawer = page.getByRole('dialog', { name: 'Snooze until' });
+  await expect(snoozeDrawer.getByRole('radio')).toHaveCount(4);
+  await snoozeDrawer.getByRole('button', { name: 'Cancel' }).click();
   await expect(familySnooze).toBeFocused();
   await familySnooze.press('Enter');
-  await snoozeDialog
+  await snoozeDrawer
     .getByRole('button', { name: 'Snooze', exact: true })
     .click();
   await expect(row(familyNote.contents)).toHaveCount(0);
@@ -184,7 +184,7 @@ test('edits, approves, and deletes family and referral notes without leaving the
     panel.getByRole('button', { name: 'All notes (4)' })
   ).toHaveAttribute('aria-pressed', 'true');
   await familySnooze.click();
-  await snoozeDialog
+  await snoozeDrawer
     .getByRole('button', { name: 'Snooze', exact: true })
     .click();
   await expect(familySnooze).toHaveCount(0);

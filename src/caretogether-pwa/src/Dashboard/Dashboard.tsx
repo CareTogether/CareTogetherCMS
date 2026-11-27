@@ -108,7 +108,7 @@ import {
 import { useApprovalExpirationWorkQueue } from './useApprovalExpirationWorkQueue';
 import { useApprovalRenewalWorkQueue } from './useApprovalRenewalWorkQueue';
 import { useArrangementWorkQueue } from './useArrangementWorkQueue';
-import { DashboardSnoozeDialog } from './DashboardSnoozeDialog';
+import { DashboardSnoozeDrawer } from './DashboardSnoozeDrawer';
 import {
   noteSnoozeToken,
   partitionSnoozed,
@@ -1261,7 +1261,7 @@ function DashboardRequirements({ storageKey }: { storageKey: string | null }) {
         />
       )}
       {selectedSnooze && (
-        <DashboardSnoozeDialog
+        <DashboardSnoozeDrawer
           onClose={() => setSnoozeSelection(undefined)}
           onSnooze={(wakeAt, now) => {
             const saved = writeSnooze(

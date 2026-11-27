@@ -1,18 +1,19 @@
 import { useState } from 'react';
 import {
+  Box,
   Button,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
+  Drawer,
   FormControlLabel,
   Radio,
   RadioGroup,
   Stack,
+  Typography,
 } from '@mui/material';
 import { SnoozeOutlined } from '@mui/icons-material';
 import { DateTimePicker } from '@mui/x-date-pickers';
 import { snoozeWakeAt, type SnoozePreset } from './dashboardSnoozes';
+
+const titleId = 'dashboard-snooze-title';
 
 const presets = {
   hour: 'For 1 hour',
@@ -21,7 +22,7 @@ const presets = {
   custom: 'Custom date and time',
 } satisfies Record<SnoozePreset, string>;
 
-export function DashboardSnoozeDialog({
+export function DashboardSnoozeDrawer({
   onClose,
   onSnooze,
 }: {
@@ -45,21 +46,32 @@ export function DashboardSnoozeDialog({
   }
 
   return (
-    <Dialog
+    <Drawer
+      anchor="right"
       open
       onClose={onClose}
-      fullWidth
-      maxWidth="xs"
-      aria-labelledby="dashboard-snooze-title"
+      slotProps={{
+        paper: {
+          role: 'dialog',
+          'aria-modal': true,
+          'aria-labelledby': titleId,
+          sx: {
+            width: { xs: '100%', sm: 500 },
+            top: 45,
+            height: 'calc(100% - 45px)',
+            display: 'flex',
+          },
+        },
+      }}
     >
-      <DialogTitle id="dashboard-snooze-title">
-        <Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}>
-          <SnoozeOutlined aria-hidden />
-          <span className="ph-unmask">Snooze until</span>
+      <Box sx={{ flex: 1, minHeight: 0, overflowY: 'auto', p: 3 }}>
+        <Stack direction="row" spacing={1} sx={{ alignItems: 'center', mb: 2 }}>
+          <SnoozeOutlined aria-hidden color="action" />
+          <Typography id={titleId} className="ph-unmask" variant="h6">
+            Snooze until
+          </Typography>
         </Stack>
-      </DialogTitle>
-      <DialogContent>
-        <RadioGroup value={preset} aria-labelledby="dashboard-snooze-title">
+        <RadioGroup value={preset} aria-labelledby={titleId}>
           {(Object.keys(presets) as SnoozePreset[]).map((value) => (
             <FormControlLabel
               key={value}
@@ -99,13 +111,27 @@ export function DashboardSnoozeDialog({
             }}
           />
         )}
-      </DialogContent>
-      <DialogActions>
-        <Button onClick={onClose}>Cancel</Button>
-        <Button variant="contained" onClick={confirm}>
+      </Box>
+      <Box
+        sx={{
+          borderTop: 1,
+          borderColor: 'divider',
+          display: 'flex',
+          flexDirection: { xs: 'column', sm: 'row' },
+          gap: 1,
+          justifyContent: 'flex-end',
+          p: 2,
+          pb: 'calc(16px + env(safe-area-inset-bottom))',
+          backgroundColor: 'background.paper',
+        }}
+      >
+        <Button onClick={onClose} color="secondary">
+          Cancel
+        </Button>
+        <Button variant="contained" color="primary" onClick={confirm}>
           Snooze
         </Button>
-      </DialogActions>
-    </Dialog>
+      </Box>
+    </Drawer>
   );
 }
