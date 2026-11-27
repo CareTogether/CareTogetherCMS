@@ -3501,6 +3501,7 @@ export interface IArrangementPolicy {
 export class MonitoringRequirement implements IMonitoringRequirement {
     action!: RequirementDefinition;
     recurrence!: RecurrencePolicy;
+    id?: string | undefined;
 
     constructor(data?: IMonitoringRequirement) {
         if (data) {
@@ -3518,6 +3519,7 @@ export class MonitoringRequirement implements IMonitoringRequirement {
         if (_data) {
             this.action = _data["action"] ? RequirementDefinition.fromJS(_data["action"]) : new RequirementDefinition();
             this.recurrence = _data["recurrence"] ? RecurrencePolicy.fromJS(_data["recurrence"]) : undefined as any;
+            this.id = _data["id"];
         }
     }
 
@@ -3532,6 +3534,7 @@ export class MonitoringRequirement implements IMonitoringRequirement {
         data = typeof data === 'object' ? data : {};
         data["action"] = this.action ? this.action.toJSON() : undefined as any;
         data["recurrence"] = this.recurrence ? this.recurrence.toJSON() : undefined as any;
+        data["id"] = this.id;
         return data;
     }
 }
@@ -3539,6 +3542,7 @@ export class MonitoringRequirement implements IMonitoringRequirement {
 export interface IMonitoringRequirement {
     action: RequirementDefinition;
     recurrence: RecurrencePolicy;
+    id?: string | undefined;
 }
 
 export abstract class RecurrencePolicy implements IRecurrencePolicy {
@@ -6702,6 +6706,7 @@ export enum ApprovalRenewalRoleScope {
 
 export class FamilyRecordsAggregate extends RecordsAggregate implements IFamilyRecordsAggregate {
     family!: CombinedFamilyInfo;
+    snoozeFreshness?: RequirementSnoozeFreshness | undefined;
 
     constructor(data?: IFamilyRecordsAggregate) {
         super(data);
@@ -6715,6 +6720,7 @@ export class FamilyRecordsAggregate extends RecordsAggregate implements IFamilyR
         super.init(_data);
         if (_data) {
             this.family = _data["family"] ? CombinedFamilyInfo.fromJS(_data["family"]) : new CombinedFamilyInfo();
+            this.snoozeFreshness = _data["snoozeFreshness"] ? RequirementSnoozeFreshness.fromJS(_data["snoozeFreshness"]) : undefined as any;
         }
     }
 
@@ -6728,6 +6734,7 @@ export class FamilyRecordsAggregate extends RecordsAggregate implements IFamilyR
     override toJSON(data?: any) {
         data = typeof data === 'object' ? data : {};
         data["family"] = this.family ? this.family.toJSON() : undefined as any;
+        data["snoozeFreshness"] = this.snoozeFreshness ? this.snoozeFreshness.toJSON() : undefined as any;
         super.toJSON(data);
         return data;
     }
@@ -6735,6 +6742,7 @@ export class FamilyRecordsAggregate extends RecordsAggregate implements IFamilyR
 
 export interface IFamilyRecordsAggregate extends IRecordsAggregate {
     family: CombinedFamilyInfo;
+    snoozeFreshness?: RequirementSnoozeFreshness | undefined;
 }
 
 export class CombinedFamilyInfo implements ICombinedFamilyInfo {
@@ -8653,6 +8661,7 @@ export class MissingArrangementRequirement implements IMissingArrangementRequire
     action!: RequirementDefinition;
     dueBy?: Date | undefined;
     pastDueSince?: Date | undefined;
+    snoozeEpisodeToken?: string | undefined;
 
     constructor(data?: IMissingArrangementRequirement) {
         if (data) {
@@ -8675,6 +8684,7 @@ export class MissingArrangementRequirement implements IMissingArrangementRequire
             this.action = _data["action"] ? RequirementDefinition.fromJS(_data["action"]) : new RequirementDefinition();
             this.dueBy = _data["dueBy"] ? new Date(_data["dueBy"].toString()) : undefined as any;
             this.pastDueSince = _data["pastDueSince"] ? new Date(_data["pastDueSince"].toString()) : undefined as any;
+            this.snoozeEpisodeToken = _data["snoozeEpisodeToken"];
         }
     }
 
@@ -8694,6 +8704,7 @@ export class MissingArrangementRequirement implements IMissingArrangementRequire
         data["action"] = this.action ? this.action.toJSON() : undefined as any;
         data["dueBy"] = this.dueBy ? formatDate(this.dueBy) : undefined as any;
         data["pastDueSince"] = this.pastDueSince ? formatDate(this.pastDueSince) : undefined as any;
+        data["snoozeEpisodeToken"] = this.snoozeEpisodeToken;
         return data;
     }
 }
@@ -8706,6 +8717,7 @@ export interface IMissingArrangementRequirement {
     action: RequirementDefinition;
     dueBy?: Date | undefined;
     pastDueSince?: Date | undefined;
+    snoozeEpisodeToken?: string | undefined;
 }
 
 export class IndividualVolunteerAssignment implements IIndividualVolunteerAssignment {
@@ -10175,6 +10187,46 @@ export interface INote {
 export enum NoteStatus {
     Draft = 0,
     Approved = 1,
+}
+
+export class RequirementSnoozeFreshness implements IRequirementSnoozeFreshness {
+    referralsRevision!: number;
+    policyRevision!: string;
+
+    constructor(data?: IRequirementSnoozeFreshness) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.referralsRevision = _data["referralsRevision"];
+            this.policyRevision = _data["policyRevision"];
+        }
+    }
+
+    static fromJS(data: any): RequirementSnoozeFreshness {
+        data = typeof data === 'object' ? data : {};
+        let result = new RequirementSnoozeFreshness();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["referralsRevision"] = this.referralsRevision;
+        data["policyRevision"] = this.policyRevision;
+        return data;
+    }
+}
+
+export interface IRequirementSnoozeFreshness {
+    referralsRevision: number;
+    policyRevision: string;
 }
 
 export class ReferralRecordsAggregate extends RecordsAggregate implements IReferralRecordsAggregate {

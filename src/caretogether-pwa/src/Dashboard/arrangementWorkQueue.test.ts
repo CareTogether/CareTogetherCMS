@@ -229,3 +229,19 @@ test('does not invent distinct IDs for indistinguishable occurrences', () => {
   assert.equal(items.length, 2);
   assert.equal(items[0].id, items[1].id);
 });
+
+test('a requirement can reappear with the same display key after a completion reversal', () => {
+  const before = buildArrangementWorkQueue(scope, [
+    familyWithRequirements([upcoming]),
+  ]);
+  const completed = buildArrangementWorkQueue(scope, [
+    familyWithRequirements([]),
+  ]);
+  const reversed = buildArrangementWorkQueue(scope, [
+    familyWithRequirements([upcoming]),
+  ]);
+
+  assert.equal(before.length, 1);
+  assert.deepEqual(completed, []);
+  assert.deepEqual(reversed, before);
+});

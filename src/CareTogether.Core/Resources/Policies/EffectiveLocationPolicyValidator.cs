@@ -244,6 +244,22 @@ namespace CareTogether.Resources.Policies
                     actionNames,
                     errors
                 );
+                foreach (var version in arrangement.PolicyVersions ?? [])
+                {
+                    var versionOwner = $"{owner} Version '{version.Version}'";
+                    ValidateMonitoringRuleIds(
+                        $"{versionOwner} Required Monitoring Actions",
+                        version.RequiredMonitoringActionsNew,
+                        errors
+                    );
+                    foreach (var function in version.ArrangementFunctions ?? [])
+                    foreach (var variant in function.Variants ?? [])
+                        ValidateMonitoringRuleIds(
+                            $"{versionOwner} Function '{function.FunctionName}' Variant '{variant.VariantName}' Required Monitoring Actions",
+                            variant.RequiredMonitoringActionsNew,
+                            errors
+                        );
+                }
                 ValidateRequirements(
                     $"{owner} Required Closeout Actions",
                     arrangement.RequiredCloseoutActions,
@@ -571,6 +587,19 @@ namespace CareTogether.Resources.Policies
         {
             foreach (var requirement in requirements ?? ImmutableList<MonitoringRequirement>.Empty)
                 ValidateActionReference(area, requirement.Action?.ActionName, actionNames, errors);
+            ValidateMonitoringRuleIds(area, requirements, errors);
+        }
+
+        private static void ValidateMonitoringRuleIds(
+            string area,
+            ImmutableList<MonitoringRequirement>? requirements,
+            ImmutableList<string>.Builder errors
+        )
+        {
+            var ruleIds = new HashSet<Guid>();
+            foreach (var requirement in requirements ?? [])
+                if (requirement.Id is Guid id && (id == Guid.Empty || !ruleIds.Add(id)))
+                    errors.Add($"{area} must have non-empty, unique monitoring rule IDs when provided.");
         }
 
         private static void ValidateActionReference(

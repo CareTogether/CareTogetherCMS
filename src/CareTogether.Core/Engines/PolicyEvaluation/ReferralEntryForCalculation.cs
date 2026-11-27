@@ -35,7 +35,10 @@ namespace CareTogether.Engines.PolicyEvaluation
         ImmutableList<FamilyVolunteerAssignment> FamilyVolunteerAssignments,
         ImmutableList<ChildLocation> ChildLocationHistory,
         string? ArrangementPolicyVersion = null
-    );
+    )
+    {
+        internal Resources.V1Cases.ArrangementMonitoringHistory? MonitoringHistory { get; init; }
+    }
 
     public sealed record IndividualVolunteerAssignment(
         Guid FamilyId,

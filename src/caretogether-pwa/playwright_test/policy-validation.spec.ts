@@ -123,8 +123,13 @@ async function mount(page: Page, tab = 'basic') {
   await page.addScriptTag({ content: bundle });
 }
 
-async function backend(page: Page, saveFails = false, keepWarnings = false) {
-  let stored = policy();
+async function backend(
+  page: Page,
+  saveFails = false,
+  keepWarnings = false,
+  initial = policy()
+) {
+  let stored = initial;
   let puts = 0;
   let validations = 0;
   await page.route('**/Configuration/policy', async (route) => {
@@ -147,7 +152,11 @@ async function backend(page: Page, saveFails = false, keepWarnings = false) {
       },
     });
   });
-  return { puts: () => puts, validations: () => validations };
+  return {
+    puts: () => puts,
+    validations: () => validations,
+    stored: () => EffectiveLocationPolicy.fromJS(stored),
+  };
 }
 
 async function addFunction(
@@ -292,6 +301,58 @@ test('successful function assignment save closes the drawer', async ({
   ).not.toBeVisible();
   await expect(page.getByText('Case Coordinator')).toBeVisible();
   expect(requests.puts()).toBe(1);
+});
+
+test('monitoring rules retain IDs on edit and receive new IDs on duplication', async ({
+  page,
+}) => {
+  const requests = await backend(page, false, false, {
+    ...policy(),
+    actionDefinitions: { 'Safety visit': {} },
+  });
+  const rules = () =>
+    requests.stored().referralPolicy.arrangementPolicies[0]
+      .requiredMonitoringActionsNew ?? [];
+  await mount(page, 'casePolicy');
+  await page.getByText('Arrangements', { exact: true }).click();
+  await page.getByText('Hosting', { exact: true }).click();
+  await page.getByText('Required Monitoring Actions', { exact: true }).click();
+  const section = page
+    .locator('.MuiAccordion-root')
+    .filter({
+      has: page.getByText('Required Monitoring Actions', { exact: true }),
+    })
+    .last();
+  await section.getByRole('button', { name: 'Add', exact: true }).click();
+  await page.getByRole('combobox', { name: 'Action Name' }).click();
+  await page.getByRole('option', { name: 'Safety visit' }).click();
+  await page.getByRole('button', { name: 'Save', exact: true }).click();
+  const copy = section.getByRole('button', { name: 'Duplicate Safety visit' });
+  await expect(copy).toBeVisible();
+  const id = rules()[0].id;
+  expect(id).toMatch(/^[0-9a-f-]{36}$/i);
+  await copy.click();
+  await page.getByRole('dialog').getByRole('button', { name: 'Yes' }).click();
+  await expect(copy).toHaveCount(2);
+  const copyId = rules()[1].id;
+  expect(copyId).toMatch(/^[0-9a-f-]{36}$/i);
+  expect(copyId).not.toBe(id);
+  expect(rules().map((rule) => rule.action.actionName)).toEqual([
+    'Safety visit',
+    'Safety visit',
+  ]);
+  await section
+    .getByRole('cell', { name: 'Safety visit', exact: true })
+    .last()
+    .click();
+  await page.getByRole('switch', { name: 'Required', exact: true }).uncheck();
+  await page.getByRole('button', { name: 'Save', exact: true }).click();
+  await expect
+    .poll(() => rules().map((rule) => [rule.id, rule.action.isRequired]))
+    .toEqual([
+      [id, true],
+      [copyId, false],
+    ]);
 });
 
 test('warning-only save closes the drawer and refreshes warnings', async ({

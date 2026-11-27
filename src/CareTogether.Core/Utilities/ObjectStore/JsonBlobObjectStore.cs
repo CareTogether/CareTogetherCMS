@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Azure;
 using Azure.Storage.Blobs;
 using Azure.Storage.Blobs.Models;
 using Azure.Storage.Blobs.Specialized;
@@ -57,13 +58,28 @@ namespace CareTogether.Utilities.ObjectStore
             }
         }
 
-        public async Task<T> GetAsync(Guid organizationId, Guid locationId, string objectId)
+        public async Task<T> GetAsync(Guid organizationId, Guid locationId, string objectId) =>
+            (await ReadSnapshotAsync(organizationId, locationId, objectId)).Value;
+
+        internal async Task<(T Value, ETag Revision)> ReadSnapshotAsync(
+            Guid organizationId,
+            Guid locationId,
+            string objectId,
+            bool revalidate = false
+        )
         {
             var key = CacheKey(organizationId, locationId, objectId);
             long generation;
+            (T Value, ETag Revision)? cachedSnapshot;
             lock (cacheLock)
             {
-                if (memoryCache.TryGetValue<T>(key, out var cached) && cached is not null)
+                cachedSnapshot = memoryCache.TryGetValue<(T Value, ETag Revision)>(
+                    key,
+                    out var cached
+                )
+                    ? cached
+                    : null;
+                if (!revalidate && cachedSnapshot.HasValue)
                     return cached;
                 generation = cacheGeneration;
             }
@@ -72,6 +88,12 @@ namespace CareTogether.Utilities.ObjectStore
             var objectBlob = tenantContainer.GetBlockBlobClient(
                 $"{locationId}/{objectType}/{objectId}.json"
             );
+
+            if (
+                cachedSnapshot is { } snapshotToValidate
+                && (await objectBlob.GetPropertiesAsync()).Value.ETag == snapshotToValidate.Revision
+            )
+                return snapshotToValidate;
 
             var response = (await objectBlob.DownloadStreamingAsync()).Value;
             using var reader = new StreamReader(response.Content);
@@ -84,12 +106,13 @@ namespace CareTogether.Utilities.ObjectStore
                         + $"Expected type: {typeof(T).FullName}"
                 );
 
+            var snapshot = (objectValue, response.Details.ETag);
             lock (cacheLock)
             {
                 if (generation == cacheGeneration)
-                    memoryCache.Set(key, objectValue, cacheExpiration);
+                    memoryCache.Set(key, snapshot, cacheExpiration);
             }
-            return objectValue;
+            return snapshot;
         }
 
         public async Task UpsertAsync(

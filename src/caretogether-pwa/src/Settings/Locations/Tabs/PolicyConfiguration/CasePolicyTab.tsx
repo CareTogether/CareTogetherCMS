@@ -11,6 +11,7 @@ import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import { useMemo, useState } from 'react';
 import {
   ArrangementPolicy,
+  ArrangementPolicyVersion,
   EffectiveLocationPolicy,
   FunctionAssignmentPolicy,
   V1CasePolicy,
@@ -24,6 +25,8 @@ import {
 import { FunctionAssignmentPoliciesTable } from './tables';
 import {
   clonePolicyWithCasePolicy,
+  copyArrangementFunction,
+  copyMonitoringRequirements,
   nextCopyName,
   personOptionsFromFamilies,
   removeByName,
@@ -139,6 +142,24 @@ export function CasePolicyTab({
         undefined,
         new ArrangementPolicy({
           ...arrangement,
+          requiredMonitoringActionsNew: copyMonitoringRequirements(
+            arrangement.requiredMonitoringActionsNew
+          ),
+          arrangementFunctions: arrangement.arrangementFunctions.map((item) =>
+            copyArrangementFunction(item)
+          ),
+          policyVersions: arrangement.policyVersions?.map(
+            (version) =>
+              new ArrangementPolicyVersion({
+                ...version,
+                requiredMonitoringActionsNew: copyMonitoringRequirements(
+                  version.requiredMonitoringActionsNew
+                ),
+                arrangementFunctions: version.arrangementFunctions.map((item) =>
+                  copyArrangementFunction(item)
+                ),
+              })
+          ),
           arrangementType: nextCopyName(
             arrangement.arrangementType,
             arrangementPolicies.map((item) => item.arrangementType)

@@ -355,3 +355,158 @@ for (const kind of ['atomic', 'composite'] as const) {
     assert.notEqual(isTestFamily(await store.get(originCache)), true);
   });
 }
+
+function tokenWire(
+  token: string,
+  freshness?: { referralsRevision: number; policyRevision: string }
+) {
+  return {
+    discriminator: 'FamilyRecordsAggregate',
+    id: deletedId,
+    ...(freshness && { snoozeFreshness: freshness }),
+    family: {
+      family: { id: deletedId },
+      partneringFamilyInfo: {
+        openV1Case: {
+          id: 'case',
+          arrangements: [
+            {
+              id: 'arrangement',
+              missingRequirements: [
+                {
+                  action,
+                  dueBy: '2026-12-02',
+                  snoozeEpisodeToken: token,
+                },
+              ],
+            },
+          ],
+        },
+        closedV1Cases: [],
+      },
+    },
+  };
+}
+
+async function snoozeTokens(
+  store: ReturnType<typeof createStore>,
+  cache: Parameters<ReturnType<typeof createStore>['get']>[0]
+) {
+  const records = (await store.get(cache)) as RecordsAggregate[];
+  return buildArrangementWorkQueue(
+    origin,
+    records.flatMap((record) =>
+      record instanceof FamilyRecordsAggregate ? [record.family] : []
+    )
+  ).map(({ snoozeToken }) => snoozeToken ?? null);
+}
+
+test('a delayed older command cannot restore an obsolete snooze episode', async () => {
+  const { atomic, requests, store, originCache } = await overlappingRequests();
+  const older = atomic();
+  const newer = atomic();
+  requests[1].resolve(
+    Response.json([
+      tokenWire('reactivated', { referralsRevision: 9, policyRevision: 'p' }),
+    ])
+  );
+  await newer;
+  assert.deepEqual(await snoozeTokens(store, originCache), ['reactivated']);
+  requests[0].resolve(
+    Response.json([
+      tokenWire('snoozed', { referralsRevision: 7, policyRevision: 'p' }),
+    ])
+  );
+  await older;
+  assert.deepEqual(await snoozeTokens(store, originCache), [null]);
+});
+
+test('newer certified responses keep their tokens and identical snapshots keep identity', async () => {
+  const { atomic, requests, store, originCache } = await overlappingRequests();
+  const first = atomic();
+  requests[0].resolve(
+    Response.json([
+      tokenWire('first', { referralsRevision: 7, policyRevision: 'p' }),
+    ])
+  );
+  await first;
+  const accepted = await store.get(originCache);
+  await store.set(originCache, (current) => current);
+  assert.equal(await store.get(originCache), accepted);
+  const second = atomic();
+  requests[1].resolve(
+    Response.json([
+      tokenWire('second', { referralsRevision: 8, policyRevision: 'q' }),
+    ])
+  );
+  await second;
+  assert.deepEqual(await snoozeTokens(store, originCache), ['second']);
+});
+
+test('incomparable policy revisions and uncertified responses keep requirements visible', async () => {
+  const { atomic, requests, store, originCache } = await overlappingRequests();
+  const respond = async (index: number, wire: object) => {
+    const pending = atomic();
+    requests[index].resolve(Response.json([wire]));
+    await pending;
+    return snoozeTokens(store, originCache);
+  };
+  assert.deepEqual(
+    await respond(
+      0,
+      tokenWire('p1', { referralsRevision: 7, policyRevision: 'p1' })
+    ),
+    ['p1']
+  );
+  assert.deepEqual(
+    await respond(
+      1,
+      tokenWire('p2', { referralsRevision: 7, policyRevision: 'p2' })
+    ),
+    [null]
+  );
+  assert.deepEqual(
+    await respond(
+      2,
+      tokenWire('p1', { referralsRevision: 7, policyRevision: 'p1' })
+    ),
+    [null]
+  );
+  assert.deepEqual(await respond(3, tokenWire('uncertified')), [null]);
+  assert.deepEqual(
+    await respond(
+      4,
+      tokenWire('next', { referralsRevision: 8, policyRevision: 'p2' })
+    ),
+    ['next']
+  );
+});
+
+test('a refresh evaluated before a command cannot restore an obsolete snooze episode', async () => {
+  const fixture = await overlappingRequests();
+  const { requests, store, originCache } = fixture;
+  await store.set(originCache, { type: 'refresh' });
+  const command = fixture.atomic();
+  requests[1].resolve(
+    Response.json([
+      tokenWire('after-command', { referralsRevision: 9, policyRevision: 'p' }),
+    ])
+  );
+  requests[0].resolve(
+    Response.json([
+      tokenWire('before-command', {
+        referralsRevision: 8,
+        policyRevision: 'p',
+      }),
+    ])
+  );
+  await command;
+  assert.deepEqual(await snoozeTokens(store, originCache), ['after-command']);
+  await store.set(originCache, { type: 'refresh' });
+  requests[2].resolve(
+    Response.json([
+      tokenWire('delayed', { referralsRevision: 8, policyRevision: 'p' }),
+    ])
+  );
+  assert.deepEqual(await snoozeTokens(store, originCache), [null]);
+});

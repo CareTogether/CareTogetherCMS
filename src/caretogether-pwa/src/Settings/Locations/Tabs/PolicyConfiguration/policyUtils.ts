@@ -1,6 +1,7 @@
 import {
   ActionRequirement,
   ArrangementFunction,
+  ArrangementFunctionVariant,
   ArrangementPolicy,
   ChildInvolvement,
   CombinedFamilyInfo,
@@ -607,6 +608,35 @@ export function removeCustomField(
   name: string
 ) {
   return (fields ?? []).filter((field) => field.name !== name);
+}
+
+export function copyMonitoringRequirements(
+  requirements?: MonitoringRequirement[]
+) {
+  return requirements?.map(
+    (requirement) =>
+      new MonitoringRequirement({ ...requirement, id: crypto.randomUUID() })
+  );
+}
+
+export function copyArrangementFunction(
+  arrangementFunction: ArrangementFunction,
+  functionName = arrangementFunction.functionName
+) {
+  return new ArrangementFunction({
+    ...arrangementFunction,
+    functionName,
+    variants:
+      arrangementFunction.variants?.map(
+        (variant) =>
+          new ArrangementFunctionVariant({
+            ...variant,
+            requiredMonitoringActionsNew: copyMonitoringRequirements(
+              variant.requiredMonitoringActionsNew
+            ),
+          })
+      ) ?? [],
+  });
 }
 
 export function upsertByName<T>(

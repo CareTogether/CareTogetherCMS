@@ -132,7 +132,13 @@ namespace CareTogether.Managers.Records
     public abstract partial record RecordsAggregate(Guid Id);
 
     public sealed record FamilyRecordsAggregate(CombinedFamilyInfo Family)
-        : RecordsAggregate(Family.Family.Id);
+        : RecordsAggregate(Family.Family.Id)
+    {
+        [Newtonsoft.Json.JsonProperty(NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
+        public RequirementSnoozeFreshness? SnoozeFreshness { get; init; }
+    }
+
+    public sealed record RequirementSnoozeFreshness(long ReferralsRevision, string PolicyRevision);
 
     public sealed record CommunityRecordsAggregate(CommunityInfo Community)
         : RecordsAggregate(Community.Community.Id);

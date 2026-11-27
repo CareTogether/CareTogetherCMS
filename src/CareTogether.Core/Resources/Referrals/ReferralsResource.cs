@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Immutable;
 using System.Linq;
 using System.Threading.Tasks;
@@ -13,6 +14,10 @@ namespace CareTogether.Resources.V1Cases
             (Guid organizationId, Guid locationId),
             V1CaseModel
         > tenantModels;
+        private readonly ConcurrentDictionary<
+            (Guid organizationId, Guid locationId),
+            EventLogPosition?
+        > tenantPositions = new();
 
         public V1CasesResource(IEventLog<V1CaseEvent> eventLog)
         {
@@ -22,9 +27,77 @@ namespace CareTogether.Resources.V1Cases
                 V1CaseModel
             >(key =>
                 V1CaseModel.InitializeAsync(
-                    eventLog.GetAllEventsAsync(key.organizationId, key.locationId)
+                    eventLog is AppendBlobEventLog<V1CaseEvent> blobLog
+                        ? blobLog.GetAllEventsAsync(
+                            key.organizationId,
+                            key.locationId,
+                            position => tenantPositions[key] = position
+                        )
+                        : eventLog.GetAllEventsAsync(key.organizationId, key.locationId),
+                    (key.organizationId, key.locationId)
                 )
             );
+        }
+
+        internal async Task<EventLogPosition?> GetReplayPositionAsync(
+            Guid organizationId,
+            Guid locationId
+        )
+        {
+            using var lockedModel = await tenantModels.ReadLockItemAsync(
+                (organizationId, locationId)
+            );
+            return tenantPositions.TryGetValue((organizationId, locationId), out var position)
+                ? position
+                : null;
+        }
+
+        internal async Task<long?> VerifyReplayPositionAsync(
+            Guid organizationId,
+            Guid locationId,
+            EventLogPosition captured
+        )
+        {
+            if (
+                eventLog is not AppendBlobEventLog<V1CaseEvent> blobLog
+                || await GetReplayPositionAsync(organizationId, locationId) != captured
+            )
+                return null;
+
+            return await blobLog.IsCurrentAsync(organizationId, locationId, captured)
+                ? captured.EventCount
+                : null;
+        }
+
+        private async Task CommitAsync(
+            (Guid organizationId, Guid locationId) key,
+            V1CaseEvent domainEvent,
+            long sequenceNumber,
+            Action onCommit
+        )
+        {
+            if (eventLog is not AppendBlobEventLog<V1CaseEvent> blobLog)
+            {
+                await eventLog.AppendEventAsync(
+                    key.organizationId,
+                    key.locationId,
+                    domainEvent,
+                    sequenceNumber
+                );
+                onCommit();
+                return;
+            }
+
+            tenantPositions.TryRemove(key, out var known);
+            var position = await blobLog.AppendEventAsync(
+                key.organizationId,
+                key.locationId,
+                domainEvent,
+                sequenceNumber,
+                known
+            );
+            onCommit();
+            tenantPositions[key] = position;
         }
 
         public async Task<V1CaseEntry> ExecuteV1CaseCommandAsync(
@@ -46,13 +119,12 @@ namespace CareTogether.Resources.V1Cases
                     DateTime.UtcNow
                 );
 
-                await eventLog.AppendEventAsync(
-                    organizationId,
-                    locationId,
+                await CommitAsync(
+                    (organizationId, locationId),
                     result.Event,
-                    result.SequenceNumber
+                    result.SequenceNumber,
+                    result.OnCommit
                 );
-                result.OnCommit();
                 return result.V1CaseEntry;
             }
         }
@@ -76,13 +148,12 @@ namespace CareTogether.Resources.V1Cases
                     DateTime.UtcNow
                 );
 
-                await eventLog.AppendEventAsync(
-                    organizationId,
-                    locationId,
+                await CommitAsync(
+                    (organizationId, locationId),
                     result.Event,
-                    result.SequenceNumber
+                    result.SequenceNumber,
+                    result.OnCommit
                 );
-                result.OnCommit();
                 return result.V1CaseEntry;
             }
         }

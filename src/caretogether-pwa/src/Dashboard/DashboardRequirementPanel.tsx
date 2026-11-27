@@ -1,18 +1,26 @@
-import { useId, type ReactNode } from 'react';
+import { useEffect, useId, useRef, useState, type ReactNode } from 'react';
 import {
   Box,
+  Button,
   CardActions,
   Chip,
   CircularProgress,
+  Collapse,
+  IconButton,
   List,
   ListItem,
   ListItemButton,
   Paper,
   Stack,
+  Tooltip,
   Typography,
 } from '@mui/material';
 import { alpha, darken } from '@mui/material/styles';
-import { ChevronRight, InboxOutlined } from '@mui/icons-material';
+import {
+  ChevronRight,
+  InboxOutlined,
+  SnoozeOutlined,
+} from '@mui/icons-material';
 import { formatUtcDateOnly } from '../Utilities/dateUtils';
 import type { RequirementGroup } from './dashboardRequirements';
 
@@ -209,6 +217,7 @@ type DashboardRequirementRowProps = {
   context: string;
   assignment?: string;
   onOpen: () => void;
+  onSnooze?: () => void;
 };
 
 export function DashboardRequirementRow({
@@ -218,6 +227,7 @@ export function DashboardRequirementRow({
   context,
   assignment,
   onOpen,
+  onSnooze,
 }: DashboardRequirementRowProps) {
   const pastDue = item.status === 'past-due';
   const daysFromToday =
@@ -239,6 +249,19 @@ export function DashboardRequirementRow({
       title={item.requirementName}
       context={context}
       onOpen={onOpen}
+      trailingAction={
+        onSnooze && (
+          <Tooltip title="Snooze requirement">
+            <IconButton
+              size="small"
+              aria-label={`Snooze ${item.requirementName}`}
+              onClick={onSnooze}
+            >
+              <SnoozeOutlined fontSize="small" />
+            </IconButton>
+          </Tooltip>
+        )
+      }
       deadline={
         <>
           <Typography
@@ -300,6 +323,7 @@ export function DashboardQueueRow({
   context,
   onOpen,
   actions,
+  trailingAction,
   deadline,
   children,
 }: {
@@ -307,6 +331,7 @@ export function DashboardQueueRow({
   context: string;
   onOpen?: () => void;
   actions?: ReactNode;
+  trailingAction?: ReactNode;
   deadline?: ReactNode;
   children: ReactNode;
 }) {
@@ -345,6 +370,7 @@ export function DashboardQueueRow({
           sx={{
             minWidth: 0,
             width: '100%',
+            ...(trailingAction && { width: 'auto', flex: '1 1 auto' }),
             gap: 1,
             px: 2,
             py: actions ? 1.25 : 1.5,
@@ -394,6 +420,22 @@ export function DashboardQueueRow({
       ) : (
         content
       )}
+      {trailingAction && (
+        <Box
+          sx={{
+            display: 'flex',
+            alignItems: 'center',
+            flexShrink: 0,
+            pr: 1,
+            '& .Mui-focusVisible': {
+              outline: '2px solid',
+              outlineColor: 'primary.dark',
+            },
+          }}
+        >
+          {trailingAction}
+        </Box>
+      )}
       {actions && (
         <CardActions
           sx={{
@@ -416,5 +458,93 @@ export function DashboardQueueRow({
         </CardActions>
       )}
     </ListItem>
+  );
+}
+
+export type DashboardSnoozedItem = {
+  key: string;
+  title: string;
+  details: ReactNode;
+  wakeAt: number;
+  restoreLabel: string;
+  onRestore: () => void;
+};
+
+export function DashboardSnoozedList({
+  items,
+  focusToggle,
+  onToggleFocused,
+}: {
+  items: DashboardSnoozedItem[];
+  focusToggle?: boolean;
+  onToggleFocused?: () => void;
+}) {
+  const [showSnoozed, setShowSnoozed] = useState(false);
+  const snoozedListId = useId();
+  const toggleRef = useRef<HTMLButtonElement>(null);
+
+  useEffect(() => {
+    if (!focusToggle || !toggleRef.current) return;
+    toggleRef.current.focus();
+    onToggleFocused?.();
+  }, [focusToggle, onToggleFocused, items.length]);
+
+  if (!items.length) return null;
+
+  return (
+    <Box sx={{ px: 2, py: 1 }}>
+      <Button
+        ref={toggleRef}
+        size="small"
+        aria-expanded={showSnoozed}
+        aria-controls={snoozedListId}
+        onClick={() => setShowSnoozed((show) => !show)}
+      >
+        <span className="ph-unmask">
+          {showSnoozed ? 'Hide snoozed' : 'Show snoozed'} ({items.length})
+        </span>
+      </Button>
+      <Collapse id={snoozedListId} in={showSnoozed} unmountOnExit>
+        <List
+          dense
+          disablePadding
+          sx={{ maxHeight: 'min(36dvh, 18rem)', overflowY: 'auto' }}
+        >
+          {items.map(
+            ({ key, title, details, wakeAt, restoreLabel, onRestore }) => (
+              <ListItem
+                key={key}
+                divider
+                sx={{ px: 0, flexWrap: 'wrap', gap: 1 }}
+              >
+                <Box
+                  sx={{
+                    flex: '1 1 12rem',
+                    minWidth: 0,
+                    overflowWrap: 'anywhere',
+                  }}
+                >
+                  <Typography variant="body2">{title}</Typography>
+                  {details}
+                  <Typography variant="caption" color="text.secondary">
+                    <span className="ph-unmask">Returns</span>{' '}
+                    <time dateTime={new Date(wakeAt).toISOString()}>
+                      {new Date(wakeAt).toLocaleString()}
+                    </time>
+                  </Typography>
+                </Box>
+                <Button
+                  size="small"
+                  aria-label={restoreLabel}
+                  onClick={onRestore}
+                >
+                  <span className="ph-unmask">Unsnooze</span>
+                </Button>
+              </ListItem>
+            )
+          )}
+        </List>
+      </Collapse>
+    </Box>
   );
 }

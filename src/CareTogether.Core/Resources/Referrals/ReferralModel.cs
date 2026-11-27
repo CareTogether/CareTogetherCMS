@@ -23,7 +23,11 @@ namespace CareTogether.Resources.V1Cases
         Guid UserId,
         DateTime TimestampUtc,
         ArrangementsCommand Command
-    ) : V1CaseEvent(UserId, TimestampUtc);
+    ) : V1CaseEvent(UserId, TimestampUtc)
+    {
+        [Newtonsoft.Json.JsonProperty(NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
+        internal Guid? MonitoringChangeId { get; init; }
+    }
 
     public sealed record ReferralOpened(
         Guid UserId,
@@ -93,11 +97,18 @@ namespace CareTogether.Resources.V1Cases
 
         public long LastKnownSequenceNumber { get; private set; } = -1;
 
+        private (Guid OrganizationId, Guid LocationId)? replayStream;
+
         public static async Task<V1CaseModel> InitializeAsync(
             IAsyncEnumerable<(V1CaseEvent DomainEvent, long SequenceNumber)> eventLog
+        ) => await InitializeAsync(eventLog, null);
+
+        internal static async Task<V1CaseModel> InitializeAsync(
+            IAsyncEnumerable<(V1CaseEvent DomainEvent, long SequenceNumber)> eventLog,
+            (Guid OrganizationId, Guid LocationId)? stream
         )
         {
-            var model = new V1CaseModel();
+            var model = new V1CaseModel { replayStream = stream };
 
             await foreach (var (domainEvent, sequenceNumber) in eventLog)
                 model.ReplayEvent(domainEvent, sequenceNumber);
@@ -314,7 +325,13 @@ namespace CareTogether.Resources.V1Cases
             ArrangementsCommand command,
             Guid userId,
             DateTime timestampUtc
-        ) => ExecuteArrangementsCommand(command, userId, timestampUtc, validate: true);
+        ) => ExecuteArrangementsCommand(
+            new ArrangementsCommandExecuted(userId, timestampUtc, command)
+            {
+                MonitoringChangeId = Guid.NewGuid(),
+            },
+            validate: true
+        );
 
         private (
             ArrangementsCommandExecuted Event,
@@ -322,12 +339,11 @@ namespace CareTogether.Resources.V1Cases
             V1CaseEntry V1CaseEntry,
             Action OnCommit
         ) ExecuteArrangementsCommand(
-            ArrangementsCommand command,
-            Guid userId,
-            DateTime timestampUtc,
+            ArrangementsCommandExecuted executed,
             bool validate
         )
         {
+            var (userId, timestampUtc, command) = executed;
             if (!v1Cases.TryGetValue(command.ReferralId, out var v1CaseEntry))
                 throw new KeyNotFoundException("A referral with the specified ID does not exist.");
 
@@ -918,10 +934,15 @@ namespace CareTogether.Resources.V1Cases
             var v1CaseEntryToUpsert = v1CaseEntry with
             {
                 Arrangements = v1CaseEntry.Arrangements.SetItems(
-                    arrangementEntriesToUpsert.Select(e => new KeyValuePair<Guid, ArrangementEntry>(
-                        e.Item1.Id,
-                        e.Item1
-                    ))
+                    arrangementEntriesToUpsert.Select(e =>
+                    {
+                        var next = e.Item1;
+                        var previous = v1CaseEntry.Arrangements.GetValueOrDefault(next.Id);
+                        return KeyValuePair.Create(next.Id, next with
+                        {
+                            MonitoringHistory = ArrangementMonitoringHistory.Apply(previous, next, executed),
+                        });
+                    })
                 ),
                 History = v1CaseEntry.History.AddRange(
                     arrangementEntriesToUpsert
@@ -938,7 +959,7 @@ namespace CareTogether.Resources.V1Cases
                 );
 
             return (
-                Event: new ArrangementsCommandExecuted(userId, timestampUtc, command),
+                Event: executed,
                 SequenceNumber: LastKnownSequenceNumber + 1,
                 V1CaseEntry: v1CaseEntryToUpsert,
                 OnCommit: () =>
@@ -1293,9 +1314,17 @@ namespace CareTogether.Resources.V1Cases
             else if (domainEvent is ArrangementsCommandExecuted arrangementCommandExecuted)
             {
                 var (_, _, _, onCommit) = ExecuteArrangementsCommand(
-                    arrangementCommandExecuted.Command,
-                    arrangementCommandExecuted.UserId,
-                    arrangementCommandExecuted.TimestampUtc,
+                    arrangementCommandExecuted.MonitoringChangeId is null
+                    && replayStream is { } stream
+                        ? arrangementCommandExecuted with
+                        {
+                            MonitoringChangeId = ArrangementMonitoringHistory.LegacyChangeId(
+                                stream,
+                                sequenceNumber,
+                                arrangementCommandExecuted
+                            ),
+                        }
+                        : arrangementCommandExecuted,
                     validate: false
                 );
                 onCommit();

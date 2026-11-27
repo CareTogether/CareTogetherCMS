@@ -157,6 +157,48 @@ test('edits, approves, and deletes family and referral notes without leaving the
       url.searchParams.get('section') === 'notes'
   );
   await page.goBack();
+  const familySnooze = row(familyNote.contents).getByRole('button', {
+    name: 'Snooze note',
+  });
+  await familySnooze.click();
+  const snoozeDialog = page.getByRole('dialog', { name: 'Snooze until' });
+  await expect(snoozeDialog.getByRole('radio')).toHaveCount(4);
+  await snoozeDialog.getByRole('button', { name: 'Cancel' }).click();
+  await expect(familySnooze).toBeFocused();
+  await familySnooze.press('Enter');
+  await snoozeDialog
+    .getByRole('button', { name: 'Snooze', exact: true })
+    .click();
+  await expect(row(familyNote.contents)).toHaveCount(0);
+  await expect(page).toHaveURL(ATLANTIS_ROUTE);
+  await expect(reviewSummary.getByText('3', { exact: true })).toBeVisible();
+  await page.reload();
+  await expect(row(familyNote.contents)).toHaveCount(0);
+  await panel.getByRole('button', { name: 'Show snoozed (1)' }).click();
+  await expect(row(familyNote.contents).locator('time')).toBeVisible();
+  await row(familyNote.contents)
+    .getByRole('button', { name: 'Unsnooze' })
+    .click();
+  await expect(reviewSummary.getByText('4', { exact: true })).toBeVisible();
+  await expect(
+    panel.getByRole('button', { name: 'All notes (4)' })
+  ).toHaveAttribute('aria-pressed', 'true');
+  await familySnooze.click();
+  await snoozeDialog
+    .getByRole('button', { name: 'Snooze', exact: true })
+    .click();
+  await expect(familySnooze).toHaveCount(0);
+  await page.evaluate(() => {
+    const key = Object.keys(localStorage).find((entry) =>
+      entry.startsWith('caretogether:dashboardSnoozes:v1:')
+    );
+    if (!key) throw new Error('Snooze was not persisted');
+    const newValue = JSON.stringify(Date.now() + 300);
+    localStorage.setItem(key, newValue);
+    window.dispatchEvent(new StorageEvent('storage', { key, newValue }));
+  });
+  await expect(familySnooze).toBeVisible();
+  await expect(reviewSummary.getByText('4', { exact: true })).toBeVisible();
   await row(familyNote.contents).getByRole('button', { name: 'Edit' }).click();
   await page
     .getByRole('textbox', { name: 'Notes', exact: true })
@@ -363,6 +405,10 @@ test('Dashboard shows scoped requirement counts and opens the arrangement @pr', 
   });
   await expect(action).toHaveCount(1);
   await expect(action).toContainText('2 matching requirements');
+  await expect(upcoming.getByRole('button', { name: /^Snooze/ })).toHaveCount(
+    0
+  );
+  await expect(pastDue.getByRole('button', { name: /^Snooze/ })).toHaveCount(0);
   await expect(pastDue.getByText('02/29/20')).toBeVisible();
   await expectNoHorizontalOverflow(page);
 
@@ -672,6 +718,9 @@ test('shows disclosed approvals and renewals and restores the independent UTC wi
   });
   await expect(window).toHaveText('Next 30 days');
   await expect(approvals.getByLabel('7 approval work items')).toBeVisible();
+  await expect(approvals.getByRole('button', { name: /^Snooze/ })).toHaveCount(
+    0
+  );
   await page.setViewportSize({ width: 1440, height: 900 });
   const approvalList = approvals.getByRole('group', {
     name: 'Expiring approvals and requirements',

@@ -1,5 +1,6 @@
 import { atom } from 'jotai';
 import type { RecordsAggregate } from '../GeneratedClient';
+import { createSnoozeFreshnessTracker } from './recordsSnoozeFreshness.ts';
 
 export type VisibleAggregatesAction =
   | { type: 'refresh' }
@@ -9,9 +10,10 @@ export type VisibleAggregatesAction =
 export function createRecordsScopeCache(
   loadRecords: () => Promise<RecordsAggregate[]>
 ) {
+  const admit = createSnoozeFreshnessTracker();
   const visibleAggregatesBaseAtom = atom<
     RecordsAggregate[] | Promise<RecordsAggregate[]>
-  >(loadRecords());
+  >(loadRecords().then(admit));
   let updateQueue: Promise<void> = Promise.resolve();
 
   function enqueueVisibleAggregatesUpdate(update: () => void | Promise<void>) {
@@ -37,7 +39,7 @@ export function createRecordsScopeCache(
         action.type === 'refresh'
       ) {
         await enqueueVisibleAggregatesUpdate(() =>
-          set(visibleAggregatesBaseAtom, loadRecords())
+          set(visibleAggregatesBaseAtom, loadRecords().then(admit))
         );
         return;
       }
@@ -45,14 +47,14 @@ export function createRecordsScopeCache(
       if (typeof action === 'function') {
         await enqueueVisibleAggregatesUpdate(async () => {
           const current = await get(visibleAggregatesBaseAtom);
-          set(visibleAggregatesBaseAtom, action(current));
+          set(visibleAggregatesBaseAtom, admit(action(current)));
         });
         return;
       }
 
       if (Array.isArray(action)) {
         await enqueueVisibleAggregatesUpdate(() =>
-          set(visibleAggregatesBaseAtom, action)
+          set(visibleAggregatesBaseAtom, admit(action))
         );
       }
     }

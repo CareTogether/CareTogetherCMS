@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
+using Azure;
 using CareTogether.Resources.Policies;
 using Timelines;
 
@@ -13,7 +14,8 @@ namespace CareTogether.Engines.PolicyEvaluation
             EffectiveLocationPolicy locationPolicy,
             V1CasePolicy v1CasePolicy,
             V1CaseEntry v1CaseEntry,
-            DateOnly today
+            DateOnly today,
+            ETag? policyRevision = null
         )
         {
             var missingIntakeRequirements = v1CasePolicy
@@ -55,7 +57,8 @@ namespace CareTogether.Engines.PolicyEvaluation
                         arrangement.Value,
                         locationPolicy,
                         arrangementPolicy,
-                        today
+                        today,
+                        policyRevision
                     );
                 }
             );
@@ -105,7 +108,8 @@ namespace CareTogether.Engines.PolicyEvaluation
             ArrangementEntry arrangement,
             EffectiveLocationPolicy locationPolicy,
             ArrangementPolicy arrangementPolicy,
-            DateOnly today
+            DateOnly today,
+            ETag? policyRevision = null
         )
         {
             var missingSetupRequirements = CalculateMissingSetupRequirements(
@@ -117,7 +121,8 @@ namespace CareTogether.Engines.PolicyEvaluation
             var missingMonitoringRequirements = CalculateMissingMonitoringRequirements(
                 arrangementPolicy,
                 arrangement,
-                today
+                today,
+                policyRevision
             );
             var missingCloseoutRequirements = CalculateMissingCloseoutRequirements(
                 locationPolicy,
@@ -321,11 +326,17 @@ namespace CareTogether.Engines.PolicyEvaluation
         internal static ImmutableList<MissingArrangementRequirement> CalculateMissingMonitoringRequirements(
             ArrangementPolicy arrangementPolicy,
             ArrangementEntry arrangement,
-            DateOnly today
+            DateOnly today,
+            ETag? policyRevision = null
         )
         {
+            var episodeFactories = ArrangementMonitoringEpisode.ForRules(
+                arrangementPolicy,
+                arrangement,
+                policyRevision
+            );
             var arrangementLevelResults = arrangementPolicy
-                .RequiredMonitoringActions_PRE_MIGRATION.SelectMany(monitoringRequirement =>
+                .RequiredMonitoringActions_PRE_MIGRATION.SelectMany((monitoringRequirement, ruleIndex) =>
                     (
                         arrangement.StartedAt.HasValue
                             ? CalculateMissingMonitoringRequirementInstances(
@@ -365,7 +376,10 @@ namespace CareTogether.Engines.PolicyEvaluation
                             monitoringRequirement.Action,
                             DueBy: missingDueDate > today ? missingDueDate : null,
                             PastDueSince: missingDueDate <= today ? missingDueDate : null
-                        ))
+                        )
+                        {
+                            MonitoringEpisode = episodeFactories[ruleIndex]?.Invoke(missingDueDate),
+                        })
                 )
                 .ToImmutableList();
 

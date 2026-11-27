@@ -28,6 +28,7 @@ import {
   RequirementSidePanel,
 } from './sidePanels';
 import {
+  copyArrangementFunction,
   enumName,
   nextCopyName,
   removeByName,
@@ -70,6 +71,13 @@ function ArrangementFunctionSummary({
 
 function monitoringRequirementName(requirement: MonitoringRequirement) {
   return requirement.action?.actionName ?? '';
+}
+
+function isMonitoringRule(
+  item: MonitoringRequirement,
+  target: MonitoringRequirement
+) {
+  return target.id ? item.id === target.id : item === target;
 }
 
 export function ArrangementPolicyDetails({
@@ -162,27 +170,6 @@ export function ArrangementPolicyDetails({
     );
   }
 
-  function duplicateMonitoringRequirement(
-    requirements: MonitoringRequirement[],
-    requirement: MonitoringRequirement
-  ) {
-    return upsertByName(
-      requirements,
-      undefined,
-      new MonitoringRequirement({
-        ...requirement,
-        action: new RequirementDefinition({
-          ...requirement.action,
-          actionName: nextCopyName(
-            monitoringRequirementName(requirement),
-            requirements.map(monitoringRequirementName)
-          ),
-        }),
-      }),
-      monitoringRequirementName
-    );
-  }
-
   function duplicateArrangementFunction(
     arrangementFunction: ArrangementFunction
   ) {
@@ -190,13 +177,13 @@ export function ArrangementPolicyDetails({
       arrangementFunctions: upsertByName(
         arrangementFunctions,
         undefined,
-        new ArrangementFunction({
-          ...arrangementFunction,
-          functionName: nextCopyName(
+        copyArrangementFunction(
+          arrangementFunction,
+          nextCopyName(
             arrangementFunction.functionName,
             arrangementFunctions.map((item) => item.functionName)
-          ),
-        }),
+          )
+        ),
         (item) => item.functionName
       ),
     });
@@ -265,18 +252,19 @@ export function ArrangementPolicyDetails({
               }}
               onDuplicate={(requirement) =>
                 updateArrangement({
-                  requiredMonitoringActionsNew: duplicateMonitoringRequirement(
-                    monitoringActions,
-                    requirement
-                  ),
+                  requiredMonitoringActionsNew: [
+                    ...monitoringActions,
+                    new MonitoringRequirement({
+                      ...requirement,
+                      id: crypto.randomUUID(),
+                    }),
+                  ],
                 })
               }
               onDelete={(requirement) =>
                 updateArrangement({
-                  requiredMonitoringActionsNew: removeByName(
-                    monitoringActions,
-                    monitoringRequirementName(requirement),
-                    monitoringRequirementName
+                  requiredMonitoringActionsNew: monitoringActions.filter(
+                    (item) => !isMonitoringRule(item, requirement)
                   ),
                 })
               }
@@ -456,6 +444,7 @@ export function ArrangementPolicyDetails({
       <MonitoringRequirementPanel>
         <MonitoringRequirementSidePanel
           key={
+            workingMonitoringRequirement?.id ??
             workingMonitoringRequirement?.action?.actionName ??
             'new-monitoring-requirement'
           }
@@ -468,15 +457,16 @@ export function ArrangementPolicyDetails({
           actionNames={actionNames}
           existingActionNames={monitoringActions.map(monitoringRequirementName)}
           onClose={closeMonitoringRequirementPanel}
-          onSave={(previousName, requirement) =>
+          onSave={(_, requirement) =>
             updateArrangementAndClose(
               {
-                requiredMonitoringActionsNew: upsertByName(
-                  monitoringActions,
-                  previousName,
-                  requirement,
-                  monitoringRequirementName
-                ),
+                requiredMonitoringActionsNew: workingMonitoringRequirement
+                  ? monitoringActions.map((item) =>
+                      isMonitoringRule(item, workingMonitoringRequirement)
+                        ? requirement
+                        : item
+                    )
+                  : [...monitoringActions, requirement],
               },
               closeMonitoringRequirementPanel
             )

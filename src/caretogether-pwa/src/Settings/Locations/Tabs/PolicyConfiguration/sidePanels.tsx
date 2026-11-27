@@ -732,6 +732,9 @@ export function MonitoringRequirementSidePanel({
   const [draft, setDraft] = useState<MonitoringRequirementDraft>(() =>
     monitoringRequirementToDraft(requirement)
   );
+  const [ruleId] = useState(() =>
+    requirement ? requirement.id : crypto.randomUUID()
+  );
   const trimmedActionName = draft.actionName.trim();
   const previousName = requirement?.action?.actionName;
   const duplicateName =
@@ -758,6 +761,7 @@ export function MonitoringRequirementSidePanel({
       onSave(
         previousName,
         new MonitoringRequirement({
+          id: ruleId,
           action: new RequirementDefinition({
             actionName: trimmedActionName,
             isRequired: draft.isRequired,

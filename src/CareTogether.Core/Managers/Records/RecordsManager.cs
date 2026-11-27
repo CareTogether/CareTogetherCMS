@@ -99,7 +99,34 @@ namespace CareTogether.Managers.Records
             return userContext;
         }
 
-        public async Task<ImmutableList<RecordsAggregate>> ListVisibleAggregatesAsync(
+        public Task<ImmutableList<RecordsAggregate>> ListVisibleAggregatesAsync(
+            ClaimsPrincipal user,
+            Guid organizationId,
+            Guid locationId
+        ) =>
+            CertifyArrangementSnoozesAsync(
+                organizationId,
+                locationId,
+                () => RenderVisibleAggregatesAsync(user, organizationId, locationId)
+            );
+
+        private Task<ImmutableList<RecordsAggregate>> CertifyArrangementSnoozesAsync(
+            Guid organizationId,
+            Guid locationId,
+            Func<Task<ImmutableList<RecordsAggregate>>> render
+        ) =>
+            v1CasesResource is V1CasesResource cases
+            && policiesResource is PoliciesResource policies
+                ? ArrangementSnoozeCertification.CertifyAsync(
+                    cases,
+                    policies,
+                    organizationId,
+                    locationId,
+                    render
+                )
+                : render();
+
+        private async Task<ImmutableList<RecordsAggregate>> RenderVisibleAggregatesAsync(
             ClaimsPrincipal user,
             Guid organizationId,
             Guid locationId
@@ -345,11 +372,16 @@ namespace CareTogether.Managers.Records
             foreach (var plannedCommand in commandPlan.AllCommands)
                 await ExecuteCommandAsync(organizationId, locationId, user, plannedCommand);
 
-            return await RenderCompositeCommandResultAsync(
+            return await CertifyArrangementSnoozesAsync(
                 organizationId,
                 locationId,
-                userContext,
-                commandPlan.AllCommands
+                () =>
+                    RenderCompositeCommandResultAsync(
+                        organizationId,
+                        locationId,
+                        userContext,
+                        commandPlan.AllCommands
+                    )
             );
         }
 
@@ -377,12 +409,17 @@ namespace CareTogether.Managers.Records
 
                 await ExecuteCommandAsync(organizationId, locationId, user, command);
 
-                return await RenderCommandResultAsync(
+                return await CertifyArrangementSnoozesAsync(
                     organizationId,
                     locationId,
-                    userContext,
-                    command,
-                    commandResultRenderingContext
+                    () =>
+                        RenderCommandResultAsync(
+                            organizationId,
+                            locationId,
+                            userContext,
+                            command,
+                            commandResultRenderingContext
+                        )
                 );
             }
             catch

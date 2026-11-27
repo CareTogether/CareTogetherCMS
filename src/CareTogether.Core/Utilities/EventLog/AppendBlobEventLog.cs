@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using System.Threading.Tasks;
+using Azure;
 using Azure.Storage.Blobs;
 using Azure.Storage.Blobs.Models;
 using Azure.Storage.Blobs.Specialized;
@@ -11,6 +12,13 @@ using Newtonsoft.Json;
 
 namespace CareTogether.Utilities.EventLog
 {
+    internal sealed record EventLogPosition(
+        long EventCount,
+        string? Segment,
+        ETag ETag,
+        long Length
+    );
+
     public class AppendBlobEventLog<T> : IEventLog<T>
     {
         private readonly string logType;
@@ -29,6 +37,98 @@ namespace CareTogether.Utilities.EventLog
         }
 
         public async Task AppendEventAsync(
+            Guid organizationId,
+            Guid locationId,
+            T domainEvent,
+            long expectedSequenceNumber
+        ) =>
+            await AppendBlockAsync(organizationId, locationId, domainEvent, expectedSequenceNumber);
+
+        internal async Task<EventLogPosition?> AppendEventAsync(
+            Guid organizationId,
+            Guid locationId,
+            T domainEvent,
+            long expectedSequenceNumber,
+            EventLogPosition? known
+        )
+        {
+            var (segment, append, length) = await AppendBlockAsync(
+                organizationId,
+                locationId,
+                domainEvent,
+                expectedSequenceNumber
+            );
+            if (known is null || !long.TryParse(append.BlobAppendOffset, out var offset))
+                return null;
+
+            var continuous =
+                segment == known.Segment
+                    ? offset == known.Length
+                    : offset == 0
+                        && (
+                            known.Segment is null
+                            || SameETag(
+                                await SegmentETagAsync(organizationId, known.Segment),
+                                known.ETag
+                            )
+                        );
+            return continuous
+                ? new(known.EventCount + 1, segment, append.ETag, offset + length)
+                : null;
+        }
+
+        internal async Task<bool> IsCurrentAsync(
+            Guid organizationId,
+            Guid locationId,
+            EventLogPosition position
+        )
+        {
+            try
+            {
+                var tenantContainer = await CreateContainerIfNotExistsAsync(organizationId);
+                BlobItem? last = null;
+                await foreach (
+                    var blob in tenantContainer.GetBlobsAsync(
+                        BlobTraits.None,
+                        BlobStates.None,
+                        $"{locationId}/{logType}",
+                        default
+                    )
+                )
+                    if (blob.Name.EndsWith(".ndjson"))
+                        last = blob;
+
+                return last is null
+                    ? position.Segment is null
+                    : last.Name == position.Segment
+                        && last.Properties.ContentLength == position.Length
+                        && SameETag(last.Properties.ETag, position.ETag);
+            }
+            catch (RequestFailedException)
+            {
+                return false;
+            }
+        }
+
+        private static bool SameETag(ETag? left, ETag right) =>
+            left is { } value && value.ToString("H") == right.ToString("H");
+
+        private async Task<ETag?> SegmentETagAsync(Guid organizationId, string segment)
+        {
+            try
+            {
+                var tenantContainer = await CreateContainerIfNotExistsAsync(organizationId);
+                return (await tenantContainer.GetAppendBlobClient(segment).GetPropertiesAsync())
+                    .Value
+                    .ETag;
+            }
+            catch (RequestFailedException)
+            {
+                return null;
+            }
+        }
+
+        private async Task<(string Segment, BlobAppendInfo Append, long Length)> AppendBlockAsync(
             Guid organizationId,
             Guid locationId,
             T domainEvent,
@@ -63,11 +163,13 @@ namespace CareTogether.Utilities.EventLog
                     }
                 ) + Environment.NewLine;
 
-            var eventStream = new MemoryStream(Encoding.UTF8.GetBytes(eventJson));
+            var eventBytes = Encoding.UTF8.GetBytes(eventJson);
+            var eventStream = new MemoryStream(eventBytes);
 
             try
             {
                 var appendResult = await logSegmentBlob.AppendBlockAsync(eventStream);
+                return (logSegmentBlob.Name, appendResult.Value, eventBytes.LongLength);
             }
             catch (Exception e)
             {
@@ -95,14 +197,21 @@ namespace CareTogether.Utilities.EventLog
                 return result;
         }
 
-        public async IAsyncEnumerable<(T DomainEvent, long SequenceNumber)> GetAllEventsAsync(
+        public IAsyncEnumerable<(T DomainEvent, long SequenceNumber)> GetAllEventsAsync(
             Guid organizationId,
             Guid locationId
+        ) => GetAllEventsAsync(organizationId, locationId, null);
+
+        internal async IAsyncEnumerable<(T DomainEvent, long SequenceNumber)> GetAllEventsAsync(
+            Guid organizationId,
+            Guid locationId,
+            Action<EventLogPosition>? onReplayed
         )
         {
             var tenantContainer = await CreateContainerIfNotExistsAsync(organizationId);
 
             long eventSequenceNumber = 0;
+            EventLogPosition position = new(0, null, default, 0);
 
             await foreach (
                 var blob in tenantContainer.GetBlobsAsync(
@@ -120,7 +229,21 @@ namespace CareTogether.Utilities.EventLog
 
                 var appendBlob = tenantContainer.GetAppendBlobClient(blob.Name);
 
-                using var eventStream = await appendBlob.OpenReadAsync();
+                Stream segmentStream;
+                if (onReplayed is null)
+                    segmentStream = await appendBlob.OpenReadAsync();
+                else
+                {
+                    var download = (await appendBlob.DownloadStreamingAsync()).Value;
+                    position = position with
+                    {
+                        Segment = blob.Name,
+                        ETag = download.Details.ETag,
+                        Length = download.Details.ContentLength,
+                    };
+                    segmentStream = download.Content;
+                }
+                using var eventStream = segmentStream;
                 using var reader = new StreamReader(eventStream);
 
                 string? line;
@@ -140,6 +263,8 @@ namespace CareTogether.Utilities.EventLog
                         : (item, eventSequenceNumber);
                 }
             }
+
+            onReplayed?.Invoke(position with { EventCount = eventSequenceNumber });
         }
 
         private async Task<BlobContainerClient> CreateContainerIfNotExistsAsync(Guid organizationId)

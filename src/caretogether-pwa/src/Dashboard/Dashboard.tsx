@@ -1,17 +1,28 @@
-import { Suspense, useId, useMemo, useState, type ReactNode } from 'react';
+import {
+  Suspense,
+  useCallback,
+  useEffect,
+  useId,
+  useMemo,
+  useState,
+  type ReactNode,
+} from 'react';
 import {
   Box,
   Button,
   Chip,
   Container,
+  IconButton,
   List,
   ListItem,
   MenuItem,
   Paper,
   Select,
+  Snackbar,
   Stack,
   ToggleButton,
   ToggleButtonGroup,
+  Tooltip,
   Typography,
 } from '@mui/material';
 import {
@@ -21,6 +32,7 @@ import {
   EventAvailableOutlined,
   EventBusyOutlined,
   FactCheckOutlined,
+  SnoozeOutlined,
   VerifiedUserOutlined,
 } from '@mui/icons-material';
 import { useAccountInfo } from '../Authentication/Auth';
@@ -74,6 +86,7 @@ import {
   DashboardRequirementPanel,
   DashboardRequirementRow,
   DashboardQueueRow,
+  DashboardSnoozedList,
 } from './DashboardRequirementPanel';
 import {
   affectedApprovalRoleLabel,
@@ -81,6 +94,7 @@ import {
 } from './dashboardApprovalRenewals';
 import {
   locationCalendarDate,
+  requirementGroupKey,
   selectDashboardRequirements,
 } from './dashboardRequirements';
 import {
@@ -94,6 +108,17 @@ import {
 import { useApprovalExpirationWorkQueue } from './useApprovalExpirationWorkQueue';
 import { useApprovalRenewalWorkQueue } from './useApprovalRenewalWorkQueue';
 import { useArrangementWorkQueue } from './useArrangementWorkQueue';
+import { DashboardSnoozeDialog } from './DashboardSnoozeDialog';
+import {
+  noteSnoozeToken,
+  partitionSnoozed,
+  removeSnooze,
+  snoozeStoragePrefix,
+  writeSnooze,
+  type SnoozeScope,
+} from './dashboardSnoozes';
+
+type SnoozeKind = 'note' | 'upcoming' | 'pastDue';
 
 const upcomingPanel = {
   title: 'Upcoming requirements',
@@ -432,6 +457,12 @@ function DashboardNoteReview({
   items,
   visible,
   onAction,
+  snoozed,
+  onSnooze,
+  onUnsnooze,
+  hasNotes,
+  focusSnoozed,
+  onSnoozedFocused,
 }: {
   familyV2: boolean;
   referralsEnabled: boolean;
@@ -440,6 +471,12 @@ function DashboardNoteReview({
   items: ReturnType<typeof useDashboardNoteReview>;
   visible: ReturnType<typeof filterDashboardNoteReview>;
   onAction: (item: ReviewNote, action: RecentNoteActionKind) => void;
+  snoozed: { item: ReviewNote; token: string; wakeAt: number }[];
+  onSnooze: ((token: string) => void) | undefined;
+  onUnsnooze: (token: string) => void;
+  hasNotes: boolean;
+  focusSnoozed: boolean;
+  onSnoozedFocused: () => void;
 }) {
   const familyLookup = useFamilyLookup();
   const noteAuthor = useNoteAuthorLookup();
@@ -450,14 +487,38 @@ function DashboardNoteReview({
     <DashboardRequirementPanel
       {...noteReviewPanel}
       emptyTitle={
-        items.length ? 'No notes for this source' : noteReviewPanel.emptyTitle
+        snoozed.length
+          ? 'No active notes in this view'
+          : hasNotes
+            ? 'No notes for this source'
+            : noteReviewPanel.emptyTitle
       }
       emptyMessage={
-        items.length
-          ? 'Choose another source to see notes awaiting review.'
-          : noteReviewPanel.emptyMessage
+        snoozed.length
+          ? 'Snoozed notes are listed below.'
+          : hasNotes
+            ? 'Choose another source to see notes awaiting review.'
+            : noteReviewPanel.emptyMessage
       }
       count={visible.length}
+      footer={
+        <DashboardSnoozedList
+          focusToggle={focusSnoozed}
+          onToggleFocused={onSnoozedFocused}
+          items={snoozed.map(({ item, token, wakeAt }) => ({
+            key: token,
+            title: item.name,
+            details: (
+              <Typography variant="body2" color="text.secondary">
+                {item.preview}
+              </Typography>
+            ),
+            wakeAt,
+            restoreLabel: 'Unsnooze note',
+            onRestore: () => onUnsnooze(token),
+          }))}
+        />
+      }
       headerAction={
         <ToggleButtonGroup
           exclusive
@@ -494,6 +555,10 @@ function DashboardNoteReview({
       }
     >
       {visible.map((item) => {
+        const snoozeToken =
+          onSnooze && (item.source === 'family' || referralsEnabled)
+            ? noteSnoozeToken(item)
+            : null;
         const author =
           item.source === 'family'
             ? noteAuthor(item.note)
@@ -553,6 +618,17 @@ function DashboardNoteReview({
                   >
                     Approve
                   </Button>
+                  {snoozeToken && (
+                    <Tooltip title="Snooze note">
+                      <IconButton
+                        size="small"
+                        aria-label="Snooze note"
+                        onClick={() => onSnooze?.(snoozeToken)}
+                      >
+                        <SnoozeOutlined fontSize="small" />
+                      </IconButton>
+                    </Tooltip>
+                  )}
                 </>
               )
             }
@@ -770,6 +846,21 @@ function DashboardColumns({
 }
 
 function DashboardRequirements({ storageKey }: { storageKey: string | null }) {
+  const userId = useAccountInfo()?.userId;
+  const locationScope = useSelectedLocationContext();
+  const snoozeScope =
+    userId && locationScope
+      ? ({ ...locationScope, userId } satisfies SnoozeScope)
+      : null;
+  const scopePrefix = snoozeScope && snoozeStoragePrefix(snoozeScope);
+  const [snoozeSelection, setSnoozeSelection] = useState<{
+    token: string;
+    kind: SnoozeKind;
+  }>();
+  const [focusSnoozed, setFocusSnoozed] = useState<SnoozeKind>();
+  const clearSnoozedFocus = useCallback(() => setFocusSnoozed(undefined), []);
+  const [snoozeFeedback, setSnoozeFeedback] = useState('');
+  const [, setSnoozeRevision] = useState(0);
   const [noteSelection, setNoteSelection] = useState<{
     key: string;
     action: RecentNoteActionKind;
@@ -787,11 +878,26 @@ function DashboardRequirements({ storageKey }: { storageKey: string | null }) {
   const personLookup = usePersonAndFamilyLookup();
   const navigate = useAppNavigate();
   const today = locationCalendarDate(new Date(), location?.timeZone?.id);
-  const { upcoming, pastDue, olderPastDueCount } = useMemo(
-    () => selectDashboardRequirements(items, today, preferences),
-    [items, today, preferences]
-  );
   const evaluationTime = new Date();
+  const requirementSnoozes = partitionSnoozed(
+    items,
+    ({ snoozeToken }) => snoozeToken,
+    snoozeScope,
+    evaluationTime.getTime()
+  );
+  const { upcoming, pastDue, olderPastDueCount } = selectDashboardRequirements(
+    requirementSnoozes.active,
+    today,
+    preferences
+  );
+  const snoozedRequirements = selectDashboardRequirements(
+    requirementSnoozes.snoozed.map(({ item }) => item),
+    today,
+    preferences
+  );
+  const requirementWakeAt = new Map(
+    requirementSnoozes.snoozed.map(({ token, wakeAt }) => [token, wakeAt])
+  );
   const approvals = useApprovalExpirationWorkQueue(
     evaluationTime.toISOString().slice(0, 10)
   );
@@ -812,10 +918,82 @@ function DashboardRequirements({ storageKey }: { storageKey: string | null }) {
         (noteSelection.action !== 'edit' || item.canEdit) &&
         (noteSelection.action !== 'delete' || item.canDelete)
     );
-  const visibleNotes = filterDashboardNoteReview(
+  const {
+    active: activeNotes,
+    snoozed: snoozedNotes,
+    nextWake: nextNoteWake,
+  } = partitionSnoozed(
     notes,
+    (item) =>
+      item.source === 'family' || referralsEnabled
+        ? noteSnoozeToken(item)
+        : null,
+    snoozeScope,
+    evaluationTime.getTime()
+  );
+  const wakeTimes = [nextNoteWake, requirementSnoozes.nextWake].filter(
+    (wake) => wake !== undefined
+  );
+  const nextWake = wakeTimes.length ? Math.min(...wakeTimes) : undefined;
+  const visibleNotes = filterDashboardNoteReview(
+    activeNotes,
     preferences.noteReviewSource
   );
+  const visibleSnoozed = snoozedNotes.filter(
+    ({ item }) =>
+      preferences.noteReviewSource === 'all' ||
+      item.source === preferences.noteReviewSource
+  );
+  const selectedSnooze =
+    snoozeSelection &&
+    snoozeScope &&
+    (snoozeSelection.kind === 'note'
+      ? visibleNotes.some(
+          (item) =>
+            (item.source === 'family' || referralsEnabled) &&
+            noteSnoozeToken(item) === snoozeSelection.token
+        )
+      : (snoozeSelection.kind === 'upcoming' ? upcoming : pastDue).some(
+          ({ item }) => item.snoozeToken === snoozeSelection.token
+        ));
+
+  function restoreSnooze(token: string, message: string) {
+    const saved = removeSnooze(snoozeScope, token);
+    setSnoozeRevision((revision) => revision + 1);
+    setSnoozeFeedback(saved ? message : 'Could not remove the snooze.');
+  }
+
+  useEffect(() => {
+    if (!scopePrefix) return;
+    const refresh = () => setSnoozeRevision((revision) => revision + 1);
+    const storageChanged = (event: StorageEvent) => {
+      if (!event.key || event.key.startsWith(scopePrefix)) refresh();
+    };
+    let timer: number | undefined;
+    function schedule(wake: number) {
+      const remaining = wake - Date.now();
+      if (remaining <= 0) {
+        refresh();
+      } else {
+        timer = window.setTimeout(
+          () => schedule(wake),
+          Math.min(remaining, 2_147_483_647)
+        );
+      }
+    }
+    if (nextWake !== undefined) schedule(nextWake);
+    window.addEventListener('focus', refresh);
+    window.addEventListener('pageshow', refresh);
+    window.addEventListener('storage', storageChanged);
+    document.addEventListener('visibilitychange', refresh);
+    return () => {
+      window.clearTimeout(timer);
+      window.removeEventListener('focus', refresh);
+      window.removeEventListener('pageshow', refresh);
+      window.removeEventListener('storage', storageChanged);
+      document.removeEventListener('visibilitychange', refresh);
+    };
+  }, [scopePrefix, nextWake]);
   const counts = {
     upcoming: upcoming.reduce((sum, group) => sum + group.count, 0),
     pastDue: pastDue.reduce((sum, group) => sum + group.count, 0),
@@ -868,23 +1046,67 @@ function DashboardRequirements({ storageKey }: { storageKey: string | null }) {
     };
   }
 
+  function snoozedRequirementList(kind: 'upcoming' | 'pastDue') {
+    return (
+      <DashboardSnoozedList
+        focusToggle={focusSnoozed === kind}
+        onToggleFocused={clearSnoozedFocus}
+        items={snoozedRequirements[kind].flatMap(({ item }) => {
+          const wakeAt =
+            item.snoozeToken && requirementWakeAt.get(item.snoozeToken);
+          if (!item.snoozeToken || !wakeAt) return [];
+          const token = item.snoozeToken;
+          return [
+            {
+              key: token,
+              title: item.requirementName,
+              details: (
+                <Typography variant="body2" color="text.secondary">
+                  {rowContext(item).context} ·{' '}
+                  <span className="ph-unmask">
+                    {item.status === 'past-due' ? 'Past due since' : 'Due'}
+                  </span>{' '}
+                  <time dateTime={item.occurrenceDate}>
+                    {formatUtcDateOnly(new Date(item.occurrenceDate))}
+                  </time>
+                </Typography>
+              ),
+              wakeAt,
+              restoreLabel: `Unsnooze ${item.requirementName}`,
+              onRestore: () =>
+                restoreSnooze(token, 'Requirement returned to the dashboard.'),
+            },
+          ];
+        })}
+      />
+    );
+  }
+
   const [upcomingRequirements, pastDueRequirements] = [
     {
       ...upcomingPanel,
-      emptyTitle: items.some(({ status }) => status === 'upcoming')
-        ? upcomingPanel.emptyTitle
-        : 'No upcoming work',
-      emptyMessage: `No upcoming requirements in the next ${preferences.upcomingDays} days.`,
+      kind: 'upcoming' as const,
+      emptyTitle: snoozedRequirements.upcoming.length
+        ? 'No active requirements in this view'
+        : items.some(({ status }) => status === 'upcoming')
+          ? upcomingPanel.emptyTitle
+          : 'No upcoming work',
+      emptyMessage: snoozedRequirements.upcoming.length
+        ? 'Snoozed requirements are listed below.'
+        : `No upcoming requirements in the next ${preferences.upcomingDays} days.`,
       groups: upcoming,
       count: counts.upcoming,
       footer: (
-        <Typography
-          variant="body2"
-          color="text.secondary"
-          sx={{ px: 2, py: 1.25, mt: 'auto' }}
-        >
-          Some recurring requirements show only the next occurrence.
-        </Typography>
+        <>
+          {snoozedRequirementList('upcoming')}
+          <Typography
+            variant="body2"
+            color="text.secondary"
+            sx={{ px: 2, py: 1.25, mt: 'auto' }}
+          >
+            Some recurring requirements show only the next occurrence.
+          </Typography>
+        </>
       ),
       headerAction: (
         <NextDaysSelect
@@ -896,12 +1118,15 @@ function DashboardRequirements({ storageKey }: { storageKey: string | null }) {
     },
     {
       ...pastDuePanel,
-      emptyTitle:
-        olderPastDueCount > 0
+      kind: 'pastDue' as const,
+      emptyTitle: snoozedRequirements.pastDue.length
+        ? 'No active requirements in this view'
+        : olderPastDueCount > 0
           ? 'No overdue work in this window'
           : pastDuePanel.emptyTitle,
-      emptyMessage:
-        preferences.pastDueDays === 'all'
+      emptyMessage: snoozedRequirements.pastDue.length
+        ? 'Snoozed requirements are listed below.'
+        : preferences.pastDueDays === 'all'
           ? pastDuePanel.emptyMessage
           : `No past-due requirements in the last ${preferences.pastDueDays} days.`,
       groups: pastDue,
@@ -931,33 +1156,39 @@ function DashboardRequirements({ storageKey }: { storageKey: string | null }) {
           ))}
         </Select>
       ),
-      footer: olderPastDueCount > 0 && (
-        <Stack
-          direction="row"
-          spacing={1}
-          useFlexGap
-          sx={{ px: 2, pb: 1, alignItems: 'center', flexWrap: 'wrap' }}
-        >
-          <Typography variant="body2" color="text.secondary">
-            {olderPastDueCount} older unresolved{' '}
-            {olderPastDueCount === 1 ? 'requirement' : 'requirements'} outside
-            this window.
-          </Typography>
-          <Button
-            size="small"
-            onClick={() => updatePreferences({ pastDueDays: 'all' })}
-          >
-            Show all
-          </Button>
-        </Stack>
+      footer: (
+        <>
+          {snoozedRequirementList('pastDue')}
+          {olderPastDueCount > 0 && (
+            <Stack
+              direction="row"
+              spacing={1}
+              useFlexGap
+              sx={{ px: 2, pb: 1, alignItems: 'center', flexWrap: 'wrap' }}
+            >
+              <Typography variant="body2" color="text.secondary">
+                {olderPastDueCount} older unresolved{' '}
+                {olderPastDueCount === 1 ? 'requirement' : 'requirements'}{' '}
+                outside this window.
+              </Typography>
+              <Button
+                size="small"
+                onClick={() => updatePreferences({ pastDueDays: 'all' })}
+              >
+                Show all
+              </Button>
+            </Stack>
+          )}
+        </>
       ),
     },
-  ].map(({ groups, ...panel }) => (
+  ].map(({ groups, kind, ...panel }) => (
     <DashboardRequirementPanel key={panel.title} {...panel}>
       {groups.map((group) => {
+        const token = group.item.snoozeToken;
         return (
           <DashboardRequirementRow
-            key={group.item.id}
+            key={requirementGroupKey(group.item)}
             group={group}
             today={today}
             dateReached={
@@ -967,6 +1198,11 @@ function DashboardRequirements({ storageKey }: { storageKey: string | null }) {
             {...rowContext(group.item)}
             onOpen={() =>
               openDashboardArrangement(navigate, group.item, familyV2)
+            }
+            onSnooze={
+              snoozeScope && token
+                ? () => setSnoozeSelection({ token, kind })
+                : undefined
             }
           />
         );
@@ -994,8 +1230,20 @@ function DashboardRequirements({ storageKey }: { storageKey: string | null }) {
             onAction={(item, action) =>
               setNoteSelection({ key: noteKey(item), action })
             }
-            items={notes}
+            items={activeNotes}
+            hasNotes={notes.length > 0}
             visible={visibleNotes}
+            snoozed={visibleSnoozed}
+            onSnooze={
+              snoozeScope
+                ? (token) => setSnoozeSelection({ token, kind: 'note' })
+                : undefined
+            }
+            onUnsnooze={(token) =>
+              restoreSnooze(token, 'Note returned to the review queue.')
+            }
+            focusSnoozed={focusSnoozed === 'note'}
+            onSnoozedFocused={clearSnoozedFocus}
             familyV2={familyV2}
             source={preferences.noteReviewSource}
             onChange={(noteReviewSource) =>
@@ -1012,6 +1260,35 @@ function DashboardRequirements({ storageKey }: { storageKey: string | null }) {
           onClose={() => setNoteSelection(undefined)}
         />
       )}
+      {selectedSnooze && (
+        <DashboardSnoozeDialog
+          onClose={() => setSnoozeSelection(undefined)}
+          onSnooze={(wakeAt, now) => {
+            const saved = writeSnooze(
+              snoozeScope,
+              snoozeSelection.token,
+              wakeAt,
+              now
+            );
+            setSnoozeRevision((revision) => revision + 1);
+            setSnoozeFeedback(
+              saved
+                ? snoozeSelection.kind === 'note'
+                  ? 'Note snoozed.'
+                  : 'Requirement snoozed.'
+                : 'Could not save the snooze on this device.'
+            );
+            if (saved) setFocusSnoozed(snoozeSelection.kind);
+            setSnoozeSelection(undefined);
+          }}
+        />
+      )}
+      <Snackbar
+        open={Boolean(snoozeFeedback)}
+        autoHideDuration={5000}
+        onClose={() => setSnoozeFeedback('')}
+        message={snoozeFeedback}
+      />
     </>
   );
 }

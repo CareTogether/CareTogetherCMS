@@ -711,7 +711,15 @@ namespace CareTogether.Engines.PolicyEvaluation
         RequirementDefinition Action,
         DateOnly? DueBy,
         DateOnly? PastDueSince
-    );
+    )
+    {
+        [JsonIgnore]
+        [Newtonsoft.Json.JsonIgnore]
+        internal ArrangementMonitoringEpisode? MonitoringEpisode { get; init; }
+
+        [Newtonsoft.Json.JsonProperty(NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
+        public string? SnoozeEpisodeToken { get; init; }
+    }
 
     public enum ArrangementPhase
     {

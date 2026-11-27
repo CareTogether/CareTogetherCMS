@@ -43,7 +43,12 @@ namespace CareTogether.Resources.V1Cases
         string? Comments,
         string? Reason,
         string? ArrangementPolicyVersion = null
-    );
+    )
+    {
+        [System.Text.Json.Serialization.JsonIgnore]
+        [Newtonsoft.Json.JsonIgnore]
+        internal ArrangementMonitoringHistory? MonitoringHistory { get; init; }
+    }
 
     public enum V1CaseCloseReason
     {

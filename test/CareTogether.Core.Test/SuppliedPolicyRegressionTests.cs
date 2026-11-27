@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Immutable;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -155,8 +156,12 @@ namespace CareTogether.Core.Test
             }
 
             using var cache = new MemoryCache(new MemoryCacheOptions());
+            using var otherProcessCache = new MemoryCache(new MemoryCacheOptions());
             var store = new JsonBlobObjectStore<string>(
                 client, "policies", cache, TimeSpan.FromMinutes(1)
+            );
+            var otherProcessStore = new JsonBlobObjectStore<string>(
+                client, "policies", otherProcessCache, TimeSpan.FromMinutes(1)
             );
             var tenant = Guid.NewGuid();
             var location = Guid.NewGuid();
@@ -164,29 +169,145 @@ namespace CareTogether.Core.Test
             try
             {
                 await store.UpsertAsync(tenant, location, "policy", "original");
-                Assert.AreEqual("original", await store.GetAsync(tenant, location, "policy"));
+                var original = await store.ReadSnapshotAsync(tenant, location, "policy");
+                Assert.AreEqual("original", original.Value);
+                Assert.AreEqual(
+                    original,
+                    await store.ReadSnapshotAsync(tenant, location, "policy")
+                );
+                Assert.AreEqual(
+                    original,
+                    await otherProcessStore.ReadSnapshotAsync(tenant, location, "policy")
+                );
                 await store.UpsertAsync(tenant, location, "policy", "updated");
-                Assert.AreEqual("updated", await store.GetAsync(tenant, location, "policy"));
+                var updated = await store.ReadSnapshotAsync(tenant, location, "policy");
+                Assert.AreEqual("updated", updated.Value);
+                Assert.AreNotEqual(original.Revision, updated.Revision);
+                Assert.AreEqual(
+                    original,
+                    await otherProcessStore.ReadSnapshotAsync(tenant, location, "policy"),
+                    "An independent cache can still serve the older policy and its original ETag."
+                );
+                Assert.AreEqual(
+                    updated,
+                    await otherProcessStore.ReadSnapshotAsync(
+                        tenant,
+                        location,
+                        "policy",
+                        revalidate: true
+                    )
+                );
 
-                var lease = container.GetBlobClient($"{location}/policies/policy.json")
-                    .GetBlobLeaseClient();
+                var blob = container.GetBlobClient($"{location}/policies/policy.json");
+                Assert.AreEqual((await blob.GetPropertiesAsync()).Value.ETag, updated.Revision);
+                var lease = blob.GetBlobLeaseClient();
                 await lease.AcquireAsync(TimeSpan.FromSeconds(15));
                 try
                 {
                     await Assert.ThrowsExactlyAsync<RequestFailedException>(() =>
                         store.UpsertAsync(tenant, location, "policy", "rejected")
                     );
-                    Assert.AreEqual("updated", await store.GetAsync(tenant, location, "policy"));
+                    Assert.AreEqual(
+                        updated,
+                        await store.ReadSnapshotAsync(tenant, location, "policy")
+                    );
                 }
                 finally
                 {
                     await lease.ReleaseAsync();
                 }
+                await store.UpsertAsync(tenant, location, "policy", original.Value);
+                var restored = await store.ReadSnapshotAsync(tenant, location, "policy");
+                Assert.AreEqual(original.Value, restored.Value);
+                Assert.AreNotEqual(original.Revision, restored.Revision);
+                Assert.AreEqual(
+                    restored,
+                    await otherProcessStore.ReadSnapshotAsync(
+                        tenant,
+                        location,
+                        "policy",
+                        revalidate: true
+                    )
+                );
+                Assert.AreEqual(
+                    restored,
+                    await otherProcessStore.ReadSnapshotAsync(
+                        tenant,
+                        location,
+                        "policy",
+                        revalidate: true
+                    )
+                );
             }
             finally
             {
                 await container.DeleteIfExistsAsync();
             }
+        }
+
+        [TestMethod]
+        public async Task MonitoringRuleIdsSurvivePolicySaveAndReload()
+        {
+            var (resource, _, organizationId, locationId) = await ResourceAsync();
+            var policy = Fixture() with
+            {
+                ActionDefinitions = ImmutableDictionary<string, ActionRequirement>.Empty.Add(
+                    "Safety visit",
+                    new ActionRequirement(
+                        DocumentLinkRequirement.None,
+                        NoteEntryRequirement.None,
+                        null, null, null, null, null, null
+                    )
+                ),
+            };
+            var arrangement = policy.ReferralPolicy.ArrangementPolicies[0];
+            var action = new RequirementDefinition("Safety visit", true);
+            var legacy = new MonitoringRequirement(action, new OneTimeRecurrencePolicy(null));
+            var first = legacy with { Id = Guid.NewGuid() };
+            var duplicate = first with { Id = Guid.NewGuid() };
+            var edited = first with { Recurrence = new OneTimeRecurrencePolicy(TimeSpan.FromDays(2)) };
+
+            EffectiveLocationPolicy WithRules(ImmutableList<MonitoringRequirement> rules) =>
+                policy with
+                {
+                    ReferralPolicy = policy.ReferralPolicy with
+                    {
+                        ArrangementPolicies = policy.ReferralPolicy.ArrangementPolicies.SetItem(
+                            0, arrangement with { RequiredMonitoringActionsNew = rules }
+                        ),
+                    },
+                };
+
+            var saved = await resource.UpsertEffectiveLocationPolicyAsync(
+                organizationId, locationId, WithRules([first, duplicate, legacy])
+            );
+            await resource.UpsertEffectiveLocationPolicyAsync(
+                organizationId, locationId, WithRules([duplicate, edited, legacy])
+            );
+            var reloaded = await resource.GetCurrentPolicy(organizationId, locationId);
+            var roundTrip = JsonConvert.DeserializeObject<EffectiveLocationPolicy>(
+                JsonConvert.SerializeObject(reloaded)
+            )!;
+            CollectionAssert.AreEqual(
+                new Guid?[] { first.Id, duplicate.Id, null },
+                saved.ReferralPolicy.ArrangementPolicies[0].RequiredMonitoringActionsNew!
+                    .Select(rule => rule.Id).ToArray()
+            );
+            CollectionAssert.AreEqual(
+                new Guid?[] { duplicate.Id, first.Id, null },
+                roundTrip.ReferralPolicy.ArrangementPolicies[0].RequiredMonitoringActionsNew!
+                    .Select(rule => rule.Id).ToArray()
+            );
+            CollectionAssert.AreEqual(
+                new Guid?[] { duplicate.Id, first.Id },
+                roundTrip.ReferralPolicy.ArrangementPolicies[0].RequiredMonitoringActions_PRE_MIGRATION
+                    .Where(rule => rule.Id.HasValue).Select(rule => rule.Id).ToArray()
+            );
+            await Assert.ThrowsExactlyAsync<PolicyValidationException>(() =>
+                resource.UpsertEffectiveLocationPolicyAsync(
+                    organizationId, locationId, WithRules([first, edited])
+                )
+            );
         }
 
         private static async Task<(

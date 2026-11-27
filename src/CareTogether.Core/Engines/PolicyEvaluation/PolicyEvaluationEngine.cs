@@ -421,7 +421,10 @@ namespace CareTogether.Engines.PolicyEvaluation
                 familyVolunteerAssignments,
                 ChildLocationHistory,
                 entry.ArrangementPolicyVersion
-            );
+            )
+            {
+                MonitoringHistory = entry.MonitoringHistory,
+            };
         }
 
         internal V1CaseEntry ToV1CaseEntryForCalculation(
@@ -463,7 +466,9 @@ namespace CareTogether.Engines.PolicyEvaluation
             Resources.V1Cases.V1CaseEntry v1CaseEntry
         )
         {
-            var policy = await policiesResource.GetCurrentPolicy(organizationId, locationId);
+            var (policy, revision) = policiesResource is PoliciesResource resource
+                ? await resource.ReadPolicySnapshotAsync(organizationId, locationId)
+                : (await policiesResource.GetCurrentPolicy(organizationId, locationId), null);
             var config = await policiesResource.GetConfigurationAsync(organizationId);
 
             var location = config.Locations.Find(item => item.Id == locationId);
@@ -475,14 +480,13 @@ namespace CareTogether.Engines.PolicyEvaluation
                 locationTimeZone
             );
 
-            var v1CaseStatus = V1CaseCalculations.CalculateV1CaseStatus(
+            return V1CaseCalculations.CalculateV1CaseStatus(
                 policy,
                 policy.ReferralPolicy,
                 v1CaseEntryForCalculation,
-                Dates.ToDateOnlyInLocationTimeZone(DateTime.UtcNow, locationTimeZone)
+                Dates.ToDateOnlyInLocationTimeZone(DateTime.UtcNow, locationTimeZone),
+                revision
             );
-
-            return v1CaseStatus;
         }
 
         public async Task<

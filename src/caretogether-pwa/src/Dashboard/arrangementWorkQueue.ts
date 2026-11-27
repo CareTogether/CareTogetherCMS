@@ -27,6 +27,7 @@ export type ArrangementWorkQueueItem = {
   assignment?: ArrangementRequirementAssignment;
   occurrenceDate: string;
   status: 'upcoming' | 'past-due';
+  snoozeToken?: string;
 };
 
 function hasIdentity(value: unknown): value is string {
@@ -73,7 +74,7 @@ function projectRequirement(
   target: ArrangementWorkQueueTarget,
   requirement: MissingArrangementRequirement
 ): ArrangementWorkQueueItem[] {
-  const { action, dueBy, pastDueSince } = requirement;
+  const { action, dueBy, pastDueSince, snoozeEpisodeToken } = requirement;
   if (
     action?.isRequired !== true ||
     !hasIdentity(action.actionName) ||
@@ -116,6 +117,8 @@ function projectRequirement(
       assignment,
       occurrenceDate,
       status: dueBy == null ? 'past-due' : 'upcoming',
+      ...(assignment === undefined &&
+        hasIdentity(snoozeEpisodeToken) && { snoozeToken: snoozeEpisodeToken }),
     },
   ];
 }
@@ -162,6 +165,7 @@ export function buildArrangementWorkQueue(
     (left, right) =>
       compareText(left.occurrenceDate, right.occurrenceDate) ||
       compareText(left.id, right.id) ||
-      compareText(left.status, right.status)
+      compareText(left.status, right.status) ||
+      compareText(left.snoozeToken ?? '', right.snoozeToken ?? '')
   );
 }

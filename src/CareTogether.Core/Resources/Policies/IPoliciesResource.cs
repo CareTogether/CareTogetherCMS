@@ -324,7 +324,8 @@ namespace CareTogether.Resources.Policies
 
     public sealed record MonitoringRequirement(
         RequirementDefinition Action,
-        RecurrencePolicy Recurrence
+        RecurrencePolicy Recurrence,
+        Guid? Id = null
     );
 
     public enum FunctionRequirement

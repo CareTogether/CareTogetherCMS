@@ -28,16 +28,24 @@ export type RequirementGroup = {
   count: number;
 };
 
+export function requirementGroupKey({
+  id,
+  snoozeToken,
+}: ArrangementWorkQueueItem) {
+  return snoozeToken ? JSON.stringify([id, snoozeToken]) : id;
+}
+
 function addRequirement(
   groups: Map<string, RequirementGroup>,
   item: ArrangementWorkQueueItem
 ) {
-  const existing = groups.get(item.id);
+  const key = requirementGroupKey(item);
+  const existing = groups.get(key);
   if (existing) {
     existing.count += 1;
     return;
   }
-  groups.set(item.id, { item, count: 1 });
+  groups.set(key, { item, count: 1 });
 }
 
 function offsetCalendarDate(today: string, days: number) {

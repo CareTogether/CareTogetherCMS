@@ -2683,6 +2683,11 @@
           },
           "recurrence": {
             "$ref": "#/components/schemas/RecurrencePolicy"
+          },
+          "id": {
+            "type": "string",
+            "format": "guid",
+            "nullable": true
           }
         }
       },
@@ -4291,6 +4296,14 @@
             "properties": {
               "family": {
                 "$ref": "#/components/schemas/CombinedFamilyInfo"
+              },
+              "snoozeFreshness": {
+                "nullable": true,
+                "oneOf": [
+                  {
+                    "$ref": "#/components/schemas/RequirementSnoozeFreshness"
+                  }
+                ]
               }
             }
           }
@@ -5512,6 +5525,10 @@
             "type": "string",
             "format": "date",
             "nullable": true
+          },
+          "snoozeEpisodeToken": {
+            "type": "string",
+            "nullable": true
           }
         }
       },
@@ -6329,6 +6346,23 @@
           0,
           1
         ]
+      },
+      "RequirementSnoozeFreshness": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "referralsRevision",
+          "policyRevision"
+        ],
+        "properties": {
+          "referralsRevision": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "policyRevision": {
+            "type": "string"
+          }
+        }
       },
       "ReferralRecordsAggregate": {
         "allOf": [

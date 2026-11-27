@@ -37,6 +37,78 @@ namespace CareTogether.Core.Test.V1CaseCalculationTests
             );
 
         [TestMethod]
+        public void MonitoringRowsLoseRuleAndReactivationProvenance()
+        {
+            var firstRule = new MonitoringRequirement(
+                RequirementA,
+                new OneTimeRecurrencePolicy(TimeSpan.FromDays(2))
+            );
+            var secondRule = new MonitoringRequirement(
+                RequirementA,
+                new DurationStagesRecurrencePolicy([new(TimeSpan.FromDays(2), 1)])
+            );
+            var policy = MonitoringRequirements([firstRule, secondRule]);
+            var arrangement = new ArrangementEntry(
+                "",
+                StartedAt: H.Date(1, 1),
+                EndedAt: null,
+                CancelledAt: null,
+                Guid.Empty,
+                [],
+                [],
+                [],
+                [],
+                []
+            );
+
+            var upcoming = V1CaseCalculations.CalculateMissingMonitoringRequirements(
+                policy,
+                arrangement,
+                H.Date(1, 2)
+            );
+            var overdue = V1CaseCalculations.CalculateMissingMonitoringRequirements(
+                policy,
+                arrangement,
+                H.Date(1, 3)
+            );
+            var completed = arrangement with { CompletedRequirements = H.Completed(("A", 2)) };
+            var reopened = completed with { CompletedRequirements = [] };
+
+            Assert.HasCount(2, upcoming);
+            Assert.AreEqual(upcoming[0], upcoming[1]);
+            Assert.AreEqual(H.Date(1, 3), upcoming[0].DueBy);
+            Assert.HasCount(2, overdue);
+            Assert.AreEqual(overdue[0], overdue[1]);
+            Assert.AreEqual(
+                upcoming[0] with { DueBy = null, PastDueSince = upcoming[0].DueBy },
+                overdue[0]
+            );
+            Assert.IsEmpty(
+                V1CaseCalculations.CalculateMissingMonitoringRequirements(policy, completed, H.Date(1, 3))
+            );
+            CollectionAssert.AreEqual(
+                overdue,
+                V1CaseCalculations.CalculateMissingMonitoringRequirements(policy, reopened, H.Date(1, 3))
+            );
+
+            var firstId = Guid.NewGuid();
+            var secondId = Guid.NewGuid();
+            var identifiedPolicy = MonitoringRequirements(
+                [firstRule with { Id = firstId }, secondRule with { Id = secondId }]
+            );
+            var identified = V1CaseCalculations.CalculateMissingMonitoringRequirements(
+                identifiedPolicy,
+                arrangement,
+                H.Date(1, 2)
+            );
+            CollectionAssert.AreEqual(upcoming, identified);
+            Assert.AreEqual(
+                Newtonsoft.Json.JsonConvert.SerializeObject(upcoming),
+                Newtonsoft.Json.JsonConvert.SerializeObject(identified)
+            );
+        }
+
+        [TestMethod]
         public void TestNotStarted()
         {
             var result = V1CaseCalculations.CalculateMissingMonitoringRequirements(

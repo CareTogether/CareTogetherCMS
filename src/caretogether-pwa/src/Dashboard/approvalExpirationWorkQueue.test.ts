@@ -261,9 +261,12 @@ test('uses the start of the current lapse after restored coverage', () => {
     'expiring'
   );
   const current = project(timeline, new Date('2027-02-09'))[0];
+  const firstLapse = project(timeline, new Date('2026-12-01'))[0];
   assert.equal(current?.status, 'expired');
   assert.equal(current?.expirationDate, '2026-12-05');
   assert.equal(current?.previousStatus, Onboarded);
+  assert.notEqual(current.expirationDate, firstLapse.expirationDate);
+  assert.equal(current.id, firstLapse.id);
 });
 
 test('does not infer expiration through gaps or after interruption by another status', () => {

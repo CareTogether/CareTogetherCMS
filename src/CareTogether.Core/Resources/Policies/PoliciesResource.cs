@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
 using System.Threading.Tasks;
+using Azure;
 using CareTogether.Resources.Accounts;
 using CareTogether.Utilities.EventLog;
 using CareTogether.Utilities.ObjectStore;
@@ -286,9 +287,41 @@ namespace CareTogether.Resources.Policies
         public async Task<EffectiveLocationPolicy> GetCurrentPolicy(
             Guid organizationId,
             Guid locationId
-        )
+        ) => (await ReadPolicySnapshotAsync(organizationId, locationId)).Policy;
+
+        internal async Task<ETag?> ValidatePolicyRevisionAsync(Guid organizationId, Guid locationId)
         {
-            var result = await locationPoliciesStore.GetAsync(organizationId, locationId, POLICY);
+            if (locationPoliciesStore is not JsonBlobObjectStore<EffectiveLocationPolicy> blobStore)
+                return null;
+            try
+            {
+                return (
+                    await blobStore.ReadSnapshotAsync(
+                        organizationId,
+                        locationId,
+                        POLICY,
+                        revalidate: true
+                    )
+                ).Revision;
+            }
+            catch (RequestFailedException)
+            {
+                return null;
+            }
+        }
+
+        internal async Task<(
+            EffectiveLocationPolicy Policy,
+            ETag? Revision
+        )> ReadPolicySnapshotAsync(Guid organizationId, Guid locationId)
+        {
+            var (result, revision) =
+                locationPoliciesStore is JsonBlobObjectStore<EffectiveLocationPolicy> blobStore
+                    ? await blobStore.ReadSnapshotAsync(organizationId, locationId, POLICY)
+                    : (
+                        await locationPoliciesStore.GetAsync(organizationId, locationId, POLICY),
+                        (ETag?)null
+                    );
 
             var effectivePolicy = result with
             {
@@ -335,7 +368,7 @@ namespace CareTogether.Resources.Policies
                 },
             };
 
-            return effectivePolicy;
+            return (effectivePolicy, revision);
         }
 
         public async Task<OrganizationSecrets> GetOrganizationSecretsAsync(Guid organizationId)
