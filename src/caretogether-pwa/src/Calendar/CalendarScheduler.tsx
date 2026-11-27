@@ -19,10 +19,10 @@ import { useAppNavigate } from '../Hooks/useAppNavigate';
 import { useLocalStorage } from '../Hooks/useLocalStorage';
 import { pageContentHeight } from '../Utilities/wideTablePageSx';
 import {
-  buildDashboardCalendarEventGroups,
+  buildCalendarEventGroups,
   CalendarFilters,
-  DashboardCalendarEvent,
-} from './dashboardCalendarEvents';
+  CalendarEvent,
+} from './calendarEvents';
 
 const DASHBOARD_CALENDAR_VIEW_KEY = 'caretogether:dashboardCalendarView';
 const DASHBOARD_CALENDAR_EVENT_TYPE_FILTERS_KEY =
@@ -181,7 +181,7 @@ function getVisibleDateRange(view: CalendarView, visibleDate: Date) {
   };
 }
 
-function getDashboardCalendarEventId(element: Element | null) {
+function getCalendarEventId(element: Element | null) {
   const eventElement = element?.closest('.dashboard-calendar-event');
   const eventIdClass = Array.from(eventElement?.classList || []).find((name) =>
     name.startsWith('dashboard-calendar-event-id-')
@@ -190,9 +190,9 @@ function getDashboardCalendarEventId(element: Element | null) {
   return eventIdClass?.replace('dashboard-calendar-event-id-', '');
 }
 
-function getDashboardCalendarEventTypeFilterKey(
+function getCalendarEventTypeFilterKey(
   filter: CalendarFilters,
-  event: DashboardCalendarEvent
+  event: CalendarEvent
 ) {
   if (filter === CalendarFilters.ArrangementCancelled) {
     return 'cancelled-arrangement';
@@ -229,7 +229,7 @@ function getDashboardCalendarEventTypeFilterKey(
   return 'actual-childcare';
 }
 
-export function DashboardCalendar() {
+export function CalendarScheduler() {
   const familyLookup = useFamilyLookup();
   const partneringFamilies = usePartneringFamilies();
   const appNavigate = useAppNavigate();
@@ -252,7 +252,7 @@ export function DashboardCalendar() {
 
   const eventGroups = useMemo(
     () =>
-      buildDashboardCalendarEventGroups(
+      buildCalendarEventGroups(
         partneringFamilies,
         familyLookup,
         visibleDateRange
@@ -265,7 +265,7 @@ export function DashboardCalendar() {
       Object.values(CalendarFilters).flatMap((filter) =>
         eventGroups[filter].filter((event) =>
           selectedEventTypeFilterKeys.has(
-            getDashboardCalendarEventTypeFilterKey(filter, event)
+            getCalendarEventTypeFilterKey(filter, event)
           )
         )
       ),
@@ -273,7 +273,7 @@ export function DashboardCalendar() {
   );
 
   const eventsById = useMemo(() => {
-    const lookup: Record<string, DashboardCalendarEvent> = {};
+    const lookup: Record<string, CalendarEvent> = {};
 
     filteredEvents.forEach((event) => {
       lookup[String(event.id)] = event;
@@ -282,7 +282,7 @@ export function DashboardCalendar() {
     return lookup;
   }, [filteredEvents]);
 
-  function navigateToCalendarEvent(event: DashboardCalendarEvent | undefined) {
+  function navigateToCalendarEvent(event: CalendarEvent | undefined) {
     if (!event) {
       return;
     }
@@ -300,9 +300,7 @@ export function DashboardCalendar() {
   }
 
   function handleCalendarClick(event: MouseEvent<HTMLDivElement>) {
-    const calendarEventId = getDashboardCalendarEventId(
-      event.target as Element
-    );
+    const calendarEventId = getCalendarEventId(event.target as Element);
     navigateToCalendarEvent(
       calendarEventId ? eventsById[calendarEventId] : undefined
     );

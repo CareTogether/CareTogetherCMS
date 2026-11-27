@@ -31,13 +31,13 @@ export enum CalendarFilters {
   ArrangementActualChildcare = 'Arrangement - Actual Childcare',
 }
 
-export interface DashboardCalendarEvent extends SchedulerEvent {
+export interface CalendarEvent extends SchedulerEvent {
   familyId?: string;
   v1CaseId?: string;
   arrangementId?: string;
 }
 
-type LegacyDashboardCalendarEvent = {
+type LegacyCalendarEvent = {
   title: string;
   start?: Date | string;
   end?: Date | string;
@@ -51,14 +51,14 @@ type LegacyDashboardCalendarEvent = {
   };
 };
 
-type CalendarEventGroups = Record<CalendarFilters, DashboardCalendarEvent[]>;
+type CalendarEventGroups = Record<CalendarFilters, CalendarEvent[]>;
 
-export type DashboardCalendarDateRange = {
+export type CalendarDateRange = {
   start: Date;
   end: Date;
 };
 
-type DashboardCalendarArrangement = {
+type CalendarArrangement = {
   arrangement: Arrangement;
   person: Person;
   familyId?: string;
@@ -94,7 +94,7 @@ function toCalendarDate(value: Date | string | undefined) {
 function dateRangeOverlaps(
   startValue: Date | string | undefined,
   endValue: Date | string | undefined,
-  range: DashboardCalendarDateRange
+  range: CalendarDateRange
 ) {
   const start = toCalendarDate(startValue);
 
@@ -126,10 +126,10 @@ function familyPerson(
   return familyPeople.find((person) => person.id === personId);
 }
 
-function getDashboardCalendarArrangements(
+function getCalendarArrangements(
   family: CombinedFamilyInfo,
   v1Case: V1Case
-): DashboardCalendarArrangement[] {
+): CalendarArrangement[] {
   return (v1Case.arrangements || []).flatMap((arrangement) => {
     const person = familyPerson(family, arrangement.partneringFamilyPersonId);
 
@@ -161,7 +161,7 @@ function toSchedulerDate(value: Date | string | undefined) {
 }
 
 function getSchedulerColor(
-  event: LegacyDashboardCalendarEvent
+  event: LegacyCalendarEvent
 ): SchedulerEventColor | undefined {
   const color = event.color || event.backgroundColor;
 
@@ -195,11 +195,11 @@ function getEventClassName(
 }
 
 function toSchedulerEvents(
-  events: LegacyDashboardCalendarEvent[],
+  events: LegacyCalendarEvent[],
   filter: CalendarFilters
 ) {
   return events
-    .map((event, index): DashboardCalendarEvent | null => {
+    .map((event, index): CalendarEvent | null => {
       const start = toSchedulerDate(event.start || event.date);
 
       if (!start) {
@@ -220,20 +220,20 @@ function toSchedulerEvents(
         ...event.extendedProps,
       };
     })
-    .filter((event): event is DashboardCalendarEvent => event !== null);
+    .filter((event): event is CalendarEvent => event !== null);
 }
 
-export function buildDashboardCalendarEventGroups(
+export function buildCalendarEventGroups(
   partneringFamilies: CombinedFamilyInfo[] | undefined,
   familyLookup: (
     familyId: string | undefined
   ) => CombinedFamilyInfo | undefined,
-  visibleDateRange: DashboardCalendarDateRange
+  visibleDateRange: CalendarDateRange
 ): CalendarEventGroups {
   const allArrangements = (partneringFamilies || []).flatMap((family) =>
     (family.partneringFamilyInfo?.closedV1Cases || [])
       .concat(family.partneringFamilyInfo?.openV1Case || [])
-      .flatMap((v1Case) => getDashboardCalendarArrangements(family, v1Case))
+      .flatMap((v1Case) => getCalendarArrangements(family, v1Case))
   );
 
   const arrangementCancelled = allArrangements
@@ -252,7 +252,7 @@ export function buildDashboardCalendarEventGroups(
         person,
         familyId,
         v1CaseId,
-      }): LegacyDashboardCalendarEvent => ({
+      }): LegacyCalendarEvent => ({
         title: `✖ ${personNameString(person)} - ${arrangement.arrangementType}`,
         start:
           arrangement.plannedStartUtc &&
@@ -281,7 +281,7 @@ export function buildDashboardCalendarEventGroups(
         person,
         familyId,
         v1CaseId,
-      }): LegacyDashboardCalendarEvent => ({
+      }): LegacyCalendarEvent => ({
         title: `${personNameString(person)} - ${arrangement.arrangementType}`,
         start:
           arrangement.plannedStartUtc &&
@@ -304,7 +304,7 @@ export function buildDashboardCalendarEventGroups(
         person,
         familyId,
         v1CaseId,
-      }): LegacyDashboardCalendarEvent => ({
+      }): LegacyCalendarEvent => ({
         title: `▶ ${personNameString(person)} - ${arrangement.arrangementType}`,
         date: arrangement.startedAtUtc,
         backgroundColor: DASHBOARD_CALENDAR_LEGACY_EVENT_COLORS.teal,
@@ -326,7 +326,7 @@ export function buildDashboardCalendarEventGroups(
         person,
         familyId,
         v1CaseId,
-      }): LegacyDashboardCalendarEvent => ({
+      }): LegacyCalendarEvent => ({
         title: `⏹ ${personNameString(person)} - ${arrangement.arrangementType}`,
         date: arrangement.endedAtUtc,
         backgroundColor: DASHBOARD_CALENDAR_LEGACY_EVENT_COLORS.teal,
@@ -349,7 +349,7 @@ export function buildDashboardCalendarEventGroups(
           )
         )
         .map(
-          (completed): LegacyDashboardCalendarEvent => ({
+          (completed): LegacyCalendarEvent => ({
             title: `✅ ${personNameString(person)} - ${completed.requirementName}`,
             date: completed.completedAtUtc,
             backgroundColor: DASHBOARD_CALENDAR_LEGACY_EVENT_COLORS.teal,
@@ -384,7 +384,7 @@ export function buildDashboardCalendarEventGroups(
         familyId,
         v1CaseId,
         arrangementId,
-      }): LegacyDashboardCalendarEvent => ({
+      }): LegacyCalendarEvent => ({
         title: `❌ ${personNameString(person)} - ${missing.action?.actionName}`,
         date:
           missing.pastDueSince && format(missing.pastDueSince, 'yyyy-MM-dd'),
@@ -408,7 +408,7 @@ export function buildDashboardCalendarEventGroups(
         familyId,
         v1CaseId,
         arrangementId,
-      }): LegacyDashboardCalendarEvent => ({
+      }): LegacyCalendarEvent => ({
         title: `📅 ${personNameString(person)} - ${missing.action?.actionName}`,
         date: missing.dueBy && format(missing.dueBy, 'yyyy-MM-dd'),
         backgroundColor: DASHBOARD_CALENDAR_LEGACY_EVENT_COLORS.lightBlue,

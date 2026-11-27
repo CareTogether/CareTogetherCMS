@@ -7,6 +7,7 @@ const currentBase = '/org/organization-1/location-1';
 const nextBase = '/org/organization-1/location-2';
 const routes: LocationRoute[] = [
   { index: true, element: null, locationSwitch: 'same-path' },
+  { path: 'calendar', element: null, locationSwitch: 'same-path' },
   {
     path: 'clients',
     element: null,
@@ -52,6 +53,7 @@ function switchFrom(path: string, search = '', hash = '') {
 test('keeps routes marked same-path and their URL state', () => {
   for (const path of [
     '/',
+    '/calendar',
     '/clients',
     '/settings/roles',
     '/settings/locations',

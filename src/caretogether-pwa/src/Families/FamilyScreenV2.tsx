@@ -461,6 +461,8 @@ export function FamilyScreenV2() {
   function removeSearchParam(paramName: string) {
     const nextSearchParams = new URLSearchParams(location.search);
     nextSearchParams.delete(paramName);
+    if (paramName === 'arrangementId')
+      nextSearchParams.delete('arrangementRequirement');
 
     const searchParamsString = nextSearchParams.size
       ? `?${nextSearchParams.toString()}`

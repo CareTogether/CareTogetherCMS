@@ -76,10 +76,10 @@ test.describe('family deep links @pr', () => {
     await expect(page).not.toHaveURL(/arrangementId=/);
   });
 
-  test('opens the arrangement drawer from a Dashboard calendar item', async ({
+  test('opens the arrangement drawer from a Calendar event', async ({
     page,
   }) => {
-    await page.goto(ATLANTIS_ROUTE);
+    await page.goto(`${ATLANTIS_ROUTE}calendar`);
 
     await page.getByRole('button', { name: /previous/i }).click();
     const safetyVisit = page.getByText(

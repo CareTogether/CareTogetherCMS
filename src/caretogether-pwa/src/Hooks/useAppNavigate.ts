@@ -1,8 +1,13 @@
 import { useRequiredSelectedLocationContext } from '../Model/Data';
 import { NavigateOptions, useNavigate } from 'react-router-dom';
+import {
+  arrangementRequirementQuery,
+  type ArrangementRequirementTarget,
+} from './workResolutionTarget';
 
 export interface AppNavigate {
   dashboard: () => void;
+  calendar: () => void;
   inbox: () => void;
   family: (
     familyId: string,
@@ -30,6 +35,7 @@ export type FamilyNavigationOptions = {
   v1CaseId?: string;
   arrangementId?: string;
   familyMemberId?: string;
+  arrangementRequirement?: ArrangementRequirementTarget;
   replace?: boolean;
 };
 
@@ -51,6 +57,7 @@ export function useAppNavigate(): AppNavigate {
 
   return {
     dashboard: () => inContext(''),
+    calendar: () => inContext('calendar'),
     inbox: () => inContext('inbox'),
     family: (
       familyId: string,
@@ -67,6 +74,17 @@ export function useAppNavigate(): AppNavigate {
               replace: options?.replace,
             };
       const searchParams = new URLSearchParams();
+      if (
+        familyNavigationOptions.arrangementId &&
+        familyNavigationOptions.arrangementRequirement
+      ) {
+        searchParams.set(
+          'arrangementRequirement',
+          arrangementRequirementQuery(
+            familyNavigationOptions.arrangementRequirement
+          )
+        );
+      }
       if (familyNavigationOptions.v1CaseId) {
         searchParams.append('v1CaseId', familyNavigationOptions.v1CaseId);
       }

@@ -41,18 +41,47 @@ test.describe('frontend smoke @smoke @pr', () => {
     const navigation = sideNavigation(page);
 
     await expect(navigation).toBeVisible();
-    await expect(navigation.getByText('Dashboard')).toBeVisible();
+    await expect(
+      navigation.getByRole('button', { name: 'Dashboard', exact: true })
+    ).toBeVisible();
+    await expect(
+      navigation.getByRole('button', { name: 'Calendar', exact: true })
+    ).toBeVisible();
     await expect(navigation.getByText('Inbox')).toBeVisible();
 
     await expectNoFatalErrorUi(page);
   });
 
-  test('dashboard reaches a usable state', async ({ page }) => {
+  test('location home opens Dashboard and Calendar has its own route', async ({
+    page,
+  }) => {
     await openHome(page);
 
+    const navigation = sideNavigation(page);
+    const dashboard = navigation.getByRole('button', {
+      name: 'Dashboard',
+      exact: true,
+    });
+    const calendar = navigation.getByRole('button', {
+      name: 'Calendar',
+      exact: true,
+    });
+    const selected = /\bMui-selected\b/;
+
+    await expect(page).toHaveURL(/\/org\/[^/]+\/[^/]+\/$/);
     await expect(
-      page.getByRole('heading', { name: /^dashboard$/i })
+      page.getByRole('heading', { name: 'Dashboard', level: 1 })
     ).toBeVisible();
+    await expect(dashboard).toHaveClass(selected);
+    await expect(calendar).not.toHaveClass(selected);
+
+    await calendar.click();
+    await expect(page).toHaveURL(/\/org\/[^/]+\/[^/]+\/calendar$/);
+    await expect(
+      page.getByRole('heading', { name: 'Calendar', level: 1 })
+    ).toBeVisible();
+    await expect(calendar).toHaveClass(selected);
+    await expect(dashboard).not.toHaveClass(selected);
 
     await expectNoFatalErrorUi(page);
   });

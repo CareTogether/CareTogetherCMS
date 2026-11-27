@@ -1,12 +1,8 @@
-import {
-  Box,
-  Button,
-  Drawer,
-  Stack,
-  Tooltip,
-  Typography,
-} from '@mui/material';
+import { Box, Button, Drawer, Stack, Tooltip, Typography } from '@mui/material';
 import { type ReactNode } from 'react';
+import { useSearchParams } from 'react-router-dom';
+import { findArrangementRequirement } from '../../Hooks/workResolutionTarget';
+import { WorkResolutionFocus } from '../../Generic/WorkResolutionFocus';
 import {
   CompletedRequirementInfo,
   ExemptedRequirementInfo,
@@ -173,10 +169,12 @@ function MissingRequirementActionRowV2({
   context,
   missing,
   onOpen,
+  linked,
 }: {
   context: RequirementContext;
   missing: MissingArrangementRequirement;
   onOpen: () => void;
+  linked?: boolean;
 }) {
   const permissions = useFamilyIdPermissions(
     requirementContextFamilyId(context)
@@ -188,11 +186,13 @@ function MissingRequirementActionRowV2({
   const personLookup = usePersonLookup();
   const icon = missing.dueBy ? '📅' : missing.action?.isRequired ? '❌' : '🔲';
 
-  return (
+  const content = (
     <IconRow icon={icon} onClick={canManage ? onOpen : undefined}>
       {missing.action?.actionName}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
       {missing.dueBy && (
-        <span style={{ float: 'right' }}>{formatUtcDateOnly(missing.dueBy)}</span>
+        <span style={{ float: 'right' }}>
+          {formatUtcDateOnly(missing.dueBy)}
+        </span>
       )}
       {!missing.dueBy && missing.pastDueSince && (
         <span style={{ float: 'right' }}>
@@ -218,6 +218,11 @@ function MissingRequirementActionRowV2({
         </>
       )}
     </IconRow>
+  );
+  return linked ? (
+    <WorkResolutionFocus>{content}</WorkResolutionFocus>
+  ) : (
+    content
   );
 }
 
@@ -276,7 +281,9 @@ function CompletedRequirementActionRowV2({
             <>
               <br />
               <span style={{ paddingLeft: '30px' }}>
-                <FamilyName family={familyLookup(context.assignment.familyId)} />
+                <FamilyName
+                  family={familyLookup(context.assignment.familyId)}
+                />
               </span>
             </>
           )}
@@ -355,7 +362,9 @@ function ExemptedRequirementActionRowV2({
             <>
               <br />
               <span style={{ paddingLeft: '30px' }}>
-                <FamilyName family={familyLookup(context.assignment.familyId)} />
+                <FamilyName
+                  family={familyLookup(context.assignment.familyId)}
+                />
               </span>
             </>
           )}
@@ -389,6 +398,7 @@ function ExemptedRequirementActionRowV2({
   );
 }
 function ArrangementRequirementsSectionV2({ row }: { row: ArrangementRowV2 }) {
+  const [params] = useSearchParams();
   const {
     closeRequirementManagementDrawer,
     selectedRequirementWorkflow,
@@ -405,6 +415,16 @@ function ArrangementRequirementsSectionV2({ row }: { row: ArrangementRowV2 }) {
     missingUpcoming,
     needsAttentionCount,
   } = useArrangementRequirementsViewModel(row);
+  const requirementQueries = params.getAll('arrangementRequirement');
+  const linkedRequirement =
+    params.get('arrangementId') === row.id && requirementQueries.length === 1
+      ? findArrangementRequirement(
+          [...missingNeedsAttention, ...missingUpcoming].map(
+            ({ missing }) => missing
+          ),
+          requirementQueries[0]
+        )
+      : undefined;
 
   if (!hasRequirements) {
     return <EmptyText>No arrangement requirements.</EmptyText>;
@@ -418,6 +438,7 @@ function ArrangementRequirementsSectionV2({ row }: { row: ArrangementRowV2 }) {
             key={`${missing.action?.actionName}:attention:${index}`}
             context={context}
             missing={missing}
+            linked={missing === linkedRequirement}
             onOpen={() =>
               setSelectedRequirementWorkflow({
                 context,
@@ -464,6 +485,7 @@ function ArrangementRequirementsSectionV2({ row }: { row: ArrangementRowV2 }) {
             key={`${missing.action?.actionName}:upcoming:${index}`}
             context={context}
             missing={missing}
+            linked={missing === linkedRequirement}
             onOpen={() =>
               setSelectedRequirementWorkflow({
                 context,
@@ -516,11 +538,8 @@ function ArrangementRequirementsSectionV2({ row }: { row: ArrangementRowV2 }) {
 }
 
 function ArrangementWorkspaceLayoutV2({ row }: { row: ArrangementRowV2 }) {
-  const {
-    defaultFunctionSummary,
-    workspaceModule,
-    WorkspaceModuleComponent,
-  } = useArrangementWorkspaceViewModel(row);
+  const { defaultFunctionSummary, workspaceModule, WorkspaceModuleComponent } =
+    useArrangementWorkspaceViewModel(row);
   const {
     closeParticipantManagementDrawer,
     openDefaultFunctionSummary,
