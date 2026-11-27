@@ -34,6 +34,7 @@ import {
 } from './DashboardRequirementPanel';
 import { DashboardSnoozeDrawer } from './DashboardSnoozeDrawer';
 import type { ArrangementWorkQueueItem } from './arrangementWorkQueue';
+import { selectDashboardApprovalWork } from './dashboardApprovalRenewals';
 import { filterDashboardNoteReview } from './dashboardNoteReview';
 import {
   dashboardPreferencesKey,
@@ -56,8 +57,11 @@ import {
   type SnoozeScope,
 } from './dashboardSnoozes';
 import { openDashboardArrangement } from './dashboardWorkNavigation';
+import { useApprovalExpirationWorkQueue } from './useApprovalExpirationWorkQueue';
+import { useApprovalRenewalWorkQueue } from './useApprovalRenewalWorkQueue';
 import { useArrangementWorkQueue } from './useArrangementWorkQueue';
 
+import { DashboardApprovalExpirations } from './DashboardApprovalSection';
 import {
   DashboardNoteDialog,
   DashboardNoteReview,
@@ -68,7 +72,7 @@ import {
   NextDaysSelect,
   type SnoozeKind,
 } from './dashboardLayout';
-import { noteReviewPanel } from './dashboardPanels';
+import { expirationPanel, noteReviewPanel } from './dashboardPanels';
 import { noteKey, useDashboardNoteReview } from './useDashboardNoteReview';
 
 const upcomingPanel = {
@@ -138,6 +142,39 @@ function DashboardRequirements({ storageKey }: { storageKey: string | null }) {
   const requirementWakeAt = new Map(
     requirementSnoozes.snoozed.map(({ token, wakeAt }) => [token, wakeAt])
   );
+  const approvals = useApprovalExpirationWorkQueue(
+    evaluationTime.toISOString().slice(0, 10)
+  );
+  const renewals = useApprovalRenewalWorkQueue();
+  const approvalSnoozes = partitionSnoozed(
+    approvals,
+    ({ snoozeToken }) => snoozeToken,
+    snoozeScope,
+    evaluationTime.getTime()
+  );
+  const renewalSnoozes = partitionSnoozed(
+    renewals,
+    ({ snoozeToken }) => snoozeToken,
+    snoozeScope,
+    evaluationTime.getTime()
+  );
+  const approvalWork = selectDashboardApprovalWork(
+    approvalSnoozes.active,
+    renewalSnoozes.active,
+    evaluationTime,
+    preferences.expirationDays
+  );
+  const snoozedApprovalWork = selectDashboardApprovalWork(
+    approvalSnoozes.snoozed.map(({ item }) => item),
+    renewalSnoozes.snoozed.map(({ item }) => item),
+    evaluationTime,
+    preferences.expirationDays
+  );
+  const approvalWakeAt = new Map(
+    [...approvalSnoozes.snoozed, ...renewalSnoozes.snoozed].map(
+      ({ token, wakeAt }) => [token, wakeAt]
+    )
+  );
   const notes = useDashboardNoteReview();
   const selectedNote =
     noteSelection &&
@@ -161,9 +198,12 @@ function DashboardRequirements({ storageKey }: { storageKey: string | null }) {
     snoozeScope,
     evaluationTime.getTime()
   );
-  const wakeTimes = [nextNoteWake, requirementSnoozes.nextWake].filter(
-    (wake) => wake !== undefined
-  );
+  const wakeTimes = [
+    nextNoteWake,
+    requirementSnoozes.nextWake,
+    approvalSnoozes.nextWake,
+    renewalSnoozes.nextWake,
+  ].filter((wake) => wake !== undefined);
   const nextWake = wakeTimes.length ? Math.min(...wakeTimes) : undefined;
   const visibleNotes = filterDashboardNoteReview(
     activeNotes,
@@ -183,9 +223,16 @@ function DashboardRequirements({ storageKey }: { storageKey: string | null }) {
             (item.source === 'family' || referralsEnabled) &&
             noteSnoozeToken(item) === snoozeSelection.token
         )
-      : (snoozeSelection.kind === 'upcoming' ? upcoming : pastDue).some(
-          ({ item }) => item.snoozeToken === snoozeSelection.token
-        ));
+      : snoozeSelection.kind === 'approval'
+        ? [
+            ...approvalWork.upcoming,
+            ...approvalWork.uncovered,
+            ...approvalWork.expiring,
+            ...approvalWork.expired,
+          ].some(({ snoozeToken }) => snoozeToken === snoozeSelection.token)
+        : (snoozeSelection.kind === 'upcoming' ? upcoming : pastDue).some(
+            ({ item }) => item.snoozeToken === snoozeSelection.token
+          ));
 
   function restoreSnooze(token: string, message: string) {
     const saved = removeSnooze(snoozeScope, token);
@@ -440,7 +487,26 @@ function DashboardRequirements({ storageKey }: { storageKey: string | null }) {
       <DashboardColumns
         upcoming={upcomingRequirements}
         pastDue={pastDueRequirements}
-        approvals={null}
+        approvals={
+          <DashboardApprovalExpirations
+            work={approvalWork}
+            snoozedWork={snoozedApprovalWork}
+            wakeAt={(token) => approvalWakeAt.get(token)}
+            onSnooze={
+              snoozeScope
+                ? (token) => setSnoozeSelection({ token, kind: 'approval' })
+                : undefined
+            }
+            onUnsnooze={(token) =>
+              restoreSnooze(token, 'Approval work returned to the dashboard.')
+            }
+            focusSnoozed={focusSnoozed === 'approval'}
+            onSnoozedFocused={clearSnoozedFocus}
+            familyV2={familyV2}
+            days={preferences.expirationDays}
+            onChange={(expirationDays) => updatePreferences({ expirationDays })}
+          />
+        }
         notes={
           <DashboardNoteReview
             referralsEnabled={referralsEnabled}
@@ -492,7 +558,9 @@ function DashboardRequirements({ storageKey }: { storageKey: string | null }) {
               saved
                 ? snoozeSelection.kind === 'note'
                   ? 'Note snoozed.'
-                  : 'Requirement snoozed.'
+                  : snoozeSelection.kind === 'approval'
+                    ? 'Approval work snoozed.'
+                    : 'Requirement snoozed.'
                 : 'Could not save the snooze on this device.'
             );
             if (saved) setFocusSnoozed(snoozeSelection.kind);
@@ -553,7 +621,7 @@ export function Dashboard() {
               upcoming={<DashboardRequirementPanel {...upcomingPanel} />}
               notes={<DashboardRequirementPanel {...noteReviewPanel} />}
               pastDue={<DashboardRequirementPanel {...pastDuePanel} />}
-              approvals={null}
+              approvals={<DashboardRequirementPanel {...expirationPanel} />}
             />
           </>
         }

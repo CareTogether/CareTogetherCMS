@@ -7,19 +7,24 @@ import {
   locationRoute,
 } from './support/constants';
 import { expectNoHorizontalOverflow } from './support/layout';
+import { ORGANIZATION_APPROVALS_FEATURE_FLAG } from '../src/featureFlags';
 import {
   noteSnoozeToken,
   snoozeStoragePrefix,
 } from '../src/Dashboard/dashboardSnoozes';
 import {
+  ApprovalRenewalRoleScope,
+  DisclosedApprovalRenewalState,
   Permission,
   NoteStatus,
+  RoleApprovalStatus,
   V1ReferralNoteStatus,
 } from '../src/GeneratedClient';
 
 const doeId = '11111111-1111-1111-1111-111111111111';
 
 test.use({
+  featureFlags: { [ORGANIZATION_APPROVALS_FEATURE_FLAG]: true },
   timezoneId: 'Pacific/Honolulu',
   viewport: { width: 375, height: 700 },
 });
@@ -556,4 +561,328 @@ test('Dashboard shows scoped requirement counts and opens the arrangement @pr', 
       Object.keys(calendarPreferences)
     )
   ).toEqual(calendarPreferences);
+});
+
+test('shows disclosed approvals and renewals and restores the independent UTC window @pr', async ({
+  page,
+}) => {
+  const communityId = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa';
+  let statusOnly = false;
+  const now = new Date();
+  now.setUTCDate(now.getUTCDate() + 12);
+  const expirationDate = now.toISOString().slice(0, 10);
+  now.setUTCDate(now.getUTCDate() - 1);
+  const timeline = {
+    ranges: [
+      {
+        start: '2020-01-01',
+        end: now.toISOString().slice(0, 10),
+        tag: RoleApprovalStatus.Approved,
+      },
+      {
+        start: expirationDate,
+        end: '9999-12-31',
+        tag: RoleApprovalStatus.Expired,
+      },
+    ],
+  };
+  const role = {
+    currentStatus: RoleApprovalStatus.Approved,
+    effectiveRoleApprovalStatus: timeline,
+    roleVersionApprovals: [],
+  };
+  await page.route('**/Records', async (route) => {
+    const response = await route.fetch();
+    const records = (await response.json()) as Array<{
+      id: string;
+      family?: {
+        family: { primaryFamilyContactPersonId: string };
+        userPermissions: Permission[];
+        volunteerFamilyInfo?: object;
+      };
+      community?: { approvalInfo?: object };
+    }>;
+    for (const record of records) {
+      if (record.family) record.family.volunteerFamilyInfo = undefined;
+      if (record.community) record.community.approvalInfo = undefined;
+    }
+    const subject = records.find(({ id }) => id === doeId)?.family;
+    expect(subject).toBeTruthy();
+    const family = subject!;
+    family.userPermissions.push(
+      Permission.ViewApprovalStatus,
+      Permission.ViewApprovalProgress
+    );
+    if (statusOnly) {
+      family.userPermissions = family.userPermissions.filter(
+        (permission) => permission !== Permission.ViewApprovalProgress
+      );
+    }
+    family.volunteerFamilyInfo = {
+      familyRoleApprovals: {
+        'Family Coach': role,
+        'Legacy Coach': {
+          ...role,
+          currentStatus: RoleApprovalStatus.Expired,
+          effectiveRoleApprovalStatus: {
+            ranges: [
+              {
+                start: '2020-01-01',
+                end: '2020-01-31',
+                tag: RoleApprovalStatus.Approved,
+              },
+              {
+                start: '2020-02-01',
+                end: '9999-12-31',
+                tag: RoleApprovalStatus.Expired,
+              },
+            ],
+          },
+        },
+      },
+      individualVolunteers: {
+        [family.family.primaryFamilyContactPersonId]: {
+          approvalStatusByRole: { 'Individual Coach': role },
+        },
+      },
+      renewalCandidates: statusOnly
+        ? []
+        : [
+            {
+              candidateKey: 'individual-renewal',
+              target: {
+                discriminator: 'IndividualApprovalRenewalTarget',
+                familyId: doeId,
+                personId: family.family.primaryFamilyContactPersonId,
+              },
+              actionName: 'Safety check renewal',
+              firstUncoveredOnUtc: expirationDate,
+              state: DisclosedApprovalRenewalState.Upcoming,
+              affectedRoles: [
+                {
+                  scope: ApprovalRenewalRoleScope.Family,
+                  roleName: 'Family Coach',
+                },
+              ],
+            },
+            {
+              candidateKey: 'family-renewal',
+              target: {
+                discriminator: 'FamilyApprovalRenewalTarget',
+                familyId: doeId,
+              },
+              actionName: 'Household check renewal',
+              firstUncoveredOnUtc: '2022-04-10',
+              state: DisclosedApprovalRenewalState.Upcoming,
+              affectedRoles: [
+                {
+                  scope: ApprovalRenewalRoleScope.Family,
+                  roleName: 'Family Coach',
+                },
+              ],
+            },
+          ],
+    };
+    await route.fulfill({
+      response,
+      json: [
+        ...records,
+        {
+          id: communityId,
+          discriminator: 'CommunityRecordsAggregate',
+          community: {
+            community: { id: communityId, name: 'Community partners' },
+            userPermissions: [
+              Permission.ViewApprovalStatus,
+              Permission.ViewApprovalProgress,
+            ],
+            approvalInfo: {
+              approvalStatusByRole: {
+                'Partner role': role,
+                'Other role': {
+                  ...role,
+                  currentStatus: RoleApprovalStatus.Expired,
+                  effectiveRoleApprovalStatus: {
+                    ranges: [
+                      {
+                        start: '2022-04-08',
+                        end: '9999-12-31',
+                        tag: RoleApprovalStatus.Expired,
+                      },
+                    ],
+                  },
+                },
+              },
+              renewalCandidates: [
+                {
+                  candidateKey: 'organization-renewal',
+                  target: {
+                    discriminator: 'OrganizationApprovalRenewalTarget',
+                    communityId,
+                  },
+                  actionName: 'Partner screening renewal',
+                  firstUncoveredOnUtc: '2022-04-08',
+                  state: DisclosedApprovalRenewalState.Uncovered,
+                  affectedRoles: [
+                    {
+                      scope: ApprovalRenewalRoleScope.Organization,
+                      roleName: 'Other role',
+                    },
+                  ],
+                },
+              ],
+            },
+          },
+        },
+      ],
+    });
+  });
+
+  await page.goto(ATLANTIS_ROUTE);
+  const approvals = page.getByRole('region', {
+    name: 'Expiring approvals and requirements',
+    exact: true,
+  });
+  const effective = approvals.getByRole('region', {
+    name: 'Expiring approvals',
+    exact: true,
+  });
+  const upcoming = approvals.getByRole('region', { name: 'Upcoming renewals' });
+  const expired = approvals.getByRole('region', {
+    name: 'Expired approvals',
+    exact: true,
+  });
+  const uncovered = approvals.getByRole('region', {
+    name: 'Expired and unresolved',
+  });
+  const window = approvals.getByRole('combobox', {
+    name: 'Expiring approvals and requirements time frame',
+  });
+  await expect(window).toHaveText('Next 30 days');
+  await expect(approvals.getByLabel('7 approval work items')).toBeVisible();
+  await expect(approvals.getByRole('button', { name: /^Snooze/ })).toHaveCount(
+    0
+  );
+  await page.setViewportSize({ width: 1440, height: 900 });
+  const approvalList = approvals.getByRole('group', {
+    name: 'Expiring approvals and requirements',
+    exact: true,
+  });
+  await approvalList.focus();
+  const headerPosition = await window.evaluate(
+    (element) => element.getBoundingClientRect().top
+  );
+  await approvalList.press('End');
+  await expect
+    .poll(() => approvalList.evaluate((element) => element.scrollTop))
+    .toBeGreaterThan(0);
+  expect(
+    await window.evaluate((element) => element.getBoundingClientRect().top)
+  ).toBe(headerPosition);
+  await page.setViewportSize({ width: 375, height: 700 });
+  await expect(effective.getByLabel('3 approvals')).toBeVisible();
+  await expect(upcoming.getByLabel('2 renewals')).toBeVisible();
+  await expect(uncovered.getByLabel('1 renewal')).toBeVisible();
+  const family = effective.getByRole('button', {
+    name: /Family Coach.*Doe Family/,
+  });
+  const individual = effective.getByRole('button', {
+    name: /Individual Coach.*Doe/,
+  });
+  const organization = effective.getByRole('button', {
+    name: /Partner role.*Community partners/,
+  });
+  await expect(family).toBeVisible();
+  await expect(individual).toBeVisible();
+  await expect(organization).toBeVisible();
+  await expect(family).toContainText('Related renewals');
+  await expect(family).toContainText('Safety check renewal');
+  await expect(individual.getByText('Related renewals')).toHaveCount(0);
+  await expect(
+    upcoming.getByText('Coverage-loss date reached. Last reported as upcoming.')
+  ).toBeVisible();
+  const formattedDate = new Intl.DateTimeFormat('en-US', {
+    timeZone: 'UTC',
+    day: '2-digit',
+    month: '2-digit',
+    year: '2-digit',
+  }).format(new Date(expirationDate));
+  await expect(
+    approvals.locator(`time[datetime="${expirationDate}"]`).first()
+  ).toHaveText(formattedDate);
+  await expectNoHorizontalOverflow(page);
+
+  await window.click();
+  await page.getByRole('option', { name: 'Next 7 days' }).click();
+  await expect(effective).toHaveCount(0);
+  await expect(approvals.getByLabel('3 approval work items')).toBeVisible();
+  await expect(expired.getByLabel('1 approval')).toBeVisible();
+  await expect(upcoming.getByLabel('1 renewal')).toBeVisible();
+  await expect(uncovered.getByLabel('1 renewal')).toBeVisible();
+  await page.reload();
+  await expect(window).toHaveText('Next 7 days');
+  await expect(
+    page.getByRole('combobox', { name: 'Upcoming requirements time frame' })
+  ).toHaveText('Next 30 days');
+  await expect(
+    page.getByRole('combobox', { name: 'Past-due requirements time frame' })
+  ).toHaveText('All past due');
+  await window.click();
+  await page.getByRole('option', { name: 'Next 14 days' }).click();
+
+  const familyRenewal = upcoming.getByRole('button', {
+    name: /Household check renewal.*Doe Family/,
+  });
+  await familyRenewal.focus();
+  await familyRenewal.press('Enter');
+  await expect(page).toHaveURL(
+    (url) =>
+      url.pathname.endsWith(`/families/${doeId}`) &&
+      url.searchParams.get('approvalAction') === 'Household check renewal'
+  );
+  await page.goBack();
+  await upcoming
+    .getByRole('button', { name: /Safety check renewal.*Doe/ })
+    .click();
+  await expect(page).toHaveURL(
+    (url) =>
+      url.pathname.endsWith(`/families/${doeId}`) &&
+      url.searchParams.has('approvalPersonId') &&
+      url.searchParams.get('approvalAction') === 'Safety check renewal'
+  );
+  await page.goBack();
+  await uncovered
+    .getByRole('button', {
+      name: /Partner screening renewal.*Community partners/,
+    })
+    .click();
+  await expect(page).toHaveURL(
+    (url) =>
+      url.pathname.endsWith(`/organizations/organization/${communityId}`) &&
+      url.searchParams.get('approvalAction') === 'Partner screening renewal'
+  );
+  await page.goBack();
+  await expired
+    .getByRole('button', { name: /Legacy Coach.*Expired on/ })
+    .click();
+  await expect(page).toHaveURL(
+    (url) =>
+      url.pathname.endsWith(`/families/${doeId}`) &&
+      url.searchParams.get('approvalRole') === 'Legacy Coach'
+  );
+  await expect(
+    page.getByRole('button', { name: 'close role details' })
+  ).toBeVisible();
+  await expect(page.locator('#role-details-title')).toHaveText('Legacy Coach');
+  statusOnly = true;
+  await page.reload();
+  await expect(
+    page.getByText('Dashboard selection', { exact: true })
+  ).toBeVisible();
+  await expect(
+    page.getByRole('button', { name: /Legacy Coach.*Expired/ })
+  ).toBeVisible();
+  await expect(
+    page.getByRole('button', { name: 'close role details' })
+  ).toHaveCount(0);
 });

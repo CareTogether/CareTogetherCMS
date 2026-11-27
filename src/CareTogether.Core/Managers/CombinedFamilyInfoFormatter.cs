@@ -501,7 +501,10 @@ namespace CareTogether.Managers
                 assignments,
                 completedCustomFields,
                 missingCustomFields
-            );
+            )
+            {
+                InternalRenewalCandidates = approvalCalculation.RenewalCandidates,
+            };
 
             return (volunteerFamilyInfo, entry.UploadedDocuments);
         }

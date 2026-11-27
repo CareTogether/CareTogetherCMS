@@ -1,4 +1,43 @@
+import type { ApprovalLedgerRow } from '../Approvals/approvalLedgerViewModel';
 import type { IMissingArrangementRequirement } from '../GeneratedClient';
+
+export type ApprovalNavigationTarget =
+  | { kind: 'role'; name: string; personId?: string }
+  | { kind: 'requirement'; name: string; personId?: string };
+
+export function appendApprovalTarget(
+  params: URLSearchParams,
+  target: ApprovalNavigationTarget
+) {
+  params.set(
+    target.kind === 'role' ? 'approvalRole' : 'approvalAction',
+    target.name
+  );
+  if (target.personId) params.set('approvalPersonId', target.personId);
+}
+
+export function readApprovalTarget(
+  params: URLSearchParams
+): ApprovalNavigationTarget | undefined {
+  const roles = params.getAll('approvalRole');
+  const actions = params.getAll('approvalAction');
+  const people = params.getAll('approvalPersonId');
+  if (roles.length + actions.length !== 1 || people.length > 1) return;
+  const name = roles[0] ?? actions[0];
+  if (!name.trim() || (people.length && !people[0].trim())) return;
+  return {
+    kind: roles.length ? 'role' : 'requirement',
+    name,
+    personId: people[0],
+  };
+}
+
+export function clearApprovalTarget(params: URLSearchParams) {
+  const next = new URLSearchParams(params);
+  for (const key of ['approvalRole', 'approvalAction', 'approvalPersonId'])
+    next.delete(key);
+  return next;
+}
 
 export function uniqueMatch<T>(
   items: readonly T[],
@@ -6,6 +45,31 @@ export function uniqueMatch<T>(
 ) {
   const found = items.filter(matches);
   return found.length === 1 ? found[0] : undefined;
+}
+
+export function findRenewalRow(
+  rows: readonly ApprovalLedgerRow[],
+  actionName: string,
+  scope: 'family' | 'person' | 'organization',
+  subjectId: string,
+  affectedRoles: readonly string[]
+) {
+  return uniqueMatch(
+    rows,
+    (row) =>
+      row.requirementName === actionName &&
+      ['missing', 'expired', 'expiring'].includes(row.status) &&
+      row.neededForRoles.some((role) => affectedRoles.includes(role)) &&
+      row.occurrences.length > 0 &&
+      row.occurrences.every(
+        ({ subject, context }) =>
+          subject.scope === scope &&
+          (scope === 'family'
+            ? context.kind === 'Volunteer Family' &&
+              context.volunteerFamilyId === subjectId
+            : subject.id === subjectId)
+      )
+  );
 }
 
 export type ArrangementRequirementTarget = {

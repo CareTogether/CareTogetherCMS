@@ -8,8 +8,16 @@ import {
   useMediaQuery,
   useTheme,
 } from '@mui/material';
-import { Navigate, useParams } from 'react-router-dom';
-import { Permission } from '../GeneratedClient';
+import {
+  Navigate,
+  useLocation,
+  useParams,
+  useSearchParams,
+} from 'react-router-dom';
+import {
+  OrganizationApprovalRenewalTarget,
+  Permission,
+} from '../GeneratedClient';
 import { useCommunityPermissions } from '../Model/SessionModel';
 import { useScreenTitle } from '../Shell/ShellScreenTitle';
 import {
@@ -48,10 +56,19 @@ import { ApprovalTabLabel } from '../Approvals/ApprovalTabLabel';
 import { approvalMobileTabLabel } from '../Approvals/approvalTabPresentation';
 import { useOrganizationApprovalViewModel } from './useOrganizationApprovalViewModel';
 import { usePolicy } from '../Model/PolicyModel';
+import {
+  clearApprovalTarget,
+  findRenewalRow,
+  readApprovalTarget,
+  uniqueMatch,
+} from '../Hooks/workResolutionTarget';
 
 type OrganizationScreenTabValue = 'overview' | 'approvals';
 
 export function CommunityScreen() {
+  const [searchParams, setSearchParams] = useSearchParams();
+  const { key: navigationKey } = useLocation();
+  const approvalTarget = readApprovalTarget(searchParams);
   const communityIdMaybe = useParams<{ communityId: string }>();
   const communityId = communityIdMaybe.communityId as string;
 
@@ -96,6 +113,38 @@ export function CommunityScreen() {
     organizationApprovalsEnabled &&
     hasConfiguredApprovalRoles &&
     permissions(Permission.ViewApprovalProgress);
+  const openApprovalsFromLink =
+    showApprovalsTab &&
+    permissions(Permission.ViewApprovalStatus) &&
+    approvalTarget?.kind === 'requirement' &&
+    !approvalTarget.personId;
+  const renewal = openApprovalsFromLink
+    ? uniqueMatch(
+        communityInfo?.approvalInfo?.renewalCandidates ?? [],
+        (candidate) =>
+          candidate.actionName === approvalTarget.name &&
+          candidate.target instanceof OrganizationApprovalRenewalTarget &&
+          candidate.target.communityId === communityId
+      )
+    : undefined;
+  const linkedRenewal =
+    openApprovalsFromLink && renewal
+      ? findRenewalRow(
+          organizationApprovalViewModel.approvalLedgerRows,
+          approvalTarget.name,
+          'organization',
+          communityId,
+          renewal.affectedRoles.map(({ roleName }) => roleName)
+        )
+      : undefined;
+
+  useEffect(() => {
+    if (openApprovalsFromLink) setSelectedTab('approvals');
+  }, [openApprovalsFromLink, navigationKey]);
+
+  function closeApprovalTarget() {
+    setSearchParams(clearApprovalTarget(searchParams), { replace: true });
+  }
 
   useEffect(() => {
     if (selectedTab === 'approvals' && !showApprovalsTab) {
@@ -207,6 +256,12 @@ export function CommunityScreen() {
       </Toolbar>
       {organizationApprovalsEnabled && (
         <OrganizationApprovalRoleSummaryCards
+          linkedRoleName={
+            approvalTarget?.kind === 'role' && !approvalTarget.personId
+              ? approvalTarget.name
+              : undefined
+          }
+          onLinkedRoleClose={closeApprovalTarget}
           communityInfo={communityInfo}
           viewModel={organizationApprovalViewModel}
         />
@@ -296,6 +351,8 @@ export function CommunityScreen() {
       )}
       {selectedTab === 'approvals' && policy && (
         <OrganizationApprovalSection
+          linkedRow={linkedRenewal}
+          onLinkedRowClose={closeApprovalTarget}
           communityInfo={communityInfo}
           policy={policy}
           viewModel={organizationApprovalViewModel}

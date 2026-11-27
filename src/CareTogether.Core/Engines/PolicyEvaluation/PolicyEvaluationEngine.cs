@@ -164,7 +164,13 @@ namespace CareTogether.Engines.PolicyEvaluation
                 exemptedFamilyRequirements,
                 completedIndividualRequirements,
                 exemptedIndividualRequirements
-            );
+            )
+            {
+                RenewalCandidates = ApprovalRenewalCalculations.ForFamily(
+                    policy, organizationId, locationId, family, approvalStatus,
+                    DateOnly.FromDateTime(DateTime.UtcNow)
+                ),
+            };
         }
 
         public async Task<OrganizationApprovalCalculationResult> CalculateOrganizationApprovalsAsync(
@@ -212,7 +218,13 @@ namespace CareTogether.Engines.PolicyEvaluation
                 approvalStatus,
                 completedWithRoles,
                 exemptedWithRoles
-            );
+            )
+            {
+                RenewalCandidates = ApprovalRenewalCalculations.ForOrganization(
+                    policy, tenantId, locationId, organizationApproval.OrganizationId,
+                    approvalStatus, DateOnly.FromDateTime(DateTime.UtcNow)
+                ),
+            };
         }
 
         private static ImmutableList<string> GetOrganizationRequirementRoleNames(

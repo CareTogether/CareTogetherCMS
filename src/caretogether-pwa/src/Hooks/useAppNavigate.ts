@@ -1,7 +1,9 @@
 import { useRequiredSelectedLocationContext } from '../Model/Data';
 import { NavigateOptions, useNavigate } from 'react-router-dom';
 import {
+  appendApprovalTarget,
   arrangementRequirementQuery,
+  type ApprovalNavigationTarget,
   type ArrangementRequirementTarget,
 } from './workResolutionTarget';
 
@@ -15,7 +17,10 @@ export interface AppNavigate {
     arrangementId?: string,
     options?: { replace?: boolean }
   ) => void;
-  organization: (organizationId: string) => void;
+  organization: (
+    organizationId: string,
+    approval?: ApprovalNavigationTarget
+  ) => void;
   settings: () => void;
   role: (roleId: string) => void;
   locationEdit: (locationId: string, options?: AppNavigateOptions) => void;
@@ -36,6 +41,7 @@ export type FamilyNavigationOptions = {
   v1CaseId?: string;
   arrangementId?: string;
   familyMemberId?: string;
+  approval?: ApprovalNavigationTarget;
   arrangementRequirement?: ArrangementRequirementTarget;
   replace?: boolean;
 };
@@ -78,6 +84,9 @@ export function useAppNavigate(): AppNavigate {
       if (familyNavigationOptions.section) {
         searchParams.set('section', familyNavigationOptions.section);
       }
+      if (familyNavigationOptions.approval) {
+        appendApprovalTarget(searchParams, familyNavigationOptions.approval);
+      }
       if (
         familyNavigationOptions.arrangementId &&
         familyNavigationOptions.arrangementRequirement
@@ -112,8 +121,16 @@ export function useAppNavigate(): AppNavigate {
       });
     },
 
-    organization: (organizationId: string) =>
-      inContext(`organizations/organization/${organizationId}`),
+    organization: (
+      organizationId: string,
+      approval?: ApprovalNavigationTarget
+    ) => {
+      const params = new URLSearchParams();
+      if (approval) appendApprovalTarget(params, approval);
+      return inContext(
+        `organizations/organization/${organizationId}${params.size ? `?${params}` : ''}`
+      );
+    },
     settings: () => inContext(`settings`),
     role: (roleId: string) => inContext(`settings/roles/${roleId}`),
     locationEdit: (locationId: string, options?: AppNavigateOptions) =>
