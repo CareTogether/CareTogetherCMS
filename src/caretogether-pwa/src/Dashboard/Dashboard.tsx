@@ -16,7 +16,6 @@ import {
   List,
   ListItem,
   MenuItem,
-  Paper,
   Select,
   Snackbar,
   Stack,
@@ -791,124 +790,6 @@ function DashboardNoteDialog({
   );
 }
 
-function DashboardSummary({
-  counts,
-  preferences,
-}: {
-  counts?: {
-    pastDue: number;
-    upcoming: number;
-    notes: number;
-    approvals: number;
-  };
-  preferences?: DashboardPreferences;
-}) {
-  const cards = [
-    {
-      label: 'Past due',
-      icon: pastDuePanel.icon,
-      count: counts?.pastDue,
-      context:
-        preferences?.pastDueDays === 'all'
-          ? 'All past-due requirements'
-          : preferences && `Last ${preferences.pastDueDays} days`,
-      urgent: Boolean(counts?.pastDue),
-    },
-    {
-      label: 'Upcoming',
-      icon: upcomingPanel.icon,
-      count: counts?.upcoming,
-      context: preferences && `Next ${preferences.upcomingDays} days`,
-    },
-    {
-      label: 'Awaiting review',
-      icon: noteReviewPanel.icon,
-      count: counts?.notes,
-      context:
-        preferences &&
-        {
-          all: 'All notes',
-          family: 'Family notes',
-          referral: 'Referral notes',
-        }[preferences.noteReviewSource],
-    },
-    {
-      label: 'Approvals & renewals',
-      icon: expirationPanel.icon,
-      count: counts?.approvals,
-      context:
-        preferences && `Next ${preferences.expirationDays} days + expired work`,
-    },
-  ];
-
-  return (
-    <Box
-      component="ul"
-      aria-label="Workload overview"
-      sx={{
-        display: 'grid',
-        gridTemplateColumns: {
-          xs: 'repeat(2, minmax(0, 1fr))',
-          md: 'repeat(4, minmax(0, 1fr))',
-        },
-        listStyle: 'none',
-        p: 0,
-        m: 0,
-        mb: 3,
-        gap: { xs: 1.5, sm: 2 },
-      }}
-    >
-      {cards.map(({ label, icon, count, context, urgent }) => (
-        <Paper
-          key={label}
-          component="li"
-          variant="outlined"
-          sx={{
-            minWidth: 0,
-            p: { xs: 1.5, sm: 2 },
-            borderRadius: 2,
-            borderColor: 'divider',
-            overflowWrap: 'anywhere',
-          }}
-        >
-          <Stack spacing={0.5}>
-            <Stack
-              direction="row"
-              spacing={0.75}
-              sx={{
-                alignItems: 'center',
-                color: urgent ? 'error.dark' : 'primary.dark',
-                '& .MuiSvgIcon-root': { flexShrink: 0 },
-              }}
-            >
-              {icon}
-              <Typography
-                className="ph-unmask"
-                variant="body2"
-                sx={{ fontWeight: 500 }}
-              >
-                {label}
-              </Typography>
-            </Stack>
-            <Typography
-              component="div"
-              sx={{ fontSize: 30, fontWeight: 600, lineHeight: 1.2 }}
-              color={urgent ? 'error.dark' : 'text.primary'}
-            >
-              {count ?? <span aria-label="Loading">—</span>}
-            </Typography>
-            {count !== undefined && (
-              <Typography variant="caption" color="text.secondary">
-                {context}
-              </Typography>
-            )}
-          </Stack>
-        </Paper>
-      ))}
-    </Box>
-  );
-}
-
 function DashboardColumns({
   upcoming,
   notes,
@@ -1125,11 +1006,6 @@ function DashboardRequirements({ storageKey }: { storageKey: string | null }) {
   const counts = {
     upcoming: upcoming.reduce((sum, group) => sum + group.count, 0),
     pastDue: pastDue.reduce((sum, group) => sum + group.count, 0),
-    notes: visibleNotes.length,
-    approvals: Object.values(approvalWork).reduce(
-      (sum, rows) => sum + rows.length,
-      0
-    ),
   };
 
   function updatePreferences(change: Partial<DashboardPreferences>) {
@@ -1340,7 +1216,6 @@ function DashboardRequirements({ storageKey }: { storageKey: string | null }) {
 
   return (
     <>
-      <DashboardSummary counts={counts} preferences={preferences} />
       <DashboardColumns
         upcoming={upcomingRequirements}
         pastDue={pastDueRequirements}
@@ -1471,15 +1346,12 @@ export function Dashboard() {
       </Stack>
       <Suspense
         fallback={
-          <>
-            <DashboardSummary />
-            <DashboardColumns
-              upcoming={<DashboardRequirementPanel {...upcomingPanel} />}
-              notes={<DashboardRequirementPanel {...noteReviewPanel} />}
-              pastDue={<DashboardRequirementPanel {...pastDuePanel} />}
-              approvals={<DashboardRequirementPanel {...expirationPanel} />}
-            />
-          </>
+          <DashboardColumns
+            upcoming={<DashboardRequirementPanel {...upcomingPanel} />}
+            notes={<DashboardRequirementPanel {...noteReviewPanel} />}
+            pastDue={<DashboardRequirementPanel {...pastDuePanel} />}
+            approvals={<DashboardRequirementPanel {...expirationPanel} />}
+          />
         }
       >
         <DashboardRequirements key={storageKey} storageKey={storageKey} />

@@ -131,10 +131,25 @@ export function DashboardRequirementPanel({
               label={count}
               aria-label={`${count} ${itemType}${count === 1 ? '' : 's'}`}
               sx={{
-                height: 22,
-                fontWeight: 500,
+                height: 24,
+                minWidth: 28,
+                fontSize: '0.8125rem',
+                fontWeight: 600,
                 fontVariantNumeric: 'tabular-nums',
-                bgcolor: 'action.hover',
+                color: urgent
+                  ? 'error.dark'
+                  : count
+                    ? 'primary.dark'
+                    : undefined,
+                bgcolor: (theme) =>
+                  count
+                    ? alpha(
+                        urgent
+                          ? theme.palette.error.main
+                          : theme.palette.primary.main,
+                        0.12
+                      )
+                    : theme.palette.action.hover,
                 flexShrink: 0,
               }}
             />

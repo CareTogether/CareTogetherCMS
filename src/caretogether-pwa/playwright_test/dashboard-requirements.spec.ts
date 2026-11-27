@@ -134,11 +134,11 @@ test('edits, approves, and deletes family and referral notes without leaving the
     .filter({ has: page.getByText('Notes awaiting review', { exact: true }) });
   const row = (contents: string) =>
     panel.getByRole('listitem').filter({ hasText: contents });
-  const reviewSummary = page
-    .getByRole('list', { name: 'Workload overview' })
-    .getByRole('listitem')
-    .filter({ hasText: 'Awaiting review' });
-  await expect(reviewSummary.getByText('4', { exact: true })).toBeVisible();
+  const noteCount = (count: number) =>
+    panel.getByLabel(`${count} ${count === 1 ? 'note' : 'notes'}`, {
+      exact: true,
+    });
+  await expect(noteCount(4)).toBeVisible();
   await expect(
     panel.getByRole('button', { name: 'All notes (4)' })
   ).toHaveAttribute('aria-pressed', 'true');
@@ -171,7 +171,7 @@ test('edits, approves, and deletes family and referral notes without leaving the
     .click();
   await expect(row(familyNote.contents)).toHaveCount(0);
   await expect(page).toHaveURL(ATLANTIS_ROUTE);
-  await expect(reviewSummary.getByText('3', { exact: true })).toBeVisible();
+  await expect(noteCount(3)).toBeVisible();
   await page.reload();
   await expect(row(familyNote.contents)).toHaveCount(0);
   await panel.getByRole('button', { name: 'Show snoozed (1)' }).click();
@@ -179,7 +179,7 @@ test('edits, approves, and deletes family and referral notes without leaving the
   await row(familyNote.contents)
     .getByRole('button', { name: 'Unsnooze' })
     .click();
-  await expect(reviewSummary.getByText('4', { exact: true })).toBeVisible();
+  await expect(noteCount(4)).toBeVisible();
   await expect(
     panel.getByRole('button', { name: 'All notes (4)' })
   ).toHaveAttribute('aria-pressed', 'true');
@@ -198,7 +198,7 @@ test('edits, approves, and deletes family and referral notes without leaving the
     window.dispatchEvent(new StorageEvent('storage', { key, newValue }));
   });
   await expect(familySnooze).toBeVisible();
-  await expect(reviewSummary.getByText('4', { exact: true })).toBeVisible();
+  await expect(noteCount(4)).toBeVisible();
   await row(familyNote.contents).getByRole('button', { name: 'Edit' }).click();
   await page
     .getByRole('textbox', { name: 'Notes', exact: true })
@@ -237,7 +237,7 @@ test('edits, approves, and deletes family and referral notes without leaving the
     release.resolve();
   }
   await expect(row('Edited family draft')).toHaveCount(0);
-  await expect(reviewSummary.getByText('3', { exact: true })).toBeVisible();
+  await expect(noteCount(3)).toBeVisible();
   expect(familyApprovalRequests).toBe(1);
   await row('Edited referral draft')
     .getByRole('button', { name: 'Approve', exact: true })
@@ -246,7 +246,7 @@ test('edits, approves, and deletes family and referral notes without leaving the
     .getByRole('dialog')
     .getByRole('button', { name: 'Approve', exact: true })
     .click();
-  await expect(reviewSummary.getByText('2', { exact: true })).toBeVisible();
+  await expect(noteCount(2)).toBeVisible();
   const familyDelete = row(familyDiscard.contents).getByRole('button', {
     name: 'Delete',
     exact: true,
@@ -255,18 +255,18 @@ test('edits, approves, and deletes family and referral notes without leaving the
   await familyDelete.press('Enter');
   await dialog.getByRole('button', { name: 'Cancel', exact: true }).click();
   await expect(familyDelete).toBeVisible();
-  await expect(reviewSummary.getByText('2', { exact: true })).toBeVisible();
+  await expect(noteCount(2)).toBeVisible();
   await familyDelete.click();
   await dialog.getByRole('button', { name: 'Save', exact: true }).click();
   await expect(row(familyDiscard.contents)).toHaveCount(0);
-  await expect(reviewSummary.getByText('1', { exact: true })).toBeVisible();
+  await expect(noteCount(1)).toBeVisible();
   await row(referralDiscard.contents)
     .getByRole('button', { name: 'Delete', exact: true })
     .click();
   await dialog.getByRole('button', { name: 'Delete', exact: true }).click();
   await expect(row(referralDiscard.contents)).toHaveCount(0);
   await expect(panel.getByText('No notes awaiting review.')).toBeVisible();
-  await expect(reviewSummary.getByText('0', { exact: true })).toBeVisible();
+  await expect(noteCount(0)).toBeVisible();
   await expect(page).toHaveURL(ATLANTIS_ROUTE);
 });
 
@@ -357,11 +357,6 @@ test('Dashboard shows scoped requirement counts and opens the arrangement @pr', 
   const upcoming = page.getByRole('region', { name: 'Upcoming requirements' });
   const pastDue = page.getByRole('region', { name: 'Past-due requirements' });
   await expect(upcoming.getByLabel('2 requirements')).toBeVisible();
-  const upcomingSummary = page
-    .getByRole('list', { name: 'Workload overview' })
-    .getByRole('listitem')
-    .filter({ hasText: 'Upcoming' });
-  await expect(upcomingSummary.getByText('2', { exact: true })).toBeVisible();
   await expect(pastDue.getByLabel('1 requirement')).toBeVisible();
   await page.setViewportSize({ width: 1440, height: 900 });
   const expiringPanel = page.getByRole('region', {
@@ -471,8 +466,7 @@ test('Dashboard shows scoped requirement counts and opens the arrangement @pr', 
   await upcomingTimeFrame.click();
   await page.getByRole('option', { name: 'Next 7 days', exact: true }).click();
   await expect(upcoming.getByLabel('0 requirements')).toBeVisible();
-  await expect(upcomingSummary.getByText('0', { exact: true })).toBeVisible();
-  await expect(upcomingSummary.getByText('Next 7 days')).toBeVisible();
+  await expect(upcomingTimeFrame).toHaveText('Next 7 days');
   await expect(pastDueTimeFrame).toHaveText('All past due');
   await pastDueTimeFrame.click();
   await page.getByRole('option', { name: 'Last 7 days', exact: true }).click();
