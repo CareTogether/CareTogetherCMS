@@ -539,10 +539,7 @@ test.describe('UIV2 case function assignments @pr', () => {
       await started.promise;
       await switchTo(destination);
       await expect(
-        page.getByRole('heading', {
-          name: 'Expiring approvals and requirements',
-          exact: true,
-        })
+        page.getByRole('heading', { name: 'Dashboard', level: 1, exact: true })
       ).toBeVisible();
       const response = page.waitForResponse(
         (result) =>
