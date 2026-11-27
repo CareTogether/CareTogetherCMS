@@ -135,6 +135,11 @@ namespace CareTogether.Api
                 Configuration["Persistence:MutableBlobStorageConnectionString"],
                 blobClientOptions
             );
+            services.AddSingleton(
+                new CareTogether.Api.Services.RecentRecordsStore(
+                    mutableBlobServiceClient.GetBlobContainerClient("recent-records")
+                )
+            );
 
             // Utility providers
             var uploadsStore = new BlobFileStore(immutableBlobServiceClient, "Uploads");
@@ -170,11 +175,10 @@ namespace CareTogether.Api
                 immutableBlobServiceClient,
                 "ApprovalsEventLog"
             );
-            var organizationApprovalsEventLog =
-                new AppendBlobEventLog<OrganizationApprovalEvent>(
-                    immutableBlobServiceClient,
-                    "OrganizationApprovalsEventLog"
-                );
+            var organizationApprovalsEventLog = new AppendBlobEventLog<OrganizationApprovalEvent>(
+                immutableBlobServiceClient,
+                "OrganizationApprovalsEventLog"
+            );
             var notesEventLog = new AppendBlobEventLog<NotesEvent>(
                 immutableBlobServiceClient,
                 "NotesEventLog"

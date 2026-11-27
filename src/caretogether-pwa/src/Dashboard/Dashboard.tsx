@@ -1,5 +1,6 @@
 import { EventAvailableOutlined, EventBusyOutlined } from '@mui/icons-material';
 import {
+  Box,
   Button,
   Container,
   MenuItem,
@@ -27,6 +28,7 @@ import {
   FAMILY_SCREEN_V2_EARLY_ACCESS_FEATURE_FLAG,
   REFERRALS_FEATURE_FLAG,
 } from '../featureFlags';
+import { DashboardRecentRecords } from './DashboardRecentRecords';
 import {
   DashboardRequirementPanel,
   DashboardRequirementRow,
@@ -62,6 +64,7 @@ import { useApprovalRenewalWorkQueue } from './useApprovalRenewalWorkQueue';
 import { useArrangementWorkQueue } from './useArrangementWorkQueue';
 
 import { DashboardApprovalExpirations } from './DashboardApprovalSection';
+import { DashboardMyAssignments } from './DashboardMyAssignments';
 import {
   DashboardNoteDialog,
   DashboardNoteReview,
@@ -72,7 +75,11 @@ import {
   NextDaysSelect,
   type SnoozeKind,
 } from './dashboardLayout';
-import { expirationPanel, noteReviewPanel } from './dashboardPanels';
+import {
+  expirationPanel,
+  myAssignmentsPanel,
+  noteReviewPanel,
+} from './dashboardPanels';
 import { noteKey, useDashboardNoteReview } from './useDashboardNoteReview';
 
 const upcomingPanel = {
@@ -484,6 +491,12 @@ function DashboardRequirements({ storageKey }: { storageKey: string | null }) {
 
   return (
     <>
+      <Box sx={{ mb: { xs: 2, lg: 2.5 } }}>
+        <DashboardMyAssignments familyV2={familyV2} />
+      </Box>
+      <Box sx={{ mb: { xs: 2, lg: 2.5 } }}>
+        <DashboardRecentRecords />
+      </Box>
       <DashboardColumns
         upcoming={upcomingRequirements}
         pastDue={pastDueRequirements}
@@ -617,6 +630,9 @@ export function Dashboard() {
       <Suspense
         fallback={
           <>
+            <Box sx={{ mb: { xs: 2, lg: 2.5 } }}>
+              <DashboardRequirementPanel {...myAssignmentsPanel} />
+            </Box>
             <DashboardColumns
               upcoming={<DashboardRequirementPanel {...upcomingPanel} />}
               notes={<DashboardRequirementPanel {...noteReviewPanel} />}

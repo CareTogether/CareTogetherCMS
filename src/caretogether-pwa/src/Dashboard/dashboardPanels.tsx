@@ -1,4 +1,8 @@
-import { FactCheckOutlined, VerifiedUserOutlined } from '@mui/icons-material';
+import {
+  AssignmentIndOutlined,
+  FactCheckOutlined,
+  VerifiedUserOutlined,
+} from '@mui/icons-material';
 
 export const expirationPanel = {
   title: 'Expiring approvals and requirements',
@@ -16,4 +20,13 @@ export const noteReviewPanel = {
   emptyTitle: 'Review queue clear',
   emptyMessage: 'No notes awaiting review.',
   itemType: 'note',
+} as const;
+
+export const myAssignmentsPanel = {
+  title: 'My assignments',
+  icon: <AssignmentIndOutlined fontSize="small" />,
+  emptyTitle: 'No assignments',
+  emptyMessage: 'You have no active case, arrangement, or role assignments.',
+  itemType: 'assignment',
+  loadingMessage: 'Loading assignments…',
 } as const;

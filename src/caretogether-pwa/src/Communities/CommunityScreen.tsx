@@ -1,4 +1,5 @@
 import Grid from '@mui/material/Grid';
+import { useRecordVisit } from '../Hooks/useRecordVisit';
 import {
   Button,
   Box,
@@ -16,6 +17,7 @@ import {
 } from 'react-router-dom';
 import {
   OrganizationApprovalRenewalTarget,
+  RecentRecordType,
   Permission,
 } from '../GeneratedClient';
 import { useCommunityPermissions } from '../Model/SessionModel';
@@ -84,6 +86,12 @@ export function CommunityScreen() {
     ({ community }) => community?.id === communityId
   );
   const community = communityInfo?.community;
+  useRecordVisit(
+    RecentRecordType.Organization,
+    !organizationCategoriesEnabled || organizationConfiguration
+      ? community?.id
+      : undefined
+  );
 
   useScreenTitle(community?.name || '...');
 

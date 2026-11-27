@@ -2,6 +2,7 @@ import {
   CommunicationsClient,
   ConfigurationClient,
   FilesClient,
+  RecentRecordsClient,
   RecordsClient,
   UsersClient,
 } from '../GeneratedClient';
@@ -36,6 +37,10 @@ export const api = {
   users: usersClient,
   configuration: configurationClient,
   records: recordsClient,
+  recentRecords: new RecentRecordsClient(
+    import.meta.env.VITE_APP_API_HOST,
+    authenticatingFetch
+  ),
   files: filesClient,
   communications: communicationsClient,
 };

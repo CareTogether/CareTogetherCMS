@@ -1,4 +1,5 @@
 import Grid from '../Generic/GridLegacyCompat';
+import { useRecordVisit } from '../Hooks/useRecordVisit';
 import { useReactToPrint } from 'react-to-print';
 import {
   Container,
@@ -27,6 +28,7 @@ import {
 } from '@mui/material';
 import {
   CompletedCustomFieldInfo,
+  RecentRecordType,
   Permission,
   V1Case,
   V1Referral,
@@ -184,6 +186,10 @@ export function FamilyScreen() {
   const familyLookup = useFamilyLookup();
   const personAndFamilyLookup = usePersonAndFamilyLookup();
   const family = familyLookup(familyId);
+  useRecordVisit(
+    RecentRecordType.Family,
+    family?.family?.active ? familyId : undefined
+  );
   const policy = usePolicy();
 
   const directoryModel = useDirectoryModel();

@@ -142,6 +142,13 @@ namespace CareTogether.Managers.Records
 
     public interface IRecordsManager
     {
+        Task<ImmutableHashSet<RecentRecordKey>> FilterVisibleRecentRecordsAsync(
+            ClaimsPrincipal user,
+            Guid organizationId,
+            Guid locationId,
+            ImmutableHashSet<RecentRecordKey> records
+        );
+
         Task<ImmutableList<RecordsAggregate>> ListVisibleAggregatesAsync(
             ClaimsPrincipal user,
             Guid organizationId,
