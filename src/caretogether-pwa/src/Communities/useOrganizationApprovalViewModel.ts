@@ -114,7 +114,7 @@ function occurrence(
   };
 }
 
-function buildOrganizationApprovalLedgerRows(communityInfo?: CommunityInfo) {
+export function buildOrganizationApprovalLedgerRows(communityInfo?: CommunityInfo) {
   if (!communityInfo) return [];
 
   const organization = communityInfo.community;

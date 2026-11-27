@@ -257,7 +257,7 @@ export const visibleFamiliesAtom = atom((get) => {
   );
 });
 
-const visibleCommunitiesAtom = atom((get) => {
+export const visibleCommunitiesAtom = atom((get) => {
   const visibleAggregates = get(visibleAggregatesState);
   return mapVisibleAggregates(visibleAggregates, (aggregates) =>
     aggregates

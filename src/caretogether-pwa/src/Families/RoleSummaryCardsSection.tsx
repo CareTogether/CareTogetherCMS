@@ -1,5 +1,7 @@
 import { Box, Stack } from '@mui/material';
+import { Fragment } from 'react';
 import { RoleSummaryCardV2 } from './RoleSummaryCardV2';
+import { WorkResolutionFocus } from '../Generic/WorkResolutionFocus';
 import type {
   RemovedRoleSummary,
   RoleSummaryCard,
@@ -7,6 +9,7 @@ import type {
 
 type RoleSummaryCardsSectionProps = {
   cards: RoleSummaryCard[];
+  linkedCardId?: string;
   removedRoles?: RemovedRoleSummary[];
   onCardClick?: (card: RoleSummaryCard) => void;
   onRemovedRoleClick?: (removedRole: RemovedRoleSummary) => void;
@@ -14,6 +17,7 @@ type RoleSummaryCardsSectionProps = {
 
 export function RoleSummaryCardsSection({
   cards,
+  linkedCardId,
   removedRoles = [],
   onCardClick,
   onRemovedRoleClick,
@@ -39,13 +43,19 @@ export function RoleSummaryCardsSection({
             flexWrap: 'nowrap',
           }}
         >
-          {cards.map((card) => (
-            <RoleSummaryCardV2
-              key={card.id}
-              card={card}
-              onClick={onCardClick ? () => onCardClick(card) : undefined}
-            />
-          ))}
+          {cards.map((card) => {
+            const content = (
+              <RoleSummaryCardV2
+                card={card}
+                onClick={onCardClick ? () => onCardClick(card) : undefined}
+              />
+            );
+            return card.id === linkedCardId ? (
+              <WorkResolutionFocus key={card.id}>{content}</WorkResolutionFocus>
+            ) : (
+              <Fragment key={card.id}>{content}</Fragment>
+            );
+          })}
           {removedRoles.map((removedRole) => (
             <RoleSummaryCardV2
               key={removedRole.id}

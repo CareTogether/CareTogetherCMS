@@ -7,6 +7,7 @@ import {
   locationRoute,
 } from './support/constants';
 import { expectNoHorizontalOverflow } from './support/layout';
+import { ORGANIZATION_APPROVALS_FEATURE_FLAG } from '../src/featureFlags';
 import {
   noteSnoozeToken,
   snoozeStoragePrefix,
@@ -14,12 +15,14 @@ import {
 import {
   Permission,
   NoteStatus,
+  RoleApprovalStatus,
   V1ReferralNoteStatus,
 } from '../src/GeneratedClient';
 
 const doeId = '11111111-1111-1111-1111-111111111111';
 
 test.use({
+  featureFlags: { [ORGANIZATION_APPROVALS_FEATURE_FLAG]: true },
   timezoneId: 'Pacific/Honolulu',
   viewport: { width: 375, height: 700 },
 });
@@ -397,6 +400,11 @@ test('Dashboard shows scoped requirement counts and opens the arrangement @pr', 
         .first()
     ).toBeVisible();
     await expect(page.getByText('No past-due requirements.')).toHaveCount(0);
+    await expect(
+      page.getByText(
+        'No approvals or requirements need attention in this view.'
+      )
+    ).toHaveCount(0);
   } finally {
     loading.resolve();
   }
@@ -406,14 +414,41 @@ test('Dashboard shows scoped requirement counts and opens the arrangement @pr', 
   await expect(upcoming.getByLabel('2 requirements')).toBeVisible();
   await expect(pastDue.getByLabel('1 requirement')).toBeVisible();
   await page.setViewportSize({ width: 1440, height: 900 });
+  const expiringPanel = page.getByRole('region', {
+    name: 'Expiring approvals and requirements',
+    exact: true,
+  });
+  const notesPanel = page.getByRole('region', {
+    name: 'Notes awaiting review',
+    exact: true,
+  });
   await expect
     .poll(async () => {
-      const [left, right] = await Promise.all(
-        [pastDue, upcoming].map((panel) => panel.boundingBox())
+      const [upperLeft, lowerLeft, upperRight, lowerRight] = await Promise.all(
+        [pastDue, notesPanel, upcoming, expiringPanel].map((panel) =>
+          panel.boundingBox()
+        )
       );
-      return left && right ? Math.round(left.y - right.y) : null;
+      if (!upperLeft || !lowerLeft || !upperRight || !lowerRight) return null;
+      return [
+        Math.round(upperLeft.y - upperRight.y),
+        Math.round(lowerLeft.y - lowerRight.y),
+        Math.round(
+          upperLeft.y + upperLeft.height - (upperRight.y + upperRight.height)
+        ),
+        Math.round(
+          lowerLeft.y + lowerLeft.height - (lowerRight.y + lowerRight.height)
+        ),
+        Math.round(
+          lowerLeft.y -
+            Math.max(
+              upperLeft.y + upperLeft.height,
+              upperRight.y + upperRight.height
+            )
+        ),
+      ];
     })
-    .toBe(0);
+    .toEqual([0, 0, 0, 0, 20]);
   await page.setViewportSize({ width: 375, height: 700 });
   const action = upcoming.getByRole('button', {
     name: /^(?!Snooze).*Upcoming safety visit/,
@@ -477,6 +512,11 @@ test('Dashboard shows scoped requirement counts and opens the arrangement @pr', 
   const pastDueTimeFrame = pastDue.getByRole('combobox', {
     name: 'Past-due requirements time frame',
   });
+  const approvalTimeFrame = page.getByRole('combobox', {
+    name: 'Expiring approvals and requirements time frame',
+  });
+  await approvalTimeFrame.click();
+  await page.getByRole('option', { name: 'Next 60 days', exact: true }).click();
   await upcomingTimeFrame.click();
   await page.getByRole('option', { name: 'Next 7 days', exact: true }).click();
   await expect(upcoming.getByLabel('0 requirements')).toBeVisible();
@@ -515,9 +555,11 @@ test('Dashboard shows scoped requirement counts and opens the arrangement @pr', 
   await expect(pastDue.getByText('No past-due requirements.')).toBeVisible();
   await expect(upcomingTimeFrame).toHaveText('Next 30 days');
   await expect(pastDueTimeFrame).toHaveText('All past due');
+  await expect(approvalTimeFrame).toHaveText('Next 30 days');
   await page.goBack();
   await expect(upcomingTimeFrame).toHaveText('Next 7 days');
   await expect(pastDueTimeFrame).toHaveText('Last 7 days');
+  await expect(approvalTimeFrame).toHaveText('Next 60 days');
   expect(
     await page.evaluate(
       (keys) =>
@@ -525,4 +567,300 @@ test('Dashboard shows scoped requirement counts and opens the arrangement @pr', 
       Object.keys(calendarPreferences)
     )
   ).toEqual(calendarPreferences);
+});
+
+test('shows expiring approvals and requirements and restores the independent UTC window @pr', async ({
+  page,
+}) => {
+  const communityId = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa';
+  let statusOnly = false;
+  const now = new Date();
+  now.setUTCDate(now.getUTCDate() + 12);
+  const expirationDate = now.toISOString().slice(0, 10);
+  now.setUTCDate(now.getUTCDate() - 1);
+  const lastValidDay = now.toISOString().slice(0, 10);
+  const daysAgo = (days: number) => {
+    const date = new Date();
+    date.setUTCDate(date.getUTCDate() - days);
+    return date.toISOString().slice(0, 10);
+  };
+  const completed = (
+    requirementName: string,
+    expiresAtUtc: string,
+    roleNames: string[]
+  ) => ({
+    requirementName,
+    completedAtUtc: '2020-01-01',
+    expiresAtUtc,
+    roleNames,
+  });
+  const timeline = {
+    ranges: [
+      {
+        start: '2020-01-01',
+        end: now.toISOString().slice(0, 10),
+        tag: RoleApprovalStatus.Approved,
+      },
+      {
+        start: expirationDate,
+        end: '9999-12-31',
+        tag: RoleApprovalStatus.Expired,
+      },
+    ],
+  };
+  const role = {
+    currentStatus: RoleApprovalStatus.Approved,
+    effectiveRoleApprovalStatus: timeline,
+    roleVersionApprovals: [],
+  };
+  await page.route('**/Records', async (route) => {
+    const response = await route.fetch();
+    const records = (await response.json()) as Array<{
+      id: string;
+      family?: {
+        family: { primaryFamilyContactPersonId: string };
+        userPermissions: Permission[];
+        volunteerFamilyInfo?: object;
+      };
+      community?: { approvalInfo?: object };
+    }>;
+    for (const record of records) {
+      if (record.family) record.family.volunteerFamilyInfo = undefined;
+      if (record.community) record.community.approvalInfo = undefined;
+    }
+    const subject = records.find(({ id }) => id === doeId)?.family;
+    expect(subject).toBeTruthy();
+    const family = subject!;
+    family.userPermissions.push(
+      Permission.ViewApprovalStatus,
+      Permission.ViewApprovalProgress
+    );
+    if (statusOnly) {
+      family.userPermissions = family.userPermissions.filter(
+        (permission) => permission !== Permission.ViewApprovalProgress
+      );
+    }
+    family.volunteerFamilyInfo = {
+      completedRequirements: [
+        completed('Household check', daysAgo(3), ['Family Coach']),
+      ],
+      exemptedRequirements: [],
+      familyRoleApprovals: {
+        'Family Coach': role,
+        'Legacy Coach': {
+          ...role,
+          currentStatus: RoleApprovalStatus.Expired,
+          effectiveRoleApprovalStatus: {
+            ranges: [
+              {
+                start: '2020-01-01',
+                end: '2020-01-31',
+                tag: RoleApprovalStatus.Approved,
+              },
+              {
+                start: '2020-02-01',
+                end: '9999-12-31',
+                tag: RoleApprovalStatus.Expired,
+              },
+            ],
+          },
+        },
+      },
+      individualVolunteers: {
+        [family.family.primaryFamilyContactPersonId]: {
+          approvalStatusByRole: { 'Individual Coach': role },
+          completedRequirements: [
+            completed('Safety check', lastValidDay, ['Family Coach']),
+          ],
+          exemptedRequirements: [],
+        },
+      },
+    };
+    await route.fulfill({
+      response,
+      json: [
+        ...records,
+        {
+          id: communityId,
+          discriminator: 'CommunityRecordsAggregate',
+          community: {
+            community: { id: communityId, name: 'Community partners' },
+            userPermissions: [
+              Permission.ViewApprovalStatus,
+              Permission.ViewApprovalProgress,
+            ],
+            approvalInfo: {
+              approvalStatusByRole: {
+                'Partner role': role,
+                'Other role': {
+                  ...role,
+                  currentStatus: RoleApprovalStatus.Expired,
+                  effectiveRoleApprovalStatus: {
+                    ranges: [
+                      {
+                        start: '2022-04-08',
+                        end: '9999-12-31',
+                        tag: RoleApprovalStatus.Expired,
+                      },
+                    ],
+                  },
+                },
+              },
+              completedRequirements: [
+                completed('Partner screening', daysAgo(2), ['Other role']),
+              ],
+              exemptedRequirements: [],
+              missingRequirements: [],
+              availableApplications: [],
+            },
+          },
+        },
+      ],
+    });
+  });
+
+  await page.goto(ATLANTIS_ROUTE);
+  const approvals = page.getByRole('region', {
+    name: 'Expiring approvals and requirements',
+    exact: true,
+  });
+  const effective = approvals.getByRole('region', {
+    name: 'Expiring approvals',
+    exact: true,
+  });
+  const upcoming = approvals.getByRole('region', {
+    name: 'Expiring requirements',
+    exact: true,
+  });
+  const expired = approvals.getByRole('region', {
+    name: 'Expired approvals',
+    exact: true,
+  });
+  const uncovered = approvals.getByRole('region', {
+    name: 'Expired requirements',
+    exact: true,
+  });
+  const window = approvals.getByRole('combobox', {
+    name: 'Expiring approvals and requirements time frame',
+  });
+  await expect(window).toHaveText('Next 30 days');
+  await expect(approvals.getByLabel('7 approval work items')).toBeVisible();
+  await expect(approvals.getByRole('button', { name: /^Snooze/ })).toHaveCount(
+    7
+  );
+  await page.setViewportSize({ width: 1440, height: 900 });
+  const approvalList = approvals.getByRole('group', {
+    name: 'Expiring approvals and requirements',
+    exact: true,
+  });
+  await approvalList.focus();
+  const headerPosition = await window.evaluate(
+    (element) => element.getBoundingClientRect().top
+  );
+  await approvalList.press('End');
+  await expect
+    .poll(() => approvalList.evaluate((element) => element.scrollTop))
+    .toBeGreaterThan(0);
+  expect(
+    await window.evaluate((element) => element.getBoundingClientRect().top)
+  ).toBe(headerPosition);
+  await page.setViewportSize({ width: 375, height: 700 });
+  await expect(effective.getByLabel('3 approvals')).toBeVisible();
+  await expect(upcoming.getByLabel('1 requirement')).toBeVisible();
+  await expect(uncovered.getByLabel('2 requirements')).toBeVisible();
+  const family = effective.getByRole('button', {
+    name: /Family Coach.*Doe Family/,
+  });
+  const individual = effective.getByRole('button', {
+    name: /Individual Coach.*Doe/,
+  });
+  const organization = effective.getByRole('button', {
+    name: /Partner role.*Community partners/,
+  });
+  await expect(family).toBeVisible();
+  await expect(individual).toBeVisible();
+  await expect(organization).toBeVisible();
+  await expect(family).toContainText('Expiring requirements');
+  await expect(family).toContainText('Safety check');
+  await expect(individual.getByText('Expiring requirements')).toHaveCount(0);
+  const formattedDate = new Intl.DateTimeFormat('en-US', {
+    timeZone: 'UTC',
+    day: '2-digit',
+    month: '2-digit',
+    year: '2-digit',
+  }).format(new Date(expirationDate));
+  await expect(
+    approvals.locator(`time[datetime="${expirationDate}"]`).first()
+  ).toHaveText(formattedDate);
+  await expectNoHorizontalOverflow(page);
+
+  await window.click();
+  await page.getByRole('option', { name: 'Next 7 days' }).click();
+  await expect(effective).toHaveCount(0);
+  await expect(approvals.getByLabel('3 approval work items')).toBeVisible();
+  await expect(expired.getByLabel('1 approval')).toBeVisible();
+  await expect(upcoming).toHaveCount(0);
+  await expect(uncovered.getByLabel('2 requirements')).toBeVisible();
+  await page.reload();
+  await expect(window).toHaveText('Next 7 days');
+  await expect(
+    page.getByRole('combobox', { name: 'Upcoming requirements time frame' })
+  ).toHaveText('Next 30 days');
+  await expect(
+    page.getByRole('combobox', { name: 'Past-due requirements time frame' })
+  ).toHaveText('All past due');
+  await window.click();
+  await page.getByRole('option', { name: 'Next 14 days' }).click();
+
+  const familyRequirement = uncovered.getByRole('button', {
+    name: /Household check.*Doe Family/,
+  });
+  await familyRequirement.focus();
+  await familyRequirement.press('Enter');
+  await expect(page).toHaveURL(
+    (url) =>
+      url.pathname.endsWith(`/families/${doeId}`) &&
+      url.searchParams.get('approvalAction') === 'Household check'
+  );
+  await page.goBack();
+  await upcoming.getByRole('button', { name: /Safety check.*Doe/ }).click();
+  await expect(page).toHaveURL(
+    (url) =>
+      url.pathname.endsWith(`/families/${doeId}`) &&
+      url.searchParams.has('approvalPersonId') &&
+      url.searchParams.get('approvalAction') === 'Safety check'
+  );
+  await page.goBack();
+  await uncovered
+    .getByRole('button', { name: /Partner screening.*Community partners/ })
+    .click();
+  await expect(page).toHaveURL(
+    (url) =>
+      url.pathname.endsWith(`/organizations/organization/${communityId}`) &&
+      url.searchParams.get('approvalAction') === 'Partner screening'
+  );
+  await page.goBack();
+  await expired
+    .getByRole('button', { name: /Legacy Coach.*Expired on/ })
+    .click();
+  await expect(page).toHaveURL(
+    (url) =>
+      url.pathname.endsWith(`/families/${doeId}`) &&
+      url.searchParams.get('approvalRole') === 'Legacy Coach'
+  );
+  await expect(
+    page.getByRole('button', { name: 'close role details' })
+  ).toBeVisible();
+  await expect(page.locator('#role-details-title')).toHaveText('Legacy Coach');
+  statusOnly = true;
+  await page.reload();
+  await expect(
+    page.getByText('Dashboard selection', { exact: true })
+  ).toBeVisible();
+  await expect(
+    page.getByRole('button', { name: /Legacy Coach.*Expired/ })
+  ).toBeVisible();
+  await expect(
+    page.getByRole('button', { name: 'close role details' })
+  ).toHaveCount(0);
 });

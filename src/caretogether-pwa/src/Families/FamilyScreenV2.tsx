@@ -58,6 +58,12 @@ import {
 import { personNameString } from './PersonName';
 import { useGlobalSnackBar } from '../Hooks/useGlobalSnackBar';
 import { ApprovalLedgerSection } from '../Approvals/ApprovalLedgerSection';
+import {
+  clearApprovalTarget,
+  findExpiringRequirementRow,
+  readApprovalTarget,
+  uniqueMatch,
+} from '../Hooks/workResolutionTarget';
 import { ApprovalTabLabel } from '../Approvals/ApprovalTabLabel';
 import { approvalMobileTabLabel } from '../Approvals/approvalTabPresentation';
 import { RoleSummaryCardsSection } from './RoleSummaryCardsSection';
@@ -102,6 +108,10 @@ export function FamilyScreenV2() {
   const navigate = useNavigate();
   const searchParams = new URLSearchParams(location.search);
   const notesSectionRequested = searchParams.get('section') === 'notes';
+  const approvalTarget =
+    searchParams.has('arrangementId') || searchParams.has('familyMemberId')
+      ? undefined
+      : readApprovalTarget(searchParams);
   const familyMemberIdFromQuery =
     searchParams.get('familyMemberId') ?? undefined;
   const arrangementIdFromQuery = searchParams.get('arrangementId') ?? undefined;
@@ -425,9 +435,53 @@ export function FamilyScreenV2() {
     selectedV1Case,
   });
 
+  const canLinkRenewal =
+    permissions(Permission.ViewApprovalStatus) &&
+    permissions(Permission.ViewApprovalProgress) &&
+    !!family?.volunteerFamilyInfo;
+  const linkedRequirementRow =
+    canLinkRenewal && approvalTarget?.kind === 'requirement'
+      ? findExpiringRequirementRow(
+          approvalLedgerRows,
+          approvalTarget.name,
+          approvalTarget.personId ? 'person' : 'family',
+          approvalTarget.personId ?? familyId
+        )
+      : undefined;
+  const linkedRole =
+    permissions(Permission.ViewApprovalStatus) &&
+    approvalTarget?.kind === 'role'
+      ? uniqueMatch(
+          roleSummaryCards,
+          (card) =>
+            card.roleName === approvalTarget.name &&
+            card.subject.scope ===
+              (approvalTarget.personId ? 'person' : 'family') &&
+            (approvalTarget.personId
+              ? card.subject.id === approvalTarget.personId
+              : card.context.kind === 'Volunteer Family' &&
+                card.context.volunteerFamilyId === familyId)
+        )
+      : undefined;
+  const openApprovalsFromLink =
+    canLinkRenewal && approvalTarget?.kind === 'requirement';
   useEffect(() => {
-    if (notesSectionRequested) setSelectedTab('timelineAndNotes');
-  }, [notesSectionRequested, location.key, setSelectedTab]);
+    if (openApprovalsFromLink) setSelectedTab('approvals');
+    else if (notesSectionRequested) setSelectedTab('timelineAndNotes');
+  }, [
+    openApprovalsFromLink,
+    notesSectionRequested,
+    location.key,
+    setSelectedTab,
+  ]);
+
+  function closeApprovalTarget() {
+    const params = clearApprovalTarget(searchParams);
+    navigate(
+      { pathname: location.pathname, search: params.toString() },
+      { replace: true }
+    );
+  }
 
   useEffect(() => {
     if (!familyMemberPrintRequested || !familyMemberToPrint) return;
@@ -829,7 +883,9 @@ export function FamilyScreenV2() {
         selectedArrangementRow={selectedArrangementRow}
         selectedFamilyMemberRow={selectedFamilyMemberRow}
         selectedRemovedRole={selectedRemovedRole}
-        selectedRoleSummaryCard={selectedRoleSummaryCard}
+        selectedRoleSummaryCard={
+          (canLinkRenewal ? linkedRole : undefined) ?? selectedRoleSummaryCard
+        }
         selectedV1Case={selectedV1Case}
         uploadDocumentDialogOpen={false}
         onAddAdultClose={(_event: object | undefined, reason: string) =>
@@ -854,6 +910,7 @@ export function FamilyScreenV2() {
         onRoleDetailsClose={() => {
           setSelectedRoleSummaryCardId(null);
           setSelectedRemovedRoleId(null);
+          if (linkedRole) closeApprovalTarget();
         }}
         onUploadDocumentClose={() => setUploadDocumentDialogOpen(false)}
       />
@@ -867,6 +924,7 @@ export function FamilyScreenV2() {
       <Box data-tour="family-type-tools">
         <RoleSummaryCardsSection
           cards={roleSummaryCards}
+          linkedCardId={linkedRole?.id}
           removedRoles={removedRoleSummaries}
           onCardClick={(card) => {
             setSelectedRemovedRoleId(null);
@@ -1000,6 +1058,8 @@ export function FamilyScreenV2() {
                     <ApprovalLedgerSection
                       groupByMember
                       rows={approvalLedgerRows}
+                      linkedRow={linkedRequirementRow}
+                      onLinkedRowClose={closeApprovalTarget}
                       renderDetailsDrawer={(row, open, onClose) => (
                         <ApprovalDetailsDrawerV2
                           row={row}
