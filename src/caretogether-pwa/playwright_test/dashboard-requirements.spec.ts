@@ -188,6 +188,7 @@ test('edits, approves, and deletes family and referral notes without leaving the
   await page.goBack();
   const familySnooze = row(familyNote.contents).getByRole('button', {
     name: 'Snooze note',
+    exact: true,
   });
   await familySnooze.click();
   const snoozeDrawer = page.getByRole('dialog', { name: 'Snooze until' });
@@ -231,7 +232,13 @@ test('edits, approves, and deletes family and referral notes without leaving the
     .click();
   await expect(familySnooze).toHaveCount(0);
   await expect(noteCount(3)).toBeVisible();
-  await expect(row(familyNote.contents)).toHaveCount(0);
+  // The snoozed list is still open from before, so the note moves there.
+  await expect(
+    row(familyNote.contents).getByRole('button', {
+      name: 'Unsnooze note',
+      exact: true,
+    })
+  ).toBeVisible();
   const resnoozed = await storedFamilySnoozes();
   expect(resnoozed.map(({ key }) => key)).toEqual([persisted[0].key]);
   await page.evaluate((key) => {
